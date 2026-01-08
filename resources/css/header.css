@@ -1,0 +1,150 @@
+/* Modern Header Styles */
+.brand-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: #f8fafc;
+  padding-left: 0.5rem;
+  transform: translateX(-0.5rem);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.brand-title:hover {
+  transform: translateX(-0.5rem) scale(1.02);
+}
+
+.brand-title i {
+  font-size: 1.75rem;
+}
+
+/* Search box styles */
+.search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.search-container:focus-within {
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.search-input {
+  background: transparent;
+  border: none;
+  padding: 0.625rem 1rem 0.625rem 2.5rem;
+  color: #fff;
+  width: 100%;
+  font-size: 0.9375rem;
+}
+
+.search-input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Header Action Icons */
+.header-action {
+  position: relative;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  color: #fff;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.header-action.is-active i {
+  color: #ffd700 !important;
+}
+
+.header-action:hover,
+.header-action:active,
+.header-action.is-active,
+.dark .header-action:hover,
+.dark .header-action:active,
+.dark .header-action.is-active {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+.header-action:hover,
+.header-action:active,
+.header-action.is-active,
+.dark .header-action:hover,
+.dark .header-action:active,
+.dark .header-action.is-active {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.header-action:active {
+  transform: translateY(0);
+}
+
+.header-action i {
+  font-size: 1.25rem;
+  transition: transform 0.2s ease;
+}
+
+.header-action:hover i {
+  transform: scale(1.1);
+}
+
+/* Remove blur from action icons */
+.header-action::before {
+  content: none;
+}
+
+.header-action::after {
+  content: none;
+}
+
+/* Remove all hover effects */
+.header-action::before,
+.header-action::after {
+  display: none !important;
+}
+
+/* Disable transitions */
+.header-action {
+  transition: none !important;
+}
+
+/* Force transparent background */
+.header-action,
+.header-action:hover,
+.header-action:active,
+.header-action.is-active,
+.dark .header-action,
+.dark .header-action:hover,
+.dark .header-action:active,
+.dark .header-action.is-active {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Highlight icon when active */
+.header-action.is-active i {
+  color: #ffd600 !important;
+}

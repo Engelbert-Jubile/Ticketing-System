@@ -1,0 +1,86 @@
+/* public/css/style.css */
+
+/* ------------------------
+   Gaya Dasar
+   ------------------------ */
+body {
+  background-color: #f3f4f6; /* Lebih terang dari #f5f5f5 */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+}
+
+.navbar-brand {
+  font-weight: bold;
+}
+
+/* Footer (jika ada) */
+footer {
+  background-color: #e9ecef;
+  color: #333;
+  padding: 10px 0;
+}
+
+/* ------------------------
+   Navbar Kustom
+   ------------------------ */
+.navbar-custom {
+  background-color: #2563eb;
+}
+.navbar-custom .navbar-brand,
+.navbar-custom .nav-link {
+  color: #fff;
+}
+.navbar-custom .nav-link:hover {
+  color: #e2e8f0;
+}
+
+/* ------------------------
+   Sidebar “Dashboard”
+   ------------------------ */
+.dashboard {
+  display: -ms-flexbox; /* IE10 */
+  display: flex;
+  -ms-flex-direction: column; /* IE10 */
+  flex-direction: column;
+  -ms-flex-align: start; /* IE10 */
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.5rem;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* Kartu (card) di dalam sidebar */
+.dashboard .card {
+  width: 100%;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Header tiap card dengan ikon */
+.dashboard .card-header {
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-align: center;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+.dashboard .card-header .icon {
+  font-size: 1.25rem;
+  color: #2563eb;
+}
+
+/* Daftar link di tiap card */
+.dashboard .list-group-item {
+  border: none;
+  padding-left: 1.5rem;
+}
+
+/* Warna khusus untuk laporan dan logout */
+.dashboard .list-group-item.report a {
+  color: #4ade80; /* hijau */
+}
+.dashboard .list-group-item.logout a {
+  color: #dc2626; /* merah */
+}

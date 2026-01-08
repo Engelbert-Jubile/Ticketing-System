@@ -1,0 +1,95 @@
+﻿/* ===== Animations & Motion Optimizations ===== */
+
+/* Fallbacks (aman jika variabel belum ada di app.css) */
+:root {
+  --ease-smooth: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --trans-short: 0.2s;
+}
+
+/* Animation Optimizations */
+.optimize-animations * {
+  -webkit-backface-visibility: hidden;
+  -moz-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-transform: translate3d(0, 0, 0);
+  -moz-transform: translate3d(0, 0, 0);
+  -ms-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+/* Smooth transitions */
+.sidebar {
+  -webkit-transform: translateZ(0);
+  -moz-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  -moz-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-transform-style: preserve-3d;
+  -moz-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+  -webkit-transition:
+    -webkit-transform 0.3s var(--ease-smooth, cubic-bezier(0.22, 0.61, 0.36, 1)),
+    width 0.3s var(--ease-smooth, cubic-bezier(0.22, 0.61, 0.36, 1));
+  -moz-transition:
+    -moz-transform 0.3s var(--ease-smooth, cubic-bezier(0.22, 0.61, 0.36, 1)),
+    width 0.3s var(--ease-smooth, cubic-bezier(0.22, 0.61, 0.36, 1));
+  transition:
+    transform 0.3s var(--ease-smooth, cubic-bezier(0.22, 0.61, 0.36, 1)),
+    width 0.3s var(--ease-smooth, cubic-bezier(0.22, 0.61, 0.36, 1));
+  will-change: transform, width;
+}
+
+/* Prevent transition flicker */
+.sidebar .nav-li > a,
+.sidebar .nav-li > button,
+.sidebar .nav-li > form > button {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  transition: all var(--trans-short, 0.2s) var(--ease-out, cubic-bezier(0.22, 0.61, 0.36, 1));
+}
+
+/* Optimize GPU rendering */
+.sidebar,
+.sidebar * {
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+}
+
+/* Prevent FOUC only during boot */
+.booting .sidebar:not(.initialized) {
+  opacity: 0;
+}
+
+.sidebar.initialized {
+  opacity: 1;
+  transition: opacity var(--trans-short, 0.2s) var(--ease-out, cubic-bezier(0.22, 0.61, 0.36, 1));
+}
+
+/* Smoother hover transitions */
+@media (hover: hover) {
+  .sidebar .nav-li > a:hover,
+  .sidebar .nav-li > button:hover,
+  .sidebar .nav-li > form > button:hover {
+    transition: all var(--trans-short, 0.2s) var(--ease-out, cubic-bezier(0.22, 0.61, 0.36, 1));
+  }
+}
+
+/* Reduce motion if user prefers */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .sidebar *,
+  .sb-spacer {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* Ensure sidebar stays visible after boot */
+.sidebar {
+  opacity: 1;
+}
+

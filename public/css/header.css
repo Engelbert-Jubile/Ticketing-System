@@ -1,0 +1,155 @@
+/* Modern Header Styles */
+.brand-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: #f8fafc;
+  padding-left: 0.5rem;
+  -webkit-transform: translateX(-0.5rem);
+  -ms-transform: translateX(-0.5rem);
+  transform: translateX(-0.5rem);
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  gap: 0.5rem;
+  -webkit-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.brand-title:hover {
+  -webkit-transform: translateX(-0.5rem) scale(1.02);
+  -ms-transform: translateX(-0.5rem) scale(1.02);
+  transform: translateX(-0.5rem) scale(1.02);
+}
+
+.brand-title i {
+  font-size: 1.75rem;
+}
+
+/* Search box styles */
+.search-container {
+  position: relative;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  -webkit-transition: all 0.2s ease;
+  transition: all 0.2s ease;
+}
+
+.search-container:focus-within {
+  background: rgba(255, 255, 255, 0.15);
+  -webkit-box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.search-input {
+  background: transparent;
+  border: none;
+  padding: 0.625rem 1rem 0.625rem 2.5rem;
+  color: #fff;
+  width: 100%;
+  font-size: 0.9375rem;
+}
+
+.search-input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Header Action Icons */
+.header-action {
+  position: relative;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  color: #fff;
+  background: transparent;
+  -webkit-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.header-action:hover {
+  background: rgba(255, 255, 255, 0.1);
+  -webkit-transform: translateY(-1px);
+  -ms-transform: translateY(-1px);
+  transform: translateY(-1px);
+}
+
+.header-action:active {
+  -webkit-transform: translateY(0);
+  -ms-transform: translateY(0);
+  transform: translateY(0);
+}
+
+.header-action i {
+  font-size: 1.25rem;
+  -webkit-transition: -webkit-transform 0.2s ease;
+  transition: -webkit-transform 0.2s ease;
+  transition: transform 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    -webkit-transform 0.2s ease;
+}
+
+.header-action:hover i {
+  -webkit-transform: scale(1.1);
+  -ms-transform: scale(1.1);
+  transform: scale(1.1);
+}
+
+/* Remove blur from action icons */
+.header-action::before {
+  content: none;
+}
+
+.header-action::after {
+  content: none;
+}
+
+/* Dark mode adjustments */
+.dark .search-container {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.dark .search-container:focus-within {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.dark .header-action:hover {
+  background: rgba(0, 0, 0, 0.2);
+}

@@ -1,0 +1,54 @@
+.topbar-icon-btn.is-active {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(0);
+}
+
+.dark .topbar-icon-btn.is-active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.topbar-icon-btn::before,
+.topbar-icon-btn::after {
+  display: none;
+}
+
+.topbar-icon-btn i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+}
+
+.search-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 16px 0 40px;
+  border: none;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 0.95rem;
+  line-height: 40px;
+}
+
+.search-input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+}
+
+.topbar__logo i {
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  transition: transform 0.2s ease;
+}
+
+.topbar__brand:hover .topbar__logo i {
+  transform: scale(1.1);
+}
