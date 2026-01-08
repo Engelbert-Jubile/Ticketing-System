@@ -75,3 +75,15 @@ proj_*.txt
 .phpstorm.meta.php
 _ide_helper*.php
 intelephense/
+
+# ===== Legacy static preview (Materialize/Gulp) =====
+assets/
+fonts/
+html/
+html-starter/
+js/
+libs/
+scss/
+scripts/
+tasks/
+index.html
