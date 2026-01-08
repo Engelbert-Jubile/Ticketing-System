@@ -70,3 +70,8 @@ t_*.txt
 sidebar_part*.txt
 review-files.txt
 proj_*.txt
+
+# ===== Unknown files trash =====
+.phpstorm.meta.php
+_ide_helper*.php
+intelephense/
