@@ -1,0 +1,139 @@
+<!-- COPY-PASTE SECTION -->
+<!-- FILE: resources/views/pages/tasks/create.blade.php -->
+
+<!-- ========== CSS STYLING ========== -->
+<!-- Lokasi: Sebelum </style> (sekitar line 340) -->
+<!-- COPY DAN PASTE BAGIAN INI: -->
+
+<style>
+  .task-quick-list{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem}
+  .task-quick-btn{padding:.5rem 1rem;border:1px dashed #d1d5db;border-radius:9999px;background:#fff;font-size:.875rem;font-weight:500;color:#374151;cursor:pointer;transition:all 200ms ease}
+  .task-quick-btn:hover{border-color:#0ea5e9;background:#f0f9ff;color:#0369a1}
+  .task-quick-btn[data-selected="true"]{border:1px solid #0ea5e9;background:#0ea5e9;color:#fff}
+  .dark .task-quick-btn{background:#1f2937;border-color:#4b5563;color:#d1d5db}
+  .dark .task-quick-btn:hover{border-color:#06b6d4;background:#083344;color:#06b6d4}
+  .dark .task-quick-btn[data-selected="true"]{background:#0ea5e9;border-color:#0ea5e9;color:#fff}
+  #taskAssigneePills{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem}
+  .task-pill{display:inline-flex;align-items:center;gap:.5rem;padding:.375rem .75rem;background:#e0e7ff;border-radius:9999px;font-size:.875rem;font-weight:500;color:#3730a3}
+  .task-pill .btn-remove-pill{margin-left:.25rem;padding:0;border:none;background:none;cursor:pointer;opacity:.7;transition:opacity 200ms ease;color:inherit}
+  .task-pill .btn-remove-pill:hover{opacity:1}
+  .dark .task-pill{background:#3730a3;color:#e0e7ff}
+</style>
+
+<!-- ========== JAVASCRIPT ========== -->
+<!-- Lokasi: Setelah @push('scripts'), sebelum @endpush (sekitar line 343-351) -->
+<!-- Ganti bagian: @push('scripts') @endpush dengan -->
+
+<script>
+  // Task Assignees Multi-Select Handler
+  (function() {
+    const quickListEl = document.getElementById('taskAssigneeQuickList');
+    const pillsEl = document.getElementById('taskAssigneePills');
+    const inputEl = document.getElementById('assigneesInput');
+    const quickBtns = document.querySelectorAll('.task-quick-btn');
+
+    let selectedIds = [];
+    try {
+      const jsonVal = inputEl.value;
+      if (jsonVal && jsonVal !== '[]') {
+        selectedIds = JSON.parse(jsonVal);
+      }
+    } catch (e) {
+      selectedIds = [];
+    }
+
+    function renderPills() {
+      pillsEl.innerHTML = selectedIds.map(userId => {
+        const btn = Array.from(quickBtns).find(b => b.dataset.userId === String(userId));
+        const label = btn ? btn.dataset.userLabel : 'User #' + userId;
+        return `<div class="task-pill"><span>${label}</span><button type="button" class="btn-remove-pill" data-user-id="${userId}">✕</button></div>`;
+      }).join('');
+
+      pillsEl.querySelectorAll('.btn-remove-pill').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.preventDefault();
+          const userId = btn.dataset.userId;
+          selectedIds = selectedIds.filter(id => String(id) !== String(userId));
+          updateUI();
+        });
+      });
+
+      updateInput();
+    }
+
+    function updateUI() {
+      quickBtns.forEach(btn => {
+        const userId = btn.dataset.userId;
+        const isSelected = selectedIds.some(id => String(id) === String(userId));
+        btn.dataset.selected = isSelected ? 'true' : 'false';
+      });
+      renderPills();
+    }
+
+    function updateInput() {
+      inputEl.value = JSON.stringify(selectedIds);
+    }
+
+    function toggleUser(userId) {
+      const userIdStr = String(userId);
+      const idx = selectedIds.findIndex(id => String(id) === userIdStr);
+      if (idx >= 0) {
+        selectedIds.splice(idx, 1);
+      } else {
+        selectedIds.push(userId);
+      }
+      updateUI();
+    }
+
+    quickBtns.forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.preventDefault();
+        toggleUser(btn.dataset.userId);
+      });
+    });
+
+    updateUI();
+  })();
+</script>
+
+<!-- ========== INSTRUKSI MANUAL ========== -->
+
+LANGKAH-LANGKAH:
+
+1. Buka file: resources/views/pages/tasks/create.blade.php
+
+2. CARI baris berisi:
+   .dark .attachments-actions{border-color:rgba(148,163,184,.35)}
+   </style>
+
+3. TAMBAHKAN CSS STYLING sebelum </style> (copy-paste dari atas)
+   - Harus sebelum tag </style>
+
+4. CARI baris:
+   @push('scripts')
+   @endpush
+
+5. GANTI SELURUH BAGIAN dengan:
+   @push('scripts')
+   @endpush
+   
+   <script>
+   ... [copy JAVASCRIPT dari atas]
+   </script>
+
+6. SAVE FILE
+
+7. Hard Refresh Browser:
+   Ctrl+Shift+R (Windows)
+   Cmd+Shift+R (Mac)
+
+8. Test:
+   - Klik tombol user - harus berubah warna biru
+   - Chips harus muncul di bawah
+   - Klik ✕ pada chip - remove user
+   - Dark mode - styling harus konsisten
+
+PERHATIAN:
+- Pastikan copy-paste dengan benar
+- Jangan ada space atau karakter yang hilang
+- Indentation tidak penting (sudah di-minify)

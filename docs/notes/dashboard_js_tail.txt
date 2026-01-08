@@ -1,0 +1,222 @@
+  // Task Report (7 hari)
+  (function () {
+    const d = readDual('tasksWeeklyChart');
+    if (!d.el) return;
+    const doneC = BRAND_EMERALD,
+      progC = '#f59e0b';
+    const chart = new Chart(d.el, {
+      type: 'bar',
+      data: {
+        labels: d.labels,
+        datasets: [
+          {
+            label: 'Completed',
+            data: d.done,
+            backgroundColor: hexToRGBA(doneC, 0.28),
+            borderColor: doneC,
+            borderWidth: 1.2,
+            hoverBackgroundColor: doneC
+          },
+          {
+            label: 'In Progress',
+            data: d.progress,
+            backgroundColor: hexToRGBA(progC, 0.28),
+            borderColor: progC,
+            borderWidth: 1.2,
+            hoverBackgroundColor: progC
+          }
+        ]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          y: {
+            beginAtZero: true,
+            suggestedMax: niceMax([...d.done, ...d.progress]),
+            ticks: { color: t.text, stepSize: 1, precision: 0 },
+            grid: { color: t.grid }
+          },
+          x: { ticks: { color: t.text }, grid: { color: t.grid } }
+        },
+        interaction: { mode: 'index', intersect: false }
+      },
+      plugins: [noData]
+    });
+    charts.set(d.el, chart);
+    makeMiniLegend(chart);
+    const wh = document.getElementById('weeklyHint');
+    if (wh)
+      wh.innerHTML = `<span class="k">Completed:</span> <span class="v">${sum(d.done)}</span>\n<span class="k">In Progress:</span> <span class="v">${sum(d.progress)}</span>`;
+    ro.observe(d.el.closest('.chart-card'));
+  })();
+
+  // Tasks by Status
+  (function () {
+    const d = read('tasksStatusChart_top');
+    if (!d.el) return;
+    const map = l => {
+      const k = String(l || '').toLowerCase();
+      if (k.includes('complete') || k.includes('done')) return BRAND_EMERALD;
+      if (k.includes('progress')) return '#f59e0b';
+      if (k.includes('new') || k.includes('pending') || k.includes('todo') || k.includes('wait')) return BRAND_BLUE;
+      return '#8b5cf6';
+    };
+    const border = (d.labels || []).map(map),
+      bg = border.map(c => hexToRGBA(c, 0.28));
+    const chart = new Chart(d.el, {
+      type: 'bar',
+      data: {
+        labels: d.labels,
+        datasets: [
+          { data: d.values, backgroundColor: bg, borderColor: border, borderWidth: 1.2, hoverBackgroundColor: border }
+        ]
+      },
+      options: {
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: {
+          x: {
+            beginAtZero: true,
+            suggestedMax: niceMax(d.values),
+            ticks: { color: t.text, stepSize: 1, precision: 0 },
+            grid: { color: t.grid }
+          },
+          y: { ticks: { color: t.text }, grid: { color: t.grid } }
+        }
+      },
+      plugins: [noData]
+    });
+    charts.set(d.el, chart);
+    const hint = document.getElementById('taskStatusHint_top');
+    if (hint) hint.textContent = `Total tasks: ${sum(d.values)}`;
+    ro.observe(d.el.closest('.chart-card'));
+  })();
+
+  // Projects by Status
+  (function () {
+    const d = read('projectsChart');
+    if (!d.el) return;
+    const colors = (d.labels || []).map(l => {
+      const k = (l || '').toLowerCase();
+      if (k.includes('complete')) return BRAND_EMERALD;
+      if (k.includes('progress')) return '#f59e0b';
+      if (k.includes('pending')) return '#ef4444';
+      if (k.includes('new')) return BRAND_BLUE;
+      return '#8b5cf6';
+    });
+    const chart = new Chart(d.el, {
+      type: 'pie',
+      data: { labels: d.labels, datasets: [{ data: d.values, backgroundColor: colors }] },
+      options: { plugins: { legend: { labels: { color: theme().text } } } },
+      plugins: [noData]
+    });
+    charts.set(d.el, chart);
+    const hint = document.getElementById('projectsHint');
+    if (hint) hint.textContent = `Total projects: ${sum(d.values)}`;
+    ro.observe(d.el.closest('.chart-card'));
+  })();
+
+  // Projects Created
+  (function () {
+    const d = read('projectsCreatedChart');
+    if (!d.el) return;
+    const border = Array(d.values.length).fill(BRAND_BLUE),
+      bg = border.map(c => hexToRGBA(c, 0.28));
+    const chart = new Chart(d.el, {
+      type: 'bar',
+      data: {
+        labels: d.labels,
+        datasets: [
+          { data: d.values, backgroundColor: bg, borderColor: border, borderWidth: 1.2, hoverBackgroundColor: border }
+        ]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          y: {
+            beginAtZero: true,
+            suggestedMax: niceMax(d.values),
+            ticks: { color: theme().text, stepSize: 1, precision: 0 },
+            grid: { color: theme().grid }
+          },
+          x: { ticks: { color: theme().text }, grid: { color: theme().grid } }
+        },
+        interaction: { mode: 'index', intersect: false }
+      },
+      plugins: [noData]
+    });
+    charts.set(d.el, chart);
+    const ph = document.getElementById('projectsCreatedHint');
+    if (ph)
+      ph.innerHTML = `<span class="k">Total Created:</span> <span class="v">${sum(d.values)}</span>\n<span class="k">Periode:</span> <span class="v">${normalizePeriod(d.period) || '-'}</span>`;
+    ro.observe(d.el.closest('.chart-card'));
+  })();
+
+  // Project Report
+  (function () {
+    const d = readDual('projectsReportChart');
+    if (!d.el) return;
+    const doneC = BRAND_EMERALD,
+      progC = '#f59e0b';
+    const chart = new Chart(d.el, {
+      type: 'bar',
+      data: {
+        labels: d.labels,
+        datasets: [
+          {
+            label: 'Completed',
+            data: d.done,
+            backgroundColor: hexToRGBA(doneC, 0.28),
+            borderColor: doneC,
+            borderWidth: 1.2,
+            hoverBackgroundColor: doneC
+          },
+          {
+            label: 'In Progress',
+            data: d.progress,
+            backgroundColor: hexToRGBA(progC, 0.28),
+            borderColor: progC,
+            borderWidth: 1.2,
+            hoverBackgroundColor: progC
+          }
+        ]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          y: {
+            beginAtZero: true,
+            suggestedMax: niceMax([...d.done, ...d.progress]),
+            ticks: { color: theme().text, stepSize: 1, precision: 0 },
+            grid: { color: theme().grid }
+          },
+          x: { ticks: { color: theme().text }, grid: { color: theme().grid } }
+        },
+        interaction: { mode: 'index', intersect: false }
+      },
+      plugins: [noData]
+    });
+    charts.set(d.el, chart);
+    makeMiniLegend(chart);
+    const hr = document.getElementById('projectsReportHint');
+    if (hr)
+      hr.innerHTML = `<span class="k">Completed:</span> <span class="v">${sum(d.done)}</span>\n<span class="k">In Progress:</span> <span class="v">${sum(d.progress)}</span>\n<span class="k">Periode:</span> <span class="v">${normalizePeriod(d.period) || '-'}</span>`;
+    ro.observe(d.el.closest('.chart-card'));
+  })();
+}
+
+function destroy() {
+  charts.forEach(c => c.destroy());
+  charts.clear();
+}
+(ready => {
+  (ready ? document.fonts.ready : Promise.resolve()).then(() => {
+    destroy();
+    build();
+  });
+})(!!document.fonts);
+new MutationObserver(() => {
+  destroy();
+  build();
+}).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
