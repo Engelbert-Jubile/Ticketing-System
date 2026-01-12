@@ -33,7 +33,7 @@
         </thead>
         <tbody class="divide-y divide-slate-200 bg-white dark:divide-slate-700 dark:bg-slate-900/60">
           <tr v-for="(project, index) in projects.data" :key="project.id" class="transition hover:bg-slate-50 dark:hover:bg-slate-800/60">
-            <td class="px-4 py-3 text-xs text-slate-500">{{ (projects.meta.current_page - 1) * projects.meta.per_page + index + 1 }}</td>
+            <td class="px-4 py-3 text-xs text-slate-500">{{ (pagination.current_page - 1) * pagination.per_page + index + 1 }}</td>
             <td class="px-4 py-3 font-medium text-slate-700 dark:text-slate-200">
               <Link :href="project.links.show" class="text-blue-600 hover:underline dark:text-blue-400">{{ project.title }}</Link>
             </td>
@@ -74,6 +74,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import StatusBadge from '@/Components/StatusBadge.vue';
 
@@ -83,6 +84,11 @@ const props = defineProps({
 });
 
 const filters = props.filters ?? {};
+
+const pagination = computed(() => props.projects.meta ?? {
+  current_page: props.projects.current_page ?? 1,
+  per_page: props.projects.per_page ?? (filters.per_page ?? 12),
+});
 
 function changePerPage(event) {
   const perPage = Number(event.target.value || filters.per_page || 12);

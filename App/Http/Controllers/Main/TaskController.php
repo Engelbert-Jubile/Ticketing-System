@@ -159,8 +159,9 @@ final class TaskController extends Controller
         return $this->reportExport->downloadPdf('Laporan Task', $columns, $rows, $meta, $filename);
     }
 
-    public function reportTicketDetail(Request $request, Ticket|string $ticket): Response
+    public function reportTicketDetail(Request $request, string $locale, Ticket|string $ticket): Response
     {
+        // Locale is captured by the route prefix; we only need the ticket value.
         $ticket = $ticket instanceof Ticket
             ? $ticket
             : Ticket::where('ticket_no', $ticket)->firstOrFail();
@@ -672,7 +673,7 @@ final class TaskController extends Controller
         ], fn ($value) => filled($value));
     }
 
-    public function downloadDetail(Request $request, Task $task)
+    public function downloadDetail(Request $request, string $locale, Task $task)
     {
         UnitVisibility::ensureTaskAccess($request->user(), $task);
         $task->load(['attachments', 'assignee', 'requester', 'ticket', 'ticket.assignedUsers', 'ticket.agent', 'project']);
@@ -903,18 +904,22 @@ final class TaskController extends Controller
 
         app(WorkItemNotifier::class)->notifyTaskCreated($task, $assigneeIds, Auth::user());
 
-        return redirect()->route('tasks.create')->with('success', 'Task created successfully.');
+        $locale = $request->route('locale') ?? app()->getLocale();
+
+        return redirect()
+            ->route('tasks.create', ['locale' => $locale])
+            ->with('success', 'Task created successfully.');
     }
 
-    public function showBySlug(Request $request, string $taskSlug): Response
+    public function showBySlug(Request $request, string $locale, string $taskSlug): Response
     {
         $task = Task::findByPublicSlug($taskSlug);
         abort_if(! $task, 404);
 
-        return $this->show($task, $request);
+        return $this->show($locale, $task, $request);
     }
 
-    public function show(Task $task, Request $request): Response
+    public function show(string $locale, Task $task, Request $request): Response
     {
         UnitVisibility::ensureTaskAccess($request->user(), $task);
         $task->load(['attachments', 'assignee', 'requester', 'ticket', 'ticket.assignedUsers', 'ticket.agent', 'project']);
@@ -938,7 +943,7 @@ final class TaskController extends Controller
         ]);
     }
 
-    public function view(Task $task, Request $request): Response
+    public function view(string $locale, Task $task, Request $request): Response
     {
         UnitVisibility::ensureTaskAccess($request->user(), $task);
         $task->load(['attachments', 'assignee', 'requester', 'ticket', 'ticket.assignedUsers', 'ticket.agent', 'project']);
@@ -951,7 +956,7 @@ final class TaskController extends Controller
         ]);
     }
 
-    public function edit(Task $task, Request $request): Response
+    public function edit(string $locale, Task $task, Request $request): Response
     {
         $viewer = $request->user();
         UnitVisibility::ensureTaskAccess($viewer, $task);
@@ -1018,7 +1023,7 @@ final class TaskController extends Controller
         ]);
     }
 
-    public function update(Request $request, Task $task): RedirectResponse
+    public function update(Request $request, string $locale, Task $task): RedirectResponse
     {
         $viewer = $request->user();
         UnitVisibility::ensureTaskAccess($viewer, $task);
@@ -1157,16 +1162,16 @@ final class TaskController extends Controller
             app(WorkItemNotifier::class)->notifyTaskCancelled($task, $viewer);
         }
 
-        $backTo = $this->resolveBackUrl($request, route('tasks.report'));
-        $referer = $request->headers->get('referer');
-        if (is_string($referer) && str_contains($referer, '/dashboard/tasks/report/edit/')) {
-            $backTo = route('tasks.edit', ['task' => $task->public_slug]);
-        }
+        $locale = $request->route('locale') ?? app()->getLocale();
+        $backTo = route('tasks.show', [
+            'locale' => $locale,
+            'taskSlug' => $task->public_slug,
+        ]);
 
         return redirect()->to($backTo)->with('success', 'Task updated successfully.');
     }
 
-    public function destroy(Request $request, Task $task): RedirectResponse
+    public function destroy(Request $request, string $locale, Task $task): RedirectResponse
     {
         UnitVisibility::ensureTaskAccess($request->user(), $task);
         $ticketId = $task->ticket_id;
@@ -1182,7 +1187,7 @@ final class TaskController extends Controller
     }
 
     /** Promote Task -> Project */
-    public function promoteToProject(Request $request, Task $task): RedirectResponse
+    public function promoteToProject(Request $request, string $locale, Task $task): RedirectResponse
     {
         UnitVisibility::ensureTaskAccess($request->user(), $task);
         if ($task->project_id) {

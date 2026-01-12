@@ -229,7 +229,7 @@ class ProjectController extends Controller
         return $this->reportExport->downloadPdf('Laporan Project', $columns, $rows, $meta, $filename);
     }
 
-    public function downloadDetail(Request $request, Project $project)
+    public function downloadDetail(Request $request, string $locale, Project $project)
     {
         UnitVisibility::ensureProjectAccess($request->user(), $project);
         $project->load([
@@ -916,7 +916,7 @@ class ProjectController extends Controller
             ->with('success', 'Project berhasil diperbarui.');
     }
 
-    public function destroy(Request $request, Project $project): RedirectResponse
+    public function destroy(Request $request, string $locale, Project $project): RedirectResponse
     {
         UnitVisibility::ensureProjectAccess($request->user(), $project);
         $ticketId = $project->ticket_id;

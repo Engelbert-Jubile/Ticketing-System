@@ -732,7 +732,7 @@ class TicketController extends Controller
         return redirect()->to($this->ticketReportDetailUrl($ticket));
     }
 
-    public function reportDetailView(Request $request, Ticket $ticket): Response
+    public function reportDetailView(Request $request, string $locale, Ticket $ticket): Response
     {
         return $this->renderTicketDetailPage($request, $ticket);
     }
@@ -759,7 +759,7 @@ class TicketController extends Controller
         ]);
     }
 
-    public function edit(Request $request, Ticket $ticket): Response
+    public function edit(Request $request, string $locale, Ticket $ticket): Response
     {
         UnitVisibility::ensureTicketAccess($request->user(), $ticket);
         $ticket->load([
@@ -853,7 +853,7 @@ class TicketController extends Controller
         ]);
     }
 
-    public function manageAttachments(Request $request, Ticket $ticket): Response
+    public function manageAttachments(Request $request, string $locale, Ticket $ticket): Response
     {
         UnitVisibility::ensureTicketAccess($request->user(), $ticket);
         $ticket->load('attachments');
@@ -877,7 +877,7 @@ class TicketController extends Controller
         ]);
     }
 
-    public function updateAttachments(Request $request, Ticket $ticket)
+    public function updateAttachments(Request $request, string $locale, Ticket $ticket)
     {
         UnitVisibility::ensureTicketAccess($request->user(), $ticket);
         $attachIds = $request->input('attachments');
@@ -889,7 +889,7 @@ class TicketController extends Controller
         return redirect()->route('tickets.attachments.manage', $ticket)->with('success', 'Lampiran diperbarui.');
     }
 
-    public function update(Request $request, Ticket $ticket)
+    public function update(Request $request, string $locale, Ticket $ticket)
     {
         UnitVisibility::ensureTicketAccess($request->user(), $ticket);
         $backTo = $this->resolveBackUrl($request, route('tickets.index'));
@@ -1211,7 +1211,7 @@ class TicketController extends Controller
         return redirect()->to($backTo)->with('success', 'Ticket updated successfully.');
     }
 
-    public function destroy(Request $request, Ticket $ticket)
+    public function destroy(Request $request, string $locale, Ticket $ticket)
     {
         UnitVisibility::ensureTicketAccess($request->user(), $ticket);
         Project::where('ticket_id', $ticket->id)->delete();
@@ -1223,7 +1223,7 @@ class TicketController extends Controller
         return redirect()->to($backTo)->with('success', 'Ticket deleted successfully.');
     }
 
-    public function changeStatus(Request $request, Ticket $ticket, string $status)
+    public function changeStatus(Request $request, string $locale, Ticket $ticket, string $status)
     {
         UnitVisibility::ensureTicketAccess($request->user(), $ticket);
         $previousStatus = WorkflowStatus::normalize($ticket->status ?? WorkflowStatus::NEW);
@@ -1722,7 +1722,7 @@ class TicketController extends Controller
         return implode(',', array_unique($columns));
     }
 
-    public function downloadDetail(Request $request, Ticket $ticket)
+    public function downloadDetail(Request $request, string $locale, Ticket $ticket)
     {
         UnitVisibility::ensureTicketAccess($request->user(), $ticket);
         $ticket->load([

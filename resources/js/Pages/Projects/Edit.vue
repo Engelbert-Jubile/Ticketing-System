@@ -1894,6 +1894,24 @@ function handleSubmit() {
   submitForm();
 }
 
+function resetFormState() {
+  form.reset();
+  currentStep.value = 0;
+  mountedSteps.value = { [steps[0].key]: true };
+  attachmentIds.value = [];
+  uploadError.value = '';
+  selectedAttachmentFilter.value = '';
+  showUploader.value = true;
+  uploaderRef.value?.reset();
+  agentDropdownOpen.value = false;
+  picDropdownOpen.value = false;
+  ticketDropdownOpen.value = false;
+  activeAgentUnit.value = '';
+  activePicUnit.value = '';
+  activeTicketUnit.value = '';
+  selectedTicketId.value = null;
+}
+
 function submitForm() {
   sanitizeArrays();
 
@@ -1903,8 +1921,12 @@ function submitForm() {
   const options = {
     preserveScroll: true,
     onSuccess: () => {
-      attachmentIds.value = [];
-      uploadError.value = '';
+      if (isCreate.value) {
+        resetFormState();
+      } else {
+        attachmentIds.value = [];
+        uploadError.value = '';
+      }
     },
     onError: focusFirstError,
   };

@@ -1321,10 +1321,7 @@ function submitForm() {
     forceFormData: true,
     preserveScroll: true,
     onSuccess: () => {
-      attachmentIds.value = [];
-      selectedAttachmentFilter.value = '';
-      uploaderRef.value?.reset();
-      currentStep.value = 0;
+      resetForm();
     },
     onError: errors => {
       const stepKey = resolveErrorStep(errors);
