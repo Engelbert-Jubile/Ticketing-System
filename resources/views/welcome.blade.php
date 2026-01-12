@@ -248,7 +248,7 @@
         <div class="space-y-1 text-xs text-slate-500">
             <p>Made with <span aria-hidden="true">❤️</span> By IT KFTD</p>
             <p>
-                Copyright ©2025
+                Copyright ©2026
                 <a href="https://kftd.co.id/" class="font-semibold text-blue-600 hover:text-blue-700" target="_blank" rel="noopener">
                     Kimia Farma Trading &amp; Distribution
                 </a>.
