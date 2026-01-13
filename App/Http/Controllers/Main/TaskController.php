@@ -1389,14 +1389,37 @@ final class TaskController extends Controller
             : ($task->due_at ?? $task->due_date);
 
         $assignmentPayload = $this->ticketAssignmentPayload($ticketModel);
+
+        $assigneeEntry = null;
+        if ($task->relationLoaded('assignee') && $task->assignee) {
+            $assigneeEntry = $this->formatAssignmentEntry($task->assignee, 'Agent');
+        }
+
         if (empty($assignmentPayload['entries'])) {
             $fallbackAssigned = $this->resolveAssigned($task);
+            $entries = $fallbackAssigned;
+
+            if ($assigneeEntry) {
+                array_unshift($entries, $assigneeEntry);
+            }
+
             $assignmentPayload = [
                 'source' => 'task',
-                'agent' => null,
+                'agent' => $assigneeEntry,
                 'pics' => $fallbackAssigned,
-                'entries' => $fallbackAssigned,
+                'entries' => collect($entries)
+                    ->filter(fn ($entry) => ! empty($entry['name']))
+                    ->unique(fn ($entry) => strtolower((string) ($entry['id'] ?? $entry['name'] ?? '')))
+                    ->values()
+                    ->all(),
             ];
+        } elseif (! $assignmentPayload['agent'] && $assigneeEntry) {
+            $assignmentPayload['agent'] = $assigneeEntry;
+            $assignmentPayload['entries'] = collect($assignmentPayload['entries'])
+                ->prepend($assigneeEntry)
+                ->unique(fn ($entry) => strtolower((string) ($entry['id'] ?? $entry['name'] ?? '')))
+                ->values()
+                ->all();
         }
 
         return [

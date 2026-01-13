@@ -134,7 +134,12 @@ $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:i
 
     public function notifyTaskCreated(Task $task, array $assigneeIds = [], ?User $actor = null, bool $sendMail = true): void
     {
-        $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:id,title,ticket_no,status,due_at,due_date', 'project:id,public_slug,title,project_no,status,start_date,end_date');
+        $task->loadMissing(
+            'requester:id,first_name,last_name,username,email',
+            'ticket:id,title,ticket_no,status,due_at,due_date',
+            'project:id,public_slug,title,project_no,status,start_date,end_date',
+            'project.pics.user:id,first_name,last_name,username,email'
+        );
 
         $recipients = $this->collectTaskRecipients($task, $assigneeIds, $actor);
         if ($recipients->isEmpty()) {
@@ -156,7 +161,11 @@ $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:i
             return;
         }
 
-        $task->loadMissing('ticket:id,title,ticket_no,status,due_at,due_date', 'project:id,public_slug,title,project_no,status,start_date,end_date');
+        $task->loadMissing(
+            'ticket:id,title,ticket_no,status,due_at,due_date',
+            'project:id,public_slug,title,project_no,status,start_date,end_date',
+            'project.pics.user:id,first_name,last_name,username,email'
+        );
         $payload = $this->buildTaskPayload($task, 'assigned', $actor);
         $this->dispatch($users, 'assigned', $payload, $actor);
     }
@@ -173,7 +182,12 @@ $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:i
 
     public function notifyTaskCancelled(Task $task, ?User $actor = null): void
     {
-        $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:id,title,ticket_no,status,due_at,due_date', 'project:id,public_slug,title,project_no,status,start_date,end_date');
+        $task->loadMissing(
+            'requester:id,first_name,last_name,username,email',
+            'ticket:id,title,ticket_no,status,due_at,due_date',
+            'project:id,public_slug,title,project_no,status,start_date,end_date',
+            'project.pics.user:id,first_name,last_name,username,email'
+        );
 
         $recipients = $this->collectTaskRecipients($task, [], $actor);
         if ($recipients->isEmpty()) {
@@ -260,11 +274,13 @@ $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:i
     private function dispatch(Collection $recipients, string $event, array $payload, ?User $actor = null, bool $sendMail = true): void
     {
         $actorName = $actor?->display_name ?? $actor?->name ?? null;
+        $actorUnit = $actor?->unit ? trim((string) $actor->unit) : null;
 
         foreach ($recipients->unique('id') as $user) {
             $allowMail = $sendMail && $this->shouldSendMail($user);
             $data = $payload;
             $data['actor'] = $actorName;
+            $data['actor_unit'] = $actorUnit;
 
             try {
                 if (method_exists($user, 'notifyNow')) {
@@ -453,6 +469,19 @@ $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:i
         if ($ticket->agent) {
             $details['Agent'] = $ticket->agent->display_name;
         }
+        $ticketPics = $ticket->assignedUsers
+            ? $ticket->assignedUsers
+                ->map(fn($user) => $user->display_name)
+                ->filter()
+                ->unique()
+                ->values()
+                ->all()
+            : [];
+        if (! empty($ticketPics)) {
+            $details['PIC'] = implode(', ', $ticketPics);
+        } else {
+            $details['PIC'] = '-';
+        }
 
         $intro = match ($event) {
             'assigned' => 'Anda baru saja ditetapkan sebagai penanggung jawab ticket berikut.',
@@ -513,7 +542,7 @@ $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:i
         $status = WorkflowStatus::label(WorkflowStatus::normalize($task->status ?? WorkflowStatus::NEW));
         $details = [
             'Judul' => $task->title,
-            'Nomor Task' => $task->task_no ?? '—',
+            'Nomor Task' => $task->task_no ?? '-',
             'Status' => $status,
             'Prioritas' => ucfirst(strtolower((string) ($task->priority ?? 'normal'))),
             'Jatuh Tempo' => $this->formatDateTime($task->due_at),
@@ -522,6 +551,44 @@ $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:i
         if ($task->requester) {
             $details['Requester'] = $task->requester->display_name;
         }
+        if ($task->assignee) {
+            $details['Agent'] = $task->assignee->display_name;
+        }
+        $picNames = collect();
+
+        $assignedIds = $this->decodeJsonIds($task->assigned_to ?? null);
+        if (! empty($assignedIds)) {
+            $assignedUsers = User::whereIn('id', $assignedIds)->get()->keyBy('id');
+            foreach ($assignedIds as $id) {
+                $user = $assignedUsers->get($id);
+                if ($user) {
+                    $picNames->push($user->display_name ?? $user->email);
+                }
+            }
+        }
+
+        if ($task->project?->pics) {
+            foreach ($task->project->pics as $pic) {
+                $label = $pic->user?->display_name;
+                if ($label) {
+                    $picNames->push($label);
+                }
+            }
+        }
+
+        if ($picNames->isEmpty() && $task->assignee) {
+            $picNames->push($task->assignee->display_name ?? $task->assignee->email);
+        }
+
+        $picList = $picNames
+            ->filter()
+            ->map(fn($name) => trim((string) $name))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $details['PIC'] = ! empty($picList) ? implode(', ', $picList) : '-';
 
         $related = [];
         if ($task->ticket) {
@@ -599,6 +666,23 @@ $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:i
         $related = [];
         if ($project->ticket) {
             $related['Ticket'] = ($project->ticket->ticket_no ? '#' . $project->ticket->ticket_no . ' - ' : '') . $project->ticket->title;
+        }
+        $projectPics = collect($project->pics ?? []);
+        $agentName = $projectPics
+            ->first(fn($pic) => strtolower((string) ($pic->role_type ?? '')) === 'agent')
+            ?->user?->display_name;
+        $picNames = $projectPics
+            ->map(fn($pic) => $pic->user?->display_name)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $details['Agent'] = $agentName ?: '-';
+        if (! empty($picNames)) {
+            $details['PIC'] = implode(', ', $picNames);
+        } else {
+            $details['PIC'] = '-';
         }
 
         $intro = match ($event) {

@@ -49,10 +49,16 @@ class WorkItemNotification extends Notification implements ShouldQueue
 
     public function toMail($notifiable): MailMessage
     {
+        $senderName = $this->payload['actor'] ?? null;
+        $senderUnit = Arr::get($this->payload, 'actor_unit');
+        $signatureName = $senderName ?: 'Ticketing System';
+        $signatureLine = $senderUnit ? $signatureName.' - '.$senderUnit : $signatureName;
+
         $mail = (new MailMessage)
             ->subject($this->payload['mail_subject'])
             ->greeting('Halo '.($notifiable->display_name ?? $notifiable->name ?? 'Rekan'))
-            ->line($this->payload['mail_intro']);
+            ->line($this->payload['mail_intro'])
+            ->salutation(' ');
 
         $details = Arr::get($this->payload, 'details', []);
         if (! empty($details)) {
@@ -61,7 +67,7 @@ class WorkItemNotification extends Notification implements ShouldQueue
                 if ($value === null || $value === '') {
                     continue;
                 }
-                $mail->line('• '.$label.': '.$value);
+                $mail->line('- '.$label.': '.$value);
             }
         }
 
@@ -72,7 +78,7 @@ class WorkItemNotification extends Notification implements ShouldQueue
                 if ($value === null || $value === '') {
                     continue;
                 }
-                $mail->line('• '.$label.': '.$value);
+                $mail->line('- '.$label.': '.$value);
             }
         }
 
@@ -84,10 +90,15 @@ class WorkItemNotification extends Notification implements ShouldQueue
             $mail->line($this->payload['mail_remark']);
         }
 
-        $actor = $this->payload['actor'] ?? null;
-        if ($actor) {
-            $mail->line('Pengirim: '.$actor);
-        }
+        $mail->line('Best Regards,');
+        $mail->line($signatureLine);
+        $mail->line('Ticketing System');
+
+        $mail->line('________________________________');
+        $mail->line('Pemberitahuan : E-mail ini (dan lampiran apa pun) dimaksudkan semata-mata untuk penggunaan individu atau entitas yang dituju dan mungkin berisi informasi yang secara hukum memiliki hak istimewa dan/atau rahasia. Jika Anda bukan penerima yang dituju (atau menerima e-mail ini karena kesalahan), harap segera beri tahu pengirim dan hapus e-mail ini. Setiap penggunaan, penyebaran, distribusi, atau penyalinan yang tidak sah dari setiap dan semua bagian dari e-mail ini sangat dilarang. Terima Kasih.');
+        $mail->line('________________________________');
+        $mail->line('Notice : This e-mail (and any attachments) is intended solely for the use of the individual (s) or entity (ies) to which it is addressed and may contain information that is legally privileged and/or confidential. If you are not the intended recipient (or have received this e-mail in error) please notify the sender immediately and delete this e-mail. Any unauthorized use, dissemination, distribution, or copying of any and all part of this e-mail is strictly prohibited. Thank You.');
+        $mail->salutation(' ');
 
         return $mail;
     }
