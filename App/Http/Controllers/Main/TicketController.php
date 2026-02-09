@@ -43,10 +43,11 @@ class TicketController extends Controller
     {
         $ticketNo = is_string($ticket->ticket_no ?? null) ? trim((string) $ticket->ticket_no) : '';
         if ($ticketNo !== '') {
-            return route('tickets.report.detail.view', ['ticket' => $ticketNo]);
+            return route('tickets.report.detail.view', ['locale' => request()->route('locale'), 'ticket' => $ticketNo]);
         }
 
-        return route('tickets.edit', ['ticket' => $ticket->id]);
+        return route('tickets.edit', ['locale' => request()->route('locale'), 'locale' => app()->getLocale(),
+                    'ticket' => $ticket->id]);
     }
 
     private function priorities(): array
@@ -719,7 +720,7 @@ class TicketController extends Controller
             $notifier->notifyTicketCreated($ticket, $actor);
         }
 
-        return redirect()->route('tickets.create')
+        return redirect()->route('tickets.create', ['locale' => app()->getLocale()])
             ->with('success', 'Ticket created successfully.');
     }
 
@@ -748,7 +749,7 @@ class TicketController extends Controller
             'projects:id,title,project_no,public_slug,ticket_id,status,status_id,end_date,created_at,updated_at',
         ]);
 
-        $backUrl = $this->resolveBackUrl($request, route('tickets.index'));
+        $backUrl = $this->resolveBackUrl($request, routeLocale('tickets.index'));
         $detail = $this->transformTicketDetail($ticket, $backUrl);
 
         return Inertia::render('Tickets/Show', [
@@ -892,7 +893,7 @@ class TicketController extends Controller
     public function update(Request $request, string $locale, Ticket $ticket)
     {
         UnitVisibility::ensureTicketAccess($request->user(), $ticket);
-        $backTo = $this->resolveBackUrl($request, route('tickets.index'));
+        $backTo = $this->resolveBackUrl($request, route('tickets.index', ['locale' => app()->getLocale()]));
         $ticket->loadMissing('assignedUsers');
         $previousAssigned = $this->collectTicketAssignedIds($ticket);
 
@@ -991,18 +992,7 @@ class TicketController extends Controller
         }
 
         $request->merge(['status' => $finalStatus]);
-        try {
-            Log::info('tickets.update.status_debug', [
-                'ticket_id' => $ticket->id,
-                'user_id' => $request->user()?->id,
-                'status_before' => $currentStatus,
-                'status_input' => $request->input('status'),
-                'status_input_raw' => $statusProvided ? $statusInputRaw : null,
-                'final_status' => $finalStatus,
-                'status_provided' => $statusProvided,
-            ]);
-        } catch (\Throwable) {
-        }
+      
         $data = $request->validate([
             'title' => ['required', 'string', 'max:100'],
             'description' => ['nullable', 'string', 'max:255'],
@@ -1218,7 +1208,7 @@ class TicketController extends Controller
         Task::where('ticket_id', $ticket->id)->delete();
 
         $ticket->delete();
-        $backTo = $request->input('from', url()->previous() ?: route('tickets.index'));
+        $backTo = $request->input('from', url()->previous() ?: route('tickets.index', ['locale' => app()->getLocale()]));
 
         return redirect()->to($backTo)->with('success', 'Ticket deleted successfully.');
     }
@@ -1245,7 +1235,7 @@ class TicketController extends Controller
             app(WorkItemNotifier::class)->notifyTicketCancelled($ticket, $request->user());
         }
 
-        $backTo = $request->query('from', url()->previous() ?: route('tickets.index'));
+        $backTo = $request->query('from', url()->previous() ?: route('tickets.index', ['locale' => app()->getLocale()]));
         $label = WorkflowStatus::label($statusNormalized);
 
         return redirect()->to($backTo)->with('success', 'Ticket status updated to '.$label.'.');
@@ -1297,6 +1287,8 @@ class TicketController extends Controller
 
         $taskTickets = $this->ticketReportPaginator($filters, 'task', $request, $actor);
         $projectTickets = $this->ticketReportPaginator($filters, 'project', $request, $actor);
+
+        Log::info('ticket_report_debug', ['actor_id'=>optional($actor)->id,'actor_unit'=>optional($actor)->unit ?? null,'filters'=>$filters,'task_summary'=>$taskSummary,'project_summary'=>$projectSummary,'task_count'=>method_exists($taskTickets,'total')?$taskTickets->total():null,'project_count'=>method_exists($projectTickets,'total')?$projectTickets->total():null]);
 
         return Inertia::render('Tickets/Report', [
             'filters' => [
@@ -1460,7 +1452,7 @@ class TicketController extends Controller
                 'created_at',
                 'updated_at',
             ])
-            ->where('type', $type);
+            ->where(function ($q) use ($type) { $q->where('type', $type)->orWhereNull('type'); });
 
         $query = UnitVisibility::scopeTickets($query, $viewer);
 
@@ -1497,19 +1489,20 @@ class TicketController extends Controller
 
         if ($filters['from_date']) {
             $from = $filters['from_date'];
-            $query->where(function (Builder $builder) use ($from) {
-                $builder->whereDate('due_at', '>=', $from)
-                    ->orWhereDate('due_date', '>=', $from);
+            $query->where(function (Builder $b) use ($from) {
+                $b->whereDate('due_at', '>=', $from)
+                  ->orWhereDate('due_date', '>=', $from);
             });
         }
 
         if ($filters['to_date']) {
             $to = $filters['to_date'];
-            $query->where(function (Builder $builder) use ($to) {
-                $builder->whereDate('due_at', '<=', $to)
-                    ->orWhereDate('due_date', '<=', $to);
+            $query->where(function (Builder $b) use ($to) {
+                $b->whereDate('due_at', '<=', $to)
+                  ->orWhereDate('due_date', '<=', $to);
             });
         }
+
 
         return $query->orderByDesc('created_at');
     }
@@ -1544,7 +1537,7 @@ class TicketController extends Controller
                     'assignee' => $task->assignee ? $this->userDisplayName($task->assignee) : null,
                     'due_display' => $this->formatDate($task->due_at ?? $task->due_date, 'd M Y H:i', $tz),
                     'links' => [
-                        'show' => route('tasks.show', ['taskSlug' => $task->public_slug]),
+                        'show' => route('tasks.show', ['locale' => request()->route('locale'), 'taskSlug' => $task->public_slug]),
                     ],
                 ];
             })->values()->all()
@@ -1563,7 +1556,7 @@ class TicketController extends Controller
                 'start_display' => $this->formatDate($ticket->project->start_date, 'd/m/Y', $tz),
                 'end_display' => $this->formatDate($ticket->project->end_date, 'd/m/Y', $tz),
                 'links' => [
-                    'show' => route('projects.show', [
+                    'show' => routeLocale('projects.show', [
                         'project' => $ticket->project->public_slug,
                     ]),
                 ],
@@ -1616,10 +1609,10 @@ class TicketController extends Controller
             'projects_count' => (int) ($ticket->projects_count ?? ($ticket->relationLoaded('projects') ? $ticket->projects->count() : 0)),
             'links' => [
                 'show' => $this->ticketReportDetailUrl($ticket),
-                'edit' => route('tickets.edit', [
+                'edit' => routeLocale('tickets.edit', [
                     'ticket' => $ticket->id,
                 ]),
-                'delete' => route('tickets.destroy', [
+                'delete' => routeLocale('tickets.destroy', [
                     'ticket' => $ticket->id,
                 ]),
             ],
@@ -1734,7 +1727,7 @@ class TicketController extends Controller
             'tasks.assignee',
         ]);
 
-        $detail = $this->transformTicketDetail($ticket, route('tickets.index'));
+        $detail = $this->transformTicketDetail($ticket, route('tickets.index', ['locale' => app()->getLocale()]));
 
         $tz = config('app.timezone');
 
@@ -1829,8 +1822,10 @@ class TicketController extends Controller
             ] : null,
             'links' => [
                 'show' => $this->ticketReportDetailUrl($ticket),
-                'edit' => route('tickets.edit', ['ticket' => $ticket->id]),
-                'delete' => route('tickets.destroy', ['ticket' => $ticket->id]),
+                'edit' => route('tickets.edit', ['locale' => app()->getLocale(),
+                    'ticket' => $ticket->id]),
+                'delete' => route('tickets.destroy', ['locale' => app()->getLocale(),
+                    'ticket' => $ticket->id]),
             ],
         ];
     }
@@ -1925,8 +1920,8 @@ class TicketController extends Controller
                     'due_display' => optional($project->end_date)->format('d/m/Y'),
                     'updated_display' => optional($project->updated_at)->format('d M Y H:i'),
                     'links' => [
-                        'show' => route('projects.show', ['project' => $project->public_slug ?? $project->id]),
-                        'edit' => route('projects.edit', ['project' => $project->public_slug ?? $project->id]),
+                        'show' => route('projects.show', ['locale' => app()->getLocale(), 'project' => $project->public_slug ?? $project->id]),
+                        'edit' => route('projects.edit', ['locale' => app()->getLocale(), 'project' => $project->public_slug ?? $project->id]),
                     ],
                 ];
             })->values()->all()
@@ -1976,12 +1971,13 @@ class TicketController extends Controller
             ])->values()->all(),
             'projects' => $projects,
             'links' => [
-                'index' => $this->normalizeInternalUrl(route('tickets.index')),
+                'index' => $this->normalizeInternalUrl(route('tickets.index', ['locale' => app()->getLocale()])),
                 'edit' => route('tickets.edit', [
+                    'locale' => app()->getLocale(),
                     'ticket' => $ticket->id,
                 ]),
                 'detail' => $this->ticketReportDetailUrl($ticket),
-                'pdf' => route('tickets.report.detail', ['ticket' => $ticket->id]),
+                'pdf' => route('tickets.report.detail', ['locale' => app()->getLocale(), 'ticket' => $ticket->id]),
             ],
         ];
     }

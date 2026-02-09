@@ -40,7 +40,7 @@ class ApplyLocaleFromSettings
         app()->setLocale($targetLocale);
         Carbon::setLocale($targetLocale);
         Date::setLocale($targetLocale);
-        URL::defaults(['locale' => $targetLocale]);
+//         URL::defaults(['locale' => $targetLocale]);
 
         return $next($request);
     }

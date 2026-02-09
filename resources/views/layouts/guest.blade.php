@@ -21,6 +21,5 @@
         @endif
     </main>
 
-    @livewireScripts
-</body>
+    @livewireScripts(['navigate' => false])</body>
 </html>

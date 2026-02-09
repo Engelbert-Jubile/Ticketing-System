@@ -54,7 +54,7 @@ class SetLocaleFromUrl
         app()->setLocale($locale);
         Carbon::setLocale($locale);
         Date::setLocale($locale);
-        URL::defaults(['locale' => $locale]);
+//         URL::defaults(['locale' => $locale]);
 
         $request->session()->put('app.locale', $locale);
         cookie()->queue(cookie('app_locale', $locale, 60 * 24 * 30));

@@ -16,6 +16,7 @@ export default defineConfig({
         'resources/css/app.css',
         'resources/css/animations.css',
         'resources/js/app.js',
+        'resources/js/auth/register-extra.js',
         'resources/js/dashboard.js',
         'resources/js/legacy-entry.js',
       ],

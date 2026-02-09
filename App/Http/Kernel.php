@@ -48,6 +48,8 @@ class Kernel extends HttpKernel
         SubstituteBindings::class,
         EnsureStrictTransportSecurity::class,
         CheckMaintenanceMode::class,
+	\App\Http\Middleware\ContentSecurityPolicy::class,
+
     ];
 
     /**
@@ -56,7 +58,7 @@ class Kernel extends HttpKernel
     protected $middlewareGroups = [
         'web' => [
             SetLocaleFromUrl::class,
-            \App\Http\Middleware\InjectLoginLoadingOverlay::class,
+            // \App\Http\Middleware\InjectLoginLoadingOverlay::class, // disabled
             HandleInertiaRequests::class,
             // untuk route web; session/csrf sudah termasuk di $middleware
         ],

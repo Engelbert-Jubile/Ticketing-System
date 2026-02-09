@@ -176,7 +176,7 @@
                           dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-900/30 transition-colors duration-300">
                   Edit
                 </a>
-                <form action="{{ route('tickets.destroy', $ticket) }}" method="POST" onsubmit="return confirm('Delete this ticket?')">
+                <form action="{{ route('tickets.destroy', $ticket) }}" method="POST" data-confirm="Delete this ticket?">
                   @csrf @method('DELETE')
                   <input type="hidden" name="from" value="{{ request()->fullUrl() }}">
                   <button type="submit"
@@ -230,7 +230,7 @@
           </tr>
 
           {{-- Payload untuk modal --}}
-          <script type="application/json" id="ticket-data-{{ $rowKey }}">
+          <script type="application/json" id="ticket-data-{{ $rowKey }}" nonce="{{ $cspNonce }}">
             {!! json_encode([
               'title'      => (string) $ticket->title,
               'status'     => (string) $label,
@@ -301,7 +301,7 @@
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script>
+<script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}">
 document.addEventListener('DOMContentLoaded', function () {
   flatpickr(".flatpickr-field", { dateFormat: "d/m/Y", allowInput: true });
 

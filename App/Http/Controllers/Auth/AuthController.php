@@ -64,11 +64,9 @@ class AuthController extends Controller
         Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
         $user->assignRole('user');
 
-        Auth::guard('web')->login($user);
-        request()->session()->regenerate();
 
         if (! (bool) config('features.email_verification', false)) {
-            return redirect()->route('dashboard', ['locale' => $locale])->with('success', 'Selamat datang!');
+            return redirect()->route('login', ['locale' => $locale])->with('success', 'Akun berhasil dibuat. Silakan login.');
         }
 
         try {
@@ -85,11 +83,12 @@ class AuthController extends Controller
                 ->with('error', 'Gagal mengirim email verifikasi. Silakan coba lagi nanti atau hubungi admin.');
         }
 
-        return redirect()->route('dashboard', ['locale' => $locale])->with('success', 'Selamat datang!');
+        return redirect()->route('login', ['locale' => $locale])->with('success', 'Akun berhasil dibuat. Silakan login.');
     }
 
     public function login(Request $request): \Illuminate\Http\RedirectResponse
     {
+
         $locale = app()->getLocale() ?? config('app.locale', 'en');
         $rules = [
             'email' => ['required', 'string', 'max:255'],
@@ -159,13 +158,16 @@ class AuthController extends Controller
         }
 
         if (! $user || ! Hash::check($data['password'], $user->password)) {
-            if ($maxAttempts > 0) {
-                RateLimiter::hit($throttleKey, $lockoutMinutes * 60);
-            }
-            return back()->withErrors([
-                'email' => 'Email atau password salah.',
-            ])->onlyInput('email');
-        }
+
+    if ($maxAttempts > 0) {
+        RateLimiter::hit($throttleKey, $lockoutMinutes * 60);
+    }
+
+    return back()->withErrors([
+        'email' => 'Email atau password salah.',
+    ])->onlyInput('email');
+}
+
 
         Auth::guard('web')->login($user, $request->boolean('remember'));
         $request->session()->regenerate();
@@ -203,7 +205,13 @@ class AuthController extends Controller
             return;
         }
 
-        if (! $this->recaptcha->verify($request->input('g-recaptcha-response'), $request->ip())) {
+        $expectedAction = match ($request->route()?->getName()) {
+            'login.store' => 'login',
+            'register.store' => 'register',
+            default => null,
+        };
+
+        if (! $this->recaptcha->verify($request->input('g-recaptcha-response'), $request->ip(), $expectedAction)) {
             throw ValidationException::withMessages([
                 'g-recaptcha-response' => 'Verifikasi keamanan gagal, silakan coba lagi.',
             ]);

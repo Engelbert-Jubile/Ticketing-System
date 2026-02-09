@@ -115,7 +115,7 @@ function closeDelete() {
 
 function performDelete() {
   deleteDialog.value.processing = true;
-  router.delete(route('users.destroy', props.user.id), {
+  router.delete(route('users.destroy', { locale: route().params.locale, user: props.user.id }), {
     preserveScroll: true,
     onFinish: () => {
       deleteDialog.value.processing = false;
@@ -135,7 +135,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleEscape));
 
 const user = computed(() => props.user);
 const can = computed(() => props.can ?? {});
-const backUrl = computed(() => props.meta?.backUrl || route('users.report'));
+const backUrl = computed(() => props.meta?.backUrl || route('users.report', { locale: route().params.locale }));
 </script>
 
 <style scoped>

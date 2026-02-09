@@ -6,5 +6,6 @@
 
 @section('helper', 'Oops! Halaman tidak ditemukan')
 @section('button_label', 'Kembali ke Dashboard')
-@section('button_url', route('dashboard'))
+@section('button_url', route('dashboard', ['locale' => request()->route('locale') ?? request()->segment(1) ?? app()->getLocale() ?? 
+config('app.locale','en')]))
 @section('art', 'images/page-not-found-404.svg')

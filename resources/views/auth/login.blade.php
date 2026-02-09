@@ -5,10 +5,18 @@ $recaptcha = app(\App\Services\Security\RecaptchaVerifier::class);
 <html lang="en">
 
 <head>
+
+  <style>
+    input[type="password"]::-ms-reveal,
+    input[type="password"]::-ms-clear { display: none; }
+  </style>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>Login &mdash; TICKORA</title>
+  <title>Tickora - Login</title>
+  <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v={{ filemtime(public_path('favicon.svg')) }}">
+  <link rel="alternate icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v={{ filemtime(public_path('favicon.ico')) }}">
+
   <link rel="preconnect" href="https://fonts.bunny.net">
   <link href="https://fonts.bunny.net/css?family=inter:400,500,600&display=swap" rel="stylesheet" />
   @vite(['resources/css/app.css'])
@@ -40,11 +48,16 @@ $recaptcha = app(\App\Services\Security\RecaptchaVerifier::class);
     }
   </style>
   @if ($recaptcha->isEnabled())
-  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <script src="https://www.google.com/recaptcha/api.js?render={{ $recaptcha->siteKey() }}" async defer></script>
   @endif
 </head>
 
 <body class="font-sans antialiased">
+<!-- Loading Overlay -->
+<div id="bgLoadingOverlay" style="display:none;">
+  <div class="spinner"></div>
+</div>
+
   <div class="relative min-h-screen overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
     <div aria-hidden="true" class="pointer-events-none absolute inset-0">
       <div class="absolute -top-24 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-blue-200/70 blur-3xl dark:bg-blue-900/30"></div>
@@ -72,7 +85,7 @@ $recaptcha = app(\App\Services\Security\RecaptchaVerifier::class);
         </div>
 
         <div class="rounded-3xl bg-white/85 p-8 shadow-xl shadow-blue-200/40 ring-1 ring-slate-200/70 backdrop-blur dark:bg-slate-900/70 dark:ring-slate-800/70 dark:shadow-none sm:p-10">
-          <div class="mb-6 space-y-1 text-center">
+          <div class="mb-8 space-y-2 text-center">
             <h2 class="text-2xl font-semibold tracking-tight">Masuk ke akun Anda</h2>
             <p class="text-sm text-slate-600 dark:text-slate-300">Kelola ticket, task, dan project dalam satu dashboard.</p>
           </div>
@@ -86,7 +99,8 @@ $recaptcha = app(\App\Services\Security\RecaptchaVerifier::class);
           @php
             $currentLocale = app()->getLocale() ?? config('app.locale', 'en');
           @endphp
-          <form id="login-form" method="POST" action="{{ route('login.store', ['locale' => $currentLocale]) }}" class="space-y-5">
+          <form id="login-form" method="POST" action="{{ route('login.store', ['locale' => $currentLocale]) }}" 
+class="space-y-6" >
             @csrf
             @php
             $lockedDomain = '@kftd.co.id';
@@ -148,13 +162,25 @@ $recaptcha = app(\App\Services\Security\RecaptchaVerifier::class);
                   </svg>
                 </button>
               </div>
-              @error('password') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+              </div>
+@error('password') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
+ 
+<div class="mt-2 mb-3 text-right">
+  <a id="forgot-wa"
+     href="#" data-wa="https://wa.me/62895393358741?text={{ urlencode('Halo admin, saya ingin reset password Tickora. Email saya: ' . (old('email') 
+?: (old('email_local') ? (old('email_local') . ($lockedDomain ?? '@kftd.co.id')) : ''))) }}"
+    
+    
+    class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">
+    Lupa Password?
+  </a>
+</div>
 
             @if ($recaptcha->isEnabled())
             <div class="space-y-2">
               <div class="flex justify-center">
-                <div class="g-recaptcha" data-sitekey="{{ $recaptcha->siteKey() }}"></div>
+                  <!-- reCAPTCHA v3: tidak menggunakan widget -->
               </div>
               @error('g-recaptcha-response') <p class="text-center text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
@@ -169,13 +195,17 @@ $recaptcha = app(\App\Services\Security\RecaptchaVerifier::class);
                 <path d="M15 12H3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
             </button>
+            @if ($recaptcha->isEnabled())
+              <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
+            @endif
+
           </form>
 
           <div class="mt-6 flex flex-col items-center gap-3 text-center text-sm text-slate-600 dark:text-slate-300">
-            <a wire:navigate.hover href="{{ route('welcome', ['locale' => $currentLocale]) }}" class="font-medium text-slate-700 underline-offset-4 hover:underline dark:text-slate-200">Kembali ke halaman welcome</a>
+            <a href="{{ route('welcome', ['locale' => $currentLocale]) }}" class="font-medium text-slate-700 underline-offset-4 hover:underline dark:text-slate-200">Kembali ke halaman welcome</a>
             <p>
               Belum punya akun?
-              <a wire:navigate.hover href="{{ route('register', ['locale' => $currentLocale]) }}" class="font-semibold text-blue-700 underline-offset-4 hover:underline dark:text-blue-300">Daftar di sini</a>
+              <a href="{{ route('register', ['locale' => $currentLocale]) }}" class="font-semibold text-blue-700 underline-offset-4 hover:underline dark:text-blue-300">Daftar di sini</a>
             </p>
           </div>
         </div>
@@ -183,123 +213,204 @@ $recaptcha = app(\App\Services\Security\RecaptchaVerifier::class);
     </div>
   </div>
 
-  <style>
-    :root {
-      --lo-primary: #4f46e5;
-      --lo-text: #0f172a;
-      --lo-muted: #475569;
-    }
-
-    #loginOverlay {
-      position: fixed;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      background: rgba(15, 23, 42, 0.35);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      z-index: 1050;
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-      transition: opacity .2s ease, visibility .2s ease;
-    }
-
-    #loginOverlay.show {
-      opacity: 1;
-      visibility: visible;
-      pointer-events: auto;
-    }
-
-    #loginOverlay .panel {
-      min-width: 260px;
-      min-height: 170px;
-      padding: 22px;
-      border-radius: 22px;
-      background: rgba(255, 255, 255, 0.85);
-      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35);
-      text-align: center;
-      border: 1px solid rgba(79, 70, 229, 0.12);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-    }
-
-    #loginOverlay .loader {
-      width: 72px;
-      height: 72px;
-      margin: 0;
-      position: relative;
-    }
-
-    #loginOverlay .loader .ring {
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      border: 4px solid rgba(79, 70, 229, 0.18);
-      border-top-color: #4f46e5;
-      border-right-color: #38bdf8;
-      animation: overlay-spin 0.85s linear infinite;
-      transform-origin: 50% 50%;
-    }
-
-    #loginOverlay .title {
-      margin: 0;
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--lo-text);
-      letter-spacing: 0.1px;
-      width: 100%;
-    }
-
-    #loginOverlay .subtitle {
-      margin: 4px 0 0;
-      font-size: 13px;
-      color: var(--lo-muted);
-    }
-
-    @keyframes overlay-spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-  </style>
-
-  <div id="loginOverlay" aria-hidden="true">
-    <div class="panel">
-      <div class="loader" aria-hidden="true"><span class="ring"></span></div>
-      <p class="title">Sedang masuk…</p>
-      <p class="subtitle">Membuka Dashboard Anda.</p>
-    </div>
-  </div>
-
-  <script>
-    (function() {
-      document.querySelectorAll('[data-password-toggle]').forEach(function(btn) {
-        var targetId = btn.getAttribute('data-password-toggle');
-        var input = document.getElementById(targetId);
-        if (!input) return;
-        btn.addEventListener('click', function() {
-          var nextType = input.getAttribute('type') === 'password' ? 'text' : 'password';
-          input.setAttribute('type', nextType);
-          var visible = nextType === 'text';
-          btn.setAttribute('aria-pressed', visible ? 'true' : 'false');
-          var label = visible ? 'Sembunyikan password' : 'Tampilkan password';
-          btn.setAttribute('aria-label', label);
-          btn.setAttribute('title', label);
-          var openIcon = btn.querySelector('[data-eye="open"]');
-          var closedIcon = btn.querySelector('[data-eye="closed"]');
-          if (openIcon) openIcon.classList.toggle('hidden', !visible);
-          if (closedIcon) closedIcon.classList.toggle('hidden', visible);
-        });
-      });
+  <script nonce="{{ $cspNonce }}">
+    (function () {
+      window.showBgLoading = function () {
+        var ov = document.getElementById("loginOverlay");
+        if (ov) ov.classList.add("show");
+      };
+      window.hideBgLoading = function () {
+        var ov = document.getElementById("loginOverlay");
+        if (ov) ov.classList.remove("show");
+      };
     })();
   </script>
 
-  <script>
-    (function() {
+
+    <style>
+      :root {
+        --lo-primary: #6366f1;
+        --lo-cyan: #38bdf8;
+        --lo-text: #0f172a;
+        --lo-muted: #475569;
+      }
+
+      #loginOverlay {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: rgba(255,255,255,0.75);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        z-index: 1050;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity .18s ease, visibility .18s ease;
+      }
+      #loginOverlay.show { opacity: 1; visibility: visible; pointer-events: auto; }
+
+      #loginOverlay .panel {
+        min-width: 300px;
+        min-height: 190px;
+        padding: 26px 26px 22px;
+        border-radius: 28px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.75), rgba(255,255,255,0.48));
+        box-shadow: 0 30px 90px rgba(2,6,23,0.55), 0 0 0 1px rgba(99,102,241,0.18) inset;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        position: relative;
+        overflow: hidden;
+      }
+      #loginOverlay .panel::before {
+        content: "";
+        position: absolute;
+        inset: -2px;
+        background: transparent;
+        pointer-events: none;
+      }
+      #loginOverlay .panel::after {
+        content: "";
+        position: absolute;
+        top: -60%;
+        left: -60%;
+        width: 220%;
+        height: 220%;
+        background: transparent;
+        animation: lo-sheen 2.4s linear infinite;
+        opacity: 0.55;
+        mix-blend-mode: soft-light;
+        pointer-events: none;
+      }
+
+      #loginOverlay .loader {
+        width: 78px;
+        height: 78px;
+        position: relative;
+        filter: drop-shadow(0 14px 22px rgba(56,189,248,0.22));
+        z-index: 1;
+      }
+      #loginOverlay .loader .ring {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: radial-gradient(circle at 50% 50%, rgba(0,0,0,0.06), rgba(0,0,0,0.0) 55%), conic-gradient(from 180deg, 
+rgba(0,0,0,0.15), rgba(0,0,0,0.55), rgba(0,0,0,0.15));
+        -webkit-mask: radial-gradient(circle, transparent 56%, #000 57%);
+                mask: radial-gradient(circle, transparent 56%, #000 57%);
+        animation: lo-spin 0.95s linear infinite;
+      }
+      #loginOverlay .loader .ring::after {
+        content: "";
+        position: absolute;
+        inset: 10px;
+        border-radius: 50%;
+        border: 1px solid rgba(99,102,241,0.22);
+        box-shadow: 0 0 0 1px rgba(56,189,248,0.16) inset;
+      }
+
+      #loginOverlay .title {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 750;
+        color: var(--lo-text);
+        letter-spacing: 0.2px;
+        z-index: 1;
+      }
+      #loginOverlay .subtitle {
+        margin: 2px 0 0;
+        font-size: 12.5px;
+        color: var(--lo-muted);
+        z-index: 1;
+      }
+
+      @keyframes lo-spin { to { transform: rotate(360deg); } }
+      @keyframes lo-sheen { to { transform: rotate(360deg); } }
+
+/* Background Loading Overlay */
+#bgLoadingOverlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(2px);
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+#bgLoadingOverlay .spinner{
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 6px solid rgba(255,255,255,.35);
+  border-top-color: rgba(255,255,255,.95);
+  animation: bgspin 0.9s linear infinite;
+}
+
+@keyframes bgspin { to { transform: rotate(360deg); } }
+    
+</style>
+
+
+  
+
+
+
+
+<!-- Livewire Scripts -->
+<script nonce="{{ $cspNonce }}">
+(function () {
+  // Forgot password -> WhatsApp (confirm + open new tab)
+  var waLink = document.getElementById("forgot-wa");
+  if (waLink && !waLink.dataset.waBound) {
+    waLink.dataset.waBound = "1";
+    waLink.addEventListener("click", function (e) {
+      e.preventDefault();
+      var url = waLink.getAttribute("data-wa") || waLink.href;
+      if (!url) return;
+      if (confirm("Anda akan diarahkan ke WhatsApp untuk mengirim permintaan reset password. Lanjutkan?")) {
+        window.open(url, "_blank", "noopener");
+      }
+    });
+  }
+
+  // Password toggle
+  document.querySelectorAll("[data-password-toggle]").forEach(function (btn) {
+    var targetId = btn.getAttribute("data-password-toggle");
+    var input = document.getElementById(targetId);
+    if (!input) return;
+    btn.addEventListener("click", function () {
+      var nextType = input.getAttribute("type") === "password" ? "text" : "password";
+      input.setAttribute("type", nextType);
+    });
+  });
+})();
+</script>
+
+  
+
+@if ($recaptcha->isEnabled())
+<script nonce="{{ $cspNonce }}">
+(function() {
+  var waLink = document.getElementById("forgot-wa");
+  if (waLink && !waLink.dataset.waBound) {
+    waLink.dataset.waBound = "1";
+    waLink.addEventListener("click", function (e) {
+      e.preventDefault();
+      var url = waLink.getAttribute("data-wa");
+      if (!url) return;
+      if (confirm("Anda akan diarahkan ke WhatsApp untuk mengirim permintaan reset password. Lanjutkan?")) {
+        window.open(url, "_blank", "noopener");
+      }
+    });
+  }
+
       var lockedDomain = '@kftd.co.id';
       var form = document.getElementById('login-form');
       if (!form) return;
@@ -331,46 +442,55 @@ $recaptcha = app(\App\Services\Security\RecaptchaVerifier::class);
     })();
   </script>
 
-  <script>
-    (function() {
-      var form = document.getElementById('login-form');
-      if (!form) return;
-      var overlay = document.getElementById('loginOverlay');
-      var submitted = false;
-      form.addEventListener('submit', function(e) {
-        if (submitted) return;
-        submitted = true;
-        try {
-          var btn = form.querySelector('[type="submit"]');
-          if (btn) {
-            btn.disabled = true;
-            btn.style.opacity = '.7';
-            btn.setAttribute('aria-busy', 'true');
-            var label = btn.querySelector('span');
-            if (label) {
-              label.textContent = 'Masuk...';
-            } else {
-              btn.textContent = 'Masuk...';
-            }
-          }
-          if (overlay) {
-            overlay.classList.add('show');
-          }
-        } catch (_) {}
+  
+
+
+@endif
+  @if ($recaptcha->isEnabled())
+  <script nonce="{{ $cspNonce }}">
+    (function () {
+      var form = document.getElementById("login-form");
+      var el = document.getElementById("g-recaptcha-response");
+      if (!form || !el) return;
+
+
+        // fallback: avoid JS crash if showBgLoading is missing
+        if (typeof window.showBgLoading !== "function") {
+          window.showBgLoading = function () {
+            var ov = document.getElementById("loginOverlay");
+            if (ov) ov.classList.add("show");
+          };
+        }
+
+      var busy = false;
+      form.addEventListener("submit", function (e) {
+          showBgLoading();
+        if (busy) return; /* submit kedua setelah token didapat */
+        if (typeof grecaptcha === "undefined") return; /* biarkan server handle error */
         e.preventDefault();
-        var MIN_OVERLAY_TIME = 700;
-        requestAnimationFrame(function() {
-          requestAnimationFrame(function() {
-            setTimeout(function() {
-              form.submit();
-            }, MIN_OVERLAY_TIME);
+        busy = true;
+
+        try {
+          grecaptcha.ready(function () {
+            grecaptcha.execute("{{ $recaptcha->siteKey() }}", { action: "login" })
+              .then(function (token) {
+                el.value = token || "";
+                form.submit();
+              })
+              .catch(function () {
+                busy = false;
+                alert("reCAPTCHA gagal, silakan refresh dan coba lagi.");
+              });
           });
-        });
-      });
+        } catch (err) {
+          busy = false;
+          alert("reCAPTCHA gagal, silakan refresh dan coba lagi.");
+        }
+      }, true);
     })();
   </script>
+  @endif
 
-  @livewireScripts
 </body>
 
 </html>

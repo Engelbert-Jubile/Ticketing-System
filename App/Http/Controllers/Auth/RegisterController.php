@@ -51,8 +51,7 @@ class RegisterController extends Controller
         ]);
 
         event(new Registered($user));
-        Auth::login($user);
 
-        return redirect()->route('dashboard', ['locale' => $locale]);
+        return redirect()->route('login', ['locale' => $locale]);
     }
 }

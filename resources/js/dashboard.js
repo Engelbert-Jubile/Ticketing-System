@@ -90,7 +90,7 @@ const noData = {
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#9ca3af';
     ctx.font = '500 13px system-ui';
-    ctx.fillText('No data', w / 2, h / 2);
+    ctx.fillText('No data', area.left + w / 2, area.top + h / 2);
     ctx.restore();
   }
 };

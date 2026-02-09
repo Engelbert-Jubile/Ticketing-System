@@ -45,6 +45,7 @@ class DashboardController extends Controller
 
     public function index(Request $request): Response
     {
+     
         $viewerId = (int) ($request->user()?->id ?? 0);
         $usersCount = User::count();
 

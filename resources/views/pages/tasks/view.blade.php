@@ -352,7 +352,7 @@
           </svg>
           <span>Edit Task</span>
         </a>
-        <form action="{{ route('tasks.destroy', $task) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus task ini?')">
+        <form action="{{ route('tasks.destroy', $task) }}" method="POST" data-confirm="Apakah Anda yakin ingin menghapus task ini?">
           @csrf @method('DELETE')
           <input type="hidden" name="from" value="{{ request()->fullUrl() }}">
           <button type="submit"

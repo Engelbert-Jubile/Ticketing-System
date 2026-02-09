@@ -719,7 +719,7 @@ class ReportController extends Controller
                     'due_date' => $ticket->due_date?->toDateString(),
                     'status' => $this->formatLabel($ticket->status ?? '-'),
                     'overdue_hours' => $overdueHours,
-                    'link' => route('tickets.show', $ticket->id),
+                    'link' => routeLocale('tickets.show', ['ticket' => $ticket->id]),
                 ];
             })->values()->all();
 
@@ -743,7 +743,7 @@ class ReportController extends Controller
                 'title' => $ticket->title ?? ($ticket->ticket_no ?? ('Ticket #'.$ticket->id)),
                 'due_at' => $ticket->due_at?->toIso8601String(),
                 'due_date' => $ticket->due_date?->toDateString(),
-                'link' => route('tickets.show', $ticket->id),
+                'link' => routeLocale('tickets.show', ['ticket' => $ticket->id]),
             ];
         })->values()->all();
 
@@ -759,7 +759,7 @@ class ReportController extends Controller
                 'title' => $task->title ?? ($task->task_no ?? ('Task #'.$task->id)),
                 'due_at' => $task->due_at?->toIso8601String(),
                 'status' => $this->formatLabel($task->status ?? '-'),
-                'link' => route('tasks.show', ['taskSlug' => $task->public_slug]),
+                'link' => routeLocale('tasks.show', ['taskSlug' => $task->public_slug]),
             ])->values()->all();
 
         $projectsDueSoon = Project::query()
@@ -774,7 +774,7 @@ class ReportController extends Controller
                 'title' => $project->title ?? ($project->project_no ?? ('Project #'.$project->id)),
                 'due_date' => $project->end_date?->toDateString(),
                 'status' => $this->formatLabel($project->status ?? '-'),
-                'link' => route('projects.show', ['project' => $project->public_slug]),
+                'link' => routeLocale('projects.show', ['project' => $project->public_slug]),
             ])->values()->all();
 
         return [

@@ -110,7 +110,7 @@
                             {{-- BUTTON HAPUS --}}
                             <form action="{{ route('tasks.destroy', $task) }}" method="POST"
                                   class="inline"
-                                  onsubmit="return confirm('Hapus task ini?')">
+                                  data-confirm="Hapus task ini?">
                                 @csrf @method('DELETE')
                                 <input type="hidden" name="from" value="{{ request()->fullUrl() }}">
                                 <button type="submit"

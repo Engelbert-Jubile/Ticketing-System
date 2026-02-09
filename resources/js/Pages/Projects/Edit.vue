@@ -506,7 +506,7 @@
           </p>
         </section>
 
-        <section v-if="mountedSteps.team" v-show="showStep('team')" class="panel relative z-0" :class="{ 'panel--inactive': !showStep('team') }">
+        <section v-if="mountedSteps.team" v-show="showStep('team')" class="panel relative z-10 overflow-visible" :class="{ 'panel--inactive': !showStep('team') }">
           <div class="panel-title">
             <div class="panel-icon indigo">
               <span class="material-icons">playlist_add_check</span>
@@ -526,7 +526,7 @@
           </div>
 
           <div class="stacked-list">
-            <div v-for="(action, index) in form.project_actions" :key="`action-${index}`" class="card-row">
+            <div v-for="(action, index) in form.project_actions" :key="`action-${index}`" class="card-row overflow-visible">
               <div class="card-row__grid card-row__grid--two">
                 <div class="panel-field col-span-2">
                   <label>Judul Action</label>
@@ -586,7 +586,7 @@
           </div>
 
           <div class="stacked-list">
-            <div v-for="(cost, index) in form.project_costs" :key="`cost-${index}`" class="card-row">
+            <div v-for="(cost, index) in form.project_costs" :key="`cost-${index}`" class="card-row overflow-visible">
               <div class="card-row__grid card-row__grid--two">
                 <div class="panel-field">
                   <label>Item Biaya</label>
@@ -641,7 +641,7 @@
           </div>
 
           <div class="stacked-list">
-            <div v-for="(risk, index) in form.project_risks" :key="`risk-${index}`" class="card-row">
+            <div v-for="(risk, index) in form.project_risks" :key="`risk-${index}`" class="card-row overflow-visible">
               <div class="card-row__grid card-row__grid--two">
                 <div class="panel-field">
                   <label>Nama Risiko</label>
@@ -704,7 +704,7 @@
           </div>
 
           <div class="stacked-list">
-            <div v-for="(deliverable, index) in form.project_deliverables" :key="`deliverable-${index}`" class="card-row">
+            <div v-for="(deliverable, index) in form.project_deliverables" :key="`deliverable-${index}`" class="card-row overflow-visible">
               <div class="card-row__grid card-row__grid--two">
                 <div class="panel-field col-span-2">
                   <label>Nama Deliverable</label>

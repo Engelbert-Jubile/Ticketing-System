@@ -154,7 +154,7 @@
 
 
 @push('scripts')
-<script>
+<script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}">
 document.addEventListener('DOMContentLoaded', function(){
   var cards = document.querySelectorAll('.search-grid a[data-card-link]');
   cards.forEach(function(a){

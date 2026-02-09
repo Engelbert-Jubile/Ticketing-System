@@ -520,7 +520,7 @@ $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:i
         return [
             'type_label' => 'Ticket',
             'title' => $ticket->title,
-            'url' => route('tickets.show', $ticket),
+            'url' => route('tickets.show', ['locale' => app()->getLocale(), 'ticket' => $ticket->id]),
             'icon' => $event === 'assigned' ? 'assignment_ind' : 'confirmation_number',
             'db_title' => $dbTitle,
             'db_message' => $dbMessage,
@@ -635,7 +635,7 @@ $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:i
         return [
             'type_label' => 'Task',
             'title' => $task->title,
-            'url' => route('tasks.show', ['taskSlug' => $task->public_slug ?? 'task-tsk'.base_convert((string) $task->id, 10, 36)]),
+            'url' => route('tasks.show', ['locale' => app()->getLocale(), 'taskSlug' => $task->public_slug ?? 'task-tsk'.base_convert((string) $task->id, 10, 36)]),
             'icon' => $event === 'assigned' ? 'assignment' : 'checklist',
             'db_title' => $dbTitle,
             'db_message' => $dbMessage,
@@ -772,7 +772,7 @@ $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:i
         $workItem = $task ?? $project;
         $workNumber = $task?->task_no ?? $project?->project_no ?? null;
         $workUrl = $task
-            ? route('tasks.show', ['taskSlug' => $task->public_slug ?? 'task-tsk'.base_convert((string) $task->id, 10, 36)])
+            ? route('tasks.show', ['locale' => app()->getLocale(), 'taskSlug' => $task->public_slug ?? 'task-tsk'.base_convert((string) $task->id, 10, 36)])
             : ($project ? route('projects.show', ['project' => $project->public_slug]) : route('tickets.show', $ticket));
         $deadline = $this->formatDateTime($task?->due_at ?? $ticket->due_at ?? $ticket->due_date ?? $project?->end_date);
 
@@ -793,7 +793,7 @@ $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:i
         return [
             'type_label' => 'Ticket',
             'title' => $ticket->title,
-            'url' => route('tickets.show', $ticket),
+            'url' => route('tickets.show', ['locale' => app()->getLocale(), 'ticket' => $ticket->id]),
             'icon' => 'sync_alt',
             'db_title' => 'Ticket Routed to ' . $type,
             'db_message' => 'Ticket "' . $ticket->title . '" diarahkan menjadi ' . $type . '.',
@@ -825,7 +825,7 @@ $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:i
                 'type' => 'Task',
                 'number' => $task->task_no ?? null,
                 'title' => $task->title ?? $ticket->title,
-                'url' => route('tasks.show', ['taskSlug' => $task->public_slug ?? 'task-tsk'.base_convert((string) $task->id, 10, 36)]),
+                'url' => route('tasks.show', ['locale' => app()->getLocale(), 'taskSlug' => $task->public_slug ?? 'task-tsk'.base_convert((string) $task->id, 10, 36)]),
                 'deadline' => $this->formatDateTime($task->due_at ?? $ticket->due_at ?? $ticket->due_date),
             ]);
         }
@@ -860,7 +860,7 @@ $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:i
         return [
             'type_label' => 'Ticket',
             'title' => $ticket->title,
-            'url' => route('tickets.show', $ticket),
+            'url' => route('tickets.show', ['locale' => app()->getLocale(), 'ticket' => $ticket->id]),
             'icon' => 'sync_alt',
             'db_title' => 'Ticket berisi '.$typeLabel,
             'db_message' => 'Ticket "'.$ticket->title.'" memuat '.$typeLabel.'.',

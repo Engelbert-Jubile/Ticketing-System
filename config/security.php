@@ -2,10 +2,12 @@
 
 return [
     'recaptcha' => [
-        'enabled' => env('RECAPTCHA_ENABLED', false),
-        'site_key' => env('RECAPTCHA_SITE_KEY'),
-        'secret' => env('RECAPTCHA_SECRET'),
+    'enabled' => env('RECAPTCHA_ENABLED', false),
+    'site_key' => env('RECAPTCHA_SITE_KEY'),
+    'secret' => env('RECAPTCHA_SECRET'),
+    'min_score' => env('RECAPTCHA_MIN_SCORE', 0.5),
     ],
+
 
     'hsts' => [
         'enabled' => env('HSTS_ENABLED', env('APP_ENV') === 'production'),

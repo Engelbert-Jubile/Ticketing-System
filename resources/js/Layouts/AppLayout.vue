@@ -1,4 +1,5 @@
 <template>
+  <Head :title="documentTitle" />
   <div class="app-shell" :class="{ 'app-shell--dark': theme === 'dark' }">
     <LegacyTopbar
       :user="authUser"
@@ -82,7 +83,7 @@
 </template>
 
 <script setup>
-import { router, usePage } from '@inertiajs/vue3'
+import { Head, router, usePage } from '@inertiajs/vue3'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import LegacySidebar from '../Components/LegacySidebar.vue'
 import LegacyTopbar from '../Components/LegacyTopbar.vue'
@@ -410,6 +411,25 @@ const navItems = computed(() => {
 
   return items
 })
+
+
+const documentTitle = computed(() => {
+  const path = currentPath.value
+
+  const flatten = (items) => (items || []).flatMap((item) => {
+    if (item && Array.isArray(item.children)) return [item, ...flatten(item.children)]
+    return [item]
+  })
+
+  const items = flatten(navItems.value)
+  const matches = items.filter((item) => typeof item?.match === "function" && item.match(path))
+
+  matches.sort((a, b) => String(b?.href || "").length - String(a?.href || "").length)
+
+  const best = matches[0]
+  return best?.label || t("nav.dashboard")
+})
+
 
 const setSidebarOpen = value => {
   sidebarOpen.value = value

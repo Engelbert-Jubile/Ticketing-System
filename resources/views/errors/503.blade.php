@@ -5,5 +5,5 @@
 @section('message', 'Layanan sedang dalam perawatan atau tidak bisa diakses untuk sementara.')
 @section('helper', 'Silakan coba lagi dalam beberapa menit.')
 @section('button_label', 'Kembali ke Dasbor')
-@section('button_url', route('dashboard'))
+@section('button_url', route('dashboard', ['locale' => app()->getLocale()]))
 @section('art', 'images/error-abstract-graph.svg')

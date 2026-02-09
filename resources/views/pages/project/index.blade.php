@@ -167,7 +167,7 @@
               <div class="flex flex-wrap items-center gap-2 text-sm">
                 <a href="{{ route('projects.show', ['project' => $project->public_slug ?? $project->id, 'from' => request()->fullUrl()]) }}" class="text-blue-600 hover:underline">View</a>
                 <a href="{{ route('projects.edit', ['project' => $project->public_slug ?? $project->id, 'from' => request()->fullUrl()]) }}" class="text-indigo-600 hover:underline">Edit</a>
-                <form action="{{ route('projects.destroy', $project) }}" method="POST" onsubmit="return confirm('Hapus project ini?')" class="inline">
+                <form action="{{ route('projects.destroy', $project) }}" method="POST" data-confirm="Hapus project ini?" class="inline">
                   @csrf
                   @method('DELETE')
                   <input type="hidden" name="from" value="{{ request()->fullUrl() }}">
@@ -318,7 +318,7 @@
                 <div class="flex flex-wrap items-center gap-2 text-sm">
                   <a href="{{ route('projects.show', ['project' => $project->public_slug ?? $project->id, 'from' => request()->fullUrl()]) }}" class="text-blue-600 hover:underline">View</a>
                   <a href="{{ route('projects.edit', ['project' => $project->public_slug ?? $project->id, 'from' => request()->fullUrl()]) }}" class="text-indigo-600 hover:underline">Edit</a>
-                  <form action="{{ route('projects.destroy', $project) }}" method="POST" onsubmit="return confirm('Hapus project ini?')" class="inline">
+                  <form action="{{ route('projects.destroy', $project) }}" method="POST" data-confirm="Hapus project ini?" class="inline">
                     @csrf
                     @method('DELETE')
                     <input type="hidden" name="from" value="{{ request()->fullUrl() }}">
@@ -356,7 +356,7 @@
 @endpush
 
 @push('scripts')
-<script>
+<script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}">
   document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('[data-toggle-section]').forEach(header => {
       header.addEventListener('click', function () {

@@ -102,7 +102,7 @@ $inputId = $inputId ?? 'attachments';
   <script src="{{ asset('vendor/filepond/filepond-plugin-file-validate-type.min.js') }}"></script>
   <script src="{{ asset('vendor/filepond/filepond-plugin-file-validate-size.min.js') }}"></script>
   <script src="{{ asset('vendor/filepond/filepond-plugin-image-preview.min.js') }}"></script>
-  <script>
+  <script nonce="{{ $cspNonce }}">
     document.addEventListener('DOMContentLoaded', () => {
       const input = document.getElementById('{{ $inputId }}');
       const toggle = document.getElementById('toggle-{{ $inputId }}');

@@ -400,7 +400,7 @@ function closeDelete() {
 function performDelete() {
   if (!deleteDialog.value.user) return;
   deleteDialog.value.processing = true;
-  router.delete(route('users.destroy', deleteDialog.value.user.id), {
+  router.delete(route('users.destroy', { locale: route().params.locale, user: deleteDialog.value.user.id }), {
     preserveScroll: true,
     onFinish: () => {
       deleteDialog.value.processing = false;

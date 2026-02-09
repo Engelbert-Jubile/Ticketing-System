@@ -2,9 +2,9 @@
 // Copied from previous resources/js/app.js prior to Inertia setup.
 
 // Page modules
-import { initTicketCreate } from './pages/ticketCreate';
-import { initTaskCreate } from './pages/taskCreate';
-import { initProjectCreate } from './pages/projectCreate';
+import { initTicketCreate } from './Pages/ticketCreate';
+import { initTaskCreate } from './Pages/taskCreate';
+import { initProjectCreate } from './Pages/projectCreate';
 
 // ---------------------------------------------------------
 // Alpine coordination helper (gunakan Alpine bawaan Livewire)

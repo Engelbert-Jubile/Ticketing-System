@@ -203,7 +203,7 @@
                             <a href="{{ route('projects.edit', ['project'=>$p->public_slug ?? $p->id, 'from'=>request()->fullUrl()]) }}"
                                class="text-green-600 hover:underline">Edit</a>
                             <form action="{{ route('projects.destroy',$p) }}" method="POST" class="inline"
-                                  onsubmit="return confirm('Hapus?')">
+                                  data-confirm="Hapus?">
                                 @csrf @method('DELETE')
                                 <input type="hidden" name="from" value="{{ request()->fullUrl() }}">
                                 <button class="text-red-600 hover:underline">Delete</button>
@@ -238,7 +238,7 @@
 @endpush
 
 @push('scripts')
-<script>
+<script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}">
 document.addEventListener('DOMContentLoaded', function () {
   const openers = document.querySelectorAll('.plan-toggle');
   let openId = null;

@@ -377,7 +377,7 @@
 @endpush
 
 @push('scripts')
-<script>
+<script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}">
   // Task Assignees - Sync between select, quick buttons, and display
   (function() {
     const selectEl = document.getElementById('taskAssigneesSelect');
@@ -492,7 +492,7 @@
 
 @endpush
 
-<script>
+<script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}">
   (function(){
     // Selaraskan kunci dengan partial attachments (storageKey = 'filepond_tmp_'+inputId)
     const ATTACH_KEY = 'filepond_tmp_task-attachments';

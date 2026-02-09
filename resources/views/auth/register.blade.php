@@ -6,10 +6,18 @@ $unitOptions = $units ?? \App\Support\UserUnitOptions::values();
 <html lang="en">
 
 <head>
+
+<style>
+  input[type="password"]::-ms-reveal,
+  input[type="password"]::-ms-clear { display: none; }
+</style>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>Register &mdash; TICKORA</title>
+  <title>Tickora - Register</title>
+  <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v={{ filemtime(public_path('favicon.svg')) }}">
+  <link rel="alternate icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v={{ filemtime(public_path('favicon.ico')) }}">
+
   <link rel="preconnect" href="https://fonts.bunny.net">
   <link href="https://fonts.bunny.net/css?family=inter:400,500,600&display=swap" rel="stylesheet" />
   @vite(['resources/css/app.css'])
@@ -76,7 +84,7 @@ $unitOptions = $units ?? \App\Support\UserUnitOptions::values();
     }
   </style>
   @if ($recaptcha->isEnabled())
-  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}" src="https://www.google.com/recaptcha/api.js?render={{ $recaptcha->siteKey() }}" async defer></script>
   @endif
 </head>
 
@@ -306,7 +314,6 @@ $unitOptions = $units ?? \App\Support\UserUnitOptions::values();
             @if ($recaptcha->isEnabled())
             <div class="space-y-2">
               <div class="flex justify-center">
-                <div class="g-recaptcha" data-sitekey="{{ $recaptcha->siteKey() }}"></div>
               </div>
               @error('g-recaptcha-response') <p class="text-center text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
@@ -321,13 +328,14 @@ $unitOptions = $units ?? \App\Support\UserUnitOptions::values();
                 <path d="m16 13.5 2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
             </button>
+    <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
           </form>
 
           <div class="mt-6 flex flex-col items-center gap-3 text-center text-sm text-slate-600 dark:text-slate-300">
-            <a wire:navigate.hover href="{{ url('/') }}" class="font-medium text-slate-700 underline-offset-4 hover:underline dark:text-slate-200">Kembali ke halaman welcome</a>
+            <a href="{{ url('/') }}" class="font-medium text-slate-700 underline-offset-4 hover:underline dark:text-slate-200">Kembali ke halaman welcome</a>
             <p>
               Sudah punya akun?
-              <a wire:navigate.hover href="{{ route('login', ['locale' => $currentLocale]) }}" class="font-semibold text-blue-700 underline-offset-4 hover:underline dark:text-blue-300">Login di sini</a>
+              <a href="{{ route('login', ['locale' => $currentLocale]) }}" class="font-semibold text-blue-700 underline-offset-4 hover:underline dark:text-blue-300">Login di sini</a>
             </p>
           </div>
         </div>
@@ -414,7 +422,7 @@ $unitOptions = $units ?? \App\Support\UserUnitOptions::values();
     </div>
   </div>
 
-  <script>
+  <script nonce="{{ $cspNonce }}">
     (function() {
       document.querySelectorAll('[data-password-toggle]').forEach(function(btn) {
         var targetId = btn.getAttribute('data-password-toggle');
@@ -437,7 +445,7 @@ $unitOptions = $units ?? \App\Support\UserUnitOptions::values();
     })();
   </script>
 
-  <script>
+  <script nonce="{{ $cspNonce }}">
     (function() {
       var selectRoot = document.getElementById('unitSelect');
       var input = document.getElementById('unit');
@@ -572,7 +580,7 @@ $unitOptions = $units ?? \App\Support\UserUnitOptions::values();
     })();
   </script>
 
-  <script>
+  <script nonce="{{ $cspNonce }}">
     (function() {
       var lockedDomain = '@kftd.co.id';
       var form = document.getElementById('register-form');
@@ -605,7 +613,7 @@ $unitOptions = $units ?? \App\Support\UserUnitOptions::values();
     })();
   </script>
 
-  <script>
+  <script nonce="{{ $cspNonce }}">
     (function() {
       var form = document.getElementById('register-form');
       if (!form) return;
@@ -660,3 +668,22 @@ $unitOptions = $units ?? \App\Support\UserUnitOptions::values();
 </body>
 
 </html>
+
+<script nonce="{{ $cspNonce }}">
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.querySelector("form");
+  if (!form) return;
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    grecaptcha.ready(function () {
+      grecaptcha.execute("{{ $recaptcha->siteKey() }}", { action: "register" }).then(function (token) {
+        const el = document.getElementById("g-recaptcha-response");
+        if (el) el.value = token;
+        form.submit();
+      });
+    });
+  });
+});
+</script>

@@ -43,7 +43,7 @@
                 Save Changes
             </button>
 
-            <form method="POST" action="{{ route('profile.destroy') }}" onsubmit="return confirm('Are you sure you want to delete your account?');">
+            <form method="POST" action="{{ route('profile.destroy') }}" data-confirm="Are you sure you want to delete your account?">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="text-red-600 hover:underline">
