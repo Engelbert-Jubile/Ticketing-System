@@ -133,7 +133,7 @@ Route::group([
 
 Route::get('/', function (Request $request) use ($publicWelcomeProps) {
     return $request->user()
-        ? redirect()->route('dashboard')
+        ? redirect()->route('dashboard', ['locale' => $request->route('locale')])
         : view('welcome', $publicWelcomeProps());
 })->name('home');
 
@@ -189,7 +189,7 @@ Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)
 } else {
     Route::get('/email/verify', function (Request $request) {
         return $request->user()
-            ? redirect()->route('dashboard')
+            ? redirect()->route('dashboard', ['locale' => $request->route('locale')])
             : redirect()->route('login');
     })->name('verification.notice');
 }
@@ -392,4 +392,9 @@ Route::get('{path}', function (Request $request, string $path) use ($resolveLoca
     $target = $cleanPath ? "/{$locale}/{$cleanPath}" : "/{$locale}";
 
     return redirect($target);
-})->where('path', '^(?!storage)(?!livewire)(?!_debugbar)(?!vendor).*$');
+})->where(
+    'path',
+    '^(?!(en|id)(/|$))(?!(livewire|storage|_debugbar|vendor)(/|$)).*$'
+);
+
+

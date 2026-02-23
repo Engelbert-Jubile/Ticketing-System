@@ -53,6 +53,7 @@ _old_*
 _tmp_*
 sb*.tmp
 part*.tmp
+*.bak*
 
 # ===== Notes / scratch files =====
 *_SUMMARY*.md
@@ -75,6 +76,10 @@ proj_*.txt
 .phpstorm.meta.php
 _ide_helper*.php
 intelephense/
+error_log
+.user.ini
+/php
+/public/vendor/remixicon/
 
 # ===== Legacy static preview (Materialize/Gulp) =====
 assets/

@@ -44,7 +44,11 @@
         
         },
         "files": [
+<<<<<<< HEAD
             "app/Helpers/route.php"
+=======
+            "App/Helpers/route.php"
+>>>>>>> 6bd67713b954480c384448d8bc8998f29bf4d93d
         ]
     },
     "autoload-dev": {
