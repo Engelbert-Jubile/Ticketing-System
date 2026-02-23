@@ -3,11 +3,14 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>TICKORA &mdash; Ticket Management System</title>
+    <title>Tickora - Ticket Management System</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v={{ filemtime(public_path('favicon.svg')) }}">
+    <link rel="alternate icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v={{ filemtime(public_path('favicon.ico')) }}">
+
     @vite(['resources/css/app.css'])
     @livewireStyles
     <style>
@@ -190,7 +193,7 @@
                 Akses seluruh fitur Dashboard, Ticket, Task, Project.
             </p>
             <div class="mt-6 grid gap-3">
-                <a wire:navigate.hover href="{{ route('login', ['locale' => app()->getLocale() ?? config('app.locale', 'en')]) }}" class="inline-flex items-center justify-center gap-2 rounded-xl border border-blue-600 bg-white px-6 py-3 text-sm font-semibold text-blue-600 transition hover:bg-blue-50">
+                <a href="{{ route('login', ['locale' => app()->getLocale() ?? config('app.locale', 'en')]) }}" class="inline-flex items-center justify-center gap-2 rounded-xl border border-blue-600 bg-white px-6 py-3 text-sm font-semibold text-blue-600 transition hover:bg-blue-50">
                     <span class="material-icons text-base">login</span>
                     <span>Login</span>
                 </a>
@@ -200,7 +203,7 @@
                         <span>Register (disabled)</span>
                     </button>
                 @else
-                    <a wire:navigate.hover href="{{ route('register', ['locale' => app()->getLocale() ?? config('app.locale', 'en')]) }}" class="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-600 bg-white px-6 py-3 text-sm font-semibold text-emerald-600 transition hover:bg-emerald-50">
+                    <a href="{{ route('register', ['locale' => app()->getLocale() ?? config('app.locale', 'en')]) }}" class="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-600 bg-white px-6 py-3 text-sm font-semibold text-emerald-600 transition hover:bg-emerald-50">
                         <span class="material-icons text-base">person_add</span>
                         <span>Register</span>
                     </a>

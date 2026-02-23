@@ -27,9 +27,9 @@ use Illuminate\Routing\Middleware\ValidateSignature;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 // Spatie permission middlewares
-use Spatie\Permission\Middlewares\PermissionMiddleware;
-use Spatie\Permission\Middlewares\RoleMiddleware;
-use Spatie\Permission\Middlewares\RoleOrPermissionMiddleware;
+use Spatie\Permission\Middleware\PermissionMiddleware;
+use Spatie\Permission\Middleware\RoleMiddleware;
+use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
 
 class Kernel extends HttpKernel
 {
@@ -48,6 +48,8 @@ class Kernel extends HttpKernel
         SubstituteBindings::class,
         EnsureStrictTransportSecurity::class,
         CheckMaintenanceMode::class,
+	\App\Http\Middleware\ContentSecurityPolicy::class,
+
     ];
 
     /**
@@ -56,7 +58,7 @@ class Kernel extends HttpKernel
     protected $middlewareGroups = [
         'web' => [
             SetLocaleFromUrl::class,
-            \App\Http\Middleware\InjectLoginLoadingOverlay::class,
+            // \App\Http\Middleware\InjectLoginLoadingOverlay::class, // disabled
             HandleInertiaRequests::class,
             // untuk route web; session/csrf sudah termasuk di $middleware
         ],
@@ -74,6 +76,7 @@ class Kernel extends HttpKernel
      * Gunakan nama alias ini pada route/middleware.
      */
     protected $middlewareAliases = [
+        'substituteBindings' => SubstituteBindings::class,
         // Laravel built-ins
         'auth' => Authenticate::class,
         'auth.basic' => AuthenticateWithBasicAuth::class,

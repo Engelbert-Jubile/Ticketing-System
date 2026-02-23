@@ -632,7 +632,7 @@ $statusIdLabel = $defaultStatusCode;
       </div>
     </div>
     </form>
-    <script>
+    <script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}">
       (function() {
         // Selaraskan kunci dengan partial attachments (storageKey = 'filepond_tmp_'+inputId)
         const ATTACH_KEY = 'filepond_tmp_project-attachments';
@@ -971,7 +971,7 @@ $statusIdLabel = $defaultStatusCode;
 @endpush
 
 @push('scripts')
-<script>
+<script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}">
   document.addEventListener('DOMContentLoaded', function() {
     const STEP_STORAGE_KEY = 'project:create:step';
     const form = document.getElementById('projectCreateForm');
@@ -1257,6 +1257,7 @@ $statusIdLabel = $defaultStatusCode;
 
     if (!flatpickr.l10ns || !flatpickr.l10ns.id) {
       const localeScript = document.createElement('script');
+      localeScript.nonce = "{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}";
       localeScript.src = 'https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js';
       localeScript.onload = () => {
         initializeDatePickers();

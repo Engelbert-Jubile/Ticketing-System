@@ -135,7 +135,7 @@
         } else {
           this.applySidebarFreshState();
         }
-        const targetAction = @json(route('logout'));
+        const targetAction = @json(routeLocale('logout'));
         const normalize = (action) => {
           if (!action) return '';
           try {
@@ -655,7 +655,7 @@
       class="menu flex flex-col p-4 pb-8 mt-2 space-y-2 text-slate-800 dark:text-slate-100">
 
       {{-- Dashboard --}}
-      @php $dash = route('dashboard'); @endphp
+      @php $dash = routeLocale('dashboard'); @endphp
       <li class="nav-li nav-li--dash">
         <a href="{{ $dash }}" id="sb-dash-link"
           @click.prevent="clearActives(); sbSet(null); try{localStorage.removeItem('sb:openKey')}catch(_){}; setSel('{{ $dash }}'); navTo('{{ $dash }}', $event, 'pulse')"
@@ -670,7 +670,7 @@
       {{-- Tickets --}}
       @php
       $uid='sb-tickets'; $ticketsBase=url('/dashboard/tickets');
-      $ticketsCreate=route('tickets.create'); $ticketsProg=route('tickets.on-progress'); $ticketsReport=route('tickets.index');
+      $ticketsCreate=routeLocale('tickets.create'); $ticketsProg=routeLocale('tickets.on-progress'); $ticketsReport=routeLocale('tickets.index');
       @endphp
       <li
         x-data="{ key:'menu.tickets', active: {{ request()->routeIs('tickets.*') ? 'true' : 'false' }}, defaultSel:'group:menu.tickets', forceOpen: {{ $ticketsReportActive ? 'true' : 'false' }} }"
@@ -736,7 +736,7 @@
       {{-- Tasks --}}
       @php
       $uid='sb-tasks'; $tasksBase=url('/dashboard/tasks');
-      $tasksCreate=route('tasks.create'); $tasksProg=route('tasks.on-progress'); $tasksReport=route('tasks.report');
+      $tasksCreate=routeLocale('tasks.create'); $tasksProg=routeLocale('tasks.on-progress'); $tasksReport=routeLocale('tasks.report');
       @endphp
       <li
         x-data="{ key:'menu.tasks', active: {{ request()->routeIs('tasks.*') ? 'true' : 'false' }}, defaultSel:'group:menu.tasks', forceOpen: {{ $tasksReportActive ? 'true' : 'false' }} }"
@@ -802,7 +802,7 @@
       {{-- Projects --}}
       @php
       $uid='sb-projects'; $projectsBase=url('/dashboard/projects');
-      $projectsCreate=route('projects.create'); $projectsProg=route('projects.on-progress'); $projectsReport=route('projects.report');
+      $projectsCreate=routeLocale('projects.create'); $projectsProg=routeLocale('projects.on-progress'); $projectsReport=routeLocale('projects.report');
       @endphp
       <li
         x-data="{ key:'menu.projects', active: {{ request()->routeIs('projects.*') ? 'true' : 'false' }}, defaultSel:'group:menu.projects', forceOpen: {{ $projectsReportActive ? 'true' : 'false' }} }"
@@ -867,7 +867,7 @@
 
       @if ($isSuperAdmin)
         {{-- Unit Reports (legacy) --}}
-        @php $unitReports = route('dashboard.unit-reports'); @endphp
+        @php $unitReports = routeLocale('dashboard.unit-reports'); @endphp
         <li class="nav-li">
           <a href="{{ $unitReports }}"
             @click.prevent="clearActives(); setSel('{{ $unitReports }}'); navTo('{{ $unitReports }}', $event, 'pulse', 260)"
@@ -880,8 +880,8 @@
 
         {{-- SLA Reports --}}
         <li class="nav-li">
-          <a href="{{ route('dashboard.sla') }}"
-            @click.prevent="clearActives(); setSel('route:dashboard.sla'); navTo('{{ route('dashboard.sla') }}', $event, 'pulse', 280)"
+          <a href="{{ routeLocale('dashboard.sla') }}"
+            @click.prevent="clearActives(); setSel('route:dashboard.sla'); navTo('{{ routeLocale('dashboard.sla') }}', $event, 'pulse', 280)"
             class="{{ $linkBase }} {{ $linkHover }} flex items-center gap-2 {{ $slaReportActive ? $linkActive.' is-active' : '' }}"
             :class="sel === 'route:dashboard.sla' ? '{{ $linkActive }} is-active' : ''">
             <span class="material-icons text-current">schedule</span>
@@ -890,7 +890,7 @@
         </li>
 
         {{-- Global Reports --}}
-        @php $reportsIndex = route('reports.index'); @endphp
+        @php $reportsIndex = routeLocale('reports.index'); @endphp
         <li class="nav-li">
           <a href="{{ $reportsIndex }}"
             @click.prevent="clearActives(); setSel('{{ $reportsIndex }}'); navTo('{{ $reportsIndex }}', $event, 'pulse', 280)"
@@ -902,7 +902,7 @@
         </li>
 
         {{-- Settings --}}
-        @php $settingsUrl = route('settings'); @endphp
+        @php $settingsUrl = routeLocale('settings'); @endphp
         <li class="nav-li">
           <a href="{{ $settingsUrl }}"
             @click.prevent="clearActives(); setSel('{{ $settingsUrl }}'); navTo('{{ $settingsUrl }}', $event, 'pulse', 280)"
@@ -918,7 +918,7 @@
       @can('viewAny', \App\Models\User::class)
       @php
       $uid='sb-users'; $usersBase=url('/dashboard/users');
-      $usersCreate=route('users.create'); $usersReport=route('users.report');
+      $usersCreate=routeLocale('users.create'); $usersReport=routeLocale('users.report');
       @endphp
       <li x-data="{ key:'menu.users', active: {{ request()->routeIs('users.*') ? 'true' : 'false' }} }"
         x-init="
@@ -968,7 +968,7 @@
       {{-- Account --}}
       @php
       $uid='sb-account'; $accountBase=url('/dashboard/account');
-      $accountProfile=route('account.profile'); $accountPass=route('account.change-password');
+      $accountProfile=routeLocale('account.profile'); $accountPass=routeLocale('account.change-password');
       @endphp
       <li x-data="{ key:'menu.account', active: {{ request()->routeIs('account.*') ? 'true' : 'false' }} }"
         x-init="
@@ -1028,7 +1028,7 @@
       {{-- Logout --}}
       @auth
       <li class="nav-li nav-li--logout">
-        <form method="POST" action="{{ route('logout') }}">
+        <form method="POST" action="{{ routeLocale('logout') }}">
           @csrf
           <button type="submit"
             @click="ripple($event); iconAnim($event,'slide')"

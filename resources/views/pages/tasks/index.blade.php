@@ -88,7 +88,7 @@
               <ul class="list-disc list-inside text-xs">
                 @foreach($atts as $att)
                   <li>
-                    <a href="{{ route('attachments.view', $att) }}" target="_blank" class="text-blue-600 hover:underline">Lihat</a>
+                    <a href="{{ route('attachments.view', ['locale' => app()->getLocale(), 'attachment' => $att->id]) }}" target="_blank" class="text-blue-600 hover:underline">Lihat</a>
                     <span class="text-slate-400">·</span>
                     <a href="{{ route('attachments.download', $att) }}" class="text-blue-600 hover:underline">Unduh</a>
                     <span class="text-slate-600 ml-1">{{ \Illuminate\Support\Str::limit($att->original_name, 24) }}</span>
@@ -105,7 +105,7 @@
                 class="inline-flex items-center gap-1 rounded-lg border border-indigo-200/70 px-3 py-1.5 text-sm font-semibold text-indigo-600 transition hover:bg-indigo-50/80 dark:border-indigo-400/40 dark:text-indigo-200 dark:hover:bg-indigo-500/10">View</a>
               <a href="{{ route('tasks.edit', ['task' => $task->public_slug]) }}"
                 class="inline-flex items-center gap-1 rounded-lg border border-blue-200/70 px-3 py-1.5 text-sm font-semibold text-blue-600 transition hover:bg-blue-50/80 dark:border-blue-400/40 dark:text-blue-200 dark:hover:bg-blue-500/10">Edit</a>
-              <form action="{{ route('tasks.destroy', $task) }}" method="POST" onsubmit="return confirm('Are you sure?')">
+              <form action="{{ route('tasks.destroy', $task) }}" method="POST" data-confirm="Are you sure?">
                 @csrf
                 @method('DELETE')
                 <input type="hidden" name="from" value="{{ request()->fullUrl() }}">

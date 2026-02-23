@@ -130,7 +130,7 @@
         </div>
     </form>
 </div>
-<script>
+<script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}">
   document.addEventListener('DOMContentLoaded', function() {
     ['current_password', 'password', 'password_confirmation'].forEach(function(id) {
       var input = document.getElementById(id);

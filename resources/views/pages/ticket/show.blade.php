@@ -40,7 +40,7 @@
     <ul class="list-disc list-inside space-y-1">
       @foreach($ticket->attachments as $att)
       <li>
-        <a href="{{ route('attachments.view', $att) }}" target="_blank" class="text-blue-600 hover:underline">Lihat</a>
+        <a href="{{ route('attachments.view', ['locale' => app()->getLocale(), 'attachment' => $att->id]) }}" target="_blank" class="text-blue-600 hover:underline">Lihat</a>
         <span class="text-slate-400">·</span>
         <a href="{{ route('attachments.download', $att) }}" class="text-blue-600 hover:underline">Unduh</a>
         <span class="text-slate-600 ml-2">

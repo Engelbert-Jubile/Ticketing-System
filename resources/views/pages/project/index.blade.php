@@ -149,7 +149,7 @@
                   @foreach($attachments->take(2) as $att)
                     <li class="flex items-center gap-1">
                       <span class="text-slate-400">•</span>
-                      <a href="{{ route('attachments.view', $att) }}" target="_blank" class="text-blue-600 hover:underline">Lihat</a>
+                      <a href="{{ route('attachments.view', ['locale' => app()->getLocale(), 'attachment' => $att->id]) }}" target="_blank" class="text-blue-600 hover:underline">Lihat</a>
                       <span class="text-slate-400">·</span>
                       <a href="{{ route('attachments.download', $att) }}" class="text-blue-600 hover:underline">Unduh</a>
                       <span class="text-slate-500">{{ \Illuminate\Support\Str::limit($att->original_name ?? '', 24) }}</span>
@@ -167,7 +167,7 @@
               <div class="flex flex-wrap items-center gap-2 text-sm">
                 <a href="{{ route('projects.show', ['project' => $project->public_slug ?? $project->id, 'from' => request()->fullUrl()]) }}" class="text-blue-600 hover:underline">View</a>
                 <a href="{{ route('projects.edit', ['project' => $project->public_slug ?? $project->id, 'from' => request()->fullUrl()]) }}" class="text-indigo-600 hover:underline">Edit</a>
-                <form action="{{ route('projects.destroy', $project) }}" method="POST" onsubmit="return confirm('Hapus project ini?')" class="inline">
+                <form action="{{ route('projects.destroy', $project) }}" method="POST" data-confirm="Hapus project ini?" class="inline">
                   @csrf
                   @method('DELETE')
                   <input type="hidden" name="from" value="{{ request()->fullUrl() }}">
@@ -300,7 +300,7 @@
                     @foreach($projAtts->take(2) as $att)
                       <li class="flex items-center gap-1">
                         <span class="text-slate-400">•</span>
-                        <a href="{{ route('attachments.view', $att) }}" target="_blank" class="text-blue-600 hover:underline">Lihat</a>
+                        <a href="{{ route('attachments.view', ['locale' => app()->getLocale(), 'attachment' => $att->id]) }}" target="_blank" class="text-blue-600 hover:underline">Lihat</a>
                         <span class="text-slate-400">·</span>
                         <a href="{{ route('attachments.download', $att) }}" class="text-blue-600 hover:underline">Unduh</a>
                         <span class="text-slate-500">{{ \Illuminate\Support\Str::limit($att->original_name ?? '', 24) }}</span>
@@ -318,7 +318,7 @@
                 <div class="flex flex-wrap items-center gap-2 text-sm">
                   <a href="{{ route('projects.show', ['project' => $project->public_slug ?? $project->id, 'from' => request()->fullUrl()]) }}" class="text-blue-600 hover:underline">View</a>
                   <a href="{{ route('projects.edit', ['project' => $project->public_slug ?? $project->id, 'from' => request()->fullUrl()]) }}" class="text-indigo-600 hover:underline">Edit</a>
-                  <form action="{{ route('projects.destroy', $project) }}" method="POST" onsubmit="return confirm('Hapus project ini?')" class="inline">
+                  <form action="{{ route('projects.destroy', $project) }}" method="POST" data-confirm="Hapus project ini?" class="inline">
                     @csrf
                     @method('DELETE')
                     <input type="hidden" name="from" value="{{ request()->fullUrl() }}">
@@ -356,7 +356,7 @@
 @endpush
 
 @push('scripts')
-<script>
+<script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}">
   document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('[data-toggle-section]').forEach(header => {
       header.addEventListener('click', function () {

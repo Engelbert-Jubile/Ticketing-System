@@ -322,7 +322,7 @@
               </div>
             </div>
             <div class="flex gap-1 flex-shrink-0">
-              <a href="{{ route('attachments.view', $att) }}" target="_blank"
+              <a href="{{ route('attachments.view', ['locale' => app()->getLocale(), 'attachment' => $att->id]) }}" target="_blank"
                  class="p-1.5 rounded border border-gray-300 hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800" title="View">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4">
                   <path d="M12 15a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z" />
@@ -352,7 +352,7 @@
           </svg>
           <span>Edit Task</span>
         </a>
-        <form action="{{ route('tasks.destroy', $task) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus task ini?')">
+        <form action="{{ route('tasks.destroy', $task) }}" method="POST" data-confirm="Apakah Anda yakin ingin menghapus task ini?">
           @csrf @method('DELETE')
           <input type="hidden" name="from" value="{{ request()->fullUrl() }}">
           <button type="submit"

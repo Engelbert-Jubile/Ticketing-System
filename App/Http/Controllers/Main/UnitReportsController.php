@@ -12,13 +12,15 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Support\RoleHelpers;
+use App\Support\UserUnitOptions;
 
 class UnitReportsController extends Controller
 {
-    private function pickCol(string $table, array $candidates = ['status', 'state', 'status_id']): string
-    {
+    private function pickCol(string $table, array $candidates = ['status', 'state', 'status_id']): string {
         foreach ($candidates as $c) {
             if (Schema::hasColumn($table, $c)) {
                 return $c;
@@ -45,27 +47,50 @@ class UnitReportsController extends Controller
 
     public function index(Request $request): Response
     {
-        $unit = trim((string) ($request->user()?->unit ?? ''));
-        $unitName = $unit !== '' ? $unit : 'Unit tidak tersedia';
 
-        $pageSubtitle = $unit !== ''
-            ? sprintf('Ringkasan tiket, task, dan project untuk unit %s.', $unit)
-            : 'Unit belum diset pada akun anda.';
+        $isSuperadmin = RoleHelpers::userIsSuperAdmin($request->user());
 
-        $usersCount = $unit !== ''
-            ? User::query()->where('unit', $unit)->count()
-            : 0;
+        $unit = trim((string) ($request->user()?->unit ?? ""));
+        $unitFilter = trim((string) $request->query("unit", ""));
+
+        $unitOptions = $isSuperadmin
+            ? collect(UserUnitOptions::values())
+            : collect();
+
+if ($isSuperadmin) {
+            $unit = $unitFilter !== "" ? $unitFilter : "";
+
+            if ($unit !== "") {
+                $unitName = $unit;
+                $pageSubtitle = sprintf("Ringkasan tiket, task, dan project untuk unit %s.", $unit);
+            } else {
+                $unitName = "Semua Unit";
+                $pageSubtitle = "Ringkasan tiket, task, dan project untuk semua unit.";
+            }
+
+            $usersCount = User::query()->count();
+        } else {
+
+
+            $unitName = $unit !== "" ? $unit : "Unit tidak tersedia";
+            $pageSubtitle = $unit !== ""
+                ? sprintf("Ringkasan tiket, task, dan project untuk unit %s.", $unit)
+                : "Unit belum diset pada akun anda.";
+            $usersCount = $unit !== ""
+                ? User::query()->where("unit", $unit)->count()
+                : 0;
+        }
+
+
+
 
         /* ===== Tickets ===== */
         $tCol = $this->pickCol('tickets');
         $lcT = $this->lcCast($tCol);
         $eq = fn (string $s) => "('".implode("','", \App\Support\WorkflowStatus::equivalents($s))."')";
-
         $ticketsBase = Ticket::query();
-        if ($unit !== '') {
-            $ticketsBase->whereHas('requester', fn (Builder $sub) => $sub->where('unit', $unit));
-        } else {
-            $ticketsBase->whereRaw('1=0');
+        if ($unit !== "") {
+            $ticketsBase->whereHas("requester", fn (Builder $sub) => $sub->where("unit", $unit));
         }
 
         $ticketAgg = (clone $ticketsBase)->selectRaw("
@@ -95,11 +120,9 @@ class UnitReportsController extends Controller
         $tasksBase = Task::query();
         if ($unit !== '') {
             $tasksBase->where(function (Builder $builder) use ($unit) {
-                $builder->whereHas('ticket.requester', fn (Builder $sub) => $sub->where('unit', $unit))
-                    ->orWhereHas('requester', fn (Builder $sub) => $sub->where('unit', $unit));
+                $builder->whereHas('ticket.requester', fn (Builder $sub) => $sub->when($unit !== "", fn ($q) => $q->where("unit", $unit)))
+                    ->orWhereHas('requester', fn (Builder $sub) => $sub->when($unit !== "", fn ($q) => $q->where("unit", $unit)));
             });
-        } else {
-            $tasksBase->whereRaw('1=0');
         }
 
         $tasksDone = (int) (clone $tasksBase)
@@ -133,11 +156,9 @@ class UnitReportsController extends Controller
         $projectsBase = Project::query();
         if ($unit !== '') {
             $projectsBase->where(function (Builder $builder) use ($unit) {
-                $builder->whereHas('ticket.requester', fn (Builder $sub) => $sub->where('unit', $unit))
-                    ->orWhereHas('requester', fn (Builder $sub) => $sub->where('unit', $unit));
+                $builder->whereHas('ticket.requester', fn (Builder $sub) => $sub->when($unit !== "", fn ($q) => $q->where("unit", $unit)))
+                    ->orWhereHas('requester', fn (Builder $sub) => $sub->when($unit !== "", fn ($q) => $q->where("unit", $unit)));
             });
-        } else {
-            $projectsBase->whereRaw('1=0');
         }
 
         $projectsCompleted = (int) (clone $projectsBase)
@@ -251,6 +272,53 @@ class UnitReportsController extends Controller
 
         $agents = $this->buildAgentStats($unit);
 
+
+        $unitSummary = [];
+
+        if ($isSuperadmin && $unit === "") {
+
+            $unitSummary = $unitOptions->map(function (string $u) {
+
+                $users = User::query()->where("unit", $u)->count();
+
+                $tickets = Ticket::query()->whereHas("requester", fn (Builder $q) => $q->where("unit", $u))->count();
+
+                $tasks = Task::query()->where(function (Builder $b) use ($u) {
+
+                    $b->whereHas("ticket.requester", fn (Builder $q) => $q->where("unit", $u))
+
+                      ->orWhereHas("requester", fn (Builder $q) => $q->where("unit", $u));
+
+                })->count();
+
+                $projects = Project::query()->where(function (Builder $b) use ($u) {
+
+                    $b->whereHas("ticket.requester", fn (Builder $q) => $q->where("unit", $u))
+
+                      ->orWhereHas("requester", fn (Builder $q) => $q->where("unit", $u));
+
+                })->count();
+
+
+
+                return [
+
+                    "unit" => $u,
+
+                    "users" => (int) $users,
+
+                    "tickets" => (int) $tickets,
+
+                    "tasks" => (int) $tasks,
+
+                    "projects" => (int) $projects,
+
+                ];
+
+            })->values()->all();
+
+        }
+
         return Inertia::render('UnitReports/Index', [
             'pageTitle' => 'Unit Reports',
             'pageSubtitle' => $pageSubtitle,
@@ -279,32 +347,38 @@ class UnitReportsController extends Controller
             'tasksPeriod' => $tasksPeriod,
             'projectsPeriod' => $projectsPeriod,
             'agents' => $agents,
+            'isSuperadmin' => $isSuperadmin,
+            'unitFilter' => $unitFilter,
+            'unitSummary' => $unitSummary,
+            'unitOptions' => $unitOptions,
+            'units' => $unitOptions,
         ]);
     }
 
     /**
      * @return array<int,array{id:int,name:string,email:string|null,tickets:int,tasks:int,projects:int}>
      */
-    private function buildAgentStats(string $unit): array
-    {
+    private function buildAgentStats(string $unit): array {
         $unit = trim($unit);
-        if ($unit === '') {
+
+        // Superadmin tanpa filter unit: UI menampilkan unitSummary, bukan tabel user
+        if ($unit === "") {
             return [];
         }
 
+        // Mode unit spesifik: tampilkan semua anggota unit
         $users = User::query()
-            ->where('unit', $unit)
-            ->select(['id', 'first_name', 'last_name', 'username', 'email'])
-            ->orderBy('first_name')
-            ->orderBy('last_name')
-            ->orderBy('username')
+            ->where("unit", $unit)
+            ->select(["id", "first_name", "last_name", "username", "email"])
+            ->orderBy("first_name")
+            ->orderBy("last_name")
+            ->orderBy("username")
             ->get();
-
-        return $users->map(function (User $user) use ($unit) {
+          return $users->map(function (User $user) use ($unit) {
             $userId = (int) $user->id;
 
             $ticketsCount = Ticket::query()
-                ->whereHas('requester', fn (Builder $sub) => $sub->where('unit', $unit))
+                ->whereHas('requester', fn (Builder $sub) => $sub->when($unit !== "", fn ($q) => $q->where("unit", $unit)))
                 ->where(function (Builder $builder) use ($userId) {
                     $builder->where('requester_id', $userId)
                         ->orWhere('agent_id', $userId)
@@ -315,8 +389,8 @@ class UnitReportsController extends Controller
 
             $tasksCount = Task::query()
                 ->where(function (Builder $builder) use ($unit) {
-                    $builder->whereHas('ticket.requester', fn (Builder $sub) => $sub->where('unit', $unit))
-                        ->orWhereHas('requester', fn (Builder $sub) => $sub->where('unit', $unit));
+                    $builder->whereHas('ticket.requester', fn (Builder $sub) => $sub->when($unit !== "", fn ($q) => $q->where("unit", $unit)))
+                        ->orWhereHas('requester', fn (Builder $sub) => $sub->when($unit !== "", fn ($q) => $q->where("unit", $unit)));
                 })
                 ->where(function (Builder $builder) use ($userId) {
                     $builder->where('assignee_id', $userId)
@@ -333,8 +407,8 @@ class UnitReportsController extends Controller
 
             $projectsCount = Project::query()
                 ->where(function (Builder $builder) use ($unit) {
-                    $builder->whereHas('ticket.requester', fn (Builder $sub) => $sub->where('unit', $unit))
-                        ->orWhereHas('requester', fn (Builder $sub) => $sub->where('unit', $unit));
+                    $builder->whereHas('ticket.requester', fn (Builder $sub) => $sub->when($unit !== "", fn ($q) => $q->where("unit", $unit)))
+                        ->orWhereHas('requester', fn (Builder $sub) => $sub->when($unit !== "", fn ($q) => $q->where("unit", $unit)));
                 })
                 ->where(function (Builder $builder) use ($userId) {
                     $builder->where('requester_id', $userId)
@@ -362,8 +436,7 @@ class UnitReportsController extends Controller
         })->values()->all();
     }
 
-    private function orWhereJsonAssignmentContains(Builder $builder, string $column, int $userId): void
-    {
+    private function orWhereJsonAssignmentContains(Builder $builder, string $column, int $userId): void {
         if ($userId <= 0) {
             return;
         }

@@ -167,8 +167,8 @@
 @endpush
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script>
+<script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}" src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}">
     document.addEventListener('DOMContentLoaded', function() {
         // Due picker (24-hour)
         flatpickr(".flatpickr-due", {

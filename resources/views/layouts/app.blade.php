@@ -16,14 +16,14 @@
   @stack('styles')
 
   {{-- LIVEWIRE x ALPINE HOOK (tambahan agar tak dobel Alpine) --}}
-  <script>
+  <script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}">
     window.deferLoadingAlpine = function(callback) {
       window.addEventListener('alpine:initialized', callback);
     };
   </script>
 
   {{-- THEME BOOT --}}
-  <script>
+  <script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}">
     (function() {
       try {
         document.documentElement.classList.add('booting');
@@ -43,7 +43,7 @@
   </script>
 
   {{-- PRE-PAINT --}}
-  <script>
+  <script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}">
     (function() {
       try {
         var forceClosed = localStorage.getItem('sb:forceClosed') === '1';
@@ -429,9 +429,9 @@
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ asset('fonts/remixicon/remixicon.css') }}">
   <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
-  <script src="https://cdn.quilljs.com/1.3.7/quill.min.js" defer></script>
+  <script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}" src="https://cdn.quilljs.com/1.3.7/quill.min.js" defer></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr" defer></script>
+  <script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}" src="https://cdn.jsdelivr.net/npm/flatpickr" defer></script>
   @stack('styles')
 </head>
 
@@ -446,7 +446,7 @@
 
 
   {{-- Initialize sidebar smoothly --}}
-  <script>
+  <script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}">
     document.addEventListener('DOMContentLoaded', () => {
       requestAnimationFrame(() => {
         document.querySelector('.sidebar')?.classList.add('initialized');
@@ -621,8 +621,37 @@
   </div>
 
   @livewireScripts
+  <script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}">
+  document.addEventListener('click', function (e) {
+    const el = e.target.closest('[data-confirm]');
+    if (!el) return;
+    const msg = el.getAttribute('data-confirm') || 'Are you sure?';
+    if (!confirm(msg)) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }
+  }, true);
+  document.addEventListener('submit', function (e) {
+    const form = e.target.closest('form[data-confirm]');
+    if (!form) return;
+    const msg = form.getAttribute('data-confirm') || 'Are you sure?';
+    if (!confirm(msg)) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }
+  }, true);
+  document.addEventListener('change', function (e) {
+    const sel = e.target.closest('select[data-jump-select]');
+    if (!sel) return;
+    const val = sel.value;
+    if (val) window.location.href = val;
+  }, true);
+
+
+  </script>
+
   @stack('scripts')
-  <script>
+  <script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}">
     // Remove booting class when ready
     (function() {
       var done = false;

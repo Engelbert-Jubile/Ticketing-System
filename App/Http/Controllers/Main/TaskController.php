@@ -45,7 +45,7 @@ final class TaskController extends Controller
 
     public function index(Request $request): Response|RedirectResponse
     {
-        return redirect()->route('tasks.report');
+        return redirect()->routeLocale('tasks.report');
     }
 
     public function onProgress(Request $request): Response
@@ -180,7 +180,7 @@ final class TaskController extends Controller
 
         $hasDueDateColumn = Schema::hasColumn('tasks', 'due_date');
         $viewer = $request->user();
-        $origin = route('tasks.report');
+        $origin = routeLocale('tasks.report');
 
         $taskRows = $this->buildTaskReportQuery($this->emptyTaskReportFilters(), $hasDueDateColumn, $viewer, true)
             ->where('ticket_id', $ticket->id)
@@ -198,7 +198,7 @@ final class TaskController extends Controller
             'tasks' => $tasks,
             'summary' => $summary,
             'meta' => [
-                'backUrl' => $this->resolveBackUrl($request, route('tasks.report')),
+                'backUrl' => $this->resolveBackUrl($request, routeLocale('tasks.report')),
             ],
         ]);
     }
@@ -419,7 +419,7 @@ final class TaskController extends Controller
             return null;
         }
 
-        return route('tasks.report.ticket', [
+        return routeLocale('tasks.report.ticket', [
             'ticket' => $identifier,
         ]);
     }
@@ -428,10 +428,10 @@ final class TaskController extends Controller
     {
         $ticketNo = is_string($ticket->ticket_no ?? null) ? trim((string) $ticket->ticket_no) : '';
         if ($ticketNo !== '') {
-            return route('tickets.report.detail.view', ['ticket' => $ticketNo]);
+            return routeLocale('tickets.report.detail.view', ['ticket' => $ticketNo]);
         }
 
-        return route('tickets.edit', ['ticket' => $ticket->id]);
+        return routeLocale('tickets.edit', ['ticket' => $ticket->id]);
     }
 
     private function buildTicketReportPayload(Ticket $ticket): array
@@ -924,13 +924,13 @@ final class TaskController extends Controller
         UnitVisibility::ensureTaskAccess($request->user(), $task);
         $task->load(['attachments', 'assignee', 'requester', 'ticket', 'ticket.assignedUsers', 'ticket.agent', 'project']);
 
-        $backUrl = $this->resolveBackUrl($request, route('tasks.report'));
+        $backUrl = $this->resolveBackUrl($request, routeLocale('tasks.report'));
 
         $taskPayload = $this->transformTaskDetail($task);
-        $taskPayload['links']['edit'] = route('tasks.edit', [
+        $taskPayload['links']['edit'] = routeLocale('tasks.edit', [
             'task' => $task->public_slug,
         ]);
-        $taskPayload['links']['view'] = route('tasks.view', [
+        $taskPayload['links']['view'] = routeLocale('tasks.view', [
             'task' => $task->id,
         ]);
         $taskPayload['related_tasks'] = $this->relatedTasksForTicket($task, $request);
@@ -999,7 +999,7 @@ final class TaskController extends Controller
         $ticketCollection = $this->linkableTicketsForUser($viewer, $task->ticket);
         [$ticketOptions, $ticketUnits] = $this->prepareTicketOptions($ticketCollection);
 
-        $backUrl = $this->resolveBackUrl($request, route('tasks.report'));
+        $backUrl = $this->resolveBackUrl($request, routeLocale('tasks.report'));
 
         return Inertia::render('Tasks/Edit', [
             'task' => $this->transformTaskForm($task),
@@ -1010,7 +1010,7 @@ final class TaskController extends Controller
             'meta' => [
                 'backUrl' => $backUrl,
                 'mode' => 'edit',
-                'submitUrl' => route('tasks.update', ['task' => $task->id]),
+                'submitUrl' => routeLocale('tasks.update', ['task' => $task->id]),
                 'statusGuide' => $this->statusGuidance(),
                 'statusDefault' => WorkflowStatus::label(WorkflowStatus::default()),
                 'lockStatus' => $lockStatus,
@@ -1163,7 +1163,7 @@ final class TaskController extends Controller
         }
 
         $locale = $request->route('locale') ?? app()->getLocale();
-        $backTo = route('tasks.show', [
+        $backTo = routeLocale('tasks.show', [
             'locale' => $locale,
             'taskSlug' => $task->public_slug,
         ]);
@@ -1181,7 +1181,7 @@ final class TaskController extends Controller
             $this->deleteTask->execute($task);
         });
 
-        $backTo = $request->input('from', url()->previous() ?: route('tasks.report', ['status' => $statusValue]));
+        $backTo = $request->input('from', url()->previous() ?: routeLocale('tasks.report', ['status' => $statusValue]));
 
         return redirect()->to($backTo)->with('success', 'Task deleted.');
     }
@@ -1303,22 +1303,22 @@ final class TaskController extends Controller
             ])->values()->all(),
             'links' => array_merge(
                 $this->buildTaskLinks($task, $origin),
-                ['promote' => route('tasks.promote', $task)]
+                ['promote' => routeLocale('tasks.promote', $task)]
             ),
         ];
     }
 
     private function taskShowLink(Task $task, ?string $origin = null): string
     {
-        return route('tasks.show', ['taskSlug' => $task->public_slug]);
+        return routeLocale('tasks.show', ['taskSlug' => $task->public_slug]);
     }
 
     private function buildTaskLinks(Task $task, ?string $origin = null): array
     {
         return [
             'show' => $this->taskShowLink($task, $origin),
-            'edit' => route('tasks.edit', ['task' => $task->public_slug]),
-            'delete' => route('tasks.destroy', ['task' => $task->id]),
+            'edit' => routeLocale('tasks.edit', ['task' => $task->public_slug]),
+            'delete' => routeLocale('tasks.destroy', ['task' => $task->id]),
         ];
     }
 
@@ -1462,10 +1462,10 @@ final class TaskController extends Controller
             ])->values()->all(),
             'links' => [
                 'show' => $this->taskShowLink($task),
-                'edit' => route('tasks.edit', ['task' => $task->public_slug]),
-                'view' => route('tasks.view', $task),
-                'pdf' => route('tasks.report.detail', $task),
-                'promote' => route('tasks.promote', $task),
+                'edit' => routeLocale('tasks.edit', ['task' => $task->public_slug]),
+                'view' => routeLocale('tasks.view', ['task' => $task->id]),
+                'pdf' => routeLocale('tasks.report.detail', ['task' => $task->id]),
+                'promote' => routeLocale('tasks.promote', ['task' => $task->id]),
             ],
         ];
     }
@@ -1513,8 +1513,8 @@ final class TaskController extends Controller
                 'due_display' => $this->formatDate($dueSource, 'd M Y H:i', $tz),
                 'links' => [
                     'show' => $this->taskShowLink($related),
-                    'edit' => route('tasks.edit', ['task' => $related->public_slug]),
-                    'delete' => $related->id === $task->id ? null : route('tasks.destroy', ['task' => $related->id]),
+                    'edit' => routeLocale('tasks.edit', ['task' => $related->public_slug]),
+                    'delete' => $related->id === $task->id ? null : routeLocale('tasks.destroy', ['task' => $related->id]),
                 ],
             ];
         })->values()->all();
@@ -1799,7 +1799,37 @@ final class TaskController extends Controller
     private function baseTaskReportQuery(array $filters, bool $hasDueDateColumn, ?User $viewer = null): Builder
     {
         $query = Task::query();
-        $query = UnitVisibility::scopeTasks($query, $viewer);
+
+if ($viewer && \App\Support\UnitVisibility::requiresRestriction($viewer)) {
+
+    $userId = (int) $viewer->id;
+
+    $query->where(function (Builder $q) use ($userId) {
+
+        // 1️⃣ TASK MANDIRI (aturan lama, ketat)
+        $q->where(function (Builder $t) use ($userId) {
+            $t->where('assignee_id', $userId)
+              ->orWhere('created_by', $userId)
+              ->orWhere(function (Builder $inner) use ($userId) {
+                  $inner->whereRaw("JSON_VALID(tasks.assigned_to) AND JSON_CONTAINS(tasks.assigned_to, CAST(? AS JSON), '$')", [(int) $userId]);
+              });
+        });
+
+
+        // 2️⃣ TASK DARI TICKET (WARISAN RELASI)
+        $q->orWhereHas('ticket', function (Builder $ticket) use ($userId) {
+            $ticket->where('requester_id', $userId)
+                   ->orWhere('agent_id', $userId)
+                   ->orWhere('assigned_id', $userId)
+                   ->orWhereHas(
+                       'assignedUsers',
+                       fn (Builder $sub) => $sub->where('users.id', $userId)
+                   );
+        });
+
+    });
+}
+
 
         if ($filters['q'] !== '') {
             $query->where(function ($inner) use ($filters) {
@@ -1820,7 +1850,9 @@ final class TaskController extends Controller
         if ($filters['from_date']) {
             $fromDate = $filters['from_date'];
             $query->where(function ($inner) use ($fromDate, $hasDueDateColumn) {
-                $inner->whereDate('due_at', '>=', $fromDate);
+                $inner->whereDate('due_at', '>=', $fromDate)
+                    ->orWhereDate('end_date', '>=', $fromDate)
+                    ->orWhereDate('created_at', '>=', $fromDate);
                 if ($hasDueDateColumn) {
                     $inner->orWhereDate('due_date', '>=', $fromDate);
                 }
@@ -1830,7 +1862,9 @@ final class TaskController extends Controller
         if ($filters['to_date']) {
             $toDate = $filters['to_date'];
             $query->where(function ($inner) use ($toDate, $hasDueDateColumn) {
-                $inner->whereDate('due_at', '<=', $toDate);
+                $inner->whereDate('due_at', '<=', $toDate)
+                    ->orWhereDate('start_date', '<=', $toDate)
+                    ->orWhereDate('created_at', '<=', $toDate);
                 if ($hasDueDateColumn) {
                     $inner->orWhereDate('due_date', '<=', $toDate);
                 }
@@ -2049,7 +2083,7 @@ final class TaskController extends Controller
             return $uri;
         }
 
-        return $this->normalizeInternalUrl(route('tasks.report'));
+        return $this->normalizeInternalUrl(routeLocale('tasks.report'));
     }
 
     private function isSafeRedirect(string $url): bool

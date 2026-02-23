@@ -43,7 +43,7 @@ $inputId = $inputId ?? 'attachments';
             <div class="flex items-center gap-2">
               <a
                 class="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-3 py-1.5 text-sm text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-900/30"
-                href="{{ route('attachments.view', $att) }}"
+                href="{{ route('attachments.view', ['locale' => app()->getLocale(), 'attachment' => $att->id]) }}"
                 target="_blank"
               >Lihat</a>
               <a
@@ -102,7 +102,7 @@ $inputId = $inputId ?? 'attachments';
   <script src="{{ asset('vendor/filepond/filepond-plugin-file-validate-type.min.js') }}"></script>
   <script src="{{ asset('vendor/filepond/filepond-plugin-file-validate-size.min.js') }}"></script>
   <script src="{{ asset('vendor/filepond/filepond-plugin-image-preview.min.js') }}"></script>
-  <script>
+  <script nonce="{{ $cspNonce }}">
     document.addEventListener('DOMContentLoaded', () => {
       const input = document.getElementById('{{ $inputId }}');
       const toggle = document.getElementById('toggle-{{ $inputId }}');

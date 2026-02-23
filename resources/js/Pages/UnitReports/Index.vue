@@ -95,50 +95,101 @@
     </section>
 
     <section class="panel">
-      <header class="panel-head">
-        <div>
-          <p class="panel-kicker">Tim Unit</p>
-          <h2 class="panel-title">User</h2>
+        <header class="panel-head">
+          <div>
+            <p class="panel-kicker">Tim Unit</p>
+              <h2 class="panel-title">{{ isSuperadmin && !selectedUnitModel ? "Unit" : "User" }}</h2>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <template v-if="isSuperadmin">
+              <label class="text-xs font-semibold text-slate-500 dark:text-slate-300">Filter Unit</label>
+                <div class="min-w-[220px] max-w-[520px]">
+                  <FancySelect
+                    v-model="selectedUnitModel"
+                    :options="unitSelectOptions"
+                    accent="subtle"
+                  />
+                </div>
+            </template>
+
+              <span class="panel-badge" v-if="isSuperadmin && !selectedUnitModel">{{ unitSummary.length }} unit</span>
+            <span class="panel-badge" v-else>{{ agents.length }} orang</span>
+          </div>
+        </header>
+
+          <div class="panel-body overflow-x-auto" v-if="isSuperadmin && !selectedUnitModel">
+          <table class="w-full min-w-[640px] text-left">
+            <thead>
+              <tr class="text-xs uppercase tracking-wide text-slate-500">
+                <th class="py-2">Unit</th>
+                <th class="py-2 text-center">Users</th>
+                <th class="py-2 text-center">Tickets</th>
+                <th class="py-2 text-center">Tasks</th>
+                <th class="py-2 text-center">Projects</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-if="!unitSummary.length">
+                <td colspan="5" class="py-4 text-center text-sm text-slate-500">Belum ada data unit.</td>
+              </tr>
+              <tr
+                v-for="row in unitSummary"
+                :key="row.unit"
+                class="border-t border-slate-200 text-sm dark:border-slate-700"
+              >
+                <td class="py-3 font-semibold text-slate-900 dark:text-slate-100">
+                    <Link :href="resolveRoute('dashboard.unit-reports', { unit: row.unit })">
+                    {{ row.unit }}
+                  </Link>
+                </td>
+                <td class="py-3 text-center font-semibold">{{ row.users }}</td>
+                <td class="py-3 text-center font-semibold">{{ row.tickets }}</td>
+                <td class="py-3 text-center font-semibold">{{ row.tasks }}</td>
+                <td class="py-3 text-center font-semibold">{{ row.projects }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        <span class="panel-badge">{{ agents.length }} orang</span>
-      </header>
-      <div class="panel-body overflow-x-auto">
-        <table class="w-full min-w-[640px] text-left">
-          <thead>
-            <tr class="text-xs uppercase tracking-wide text-slate-500">
-              <th class="py-2">Nama</th>
-              <th class="py-2">Email</th>
-              <th class="py-2 text-center">Tickets</th>
-              <th class="py-2 text-center">Tasks</th>
-              <th class="py-2 text-center">Projects</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-if="!agents.length">
-              <td colspan="5" class="py-4 text-center text-sm text-slate-500">Belum ada anggota di unit ini.</td>
-            </tr>
-            <tr
-              v-for="agent in agents"
-              :key="agent.id"
-              class="border-t border-slate-200 text-sm dark:border-slate-700"
-            >
-              <td class="py-3 font-semibold text-slate-900 dark:text-slate-100">{{ agent.name }}</td>
-              <td class="py-3 text-slate-600 dark:text-slate-300">{{ agent.email || '—' }}</td>
-              <td class="py-3 text-center font-semibold">{{ agent.tickets }}</td>
-              <td class="py-3 text-center font-semibold">{{ agent.tasks }}</td>
-              <td class="py-3 text-center font-semibold">{{ agent.projects }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
+
+        <div class="panel-body overflow-x-auto" v-else>
+          <table class="w-full min-w-[640px] text-left">
+            <thead>
+              <tr class="text-xs uppercase tracking-wide text-slate-500">
+                <th class="py-2">Nama</th>
+                <th class="py-2">Email</th>
+                <th class="py-2 text-center">Tickets</th>
+                <th class="py-2 text-center">Tasks</th>
+                <th class="py-2 text-center">Projects</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-if="!agents.length">
+                <td colspan="5" class="py-4 text-center text-sm text-slate-500">Belum ada anggota di unit ini.</td>
+              </tr>
+              <tr
+                v-for="agent in agents"
+                :key="agent.id"
+                class="border-t border-slate-200 text-sm dark:border-slate-700"
+              >
+                <td class="py-3 font-semibold text-slate-900 dark:text-slate-100">{{ agent.name }}</td>
+                <td class="py-3 text-slate-600 dark:text-slate-300">{{ agent.email || "—" }}</td>
+                <td class="py-3 text-center font-semibold">{{ agent.tickets }}</td>
+                <td class="py-3 text-center font-semibold">{{ agent.tasks }}</td>
+                <td class="py-3 text-center font-semibold">{{ agent.projects }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
   </div>
 </template>
 
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import { Link, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import resolveRoute from '../../utils/resolveRoute';
+import FancySelect from "../../Components/FancySelect.vue";
 
 const props = defineProps({
   pageTitle: { type: String, default: 'Unit Reports' },
@@ -156,7 +207,41 @@ const props = defineProps({
   tasksPeriod: { type: String, default: '' },
   projectsPeriod: { type: String, default: '' },
   agents: { type: Array, default: () => [] },
+
+  // superadmin
+  isSuperadmin: { type: Boolean, default: false },
+  unitFilter: { type: String, default: '' },
+  unitOptions: { type: Array, default: () => [] },
+  unitSummary: { type: Array, default: () => [] },
 });
+
+// Superadmin controls
+const isSuperadmin = computed(() => Boolean(props.isSuperadmin));
+const unitFilter = computed(() => String(props.unitFilter ?? ''));
+const unitOptions = computed(() => (Array.isArray(props.unitOptions) ? props.unitOptions : []));
+const unitSummary = computed(() => (Array.isArray(props.unitSummary) ? props.unitSummary : []));
+
+// FancySelect - Unit filter
+const unitSelectOptions = computed(() => [{ value: "", label: "Semua Unit" }].concat(
+  unitOptions.value.map(u => ({ value: String(u), label: String(u) }))
+));
+
+const selectedUnitModel = computed({
+  get() {
+    if (typeof window === "undefined") return unitFilter.value;
+    const q = new URLSearchParams(window.location.search);
+    return q.get("unit") ?? "";
+  },
+  set(v) {
+    const value = v == null ? "" : String(v);
+    router.visit(resolveRoute("dashboard.unit-reports"), {
+      data: value ? { unit: value } : {},
+      preserveState: false,
+    });
+  },
+});
+
+
 
 const titleText = computed(() => props.pageTitle || 'Unit Reports');
 const subtitleText = computed(() => props.pageSubtitle || 'Ringkasan unit.');
@@ -182,17 +267,11 @@ const projectsTotal = computed(() => {
 const tasksActive = computed(() => Math.max(tasksTotal.value - tasksDone.value, 0));
 const projectsActive = computed(() => Math.max(projectsTotal.value - projectsCompleted.value, 0));
 
-const ticketsCompletion = computed(() =>
-  ticketsTotal.value ? Math.round((ticketsDone.value / ticketsTotal.value) * 100) : 0
-);
-const tasksCompletion = computed(() =>
-  tasksTotal.value ? Math.round((tasksDone.value / tasksTotal.value) * 100) : 0
-);
-const projectsCompletion = computed(() =>
-  projectsTotal.value ? Math.round((projectsCompleted.value / projectsTotal.value) * 100) : 0
-);
+const ticketsCompletion = computed(() => (ticketsTotal.value ? Math.round((ticketsDone.value / ticketsTotal.value) * 100) : 0));
+const tasksCompletion = computed(() => (tasksTotal.value ? Math.round((tasksDone.value / tasksTotal.value) * 100) : 0));
+const projectsCompletion = computed(() => (projectsTotal.value ? Math.round((projectsCompleted.value / projectsTotal.value) * 100) : 0));
 
-const meterClass = rate => {
+const meterClass = (rate) => {
   if (rate < 40) return 'danger';
   if (rate < 70) return 'warning';
   return 'ok';

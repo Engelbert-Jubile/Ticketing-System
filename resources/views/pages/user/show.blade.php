@@ -44,7 +44,7 @@
             @can('delete', $user)
                 <div class="pt-2">
                     <form action="{{ route('users.destroy', $user) }}" method="POST"
-                          onsubmit="return confirm('Yakin ingin menghapus user ini?')">
+                          data-confirm="Yakin ingin menghapus user ini?">
                         @csrf
                         @method('DELETE')
                         <button type="submit"

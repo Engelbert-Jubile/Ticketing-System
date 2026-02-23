@@ -87,7 +87,7 @@
                                     @endphp
 
                                     @if ($statusActions->isNotEmpty())
-                                        <select onchange="if(this.value){ window.location.href=this.value; }"
+                                        <select data-jump-select="1"
                                                 class="w-44 appearance-none rounded-full border border-gray-300 bg-white px-3 py-1 text-xs
                                                        text-gray-900 pr-7">
                                             <option disabled selected>Change status</option>

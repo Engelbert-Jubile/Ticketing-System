@@ -521,9 +521,9 @@ $backTo = request('from', route('tasks.report'));
 @endpush
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/quill@2.0.0/dist/quill.js"></script>
-<script>
+<script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}" src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}" src="https://cdn.jsdelivr.net/npm/quill@2.0.0/dist/quill.js"></script>
+<script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}">
   const FieldIndicators = (() => {
     const indicators = {};
 

@@ -145,7 +145,7 @@
               @if($atts->isNotEmpty())
                 <div class="flex flex-wrap gap-1.5">
                   @foreach($atts->take(2) as $att)
-                    <a href="{{ route('attachments.view', $att) }}" target="_blank"
+                    <a href="{{ route('attachments.view', ['locale' => app()->getLocale(), 'attachment' => $att->id]) }}" target="_blank"
                        class="inline-flex items-center rounded border border-slate-200 px-2 py-0.5 text-xs text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800/60"
                        title="{{ $att->original_name }}">
                       View
@@ -176,7 +176,7 @@
                           dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-900/30 transition-colors duration-300">
                   Edit
                 </a>
-                <form action="{{ route('tickets.destroy', $ticket) }}" method="POST" onsubmit="return confirm('Delete this ticket?')">
+                <form action="{{ route('tickets.destroy', $ticket) }}" method="POST" data-confirm="Delete this ticket?">
                   @csrf @method('DELETE')
                   <input type="hidden" name="from" value="{{ request()->fullUrl() }}">
                   <button type="submit"
@@ -206,7 +206,7 @@
                       <ul class="list-disc list-inside space-y-1">
                         @foreach($ticket->attachments as $att)
                         <li>
-                          <a href="{{ route('attachments.view', $att) }}" target="_blank" class="text-blue-600 hover:underline">Lihat</a>
+                          <a href="{{ route('attachments.view', ['locale' => app()->getLocale(), 'attachment' => $att->id]) }}" target="_blank" class="text-blue-600 hover:underline">Lihat</a>
                           <span class="text-slate-400">·</span>
                           <a href="{{ route('attachments.download', $att) }}" class="text-blue-600 hover:underline">Unduh</a>
                           <span class="text-slate-600 ml-2">
@@ -230,7 +230,7 @@
           </tr>
 
           {{-- Payload untuk modal --}}
-          <script type="application/json" id="ticket-data-{{ $rowKey }}">
+          <script type="application/json" id="ticket-data-{{ $rowKey }}" nonce="{{ $cspNonce }}">
             {!! json_encode([
               'title'      => (string) $ticket->title,
               'status'     => (string) $label,
@@ -301,7 +301,7 @@
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script>
+<script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}">
 document.addEventListener('DOMContentLoaded', function () {
   flatpickr(".flatpickr-field", { dateFormat: "d/m/Y", allowInput: true });
 

@@ -30,60 +30,85 @@ class UnitVisibility
     }
 
     public static function scopeTickets(Builder $query, ?User $user): Builder
-    {
-        if (! self::requiresRestriction($user)) {
-            return $query;
+{
+    if (! self::requiresRestriction($user)) {
+        return $query;
+    }
+
+    $userId = (int) ($user?->id ?? 0);
+    $unit = $user->unit;
+
+    return $query->where(function (Builder $builder) use ($unit, $userId) {
+        if ($userId <= 0) {
+            $builder->whereRaw('1=0');
+            return;
         }
 
-        $userId = (int) ($user?->id ?? 0);
-        $unit = $user->unit;
 
-        return $query->where(function (Builder $builder) use ($unit, $userId) {
-            $builder->whereHas('requester', fn (Builder $sub) => $sub->where('unit', $unit));
+            // ✅ OVERRIDE: user terlibat langsung → boleh lihat TANPA syarat unit
+            $builder->where(function (Builder $r) use ($userId) {
+                $r->where("requester_id", $userId)
+                  ->orWhere("agent_id", $userId)
+                  ->orWhere("assigned_id", $userId)
+                  ->orWhereHas("assignedUsers", fn (Builder $sub) => $sub->where("users.id", $userId))
+                  ->orWhereHas("tasks", function (Builder $taskQuery) use ($userId) {
+                      $taskQuery->where("assignee_id", $userId)
+                          ->orWhere(function (Builder $subQuery) use ($userId) {
+                              self::orWhereJsonAssignmentContains($subQuery, "assigned_to", $userId);
+                          });
+                  });
+            });
 
-            if ($userId > 0) {
-                $builder->orWhere('requester_id', $userId)
-                    ->orWhere('agent_id', $userId)
-                    ->orWhere('assigned_id', $userId)
-                    ->orWhereHas('assignedUsers', fn (Builder $sub) => $sub->where('users.id', $userId))
-                    ->orWhereHas('tasks', function (Builder $taskQuery) use ($userId) {
-                        $taskQuery->where('assignee_id', $userId)
-                            ->orWhere('created_by', $userId)
-                            ->orWhere(function (Builder $subQuery) use ($userId) {
-                                self::orWhereJsonAssignmentContains($subQuery, 'assigned_to', $userId);
-                            });
-                    });
-            }
+        $builder->orWhere(function (Builder $rel) use ($unit, $userId) {
+
+	
+            // Filter unit (boleh null)
+            $rel->where(function (Builder $u) use ($unit) {
+                $u->whereHas('requester', fn (Builder $sub) => $sub->where('unit', $unit))
+                  ->orWhereDoesntHave('requester')
+                  ->orWhereHas('requester', fn (Builder $sub) => $sub->whereNull('unit'));
+            });
+
+            // Relasi user (REQUESTER TERMASUK)
+            $rel->where(function (Builder $r) use ($userId) {
+                $r->where('requester_id', $userId)
+                  ->orWhere('agent_id', $userId)
+                  ->orWhere('assigned_id', $userId)
+                  ->orWhereHas('assignedUsers', fn (Builder $sub) => $sub->where('users.id', $userId))
+                  ->orWhereHas('tasks', function (Builder $taskQuery) use ($userId) {
+                      $taskQuery->where('assignee_id', $userId)
+                          ->orWhere(function (Builder $subQuery) use ($userId) {
+                              self::orWhereJsonAssignmentContains($subQuery, 'assigned_to', $userId);
+                          });
+                  });
+            });
         });
-    }
+    });
+}
+
 
     public static function scopeTasks(Builder $query, ?User $user): Builder
-    {
-        if (! self::requiresRestriction($user)) {
-            return $query;
-        }
-
-        $userId = (int) ($user?->id ?? 0);
-        $unit = $user->unit;
-
-        return $query->where(function (Builder $builder) use ($unit, $userId) {
-            $builder->whereHas('requester', fn (Builder $sub) => $sub->where('unit', $unit));
-
-            if ($userId > 0) {
-                $builder->orWhere('assignee_id', $userId)
-                    ->orWhere('created_by', $userId)
-                    ->orWhere(function (Builder $sub) use ($userId) {
-                        self::orWhereJsonAssignmentContains($sub, 'assigned_to', $userId);
-                    })
-                    ->orWhereHas('ticket', function (Builder $ticketQuery) use ($unit, $userId) {
-                        $ticketQuery->whereHas('requester', fn (Builder $sub) => $sub->where('unit', $unit))
-                            ->orWhere('agent_id', $userId)
-                            ->orWhere('assigned_id', $userId)
-                            ->orWhereHas('assignedUsers', fn (Builder $sub) => $sub->where('users.id', $userId));
-                    });
-            }
-        });
+{
+    if (! self::requiresRestriction($user)) {
+        return $query;
     }
+
+    $userId = (int) ($user?->id ?? 0);
+
+    if ($userId <= 0) {
+        return $query->whereRaw('1=0');
+    }
+
+    return $query->where(function (Builder $q) use ($userId) {
+        $q->where('assignee_id', $userId)
+          ->orWhere(function (Builder $inner) use ($userId) {
+              self::orWhereJsonAssignmentContains($inner, 'assigned_to', $userId);
+          });
+    });
+}
+
+
+
 
     public static function scopeProjects(Builder $query, ?User $user): Builder
     {
@@ -92,31 +117,28 @@ class UnitVisibility
         }
 
         $userId = (int) ($user?->id ?? 0);
-        $unit = $user->unit;
         $projectsHasAgent = self::projectHasColumn('agent_id');
         $projectsHasAssigned = self::projectHasColumn('assigned_id');
 
-        return $query->where(function (Builder $builder) use ($unit, $userId, $projectsHasAgent, $projectsHasAssigned) {
-            $builder->whereHas('requester', fn (Builder $sub) => $sub->where('unit', $unit))
-                ->orWhereHas('user', fn (Builder $sub) => $sub->where('unit', $unit))
-                ->orWhereHas('ticket.requester', fn (Builder $sub) => $sub->where('unit', $unit));
-
-            if ($userId > 0) {
-                $builder->orWhere('requester_id', $userId)
-                    ->orWhere('created_by', $userId)
-                    ->when($projectsHasAgent, fn (Builder $sub) => $sub->orWhere('agent_id', $userId))
-                    ->when($projectsHasAssigned, fn (Builder $sub) => $sub->orWhere('assigned_id', $userId))
-                    ->orWhereHas('pics', fn (Builder $sub) => $sub->where('user_id', $userId))
-                    ->orWhereHas('ticket', function (Builder $ticketQuery) use ($unit, $userId) {
-                        $ticketQuery->whereHas('requester', fn (Builder $sub) => $sub->where('unit', $unit))
-                            ->orWhere('agent_id', $userId)
-                            ->orWhere('assigned_id', $userId)
-                            ->orWhereHas('assignedUsers', fn (Builder $sub) => $sub->where('users.id', $userId));
-                    });
+        return $query->where(function (Builder $builder) use ($userId, $projectsHasAgent, $projectsHasAssigned) {
+            if ($userId <= 0) {
+                $builder->whereRaw('1=0');
+                return;
             }
+
+            $builder->where(function (Builder $r) use ($userId, $projectsHasAgent, $projectsHasAssigned) {
+                $r->where('created_by', $userId)
+                  ->when($projectsHasAgent, fn (Builder $q) => $q->orWhere('agent_id', $userId))
+                  ->when($projectsHasAssigned, fn (Builder $q) => $q->orWhere('assigned_id', $userId))
+                  ->orWhereHas('pics', fn (Builder $sub) => $sub->where('user_id', $userId))
+                  ->orWhereHas('ticket', function (Builder $tq) use ($userId) {
+                      $tq->where('agent_id', $userId)
+                         ->orWhere('assigned_id', $userId)
+                         ->orWhereHas('assignedUsers', fn (Builder $sub) => $sub->where('users.id', $userId));
+                  });
+            });
         });
     }
-
     public static function ensureTicketAccess(?User $user, Ticket $ticket): void
     {
         if (! self::requiresRestriction($user)) {

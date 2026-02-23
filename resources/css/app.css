@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-@import url('https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css');
 
 @tailwind base;
 @tailwind components;
@@ -45,7 +44,7 @@
 }
 
 /* Basic theme transitions */
-html,
+/* html,
 body {
   -webkit-transition:
     background-color 0.35s var(--ease-smooth),
@@ -53,6 +52,12 @@ body {
   transition:
     background-color 0.35s var(--ease-smooth),
     color 0.35s var(--ease-smooth);
+} */
+
+/* Stabilkan warna kursor input saat initial paint */
+input,
+textarea {
+  caret-color: currentColor;
 }
 
 /* Sidebar base styles */
@@ -935,4 +940,36 @@ body {
     animation-duration: 0.25s !important;
     animation-iteration-count: 1 !important;
   }
+}
+
+/* Force caret visible on first paint (avoid transparent/white caret) */
+input,
+textarea {
+  caret-color: #0f172a !important;
+}
+
+/* Disable theme transition during first paint to avoid caret flicker */
+html.preload *,
+html.preload {
+  transition: none !important;
+  -webkit-transition: none !important;
+}
+
+/* Fix caret turning invisible on focus */
+input:focus,
+textarea:focus,
+input:focus-visible,
+textarea:focus-visible {
+  caret-color: #0f172a !important;
+}
+.dark input:focus,
+.dark textarea:focus,
+.dark input:focus-visible,
+.dark textarea:focus-visible {
+  caret-color: #f8fafc !important;
+}
+
+/* Prevent caret/focus flicker caused by transitions on inputs */
+input, textarea {
+  transition: none !important;
 }

@@ -54,6 +54,7 @@
             id="first_name"
             v-model="form.first_name"
             type="text"
+            autocomplete="given-name"
             class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
             required
           />
@@ -65,6 +66,7 @@
             id="last_name"
             v-model="form.last_name"
             type="text"
+            autocomplete="family-name"
             class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
           />
           <p v-if="form.errors.last_name" class="mt-1 text-xs text-rose-500">{{ form.errors.last_name }}</p>

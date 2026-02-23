@@ -21,7 +21,7 @@ class AccountController extends Controller
         return Inertia::render('Account/Profile', [
             'user' => $this->transformAccountUser($request->user()),
             'meta' => [
-                'updateRoute' => route('account.update-profile'),
+                'updateRoute' => route('account.update-profile', ['locale' => app()->getLocale()]),
                 'method' => 'put',
             ],
         ]);

@@ -51,7 +51,7 @@
                             <div class="text-xs text-gray-500 dark:text-gray-400">{{ number_format(($att->size ?? 0) / 1024, 1) }} KB</div>
                         </div>
                         <div class="flex items-center gap-2 ml-3">
-                            <a href="{{ route('attachments.view', $att) }}" target="_blank"
+                            <a href="{{ route('attachments.view', ['locale' => app()->getLocale(), 'attachment' => $att->id]) }}" target="_blank"
                                 class="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-900/30">
                                 Lihat
                             </a>

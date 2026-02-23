@@ -93,7 +93,7 @@ class SearchController extends Controller
                 ] : null,
                 'created_at' => optional($ticket->created_at)?->format('d M Y'),
                 'created_diff' => optional($ticket->created_at)?->diffForHumans(),
-                'url' => route('tickets.show', $ticket),
+                'url' => route('tickets.show', ['locale' => request()->route('locale'), 'ticket' => $ticket]),
             ])->values()->all(),
             'tasks' => $tasks->map(fn (Task $task) => [
                 'id' => $task->id,
@@ -108,7 +108,7 @@ class SearchController extends Controller
                     'name' => $task->requester->display_name ?? $task->requester->name ?? $task->requester->email,
                 ] : null,
                 'created_diff' => optional($task->created_at)?->diffForHumans(),
-                'url' => route('tasks.show', ['taskSlug' => $task->public_slug]),
+                'url' => route('tasks.show', ['locale' => request()->route('locale'), 'taskSlug' => $task->public_slug]),
             ])->values()->all(),
             'projects' => $projects->map(fn (Project $project) => [
                 'id' => $project->id,
@@ -119,7 +119,7 @@ class SearchController extends Controller
                     'id' => $project->user->id,
                     'name' => $project->user->display_name ?? $project->user->name ?? $project->user->email,
                 ] : null,
-                'url' => route('projects.show', ['project' => $project->public_slug]),
+                'url' => route('projects.show', ['locale' => request()->route('locale'), 'project' => $project->public_slug]),
             ])->values()->all(),
         ]);
     }

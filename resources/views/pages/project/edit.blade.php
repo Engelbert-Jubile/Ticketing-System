@@ -640,9 +640,9 @@ $userMap = collect($users ?? [])->mapWithKeys(fn ($user) => [
 @endpush
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/quill@1.3.6/dist/quill.js"></script>
-<script>
+<script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}" src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}" src="https://cdn.jsdelivr.net/npm/quill@1.3.6/dist/quill.js"></script>
+<script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}">
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('projectEditForm');
     const userMap = JSON.parse(form.getAttribute('data-user-map') || '{}');

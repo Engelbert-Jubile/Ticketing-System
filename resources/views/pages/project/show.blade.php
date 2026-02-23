@@ -236,7 +236,7 @@
                         @endif
                     </div>
                     <div class="flex gap-2">
-                        <a href="{{ route('attachments.view', $att) }}" target="_blank" class="px-3 py-1 rounded bg-blue-600 text-white text-xs hover:bg-blue-700">Lihat</a>
+                        <a href="{{ route('attachments.view', ['locale' => app()->getLocale(), 'attachment' => $att->id]) }}" target="_blank" class="px-3 py-1 rounded bg-blue-600 text-white text-xs hover:bg-blue-700">Lihat</a>
                         <a href="{{ route('attachments.download', $att) }}" class="px-3 py-1 rounded bg-blue-600 text-white text-xs hover:bg-blue-700">Unduh</a>
                     </div>
                 </li>

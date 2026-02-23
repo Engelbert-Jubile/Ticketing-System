@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Domains\Project\Models\Project;
+use App\Models\Attachment;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Route;
 
@@ -22,6 +23,7 @@ class RouteServiceProvider extends ServiceProvider
 
         // **Definisikan route-model binding kustom**
         Route::model('project', Project::class);
+        Route::model('attachment', Attachment::class);
     }
 
     public function map(): void

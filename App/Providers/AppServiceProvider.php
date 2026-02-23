@@ -28,12 +28,12 @@ class AppServiceProvider extends ServiceProvider
         // Daftarkan alias Livewire untuk Login (ƒ?opages.auth.loginƒ?? di Blade / route)
         Livewire::component('pages.auth.login', Login::class);
 
-        Status::ensureDefaults();
+        // Status::ensureDefaults();
 
         // Pastikan parameter locale selalu tersedia saat membangkitkan URL.
         $this->app['router']->matched(function (RouteMatched $event) {
             $locale = $event->route->parameter('locale') ?? app()->getLocale() ?? config('app.locale', 'en');
-            URL::defaults(['locale' => $locale]);
+            // URL::defaults(['locale' => $locale]);
         });
     }
 

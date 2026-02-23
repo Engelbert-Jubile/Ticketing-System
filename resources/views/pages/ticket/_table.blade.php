@@ -82,7 +82,7 @@
               <ul class="list-disc list-inside text-xs">
                 @foreach($atts as $att)
                   <li>
-                    <a href="{{ route('attachments.view', $att) }}" target="_blank" class="text-blue-600 hover:underline">Lihat</a>
+                    <a href="{{ route('attachments.view', ['locale' => app()->getLocale(), 'attachment' => $att->id]) }}" target="_blank" class="text-blue-600 hover:underline">Lihat</a>
                     <span class="text-slate-400">·</span>
                     <a href="{{ route('attachments.download', $att) }}" class="text-blue-600 hover:underline">Unduh</a>
                     <span class="text-slate-600 ml-1">{{ \Illuminate\Support\Str::limit($att->original_name, 24) }}</span>
@@ -96,7 +96,7 @@
           <td class="px-3 py-2 space-x-2">
             <a href="{{ route('tickets.show', ['ticket' => $t->id, 'from' => request()->fullUrl()]) }}" class="text-blue-600 hover:underline">View</a>
             <a href="{{ route('tickets.edit', ['ticket' => $t->id, 'from' => request()->fullUrl()]) }}" class="text-blue-600 hover:underline">Edit</a>
-            <form action="{{ route('tickets.destroy', $t) }}" method="POST" class="inline" onsubmit="return confirm('Hapus ticket ini?')">
+            <form action="{{ route('tickets.destroy', $t) }}" method="POST" class="inline" data-confirm="Hapus ticket ini?">
               @csrf @method('DELETE')
               <button class="text-red-600 hover:underline">Delete</button>
             </form>

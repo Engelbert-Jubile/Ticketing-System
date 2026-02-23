@@ -121,7 +121,7 @@
                     </a>
                   @endcan
                   @can('delete', $u)
-                    <form method="POST" action="{{ route('users.destroy',$u->id) }}" onsubmit="return confirm('Hapus akun {{ $u->username }}?')">
+                    <form method="POST" action="{{ route('users.destroy',$u->id) }}" data-confirm="Hapus akun?">
                       @csrf
                       @method('DELETE')
                       <button type="submit" class="inline-flex items-center gap-1 rounded-md border border-rose-300 px-3 py-1 text-xs font-semibold text-rose-600 transition hover:bg-rose-50 dark:border-rose-900/30 dark:text-rose-300 dark:hover:bg-rose-900/20">

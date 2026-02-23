@@ -168,11 +168,11 @@ class UserController extends Controller
         $this->authorize('assignRole', $user);
         $user->assignRole($validated['role']);
 
-        return to_route('users.report')->with('success', 'User created successfully.');
+        return to_route('users.report', ['locale' => request()->route('locale')])->with('success', 'User created successfully.');
     }
 
     /** Form edit. */
-    public function edit(Request $request, User $user): Response
+    public function edit(Request $request, string $locale, User $user): Response
     {
         $this->authorize('update', $user);
 
@@ -181,13 +181,6 @@ class UserController extends Controller
         $viewerIsSuper = RoleHelpers::userIsSuperAdmin($viewer);
         $allowed = $this->allowedRoleValues($viewer, $user);
 
-        \Log::info('users.edit.access', [
-            'viewer_id' => $viewer?->id,
-            'viewer_roles' => $viewer?->getRoleNames()?->toArray(),
-            'target_id' => $user->id,
-            'target_roles' => $user->getRoleNames()->toArray(),
-            'allowed_roles' => $allowed,
-        ]);
 
         return Inertia::render('Users/Edit', [
             'user' => $this->transformUserDetail($user),
@@ -204,7 +197,7 @@ class UserController extends Controller
     }
 
     /** Simpan perubahan user. */
-    public function update(Request $request, User $user): RedirectResponse
+    public function update(Request $request, string $locale, User $user)
     {
         $this->authorize('update', $user);
 
@@ -266,11 +259,11 @@ class UserController extends Controller
         $this->authorize('assignRole', $user);
         $user->syncRoles([$validated['role']]);
 
-        return to_route('users.report')->with('success', 'User updated successfully.');
+        return to_route('users.report', ['locale' => $locale])->with('success', 'User updated successfully.');
     }
 
     /** Hapus user. */
-    public function destroy(User $user): RedirectResponse
+    public function destroy(Request $request, string $locale, User $user): RedirectResponse
     {
         $this->authorize('delete', $user);
 
@@ -280,7 +273,7 @@ class UserController extends Controller
 
         $user->delete();
 
-        return to_route('users.report')->with('success', 'User deleted successfully.');
+        return to_route('users.report', ['locale' => request()->route('locale')])->with('success', 'User deleted successfully.');
     }
 
     /**
@@ -359,8 +352,8 @@ class UserController extends Controller
             'roles' => $roles,
             'unit' => $user->unit,
             'links' => [
-                'show' => route('users.show', $user),
-                'edit' => $viewer->can('update', $user) ? route('users.edit', $user) : null,
+                'show' => routeLocale('users.show', ['user' => $user->id]),
+                'edit' => $viewer->can('update', $user) ? routeLocale('users.edit', ['user' => $user->id]) : null,
             ],
             'can' => [
                 'update' => $viewer->can('update', $user),

@@ -16,7 +16,7 @@
 
 <form action="{{ route('tasks.promote', $task) }}"
       method="POST"
-      onsubmit="return confirm('Promote task ini menjadi project?')"
+      data-confirm="Promote task ini menjadi project?"
       class="inline-block {{ $class }}">
   @csrf
   <button type="submit"

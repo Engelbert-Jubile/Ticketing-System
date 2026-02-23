@@ -200,7 +200,7 @@ function closeDelete() {
 
 function performDelete() {
   deleteDialog.value.processing = true;
-  router.delete(route('users.destroy', props.user.id), {
+  router.delete(route('users.destroy', { locale: route().params.locale, user: props.user.id }), {
     preserveScroll: true,
     onFinish: () => {
       deleteDialog.value.processing = false;

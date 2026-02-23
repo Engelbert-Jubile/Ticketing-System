@@ -105,7 +105,7 @@
                             </a>
 
                             {{-- Delete --}}
-                            <form action="{{ route('projects.destroy',$p) }}" method="POST" class="inline" onsubmit="return confirm('Hapus?')">
+                            <form action="{{ route('projects.destroy',$p) }}" method="POST" class="inline" data-confirm="Hapus?">
                                 @csrf @method('DELETE')
                                 <input type="hidden" name="from" value="{{ request()->fullUrl() }}">
                                 <button type="submit"

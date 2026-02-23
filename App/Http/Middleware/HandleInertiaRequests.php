@@ -223,7 +223,7 @@ class HandleInertiaRequests extends Middleware
                         'message' => $notification->data['message'] ?? null,
                         'url' => $notification->data['url'] ?? null,
                         'is_unread' => is_null($notification->read_at),
-                        'read_at' => optional($notification->read_at)?->toDateTimeString(),
+                        'read_at' => $notification->read_at ? $notification->read_at->toDateTimeString() : null,
                         'time_ago' => optional($notification->created_at)?->diffForHumans(),
                     ];
                 })->all(),

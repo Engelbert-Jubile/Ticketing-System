@@ -13,6 +13,7 @@ import { createI18n } from './i18n';
 const pages = import.meta.glob('./Pages/**/*.vue');
 
 createInertiaApp({
+  title: (title) => title ? `Tickora - ${title}` : `Tickora`,
   resolve: name => {
     const importPage = pages[`./Pages/${name}.vue`];
     if (!importPage) {

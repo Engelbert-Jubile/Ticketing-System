@@ -9,10 +9,52 @@ use App\Models\Task;
 use App\Models\Ticket;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
 class AttachmentController extends BaseController
 {
+    private function normalizePath(string $path): string
+    {
+        $path = ltrim($path, '/');
+        if (str_starts_with($path, 'storage/')) {
+            $path = substr($path, strlen('storage/'));
+        }
+        if (str_starts_with($path, 'public/')) {
+            $path = substr($path, strlen('public/'));
+        }
+
+        return $path;
+    }
+
+    private function resolveAttachmentFile(Attachment $attachment): ?string
+    {
+        $path = $this->normalizePath((string) $attachment->path);
+        $disk = $attachment->disk ?? 'public';
+
+        try {
+            if (Storage::disk($disk)->exists($path)) {
+                return Storage::disk($disk)->path($path);
+            }
+        } catch (\Throwable) {
+        }
+
+        $candidates = [
+            public_path($path),
+            public_path('storage/'.$path),
+            storage_path('app/'.$path),
+            storage_path('app/public/'.$path),
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (is_file($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return null;
+    }
+
     private function canAccess(Attachment $attachment): bool
     {
         $user = Auth::user();
@@ -61,22 +103,16 @@ class AttachmentController extends BaseController
     }
 
     // GET /dashboard/attachments/{attachment}/view
-    public function view(Attachment $attachment)
+    public function view($attachment)
     {
+        $attachment = \App\Models\Attachment::findOrFail($attachment);
+
         if (! $this->canAccess($attachment)) {
             abort(403);
         }
 
-        $disk = 'public';
-        $path = $attachment->path;
-
-        if (! Storage::disk($disk)->exists($path)) {
-            abort(404);
-        }
-
-        try {
-            $fullPath = Storage::disk($disk)->path($path);
-        } catch (\Throwable) {
+        $fullPath = $this->resolveAttachmentFile($attachment);
+        if (! $fullPath) {
             abort(404);
         }
 
@@ -86,27 +122,52 @@ class AttachmentController extends BaseController
     }
 
     // GET /dashboard/attachments/{attachment}/download
-    public function download(Attachment $attachment)
+    public function download($attachment)
     {
+        $attachment = \App\Models\Attachment::findOrFail($attachment);
+
         if (! $this->canAccess($attachment)) {
             abort(403);
         }
 
-        return Storage::disk('public')->download(
-            $attachment->path,
-            $attachment->original_name
-        );
+        $fullPath = $this->resolveAttachmentFile($attachment);
+        if (! $fullPath) {
+            abort(404);
+        }
+
+        return response()->download($fullPath, $attachment->original_name);
     }
 
     // DELETE /dashboard/attachments/{attachment}
-    public function destroy(Request $request, Attachment $attachment)
+    public function destroy(Request $request, $attachment)
     {
+        $attachment = \App\Models\Attachment::findOrFail($attachment);
+
         if (! $this->canAccess($attachment)) {
             abort(403);
         }
 
-        if (Storage::disk('public')->exists($attachment->path)) {
-            Storage::disk('public')->delete($attachment->path);
+        $disk = $attachment->disk ?? 'public';
+        $path = $this->normalizePath((string) $attachment->path);
+
+        try {
+            if (Storage::disk($disk)->exists($path)) {
+                Storage::disk($disk)->delete($path);
+            }
+        } catch (\Throwable) {
+        }
+
+        $legacyCandidates = [
+            public_path($path),
+            public_path('storage/'.$path),
+            storage_path('app/'.$path),
+            storage_path('app/public/'.$path),
+        ];
+
+        foreach ($legacyCandidates as $candidate) {
+            if (is_file($candidate)) {
+                File::delete($candidate);
+            }
         }
 
         $attachment->delete();

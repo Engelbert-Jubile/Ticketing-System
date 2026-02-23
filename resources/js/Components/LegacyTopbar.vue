@@ -180,6 +180,8 @@
           <input
             v-model.trim="search"
             class="topbar-search__input"
+            name="search"
+            id="topbar-search"
             type="search"
             :placeholder="t('topbar.searchPlaceholder')"
             :aria-label="t('topbar.searchPlaceholder')"
@@ -265,7 +267,7 @@ watch(
   { deep: true }
 )
 
-const unreadCount = computed(() => notificationItems.value.filter(item => !item.read_at).length)
+const unreadCount = computed(() => notificationItems.value.filter(item => item.read_at == null).length)
 const themeIcon = computed(() => (props.theme === 'dark' ? 'light_mode' : 'dark_mode'))
 const themeToggleTitle = computed(() => (props.theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'))
 

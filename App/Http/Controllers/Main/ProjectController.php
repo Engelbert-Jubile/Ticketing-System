@@ -44,7 +44,8 @@ class ProjectController extends Controller
     /** Semua project */
     public function index(Request $request): RedirectResponse
     {
-        return redirect()->route('projects.report');
+        $locale = $request->route('locale') ?? app()->getLocale();
+        return redirect()->route('projects.report', ['locale' => $locale]);
     }
 
     /** Project in_progress */
@@ -332,7 +333,7 @@ class ProjectController extends Controller
 
     public function showLegacy(Request $request, string $locale, Project $project): Response
     {
-        return redirect()->route('projects.show', ['project' => $project->public_slug]);
+        return redirect()->route('projects.show', ['locale' => $locale, 'project' => $project->public_slug]);
     }
 
     private function renderProjectDetailPage(Request $request, Project $project): Response
@@ -357,7 +358,7 @@ class ProjectController extends Controller
         return Inertia::render('Projects/Show', [
             'project' => $detail,
             'meta' => [
-                'backUrl' => $this->resolveBackUrl($request, route('projects.report')),
+                'backUrl' => $this->resolveBackUrl($request, routeLocale('projects.report')),
             ],
         ]);
     }
@@ -375,7 +376,7 @@ class ProjectController extends Controller
         $statuses = $this->orderedStatuses();
 
         if ($statuses->isEmpty()) {
-            Status::ensureDefaults();
+            // Status::ensureDefaults();
             $statuses = $this->orderedStatuses();
         }
 
@@ -440,9 +441,9 @@ class ProjectController extends Controller
             ],
             'meta' => [
                 'mode' => 'create',
-                'backUrl' => $this->resolveBackUrl($request, route('projects.report')),
+                'backUrl' => $this->resolveBackUrl($request, routeLocale('projects.report')),
                 'canManageTicket' => $this->userCanManageTicket($viewer),
-                'submitUrl' => route('projects.store'),
+                'submitUrl' => routeLocale('projects.store'),
                 'submitMethod' => 'post',
                 'statusGuide' => $this->statusGuidance(),
                 'lockStatus' => $statusLock,
@@ -555,7 +556,7 @@ class ProjectController extends Controller
         $statuses = $this->orderedStatuses();
 
         if ($statuses->isEmpty()) {
-            Status::ensureDefaults();
+            // Status::ensureDefaults();
             $statuses = $this->orderedStatuses();
         }
 
@@ -668,7 +669,7 @@ class ProjectController extends Controller
             ])->values()->all(),
         ];
 
-        $backUrl = $this->resolveBackUrl($request, route('projects.report'));
+        $backUrl = $this->resolveBackUrl($request, route('projects.report', ['locale' => app()->getLocale()]));
 
         return Inertia::render('Projects/Edit', [
             'project' => $projectPayload,
@@ -698,7 +699,7 @@ class ProjectController extends Controller
                 'mode' => 'edit',
                 'backUrl' => $backUrl,
                 'canManageTicket' => $canManageTicket,
-                'submitUrl' => route('projects.update', $project->id),
+                'submitUrl' => route('projects.update', ['locale' => app()->getLocale(), 'project' => $project->id]),
                 'submitMethod' => 'put',
                 'statusGuide' => $this->statusGuidance(),
                 'lockStatus' => $statusLock,
@@ -1322,9 +1323,9 @@ class ProjectController extends Controller
     private function buildProjectLinks(Project $project): array
     {
         return [
-            'show' => route('projects.show', ['project' => $project->public_slug]),
-            'edit' => route('projects.edit', ['project' => $project->public_slug]),
-            'delete' => route('projects.destroy', ['project' => $project->id]),
+            'show' => route('projects.show', ['locale' => app()->getLocale(), 'project' => $project->public_slug]),
+            'edit' => route('projects.edit', ['locale' => app()->getLocale(), 'project' => $project->public_slug]),
+            'delete' => route('projects.destroy', ['locale' => app()->getLocale(), 'project' => $project->id]),
         ];
     }
 
@@ -1488,8 +1489,8 @@ class ProjectController extends Controller
                         'due_display' => $this->formatDate($related->end_date, 'd/m/Y', $tz),
                         'updated_display' => $this->formatDate($related->updated_at, 'd M Y H:i', $tz),
                         'links' => [
-                            'show' => route('projects.show', ['project' => $related->public_slug ?? $related->id]),
-                            'edit' => route('projects.edit', ['project' => $related->public_slug ?? $related->id]),
+                            'show' => route('projects.show', ['locale' => app()->getLocale(), 'project' => $related->public_slug ?? $related->id]),
+                            'edit' => route('projects.edit', ['locale' => app()->getLocale(), 'project' => $related->public_slug ?? $related->id]),
                         ],
                     ];
                 })
@@ -1527,7 +1528,7 @@ class ProjectController extends Controller
             'related_projects' => $relatedProjects,
             'links' => array_merge(
                 $this->buildProjectLinks($project),
-                ['pdf' => route('projects.report.detail', ['project' => $project->id])]
+                ['pdf' => route('projects.report.detail', ['locale' => app()->getLocale(), 'project' => $project->id])]
             ),
         ];
     }
@@ -1843,7 +1844,7 @@ class ProjectController extends Controller
                 $this->buildProjectLinks($project),
                 [
                     'ticket' => $project->ticket
-                        ? route('tickets.show', ['ticket' => $project->ticket->id])
+                        ? route('tickets.show', ['locale' => app()->getLocale(), 'ticket' => $project->ticket->id])
                         : null,
                 ]
             ),
