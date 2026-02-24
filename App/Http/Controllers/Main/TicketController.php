@@ -720,8 +720,6 @@ class TicketController extends Controller
             $notifier->notifyTicketCreated($ticket, $actor);
         }
 
-<<<<<<< HEAD
-
         // notify assigned recipients on create
         $ticket->loadMissing("assignedUsers:id");
         $assignedIds = $this->collectTicketAssignedIds($ticket);
@@ -734,9 +732,6 @@ class TicketController extends Controller
         if (! empty($assignedIds)) {
             $notifier->notifyTicketAssigned($ticket, $assignedIds, $actor);
         }
-
-=======
->>>>>>> 6bd67713b954480c384448d8bc8998f29bf4d93d
         return redirect()->route('tickets.create', ['locale' => app()->getLocale()])
             ->with('success', 'Ticket created successfully.');
     }

@@ -773,11 +773,7 @@ $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:i
         $workNumber = $task?->task_no ?? $project?->project_no ?? null;
         $workUrl = $task
             ? route('tasks.show', ['locale' => app()->getLocale(), 'taskSlug' => $task->public_slug ?? 'task-tsk'.base_convert((string) $task->id, 10, 36)])
-<<<<<<< HEAD
             : ($project ? route('projects.show', ['locale' => app()->getLocale(), 'project' => $project->public_slug]) : route('tickets.show', $ticket));
-=======
-            : ($project ? route('projects.show', ['project' => $project->public_slug]) : route('tickets.show', $ticket));
->>>>>>> 6bd67713b954480c384448d8bc8998f29bf4d93d
         $deadline = $this->formatDateTime($task?->due_at ?? $ticket->due_at ?? $ticket->due_date ?? $project?->end_date);
 
         $details = [
