@@ -10,45 +10,92 @@ use App\Models\Ticket;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class AttachmentController extends BaseController
 {
     private function normalizePath(string $path): string
     {
-        $path = ltrim($path, '/');
-        if (str_starts_with($path, 'storage/')) {
-            $path = substr($path, strlen('storage/'));
-        }
-        if (str_starts_with($path, 'public/')) {
-            $path = substr($path, strlen('public/'));
+        $path = trim($path);
+        $path = str_replace('\\', '/', $path);
+
+        if (preg_match('#^https?://#i', $path)) {
+            $parsed = parse_url($path, PHP_URL_PATH);
+            if (is_string($parsed) && $parsed !== '') {
+                $path = $parsed;
+            }
         }
 
-        return $path;
+        $path = ltrim($path, '/');
+
+        $prefixes = [
+            'storage/app/public/',
+            'public/storage/',
+            'storage/public/',
+            'storage/',
+            'public/',
+            'app/public/',
+            'app/',
+        ];
+
+        $changed = true;
+        while ($changed) {
+            $changed = false;
+            foreach ($prefixes as $prefix) {
+                if (str_starts_with($path, $prefix)) {
+                    $path = substr($path, strlen($prefix));
+                    $changed = true;
+                }
+            }
+        }
+
+        return ltrim($path, '/');
     }
 
     private function resolveAttachmentFile(Attachment $attachment): ?string
     {
-        $path = $this->normalizePath((string) $attachment->path);
+        $rawPath = trim((string) $attachment->path);
+        $rawPath = ltrim(str_replace('\\', '/', $rawPath), '/');
+        $normalizedPath = $this->normalizePath((string) $attachment->path);
         $disk = $attachment->disk ?? 'public';
 
-        try {
-            if (Storage::disk($disk)->exists($path)) {
-                return Storage::disk($disk)->path($path);
+        $relativeCandidates = array_values(array_unique(array_filter([
+            $normalizedPath,
+            $rawPath,
+        ], fn ($item) => is_string($item) && $item !== '')));
+
+        foreach ($relativeCandidates as $relativePath) {
+            $diskPaths = array_values(array_unique(array_filter([
+                $relativePath,
+                preg_replace('#^public/storage/#', '', $relativePath),
+                preg_replace('#^storage/app/public/#', '', $relativePath),
+                preg_replace('#^storage/#', '', $relativePath),
+                preg_replace('#^public/#', '', $relativePath),
+            ], fn ($item) => is_string($item) && $item !== '')));
+
+            foreach ($diskPaths as $diskPath) {
+                try {
+                    if (Storage::disk($disk)->exists($diskPath)) {
+                        return Storage::disk($disk)->path($diskPath);
+                    }
+                } catch (\Throwable) {
+                }
             }
-        } catch (\Throwable) {
         }
 
-        $candidates = [
-            public_path($path),
-            public_path('storage/'.$path),
-            storage_path('app/'.$path),
-            storage_path('app/public/'.$path),
-        ];
+        foreach ($relativeCandidates as $relativePath) {
+            $candidates = [
+                public_path($relativePath),
+                public_path('storage/'.$relativePath),
+                storage_path('app/'.$relativePath),
+                storage_path('app/public/'.$relativePath),
+            ];
 
-        foreach ($candidates as $candidate) {
-            if (is_file($candidate)) {
-                return $candidate;
+            foreach ($candidates as $candidate) {
+                if (is_file($candidate)) {
+                    return $candidate;
+                }
             }
         }
 
@@ -113,6 +160,12 @@ class AttachmentController extends BaseController
 
         $fullPath = $this->resolveAttachmentFile($attachment);
         if (! $fullPath) {
+            Log::warning('attachments.view.file_not_found', [
+                'attachment_id' => $attachment->id,
+                'db_path' => $attachment->path,
+                'normalized_path' => $this->normalizePath((string) $attachment->path),
+                'disk' => $attachment->disk ?? 'public',
+            ]);
             abort(404);
         }
 
@@ -132,6 +185,12 @@ class AttachmentController extends BaseController
 
         $fullPath = $this->resolveAttachmentFile($attachment);
         if (! $fullPath) {
+            Log::warning('attachments.download.file_not_found', [
+                'attachment_id' => $attachment->id,
+                'db_path' => $attachment->path,
+                'normalized_path' => $this->normalizePath((string) $attachment->path),
+                'disk' => $attachment->disk ?? 'public',
+            ]);
             abort(404);
         }
 
@@ -149,6 +208,8 @@ class AttachmentController extends BaseController
 
         $disk = $attachment->disk ?? 'public';
         $path = $this->normalizePath((string) $attachment->path);
+        $rawPath = trim((string) $attachment->path);
+        $rawPath = ltrim(str_replace('\\', '/', $rawPath), '/');
 
         try {
             if (Storage::disk($disk)->exists($path)) {
@@ -157,16 +218,23 @@ class AttachmentController extends BaseController
         } catch (\Throwable) {
         }
 
-        $legacyCandidates = [
-            public_path($path),
-            public_path('storage/'.$path),
-            storage_path('app/'.$path),
-            storage_path('app/public/'.$path),
-        ];
+        $relativeCandidates = array_values(array_unique(array_filter([
+            $path,
+            $rawPath,
+        ], fn ($item) => is_string($item) && $item !== '')));
 
-        foreach ($legacyCandidates as $candidate) {
-            if (is_file($candidate)) {
-                File::delete($candidate);
+        foreach ($relativeCandidates as $relativePath) {
+            $legacyCandidates = [
+                public_path($relativePath),
+                public_path('storage/'.$relativePath),
+                storage_path('app/'.$relativePath),
+                storage_path('app/public/'.$relativePath),
+            ];
+
+            foreach ($legacyCandidates as $candidate) {
+                if (is_file($candidate)) {
+                    File::delete($candidate);
+                }
             }
         }
 
