@@ -23,7 +23,7 @@ class ContentSecurityPolicy
             "frame-src 'self' https://www.google.com https://www.gstatic.com",
             "img-src 'self' data: https://img.icons8.com",
             // NOTE: hashes below whitelist known inline bootstrap snippets.
-            "script-src 'self' 'nonce-{$nonce}' https://cdn.jsdelivr.net https://www.google.com https://www.gstatic.com 'sha256-LMmqXgfkkVs7Lpa0RDspAs2xyQJI/+Yv58I12SywUnA=' 'sha256-FyCbrsYE1Dwm6hKyfZKXqBbAkusY0XCL9xowJYRWmWo=' 'sha256-uyWu7xRwdCUgJJE4CkMn64ZUqHkwyOrS2xAOZ9B77+0=' 'sha256-b1rtbWIN0jhBPpRIL713T0oW9gTGg+D3HAbnKoidRm4=' 'sha256-Ed+eLaW9fQnKqC1wOd2Fc52IdsYurUnHxlqH9idgnnk=' 'sha256-Y0wPbVp63Ys5vshT3/LI0dkbqsik0yl6mZ66JmR5IvE=' 'sha256-07d3SD3u41fNM/vCBhGjQxghXue+I310wn3w9cCV/Bs=' 'sha256-AKf3tXPksV2ofkZmQrnF4A1VDgGC1yJp4ZWH2yMsYcE='",
+            "script-src 'self' 'nonce-{$nonce}' https://cdn.jsdelivr.net https://www.google.com https://www.gstatic.com 'sha256-LMmqXgfkkVs7Lpa0RDspAs2xyQJI/+Yv58I12SywUnA=' 'sha256-FyCbrsYE1Dwm6hKyfZKXqBbAkusY0XCL9xowJYRWmWo=' 'sha256-uyWu7xRwdCUgJJE4CkMn64ZUqHkwyOrS2xAOZ9B77+0=' 'sha256-b1rtbWIN0jhBPpRIL713T0oW9gTGg+D3HAbnKoidRm4=' 'sha256-Ed+eLaW9fQnKqC1wOd2Fc52IdsYurUnHxlqH9idgnnk=' 'sha256-Y0wPbVp63Ys5vshT3/LI0dkbqsik0yl6mZ66JmR5IvE=' 'sha256-07d3SD3u41fNM/vCBhGjQxghXue+I310wn3w9cCV/Bs=' 'sha256-AKf3tXPksV2ofkZmQrnF4A1VDgGC1yJp4ZWH2yMsYcE=' 'sha256-CYVhwhzP/O+34ZD6clHrW1MtHM5hQgNG5VjCXQiaS1c='",
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.bunny.net https://cdn.jsdelivr.net",
             "font-src 'self' data: https://fonts.gstatic.com https://fonts.bunny.net https://cdn.jsdelivr.net",
             "connect-src 'self' https://www.google.com https://www.gstatic.com",
