@@ -31,10 +31,30 @@ class ContentSecurityPolicy
 
         /** @var Response $response */
         $response = $next($request);
+        $this->injectNonceIntoHtml($response, $nonce);
         $response->headers->set('Content-Security-Policy', preg_replace("/[\r\n]+/", ' ', $csp).';');
         $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
         $response->headers->set('Pragma', 'no-cache');
 
         return $response;
+    }
+
+    private function injectNonceIntoHtml(Response $response, string $nonce): void
+    {
+        $contentType = strtolower((string) $response->headers->get('Content-Type', ''));
+        if ($contentType !== '' && strpos($contentType, 'text/html') === false) {
+            return;
+        }
+
+        $content = (string) $response->getContent();
+        if ($content === '') {
+            return;
+        }
+
+        // Add nonce to script/style tags that do not already have one.
+        $content = preg_replace('/<script(?![^>]*\bnonce=)([^>]*)>/i', '<script nonce="'.$nonce.'"$1>', $content);
+        $content = preg_replace('/<style(?![^>]*\bnonce=)([^>]*)>/i', '<style nonce="'.$nonce.'"$1>', $content);
+
+        $response->setContent($content);
     }
 }
