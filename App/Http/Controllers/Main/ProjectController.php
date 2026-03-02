@@ -710,7 +710,11 @@ class ProjectController extends Controller
         ]);
     }
 
-    /** Tickets yang bisa dilink-kan ke project (mirip create task) */
+    /**
+     * Tickets yang bisa dilink-kan ke project (mirip create task).
+     *
+     * @return Collection<int, Ticket>
+     */
     private function linkableTicketsForUser(?User $viewer, ?Ticket $context = null): Collection
     {
         $requesterColumns = $this->requesterSelectColumns();
@@ -727,6 +731,7 @@ class ProjectController extends Controller
             ->latest('id')
             ->limit(200);
 
+        /** @var Collection<int, Ticket> $tickets */
         $tickets = $this->filterTicketsByViewerUnit($query->get(), $viewer);
 
         if ($context) {
@@ -735,10 +740,12 @@ class ProjectController extends Controller
                 'attachments:'.implode(',', $attachmentColumns),
             ]);
             if ($tickets->where('id', $context->id)->isEmpty()) {
-                $tickets->push($context);
+                /** @var Collection<int, Ticket> $tickets */
+                $tickets = $tickets->concat([$context]);
             }
         }
 
+        /** @var Collection<int, Ticket> $tickets */
         return $tickets->values();
     }
 
@@ -753,6 +760,10 @@ class ProjectController extends Controller
         ];
     }
 
+    /**
+     * @param Collection<int, Ticket> $tickets
+     * @return array{0: array<int, array<string, mixed>>, 1: array<int, string>}
+     */
     private function prepareTicketOptions(Collection $tickets): array
     {
         $options = $tickets
@@ -808,9 +819,14 @@ class ProjectController extends Controller
         ];
     }
 
+    /**
+     * @param Collection<int, Ticket> $tickets
+     * @return Collection<int, Ticket>
+     */
     private function filterTicketsByViewerUnit(Collection $tickets, ?User $viewer): Collection
     {
         // Tampilkan semua tiket agar pilihan unit lengkap seperti di create task
+        /** @var Collection<int, Ticket> $tickets */
         return $tickets->values();
     }
 
@@ -2349,4 +2365,3 @@ class ProjectController extends Controller
         return $clean;
     }
 }
-
