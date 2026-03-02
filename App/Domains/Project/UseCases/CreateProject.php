@@ -10,7 +10,7 @@ class CreateProject
     public function execute(ProjectData $data): Project
     {
         return Project::create([
-            'name' => $data->name,
+            'title' => $data->title,
             'description' => $data->description,
             'status' => 'in_progress', // default status
         ]);

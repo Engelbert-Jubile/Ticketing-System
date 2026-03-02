@@ -297,7 +297,9 @@ class DashboardController extends Controller
             return;
         }
 
-        $driver = $builder->getConnection()->getDriverName();
+        /** @var \Illuminate\Database\Connection $connection */
+        $connection = $builder->getConnection();
+        $driver = $connection->getDriverName();
         $qualified = $builder->qualifyColumn($column);
         $jsonValue = json_encode($userId);
 

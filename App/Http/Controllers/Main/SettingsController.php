@@ -13,6 +13,7 @@ use App\Domains\Project\Models\Project;
 use App\Models\Task;
 use App\Models\Ticket;
 use Carbon\Carbon;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -39,7 +40,9 @@ class SettingsController extends Controller
         $defaults = $settings->getGroupWithMeta('defaults');
 
         $logoPath = $general['values']['app_logo_path'] ?? null;
-        $logoUrl = $logoPath ? Storage::disk('public')->url($logoPath) : null;
+        /** @var FilesystemAdapter $publicDisk */
+        $publicDisk = Storage::disk('public');
+        $logoUrl = $logoPath ? $publicDisk->url($logoPath) : null;
 
         $rolesPayload = [];
         $permissionsPayload = [];

@@ -10,7 +10,7 @@ class UpdateProject
     public function execute(Project $project, ProjectData $data): bool
     {
         return $project->update([
-            'name' => $data->name,
+            'title' => $data->title,
             'description' => $data->description,
             'status' => $data->status ?? $project->status, // fallback to current status
         ]);

@@ -10,14 +10,15 @@ class ResyncTicketStatus extends Command
 {
     protected $signature = 'tickets:resync-status';
 
-    protected $description = 'Rescan & sync ticket status from related projects/tasks';
+    protected $description = 'Resync ticket status from related projects/tasks';
 
     public function handle(): int
     {
         $bar = $this->output->createProgressBar(Ticket::count());
         Ticket::chunk(200, function ($chunk) use ($bar) {
+            /** @var \Illuminate\Support\Collection<int, Ticket> $chunk */
             foreach ($chunk as $t) {
-                TicketStatusSync::rescanTicket((int) $t->id);
+                TicketStatusSync::handleTicketSaved($t);
                 $bar->advance();
             }
         });

@@ -13,6 +13,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Task;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Notifications\ActivityNotification;
 use App\Services\AttachmentService;
 use App\Services\ReportExportService;
 use App\Services\WorkItemNotifier;
@@ -27,6 +28,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -58,6 +60,7 @@ final class TaskController extends Controller
         $origin = $this->pageOrigin($request, 'tasks.on-progress');
         $actor = $request->user();
 
+        /** @var Builder $taskQuery */
         $taskQuery = Task::query()
             ->select(['id', 'title', 'description', 'status', 'updated_at'])
             ->whereIn('status', $statusScope);
@@ -1030,7 +1033,7 @@ final class TaskController extends Controller
         $previousAssignees = $this->collectTaskAssigneeIds($task);
 
         try {
-            \Log::debug('tasks.update.payload_keys', array_keys($request->all()));
+            Log::debug('tasks.update.payload_keys', array_keys($request->all()));
         } catch (\Throwable) {
         }
 
@@ -1041,7 +1044,7 @@ final class TaskController extends Controller
             $request->merge(['status' => $task->status ?? WorkflowStatus::default()]);
         }
         try {
-            \Log::debug('tasks.update.input_snapshot', [
+            Log::debug('tasks.update.input_snapshot', [
                 'task_id' => $task->id,
                 'before_status' => $task->status,
                 'before_title' => $task->title,
@@ -1122,7 +1125,7 @@ final class TaskController extends Controller
 
         $this->updateTask->execute($task, $data);
         try {
-            \Log::debug('tasks.update.after_execute', [
+            Log::debug('tasks.update.after_execute', [
                 'task_id' => $task->id,
                 'status' => $task->status,
                 'title' => $task->title,
@@ -1303,7 +1306,7 @@ final class TaskController extends Controller
             ])->values()->all(),
             'links' => array_merge(
                 $this->buildTaskLinks($task, $origin),
-                ['promote' => routeLocale('tasks.promote', $task)]
+                ['promote' => routeLocale('tasks.promote', ['task' => $task->id])]
             ),
         ];
     }
@@ -1479,10 +1482,12 @@ final class TaskController extends Controller
         $viewer = $request->user();
         $tz = config('app.timezone');
 
+        /** @var Builder $query */
         $query = Task::query()
             ->where('ticket_id', $task->ticket_id)
             ->orderByDesc('created_at');
 
+        /** @var Builder $query */
         $query = UnitVisibility::scopeTasks($query, $viewer);
 
         $ticketColumns = implode(',', array_unique(array_filter([
