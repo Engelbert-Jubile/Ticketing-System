@@ -1,6 +1,7 @@
 @php
 $recaptcha = app(\App\Services\Security\RecaptchaVerifier::class);
 $unitOptions = $units ?? \App\Support\UserUnitOptions::values();
+$nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -84,7 +85,7 @@ $unitOptions = $units ?? \App\Support\UserUnitOptions::values();
     }
   </style>
   @if ($recaptcha->isEnabled())
-  <script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}" src="https://www.google.com/recaptcha/api.js?render={{ $recaptcha->siteKey() }}" async defer></script>
+  <script nonce="{{ $nonce }}" src="https://www.google.com/recaptcha/api.js?render={{ $recaptcha->siteKey() }}" async defer></script>
   @endif
 </head>
 
@@ -422,7 +423,7 @@ $unitOptions = $units ?? \App\Support\UserUnitOptions::values();
     </div>
   </div>
 
-  <script nonce="{{ $cspNonce }}">
+  <script nonce="{{ $nonce }}">
     (function() {
       document.querySelectorAll('[data-password-toggle]').forEach(function(btn) {
         var targetId = btn.getAttribute('data-password-toggle');
@@ -445,7 +446,7 @@ $unitOptions = $units ?? \App\Support\UserUnitOptions::values();
     })();
   </script>
 
-  <script nonce="{{ $cspNonce }}">
+  <script nonce="{{ $nonce }}">
     (function() {
       var selectRoot = document.getElementById('unitSelect');
       var input = document.getElementById('unit');
@@ -580,7 +581,7 @@ $unitOptions = $units ?? \App\Support\UserUnitOptions::values();
     })();
   </script>
 
-  <script nonce="{{ $cspNonce }}">
+  <script nonce="{{ $nonce }}">
     (function() {
       var lockedDomain = '@kftd.co.id';
       var form = document.getElementById('register-form');
@@ -613,7 +614,7 @@ $unitOptions = $units ?? \App\Support\UserUnitOptions::values();
     })();
   </script>
 
-  <script nonce="{{ $cspNonce }}">
+  <script nonce="{{ $nonce }}">
     (function() {
       var form = document.getElementById('register-form');
       if (!form) return;
@@ -669,7 +670,7 @@ $unitOptions = $units ?? \App\Support\UserUnitOptions::values();
 
 </html>
 
-<script nonce="{{ $cspNonce }}">
+<script nonce="{{ $nonce }}">
 document.addEventListener("DOMContentLoaded", function () {
   const form = document.querySelector("form");
   if (!form) return;
