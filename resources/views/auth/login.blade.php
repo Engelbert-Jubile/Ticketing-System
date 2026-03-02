@@ -101,6 +101,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
             $currentLocale = app()->getLocale() ?? config('app.locale', 'en');
           @endphp
           <form id="login-form" method="POST" action="{{ route('login.store', ['locale' => $currentLocale]) }}" 
+            @if ($recaptcha->isEnabled()) data-recaptcha-sitekey="{{ $recaptcha->siteKey() }}" @endif
 class="space-y-6" >
             @csrf
             @php
@@ -448,48 +449,7 @@ rgba(0,0,0,0.15), rgba(0,0,0,0.55), rgba(0,0,0,0.15));
 
 @endif
   @if ($recaptcha->isEnabled())
-  <script nonce="{{ $nonce }}">
-    (function () {
-      var form = document.getElementById("login-form");
-      var el = document.getElementById("g-recaptcha-response");
-      if (!form || !el) return;
-
-
-        // fallback: avoid JS crash if showBgLoading is missing
-        if (typeof window.showBgLoading !== "function") {
-          window.showBgLoading = function () {
-            var ov = document.getElementById("loginOverlay");
-            if (ov) ov.classList.add("show");
-          };
-        }
-
-      var busy = false;
-      form.addEventListener("submit", function (e) {
-          showBgLoading();
-        if (busy) return; /* submit kedua setelah token didapat */
-        if (typeof grecaptcha === "undefined") return; /* biarkan server handle error */
-        e.preventDefault();
-        busy = true;
-
-        try {
-          grecaptcha.ready(function () {
-            grecaptcha.execute("{{ $recaptcha->siteKey() }}", { action: "login" })
-              .then(function (token) {
-                el.value = token || "";
-                form.submit();
-              })
-              .catch(function () {
-                busy = false;
-                alert("reCAPTCHA gagal, silakan refresh dan coba lagi.");
-              });
-          });
-        } catch (err) {
-          busy = false;
-          alert("reCAPTCHA gagal, silakan refresh dan coba lagi.");
-        }
-      }, true);
-    })();
-  </script>
+  <script nonce="{{ $nonce }}" src="{{ asset('login-recaptcha.js') }}" defer></script>
   @endif
 
 </body>
