@@ -150,7 +150,7 @@ class AttachmentController extends BaseController
     }
 
     // GET /dashboard/attachments/{attachment}/view
-    public function view(Attachment $attachment)
+    public function view(string $locale, Attachment $attachment)
     {
         if (! $this->canAccess($attachment)) {
             abort(403);
@@ -173,7 +173,7 @@ class AttachmentController extends BaseController
     }
 
     // GET /dashboard/attachments/{attachment}/download
-    public function download(Attachment $attachment)
+    public function download(string $locale, Attachment $attachment)
     {
         if (! $this->canAccess($attachment)) {
             abort(403);
@@ -194,7 +194,7 @@ class AttachmentController extends BaseController
     }
 
     // DELETE /dashboard/attachments/{attachment}
-    public function destroy(Request $request, Attachment $attachment)
+    public function destroy(string $locale, Request $request, Attachment $attachment)
     {
         if (! $this->canAccess($attachment)) {
             abort(403);
