@@ -6,6 +6,8 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Models\Ticket;
 use App\Support\UnitVisibility;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -13,7 +15,7 @@ use Inertia\Response;
 
 class SearchController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request): Response|RedirectResponse
     {
         $query = $request->input('query');
         $locale = app()->getLocale() ?? config('app.locale', 'en');
@@ -22,7 +24,9 @@ class SearchController extends Controller
             return redirect()->back()->with('error', 'Silakan masukkan kata kunci pencarian.');
         }
 
+        /** @var Builder $ticketsQuery */
         $ticketsQuery = Ticket::with(['requester', 'statusRelation', 'priorityRelation']);
+        /** @var Builder $ticketsQuery */
         $ticketsQuery = UnitVisibility::scopeTickets($ticketsQuery, $request->user());
 
         $tickets = $ticketsQuery
@@ -34,7 +38,9 @@ class SearchController extends Controller
             ->limit(10)
             ->get();
 
+        /** @var Builder $tasksQuery */
         $tasksQuery = Task::with(['requester']);
+        /** @var Builder $tasksQuery */
         $tasksQuery = UnitVisibility::scopeTasks($tasksQuery, $request->user());
 
         $tasks = $tasksQuery
@@ -46,7 +52,9 @@ class SearchController extends Controller
             ->limit(10)
             ->get();
 
+        /** @var Builder $projectsQuery */
         $projectsQuery = Project::with(['user']);
+        /** @var Builder $projectsQuery */
         $projectsQuery = UnitVisibility::scopeProjects($projectsQuery, $request->user());
 
         $projects = $projectsQuery

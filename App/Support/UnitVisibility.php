@@ -323,7 +323,9 @@ class UnitVisibility
             return;
         }
 
-        $driver = $builder->getConnection()->getDriverName();
+        /** @var \Illuminate\Database\Connection $connection */
+        $connection = $builder->getConnection();
+        $driver = $connection->getDriverName();
         $qualified = $builder->qualifyColumn($column);
         $jsonValue = json_encode($userId);
 
@@ -348,7 +350,7 @@ class UnitVisibility
             return false;
         }
 
-        $raw = $task->assigned_to;
+        $raw = $task->assigned_to ?? null;
         if (! $raw) {
             return false;
         }
@@ -359,7 +361,9 @@ class UnitVisibility
             if (is_array($decoded)) {
                 $values = $decoded;
             }
-        } elseif (is_array($raw)) {
+        }
+
+        if (is_array($raw)) {
             $values = $raw;
         }
 

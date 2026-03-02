@@ -46,8 +46,10 @@ class TicketController extends Controller
             return route('tickets.report.detail.view', ['locale' => request()->route('locale'), 'ticket' => $ticketNo]);
         }
 
-        return route('tickets.edit', ['locale' => request()->route('locale'), 'locale' => app()->getLocale(),
-                    'ticket' => $ticket->id]);
+        return route('tickets.edit', [
+            'locale' => request()->route('locale') ?? app()->getLocale(),
+            'ticket' => $ticket->id,
+        ]);
     }
 
     private function priorities(): array
@@ -1263,10 +1265,12 @@ class TicketController extends Controller
         $origin = $this->pageOrigin($request, 'tickets.on-progress');
         $actor = $request->user();
 
+        /** @var Builder $ticketsQuery */
         $ticketsQuery = Ticket::query()
             ->select(['id', 'title', 'description', 'status', 'updated_at'])
             ->whereIn('status', $statusScope);
 
+        /** @var Builder $ticketsQuery */
         $ticketsQuery = UnitVisibility::scopeTickets($ticketsQuery, $actor);
 
         $tickets = $ticketsQuery
@@ -1441,6 +1445,7 @@ class TicketController extends Controller
 
     private function buildTicketReportQuery(array $filters, string $type, bool $withRelations = false, ?User $viewer = null): Builder
     {
+        /** @var Builder $query */
         $query = Ticket::query()
             ->select([
                 'id',
@@ -1464,8 +1469,11 @@ class TicketController extends Controller
                 'created_at',
                 'updated_at',
             ])
-            ->where(function ($q) use ($type) { $q->where('type', $type)->orWhereNull('type'); });
+            ->where(function (Builder $q) use ($type): void {
+                $q->where('type', $type)->orWhereNull('type');
+            });
 
+        /** @var Builder $query */
         $query = UnitVisibility::scopeTickets($query, $viewer);
 
         if ($withRelations) {

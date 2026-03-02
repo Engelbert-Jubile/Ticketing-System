@@ -37,8 +37,12 @@ class SetSuperAdminSeeder extends Seeder
             // Normalisasi role lama "super-admin" -> "superadmin"
             $legacy = Role::where('name', 'super-admin')->where('guard_name', $guard)->first();
             if ($legacy) {
+                /** @var \Illuminate\Support\Collection<int, User> $usersLegacy */
                 $usersLegacy = User::role('super-admin')->get();
                 foreach ($usersLegacy as $u) {
+                    if (! $u instanceof User) {
+                        continue;
+                    }
                     $u->syncRoles(
                         $u->getRoleNames()
                             ->map(fn ($n) => $n === 'super-admin' ? 'superadmin' : $n)

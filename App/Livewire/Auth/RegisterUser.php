@@ -7,9 +7,11 @@ use App\Support\UserUnitOptions;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Spatie\Permission\Models\Role;
 
+#[Layout('layouts.guest')]
 class RegisterUser extends Component
 {
     public string $username = '';
@@ -59,7 +61,6 @@ class RegisterUser extends Component
     public function render()
     {
         // resources/views/livewire/auth/register-user.blade.php
-        return view('livewire.auth.register-user')
-            ->layout('layouts.guest');
+        return view('livewire.auth.register-user');
     }
 }
