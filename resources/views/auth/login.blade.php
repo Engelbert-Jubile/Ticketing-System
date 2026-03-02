@@ -1,5 +1,6 @@
 @php
 $recaptcha = app(\App\Services\Security\RecaptchaVerifier::class);
+$nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -48,7 +49,7 @@ $recaptcha = app(\App\Services\Security\RecaptchaVerifier::class);
     }
   </style>
   @if ($recaptcha->isEnabled())
-    <script src="https://www.google.com/recaptcha/api.js?render={{ $recaptcha->siteKey() }}" async defer></script>
+    <script nonce="{{ $nonce }}" src="https://www.google.com/recaptcha/api.js?render={{ $recaptcha->siteKey() }}" async defer></script>
   @endif
 </head>
 
@@ -213,7 +214,7 @@ class="space-y-6" >
     </div>
   </div>
 
-  <script nonce="{{ $cspNonce }}">
+  <script nonce="{{ $nonce }}">
     (function () {
       window.showBgLoading = function () {
         var ov = document.getElementById("loginOverlay");
@@ -364,7 +365,7 @@ rgba(0,0,0,0.15), rgba(0,0,0,0.55), rgba(0,0,0,0.15));
 
 
 <!-- Livewire Scripts -->
-<script nonce="{{ $cspNonce }}">
+<script nonce="{{ $nonce }}">
 (function () {
   // Forgot password -> WhatsApp (confirm + open new tab)
   var waLink = document.getElementById("forgot-wa");
@@ -396,7 +397,7 @@ rgba(0,0,0,0.15), rgba(0,0,0,0.55), rgba(0,0,0,0.15));
   
 
 @if ($recaptcha->isEnabled())
-<script nonce="{{ $cspNonce }}">
+<script nonce="{{ $nonce }}">
 (function() {
   var waLink = document.getElementById("forgot-wa");
   if (waLink && !waLink.dataset.waBound) {
@@ -447,7 +448,7 @@ rgba(0,0,0,0.15), rgba(0,0,0,0.55), rgba(0,0,0,0.15));
 
 @endif
   @if ($recaptcha->isEnabled())
-  <script nonce="{{ $cspNonce }}">
+  <script nonce="{{ $nonce }}">
     (function () {
       var form = document.getElementById("login-form");
       var el = document.getElementById("g-recaptcha-response");

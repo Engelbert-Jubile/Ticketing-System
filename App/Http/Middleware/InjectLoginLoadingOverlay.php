@@ -13,7 +13,7 @@ class InjectLoginLoadingOverlay
         /** @var Response $response */
         $response = $next($request);
 
-        if (!($response instanceof Response)) {
+        if (! ($response instanceof Response)) {
             return $response;
         }
 
@@ -28,7 +28,7 @@ class InjectLoginLoadingOverlay
             return $response;
         }
 
-        $overlay = $this->overlayMarkup();
+        $overlay = $this->overlayMarkup((string) $request->attributes->get('csp_nonce', ''));
 
         if (stripos($content, '</body>') !== false) {
             $content = preg_replace('~</body>~i', $overlay . "\n</body>", $content, 1);
@@ -37,6 +37,7 @@ class InjectLoginLoadingOverlay
         }
 
         $response->setContent($content);
+
         return $response;
     }
 
@@ -48,7 +49,7 @@ class InjectLoginLoadingOverlay
 
         // hanya di /login (termasuk /en/login, dst)
         $path = '/' . ltrim(strtolower($request->path()), '/');
-        if ($path !== '/login' && !str_ends_with($path, '/login')) {
+        if ($path !== '/login' && ! str_ends_with($path, '/login')) {
             return false;
         }
 
@@ -70,9 +71,10 @@ class InjectLoginLoadingOverlay
         return $hasForm && $hasPassword;
     }
 
-    protected function overlayMarkup(): string
+    protected function overlayMarkup(string $nonce = ''): string
     {
-        return <<<'HTML'
+        $nonceAttr = $nonce !== '' ? ' nonce="' . e($nonce) . '"' : '';
+        $html = <<<'HTML'
 <style id="login-overlay-style">
 #loginOverlay{
   position:fixed;
@@ -173,17 +175,19 @@ class InjectLoginLoadingOverlay
 </style>
 
 <div id="loginOverlay" aria-hidden="true">
-  <button type="button" class="close-btn" aria-label="Tutup overlay">×</button>
+  <button type="button" class="close-btn" aria-label="Tutup overlay">&times;</button>
   <div class="panel">
     <div class="emblem">
       <span class="orbit" aria-hidden="true"></span>
     </div>
-    <p class="title">Sedang masuk, mohon tunggu…</p>
+    <p class="title">Sedang masuk, mohon tunggu...</p>
     <p class="subtitle">Kami sedang menyiapkan dasbor Tickora Anda.</p>
   </div>
 </div>
 
-<script src="/js/login-overlay.js" defer></script>
+<script__NONCE__ src="/js/login-overlay.js" defer></script>
 HTML;
+
+        return str_replace('__NONCE__', $nonceAttr, $html);
     }
 }

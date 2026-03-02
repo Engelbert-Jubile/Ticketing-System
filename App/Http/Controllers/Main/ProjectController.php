@@ -331,7 +331,7 @@ class ProjectController extends Controller
         return $this->renderProjectDetailPage($request, $project);
     }
 
-    public function showLegacy(Request $request, string $locale, Project $project): Response
+    public function showLegacy(Request $request, string $locale, Project $project): RedirectResponse
     {
         return redirect()->route('projects.show', ['locale' => $locale, 'project' => $project->public_slug]);
     }
@@ -2349,5 +2349,4 @@ class ProjectController extends Controller
         return $clean;
     }
 }
-
 
