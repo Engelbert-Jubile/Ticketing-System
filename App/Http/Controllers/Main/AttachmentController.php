@@ -150,10 +150,8 @@ class AttachmentController extends BaseController
     }
 
     // GET /dashboard/attachments/{attachment}/view
-    public function view($attachment)
+    public function view(Attachment $attachment)
     {
-        $attachment = \App\Models\Attachment::findOrFail($attachment);
-
         if (! $this->canAccess($attachment)) {
             abort(403);
         }
@@ -175,10 +173,8 @@ class AttachmentController extends BaseController
     }
 
     // GET /dashboard/attachments/{attachment}/download
-    public function download($attachment)
+    public function download(Attachment $attachment)
     {
-        $attachment = \App\Models\Attachment::findOrFail($attachment);
-
         if (! $this->canAccess($attachment)) {
             abort(403);
         }
@@ -198,10 +194,8 @@ class AttachmentController extends BaseController
     }
 
     // DELETE /dashboard/attachments/{attachment}
-    public function destroy(Request $request, $attachment)
+    public function destroy(Request $request, Attachment $attachment)
     {
-        $attachment = \App\Models\Attachment::findOrFail($attachment);
-
         if (! $this->canAccess($attachment)) {
             abort(403);
         }
