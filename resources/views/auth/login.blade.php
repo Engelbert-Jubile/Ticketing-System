@@ -69,7 +69,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
     <div class="relative flex min-h-screen items-center justify-center p-4">
       <div class="w-full max-w-md">
         <div class="mb-7 flex flex-col items-center text-center">
-          <div class="mb-5 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white/75 ring-1 ring-slate-200/70 shadow-sm shadow-blue-200/50 backdrop-blur dark:bg-slate-900/70 dark:ring-slate-800/70 dark:shadow-none">
+          <div class="auth-gpu-safe-surface mb-5 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white/75 ring-1 ring-slate-200/70 shadow-sm shadow-blue-200/50 backdrop-blur dark:bg-slate-900/70 dark:ring-slate-800/70 dark:shadow-none">
             <svg class="h-9 w-9" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M7 7.5V6.75C7 5.231 8.231 4 9.75 4h4.5C15.769 4 17 5.231 17 6.75V7.5" stroke="var(--brand-blue)" stroke-width="1.8" stroke-linecap="round" />
               <path d="M6.25 7.5h11.5c.966 0 1.75.784 1.75 1.75v8.25A2.5 2.5 0 0 1 17 20H7a2.5 2.5 0 0 1-2.5-2.5V9.25c0-.966.784-1.75 1.75-1.75Z" stroke="var(--brand-blue)" stroke-width="1.8" />
@@ -85,7 +85,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
           </p>
         </div>
 
-        <div class="rounded-3xl bg-white/85 p-8 shadow-xl shadow-blue-200/40 ring-1 ring-slate-200/70 backdrop-blur dark:bg-slate-900/70 dark:ring-slate-800/70 dark:shadow-none sm:p-10">
+        <div class="auth-gpu-safe-surface rounded-3xl bg-white/85 p-8 shadow-xl shadow-blue-200/40 ring-1 ring-slate-200/70 backdrop-blur dark:bg-slate-900/70 dark:ring-slate-800/70 dark:shadow-none sm:p-10">
           <div class="mb-8 space-y-2 text-center">
             <h2 class="text-2xl font-semibold tracking-tight">Masuk ke akun Anda</h2>
             <p class="text-sm text-slate-600 dark:text-slate-300">Kelola ticket, task, dan project dalam satu dashboard.</p>
@@ -131,7 +131,7 @@ class="space-y-6" >
                 <input id="email" type="hidden" name="email" value="{{ ($oldEmailLocal ?? '') ? (($oldEmailLocal ?? '') . ($lockedDomain ?? '@kftd.co.id')) : '' }}" />
                 <input id="email_local" type="text" inputmode="email" autocapitalize="none" spellcheck="false" value="{{ $oldEmailLocal ?? '' }}" required autofocus autocomplete="username"
                   aria-label="Email (tanpa domain)"
-                  class="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-3 pl-10 pr-28 text-sm text-slate-900 shadow-sm shadow-slate-200/40 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:shadow-none" />
+                  class="auth-input-stable w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-3 pl-10 pr-28 text-sm text-slate-900 shadow-sm shadow-slate-200/40 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:shadow-none" />
                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-xs font-semibold tracking-wide text-slate-500 dark:text-slate-300">{{ $lockedDomain ?? '@kftd.co.id' }}</span>
               </div>
               @error('email') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
@@ -147,7 +147,7 @@ class="space-y-6" >
                   </svg>
                 </span>
                 <input id="password" type="password" name="password" required autocomplete="current-password"
-                  class="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-3 pl-10 pr-12 text-sm text-slate-900 shadow-sm shadow-slate-200/40 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:shadow-none" />
+                  class="auth-input-stable w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-3 pl-10 pr-12 text-sm text-slate-900 shadow-sm shadow-slate-200/40 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:shadow-none" />
                 <button type="button"
                   class="absolute inset-y-0 right-0 inline-flex items-center px-3 text-slate-500 transition hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 dark:text-slate-300 dark:hover:text-white"
                   data-password-toggle="password"

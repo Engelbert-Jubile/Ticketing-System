@@ -973,3 +973,22 @@ textarea:focus-visible {
 input, textarea {
   transition: none !important;
 }
+
+/* GPU-safe auth surfaces/inputs to avoid Chromium caret compositing glitches */
+.auth-gpu-safe-surface {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.auth-input-stable {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  contain: paint;
+  isolation: isolate;
+  -webkit-text-fill-color: currentColor;
+  caret-color: #0f172a !important;
+}
+
+.dark .auth-input-stable {
+  caret-color: #f8fafc !important;
+}

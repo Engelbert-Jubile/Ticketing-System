@@ -100,7 +100,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
     <div class="relative flex min-h-screen items-center justify-center p-4">
       <div class="w-full max-w-xl">
         <div class="mb-7 flex flex-col items-center text-center">
-          <div class="mb-5 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white/75 ring-1 ring-slate-200/70 shadow-sm shadow-blue-200/50 backdrop-blur dark:bg-slate-900/70 dark:ring-slate-800/70 dark:shadow-none">
+          <div class="auth-gpu-safe-surface mb-5 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white/75 ring-1 ring-slate-200/70 shadow-sm shadow-blue-200/50 backdrop-blur dark:bg-slate-900/70 dark:ring-slate-800/70 dark:shadow-none">
             <svg class="h-9 w-9" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M12 12a3.25 3.25 0 1 0-3.25-3.25A3.25 3.25 0 0 0 12 12Z" stroke="var(--brand-blue)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
               <path d="M4.5 20a7.5 7.5 0 0 1 15 0" stroke="var(--brand-blue)" stroke-width="1.8" stroke-linecap="round" />
@@ -116,7 +116,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
           </p>
         </div>
 
-        <div class="rounded-3xl bg-white/85 p-8 shadow-xl shadow-blue-200/40 ring-1 ring-slate-200/70 backdrop-blur dark:bg-slate-900/70 dark:ring-slate-800/70 dark:shadow-none sm:p-10">
+        <div class="auth-gpu-safe-surface rounded-3xl bg-white/85 p-8 shadow-xl shadow-blue-200/40 ring-1 ring-slate-200/70 backdrop-blur dark:bg-slate-900/70 dark:ring-slate-800/70 dark:shadow-none sm:p-10">
           <div class="mb-6 space-y-1 text-center">
             <h2 class="text-2xl font-semibold tracking-tight">Daftar Akun Baru</h2>
             <p class="text-sm text-slate-600 dark:text-slate-300">Buat akun untuk mulai mengelola ticket dan pekerjaan tim.</p>
@@ -151,8 +151,8 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
                     <path d="M4 20a8 8 0 0 1 16 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
                   </svg>
                 </span>
-                <input id="username" type="text" name="username" value="{{ old('username') }}" required autocomplete="username"
-                  class="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-3 pl-10 text-sm text-slate-900 shadow-sm shadow-slate-200/40 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:shadow-none" />
+                  <input id="username" type="text" name="username" value="{{ old('username') }}" required autocomplete="username"
+                  class="auth-input-stable w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-3 pl-10 text-sm text-slate-900 shadow-sm shadow-slate-200/40 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:shadow-none" />
               </div>
               @error('username') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
@@ -168,7 +168,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
                     </svg>
                   </span>
                   <input id="first_name" type="text" name="first_name" value="{{ old('first_name') }}" required autocomplete="given-name"
-                    class="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-3 pl-10 text-sm text-slate-900 shadow-sm shadow-slate-200/40 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:shadow-none" />
+                    class="auth-input-stable w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-3 pl-10 text-sm text-slate-900 shadow-sm shadow-slate-200/40 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:shadow-none" />
                 </div>
                 @error('first_name') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
               </div>
@@ -183,7 +183,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
                     </svg>
                   </span>
                   <input id="last_name" type="text" name="last_name" value="{{ old('last_name') }}" autocomplete="family-name"
-                    class="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-3 pl-10 text-sm text-slate-900 shadow-sm shadow-slate-200/40 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:shadow-none" />
+                    class="auth-input-stable w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-3 pl-10 text-sm text-slate-900 shadow-sm shadow-slate-200/40 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:shadow-none" />
                 </div>
                 @error('last_name') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
               </div>
@@ -201,7 +201,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
                 <input id="email" type="hidden" name="email" value="{{ ($oldEmailLocal ?? '') ? (($oldEmailLocal ?? '') . ($lockedDomain ?? '@kftd.co.id')) : '' }}" />
                 <input id="email_local" type="text" inputmode="email" autocapitalize="none" spellcheck="false" value="{{ $oldEmailLocal ?? '' }}" required autocomplete="username"
                   aria-label="Email (tanpa domain)"
-                  class="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-3 pl-10 pr-28 text-sm text-slate-900 shadow-sm shadow-slate-200/40 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:shadow-none" />
+                  class="auth-input-stable w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-3 pl-10 pr-28 text-sm text-slate-900 shadow-sm shadow-slate-200/40 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:shadow-none" />
                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-xs font-semibold tracking-wide text-slate-500 dark:text-slate-300">{{ $lockedDomain ?? '@kftd.co.id' }}</span>
               </div>
               @error('email') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
@@ -262,7 +262,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
                     </svg>
                   </span>
                   <input id="password" type="password" name="password" required autocomplete="new-password"
-                    class="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-3 pl-10 pr-12 text-sm text-slate-900 shadow-sm shadow-slate-200/40 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:shadow-none" />
+                    class="auth-input-stable w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-3 pl-10 pr-12 text-sm text-slate-900 shadow-sm shadow-slate-200/40 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:shadow-none" />
                   <button type="button"
                     class="absolute inset-y-0 right-0 inline-flex items-center px-3 text-slate-500 transition hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 dark:text-slate-300 dark:hover:text-white"
                     data-password-toggle="password"
@@ -292,7 +292,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
                     </svg>
                   </span>
                   <input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password"
-                    class="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-3 pl-10 pr-12 text-sm text-slate-900 shadow-sm shadow-slate-200/40 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:shadow-none" />
+                    class="auth-input-stable w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-3 pl-10 pr-12 text-sm text-slate-900 shadow-sm shadow-slate-200/40 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:shadow-none" />
                   <button type="button"
                     class="absolute inset-y-0 right-0 inline-flex items-center px-3 text-slate-500 transition hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 dark:text-slate-300 dark:hover:text-white"
                     data-password-toggle="password_confirmation"
