@@ -11,14 +11,18 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
     input[type="password"]::-ms-reveal,
     input[type="password"]::-ms-clear { display: none; }
 
-    /* Critical first-paint fix: keep caret stable before bundled CSS loads */
+    /* Force stable caret color on auth page even when GPU compositing is enabled */
+    #login-form .auth-input-stable,
+    .dark #login-form .auth-input-stable,
     #email_local,
     #password {
       color: #0f172a !important;
       -webkit-text-fill-color: #0f172a !important;
       caret-color: #0f172a !important;
       text-shadow: none !important;
-      transform: translateZ(0);
+      opacity: 1 !important;
+      mix-blend-mode: normal !important;
+      transform-style: flat !important;
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
     }
@@ -73,15 +77,15 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
 
   <div class="relative min-h-screen overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
     <div aria-hidden="true" class="pointer-events-none absolute inset-0">
-      <div class="absolute -top-24 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-blue-200/45 dark:bg-blue-900/20"></div>
-      <div class="absolute -bottom-28 -left-28 h-80 w-80 rounded-full bg-amber-200/45 dark:bg-amber-900/15"></div>
-      <div class="absolute top-1/3 -right-28 h-96 w-96 rounded-full bg-indigo-200/40 dark:bg-indigo-900/15"></div>
+      <div class="absolute -top-24 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-blue-200/70 blur-3xl dark:bg-blue-900/30"></div>
+      <div class="absolute -bottom-28 -left-28 h-80 w-80 rounded-full bg-amber-200/70 blur-3xl dark:bg-amber-900/25"></div>
+      <div class="absolute top-1/3 -right-28 h-96 w-96 rounded-full bg-indigo-200/60 blur-3xl dark:bg-indigo-900/25"></div>
     </div>
 
     <div class="relative flex min-h-screen items-center justify-center p-4">
       <div class="w-full max-w-md">
         <div class="mb-7 flex flex-col items-center text-center">
-          <div class="auth-gpu-safe-surface mb-5 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white/75 ring-1 ring-slate-200/70 shadow-sm shadow-blue-200/50 dark:bg-slate-900/70 dark:ring-slate-800/70 dark:shadow-none">
+          <div class="auth-gpu-safe-surface mb-5 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white/75 ring-1 ring-slate-200/70 shadow-sm shadow-blue-200/50 backdrop-blur dark:bg-slate-900/70 dark:ring-slate-800/70 dark:shadow-none">
             <svg class="h-9 w-9" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M7 7.5V6.75C7 5.231 8.231 4 9.75 4h4.5C15.769 4 17 5.231 17 6.75V7.5" stroke="var(--brand-blue)" stroke-width="1.8" stroke-linecap="round" />
               <path d="M6.25 7.5h11.5c.966 0 1.75.784 1.75 1.75v8.25A2.5 2.5 0 0 1 17 20H7a2.5 2.5 0 0 1-2.5-2.5V9.25c0-.966.784-1.75 1.75-1.75Z" stroke="var(--brand-blue)" stroke-width="1.8" />
@@ -97,7 +101,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
           </p>
         </div>
 
-        <div class="auth-gpu-safe-surface rounded-3xl bg-white/85 p-8 shadow-xl shadow-blue-200/40 ring-1 ring-slate-200/70 dark:bg-slate-900/70 dark:ring-slate-800/70 dark:shadow-none sm:p-10">
+        <div class="auth-gpu-safe-surface rounded-3xl bg-white/85 p-8 shadow-xl shadow-blue-200/40 ring-1 ring-slate-200/70 backdrop-blur dark:bg-slate-900/70 dark:ring-slate-800/70 dark:shadow-none sm:p-10">
           <div class="mb-8 space-y-2 text-center">
             <h2 class="text-2xl font-semibold tracking-tight">Masuk ke akun Anda</h2>
             <p class="text-sm text-slate-600 dark:text-slate-300">Kelola ticket, task, dan project dalam satu dashboard.</p>
@@ -404,6 +408,34 @@ rgba(0,0,0,0.15), rgba(0,0,0,0.55), rgba(0,0,0,0.15));
       input.setAttribute("type", nextType);
     });
   });
+})();
+</script>
+
+<script nonce="{{ $nonce }}">
+(function () {
+  var ids = ['email_local', 'password'];
+  function lockCaret() {
+    ids.forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.style.setProperty('color', '#0f172a', 'important');
+      el.style.setProperty('-webkit-text-fill-color', '#0f172a', 'important');
+      el.style.setProperty('caret-color', '#0f172a', 'important');
+      el.style.setProperty('text-shadow', 'none', 'important');
+      el.style.setProperty('mix-blend-mode', 'normal', 'important');
+      el.style.setProperty('opacity', '1', 'important');
+    });
+  }
+
+  var frames = 0;
+  function pump() {
+    lockCaret();
+    if (frames++ < 90) requestAnimationFrame(pump);
+  }
+  requestAnimationFrame(pump);
+  window.addEventListener('pageshow', lockCaret, { passive: true });
+  document.addEventListener('visibilitychange', lockCaret, { passive: true });
+  document.addEventListener('focusin', lockCaret, { passive: true });
 })();
 </script>
 

@@ -12,7 +12,9 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
   input[type="password"]::-ms-reveal,
   input[type="password"]::-ms-clear { display: none; }
 
-  /* Critical first-paint fix: keep caret stable before bundled CSS loads */
+  /* Force stable caret color on auth page even when GPU compositing is enabled */
+  #register-form .auth-input-stable,
+  .dark #register-form .auth-input-stable,
   #username,
   #first_name,
   #last_name,
@@ -23,7 +25,9 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
     -webkit-text-fill-color: #0f172a !important;
     caret-color: #0f172a !important;
     text-shadow: none !important;
-    transform: translateZ(0);
+    opacity: 1 !important;
+    mix-blend-mode: normal !important;
+    transform-style: flat !important;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
   }
@@ -108,15 +112,15 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
 <body class="font-sans antialiased">
   <div class="relative min-h-screen overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
     <div aria-hidden="true" class="pointer-events-none absolute inset-0">
-      <div class="absolute -top-24 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-blue-200/45 dark:bg-blue-900/20"></div>
-      <div class="absolute -bottom-28 -left-28 h-80 w-80 rounded-full bg-amber-200/45 dark:bg-amber-900/15"></div>
-      <div class="absolute top-1/3 -right-28 h-96 w-96 rounded-full bg-indigo-200/40 dark:bg-indigo-900/15"></div>
+      <div class="absolute -top-24 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-blue-200/70 blur-3xl dark:bg-blue-900/30"></div>
+      <div class="absolute -bottom-28 -left-28 h-80 w-80 rounded-full bg-amber-200/70 blur-3xl dark:bg-amber-900/25"></div>
+      <div class="absolute top-1/3 -right-28 h-96 w-96 rounded-full bg-indigo-200/60 blur-3xl dark:bg-indigo-900/25"></div>
     </div>
 
     <div class="relative flex min-h-screen items-center justify-center p-4">
       <div class="w-full max-w-xl">
         <div class="mb-7 flex flex-col items-center text-center">
-          <div class="auth-gpu-safe-surface mb-5 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white/75 ring-1 ring-slate-200/70 shadow-sm shadow-blue-200/50 dark:bg-slate-900/70 dark:ring-slate-800/70 dark:shadow-none">
+          <div class="auth-gpu-safe-surface mb-5 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white/75 ring-1 ring-slate-200/70 shadow-sm shadow-blue-200/50 backdrop-blur dark:bg-slate-900/70 dark:ring-slate-800/70 dark:shadow-none">
             <svg class="h-9 w-9" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M12 12a3.25 3.25 0 1 0-3.25-3.25A3.25 3.25 0 0 0 12 12Z" stroke="var(--brand-blue)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
               <path d="M4.5 20a7.5 7.5 0 0 1 15 0" stroke="var(--brand-blue)" stroke-width="1.8" stroke-linecap="round" />
@@ -132,7 +136,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
           </p>
         </div>
 
-        <div class="auth-gpu-safe-surface rounded-3xl bg-white/85 p-8 shadow-xl shadow-blue-200/40 ring-1 ring-slate-200/70 dark:bg-slate-900/70 dark:ring-slate-800/70 dark:shadow-none sm:p-10">
+        <div class="auth-gpu-safe-surface rounded-3xl bg-white/85 p-8 shadow-xl shadow-blue-200/40 ring-1 ring-slate-200/70 backdrop-blur dark:bg-slate-900/70 dark:ring-slate-800/70 dark:shadow-none sm:p-10">
           <div class="mb-6 space-y-1 text-center">
             <h2 class="text-2xl font-semibold tracking-tight">Daftar Akun Baru</h2>
             <p class="text-sm text-slate-600 dark:text-slate-300">Buat akun untuk mulai mengelola ticket dan pekerjaan tim.</p>
@@ -248,7 +252,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
                 </span>
 
                 <div id="unitListbox" role="listbox" tabindex="-1"
-                  class="unit-menu absolute left-0 right-0 top-full z-30 mt-2 rounded-2xl border border-slate-200 bg-white/95 shadow-xl shadow-slate-200/60 ring-1 ring-slate-200/60 dark:border-slate-800 dark:bg-slate-950/85 dark:shadow-none">
+                  class="unit-menu absolute left-0 right-0 top-full z-30 mt-2 rounded-2xl border border-slate-200 bg-white/95 shadow-xl shadow-slate-200/60 ring-1 ring-slate-200/60 backdrop-blur dark:border-slate-800 dark:bg-slate-950/85 dark:shadow-none">
                   <div class="py-1">
                     <button type="button" class="unit-option w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-900/50"
                       data-unit-option data-value="" role="option" aria-selected="{{ old('unit') ? 'false' : 'true' }}">
@@ -459,6 +463,34 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
           if (closedIcon) closedIcon.classList.toggle('hidden', visible);
         });
       });
+    })();
+  </script>
+
+  <script nonce="{{ $nonce }}">
+    (function () {
+      var ids = ['username', 'first_name', 'last_name', 'email_local', 'password', 'password_confirmation'];
+      function lockCaret() {
+        ids.forEach(function (id) {
+          var el = document.getElementById(id);
+          if (!el) return;
+          el.style.setProperty('color', '#0f172a', 'important');
+          el.style.setProperty('-webkit-text-fill-color', '#0f172a', 'important');
+          el.style.setProperty('caret-color', '#0f172a', 'important');
+          el.style.setProperty('text-shadow', 'none', 'important');
+          el.style.setProperty('mix-blend-mode', 'normal', 'important');
+          el.style.setProperty('opacity', '1', 'important');
+        });
+      }
+
+      var frames = 0;
+      function pump() {
+        lockCaret();
+        if (frames++ < 90) requestAnimationFrame(pump);
+      }
+      requestAnimationFrame(pump);
+      window.addEventListener('pageshow', lockCaret, { passive: true });
+      document.addEventListener('visibilitychange', lockCaret, { passive: true });
+      document.addEventListener('focusin', lockCaret, { passive: true });
     })();
   </script>
 
