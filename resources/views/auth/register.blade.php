@@ -8,14 +8,11 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
 
 <head>
 
-<script nonce="{{ $nonce }}">
-  document.documentElement.classList.add('auth-caret-booting');
-</script>
 <style>
   input[type="password"]::-ms-reveal,
   input[type="password"]::-ms-clear { display: none; }
 
-  /* Force stable caret color on auth page even when GPU compositing is enabled */
+  /* Keep insertion caret stable and force dark text cursor color */
   #register-form .auth-input-stable,
   .dark #register-form .auth-input-stable,
   #username,
@@ -27,21 +24,13 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
     color: #0f172a !important;
     -webkit-text-fill-color: #0f172a !important;
     caret-color: #0f172a !important;
-    color-scheme: light !important;
     text-shadow: none !important;
-    opacity: 1 !important;
-    mix-blend-mode: normal !important;
-    transform-style: flat !important;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
   }
 
-  html.auth-caret-booting #register-form {
-    pointer-events: none !important;
-  }
-
-  html.auth-caret-booting #register-form .auth-input-stable {
-    caret-color: transparent !important;
+  /* Force pointer I-beam to stay dark (fix white I-beam on GPU acceleration) */
+  #register-form input[type="text"],
+  #register-form input[type="password"] {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M12 4v16M9 4h6M9 20h6' stroke='%230f172a' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E") 12 12, text !important;
   }
 </style>
   <meta charset="UTF-8">
@@ -475,56 +464,6 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
           if (closedIcon) closedIcon.classList.toggle('hidden', visible);
         });
       });
-    })();
-  </script>
-
-  <script nonce="{{ $nonce }}">
-    (function () {
-      var ids = ['username', 'first_name', 'last_name', 'email_local', 'password', 'password_confirmation'];
-      function lockCaret() {
-        ids.forEach(function (id) {
-          var el = document.getElementById(id);
-          if (!el) return;
-          el.style.setProperty('color', '#0f172a', 'important');
-          el.style.setProperty('-webkit-text-fill-color', '#0f172a', 'important');
-          el.style.setProperty('caret-color', '#0f172a', 'important');
-          el.style.setProperty('text-shadow', 'none', 'important');
-          el.style.setProperty('mix-blend-mode', 'normal', 'important');
-          el.style.setProperty('opacity', '1', 'important');
-        });
-      }
-
-      var frames = 0;
-      function pump() {
-        lockCaret();
-        if (frames++ < 90) requestAnimationFrame(pump);
-      }
-      requestAnimationFrame(pump);
-      window.addEventListener('pageshow', lockCaret, { passive: true });
-      document.addEventListener('visibilitychange', lockCaret, { passive: true });
-      document.addEventListener('focusin', lockCaret, { passive: true });
-    })();
-  </script>
-
-  <script nonce="{{ $nonce }}">
-    (function () {
-      function unlockCaretBoot() {
-        document.documentElement.classList.remove('auth-caret-booting');
-      }
-
-      if (document.readyState === 'complete') {
-        requestAnimationFrame(function () {
-          requestAnimationFrame(unlockCaretBoot);
-        });
-      } else {
-        window.addEventListener('load', function () {
-          requestAnimationFrame(function () {
-            requestAnimationFrame(unlockCaretBoot);
-          });
-        }, { once: true });
-      }
-
-      setTimeout(unlockCaretBoot, 1500);
     })();
   </script>
 
