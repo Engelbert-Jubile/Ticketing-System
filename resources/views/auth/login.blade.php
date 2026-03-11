@@ -7,6 +7,9 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
 
 <head>
 
+  <script nonce="{{ $nonce }}">
+    document.documentElement.classList.add('auth-caret-booting');
+  </script>
   <style>
     input[type="password"]::-ms-reveal,
     input[type="password"]::-ms-clear { display: none; }
@@ -19,12 +22,21 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
       color: #0f172a !important;
       -webkit-text-fill-color: #0f172a !important;
       caret-color: #0f172a !important;
+      color-scheme: light !important;
       text-shadow: none !important;
       opacity: 1 !important;
       mix-blend-mode: normal !important;
       transform-style: flat !important;
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
+    }
+
+    html.auth-caret-booting #login-form {
+      pointer-events: none !important;
+    }
+
+    html.auth-caret-booting #login-form .auth-input-stable {
+      caret-color: transparent !important;
     }
   </style>
   <meta charset="UTF-8">
@@ -436,6 +448,28 @@ rgba(0,0,0,0.15), rgba(0,0,0,0.55), rgba(0,0,0,0.15));
   window.addEventListener('pageshow', lockCaret, { passive: true });
   document.addEventListener('visibilitychange', lockCaret, { passive: true });
   document.addEventListener('focusin', lockCaret, { passive: true });
+})();
+</script>
+
+<script nonce="{{ $nonce }}">
+(function () {
+  function unlockCaretBoot() {
+    document.documentElement.classList.remove('auth-caret-booting');
+  }
+
+  if (document.readyState === 'complete') {
+    requestAnimationFrame(function () {
+      requestAnimationFrame(unlockCaretBoot);
+    });
+  } else {
+    window.addEventListener('load', function () {
+      requestAnimationFrame(function () {
+        requestAnimationFrame(unlockCaretBoot);
+      });
+    }, { once: true });
+  }
+
+  setTimeout(unlockCaretBoot, 1500);
 })();
 </script>
 
