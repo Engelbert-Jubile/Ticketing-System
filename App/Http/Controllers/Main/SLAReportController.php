@@ -119,7 +119,7 @@ class SLAReportController extends Controller
         ]);
     }
 
-    public function downloadDetail(Request $request, string $type, int $id)
+    public function downloadDetail(Request $request, string $locale, string $type, int $id)
     {
         $allowedTypes = array_keys($this->types());
         if (! in_array($type, $allowedTypes, true)) {
