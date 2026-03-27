@@ -65,7 +65,7 @@ class AuthController extends Controller
         $user->assignRole('user');
 
 
-        if (! (bool) config('features.email_verification', false)) {
+        if (! (bool) config('features.email_verification', true)) {
             return redirect()->route('login', ['locale' => $locale])->with('success', 'Akun berhasil dibuat. Silakan login.');
         }
 
@@ -73,13 +73,16 @@ class AuthController extends Controller
             if ($user instanceof MustVerifyEmail && ! $user->hasVerifiedEmail()) {
                 $user->sendEmailVerificationNotification();
 
+                Auth::guard('web')->login($user);
+                $request->session()->regenerate();
+
                 return redirect()
                     ->route('verification.notice', ['locale' => $locale])
                     ->with('status', 'verification-link-sent');
             }
         } catch (\Throwable $e) {
             return redirect()
-                ->route('verification.notice', ['locale' => $locale])
+                ->route('login', ['locale' => $locale])
                 ->with('error', 'Gagal mengirim email verifikasi. Silakan coba lagi nanti atau hubungi admin.');
         }
 
@@ -173,7 +176,7 @@ class AuthController extends Controller
         $request->session()->regenerate();
         RateLimiter::clear($throttleKey);
 
-        if (! (bool) config('features.email_verification', false)) {
+        if (! (bool) config('features.email_verification', true)) {
             return redirect()->intended(route('dashboard', ['locale' => $locale]));
         }
 

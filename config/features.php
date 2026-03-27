@@ -8,5 +8,5 @@ return [
     'cache_actions' => env('FEATURE_CACHE_ACTIONS', true),
     'rebuild_indexes' => env('FEATURE_REBUILD_INDEXES', true),
     'system_actions_in_production' => env('FEATURE_SYSTEM_ACTIONS_PROD', false),
-    'email_verification' => env('FEATURE_EMAIL_VERIFICATION', false),
+    'email_verification' => env('FEATURE_EMAIL_VERIFICATION', true),
 ];
