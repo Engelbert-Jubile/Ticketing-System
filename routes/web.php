@@ -177,9 +177,13 @@ Route::middleware('auth')->group(function () {
     })->name('verification.status');
 
     Route::post('/email/verification-notification', function (Request $request) {
-        $request->user()->sendEmailVerificationNotification();
+        try {
+            $request->user()->sendEmailVerificationNotification();
 
-        return back()->with('status', 'verification-link-sent');
+            return back()->with('status', 'verification-link-sent');
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Gagal mengirim email verifikasi. Silakan coba lagi atau hubungi admin.');
+        }
     })->middleware('throttle:6,1')->name('verification.send');
 });
 
@@ -396,5 +400,4 @@ Route::get('{path}', function (Request $request, string $path) use ($resolveLoca
     'path',
     '^(?!(en|id)(/|$))(?!(livewire|storage|_debugbar|vendor)(/|$)).*$'
 );
-
 
