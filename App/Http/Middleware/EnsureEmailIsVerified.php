@@ -13,22 +13,37 @@ class EnsureEmailIsVerified
      */
     public function handle(Request $request, Closure $next)
     {
-        // 1️⃣  Jika user belum login ⇒ lanjutkan (biarkan middleware "auth" yang menanganinya)
-        if (! $request->user()) {
+        $user = $request->user();
+
+        // Let auth middleware handle guests.
+        if (! $user) {
             return $next($request);
         }
 
-        // 2️⃣  Jika email SUDAH ter-verifikasi ⇒ lanjutkan ke route berikutnya
-        if ($request->user() && $request->user()->hasVerifiedEmail()) {
+        // Superadmin can bypass email verification.
+        if (method_exists($user, 'hasRole') && $user->hasRole('superadmin')) {
             return $next($request);
         }
 
-        // 3️⃣  Kalau AJAX/JSON, kembalikan 403 – cocok untuk SPA/API
+        if (! (bool) config('features.email_verification', true)) {
+            return $next($request);
+        }
+
+        $email = strtolower(trim((string) $user->email));
+        if (! str_ends_with($email, '@kftd.co.id')) {
+            return $next($request);
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            return $next($request);
+        }
+
         if ($request->expectsJson()) {
             abort(403, 'Your email address is not verified.');
         }
 
-        // 4️⃣  Kalau web biasa, lempar ke halaman verifikasi email (route('verification.notice'))
-        return Redirect::route('verification.notice');
+        return Redirect::route('verification.notice', [
+            'locale' => $request->route('locale') ?? app()->getLocale() ?? config('app.locale', 'en'),
+        ]);
     }
 }

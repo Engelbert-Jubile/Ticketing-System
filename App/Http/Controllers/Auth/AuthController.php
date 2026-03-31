@@ -22,7 +22,7 @@ class AuthController extends Controller
 {
     public function __construct(private RecaptchaVerifier $recaptcha) {}
 
-    /* Proses register — disesuaikan dengan model User kamu */
+    /* Proses register - disesuaikan dengan model User kamu */
     public function register(Request $request): \Illuminate\Http\RedirectResponse
     {
         $locale = app()->getLocale() ?? config('app.locale', 'en');
@@ -65,12 +65,8 @@ class AuthController extends Controller
         $user->assignRole('user');
 
 
-        if (! (bool) config('features.email_verification', true)) {
-            return redirect()->route('login', ['locale' => $locale])->with('success', 'Akun berhasil dibuat. Silakan login.');
-        }
-
         try {
-            if ($user instanceof MustVerifyEmail && ! $user->hasVerifiedEmail()) {
+            if ($this->shouldRequireEmailVerification($user)) {
                 $user->sendEmailVerificationNotification();
 
                 Auth::guard('web')->login($user);
@@ -176,12 +172,10 @@ class AuthController extends Controller
         $request->session()->regenerate();
         RateLimiter::clear($throttleKey);
 
-        if (! (bool) config('features.email_verification', true)) {
-            return redirect()->intended(route('dashboard', ['locale' => $locale]));
-        }
-
-        if ($user instanceof MustVerifyEmail && ! $user->hasVerifiedEmail()) {
-            return redirect()->route('verification.notice', ['locale' => $locale]);
+        if ($this->shouldRequireEmailVerification($user)) {
+            return redirect()
+                ->route('verification.notice', ['locale' => $locale])
+                ->with('warning', 'Akun ini belum terverifikasi. Klik tombol "Kirim Ulang Email Verifikasi" untuk one-time verification.');
         }
 
         return redirect()->intended(route('dashboard', ['locale' => $locale]));
@@ -219,5 +213,23 @@ class AuthController extends Controller
                 'g-recaptcha-response' => 'Verifikasi keamanan gagal, silakan coba lagi.',
             ]);
         }
+    }
+
+    private function shouldRequireEmailVerification(User $user): bool
+    {
+        if (! (bool) config('features.email_verification', true)) {
+            return false;
+        }
+
+        if ($user->hasRole('superadmin')) {
+            return false;
+        }
+
+        $email = strtolower(trim((string) $user->email));
+        if (! str_ends_with($email, '@kftd.co.id')) {
+            return false;
+        }
+
+        return $user instanceof MustVerifyEmail && ! $user->hasVerifiedEmail();
     }
 }

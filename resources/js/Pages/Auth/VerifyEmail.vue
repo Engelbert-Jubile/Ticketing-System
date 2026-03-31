@@ -25,6 +25,7 @@
       </form>
       <p v-if="successMessage" class="text-sm font-semibold text-green-600">{{ successMessage }}</p>
       <p v-if="errorMessage" class="text-sm font-semibold text-red-500">{{ errorMessage }}</p>
+      <p v-if="warningMessage" class="text-sm font-semibold text-amber-600">{{ warningMessage }}</p>
       <p v-if="checking" class="text-xs font-medium text-slate-500 dark:text-slate-400">
         Menunggu verifikasi&hellip; halaman ini akan otomatis lanjut setelah kamu klik link di email.
       </p>
@@ -55,6 +56,7 @@ const email = computed(() => page.props.value?.auth?.user?.email ?? '');
 const status = computed(() => page.props.value?.status ?? null);
 const flashSuccess = computed(() => page.props.value?.flash?.success ?? null);
 const flashError = computed(() => page.props.value?.flash?.error ?? null);
+const flashWarning = computed(() => page.props.value?.flash?.warning ?? null);
 const successMessage = computed(() => {
   if (status.value === 'verification-link-sent') return 'Tautan verifikasi berhasil dikirim.';
   if (typeof flashSuccess.value === 'string' && flashSuccess.value.trim() !== '') return flashSuccess.value;
@@ -62,6 +64,10 @@ const successMessage = computed(() => {
 });
 const errorMessage = computed(() => {
   if (typeof flashError.value === 'string' && flashError.value.trim() !== '') return flashError.value;
+  return null;
+});
+const warningMessage = computed(() => {
+  if (typeof flashWarning.value === 'string' && flashWarning.value.trim() !== '') return flashWarning.value;
   return null;
 });
 
