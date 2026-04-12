@@ -33,8 +33,12 @@ class EnsureEmailIsVerified
         if (! str_ends_with($email, '@kftd.co.id')) {
             return $next($request);
         }
-
         if ($user->hasVerifiedEmail()) {
+            return $next($request);
+        }
+
+        // Soft mode: keep the verified middleware in route stacks but do not block access.
+        if (! (bool) config('features.enforce_verified_routes', false)) {
             return $next($request);
         }
 
@@ -47,3 +51,4 @@ class EnsureEmailIsVerified
         ]);
     }
 }
+

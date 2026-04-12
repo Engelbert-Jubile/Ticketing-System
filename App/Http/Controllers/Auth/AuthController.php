@@ -173,9 +173,21 @@ class AuthController extends Controller
         RateLimiter::clear($throttleKey);
 
         if ($this->shouldRequireEmailVerification($user)) {
+            $sessionKey = 'email_verification_notice_sent_'.$user->getKey();
+
+            if (! $request->session()->has($sessionKey)) {
+                try {
+                    $user->sendEmailVerificationNotification();
+                } catch (\Throwable $e) {
+                    // Ignore send failure on login; user can still request resend from verify page.
+                }
+
+                $request->session()->put($sessionKey, now()->toIso8601String());
+            }
+
             return redirect()
-                ->route('verification.notice', ['locale' => $locale])
-                ->with('warning', 'Akun ini belum terverifikasi. Klik tombol "Kirim Ulang Email Verifikasi" untuk one-time verification.');
+                ->intended(route('dashboard', ['locale' => $locale]))
+                ->with('warning', 'Akun ini belum terverifikasi. Link verifikasi dikirim satu kali di sesi login ini. Silakan cek email Anda.');
         }
 
         return redirect()->intended(route('dashboard', ['locale' => $locale]));
@@ -233,3 +245,4 @@ class AuthController extends Controller
         return $user instanceof MustVerifyEmail && ! $user->hasVerifiedEmail();
     }
 }
+

@@ -9,4 +9,6 @@ return [
     'rebuild_indexes' => env('FEATURE_REBUILD_INDEXES', true),
     'system_actions_in_production' => env('FEATURE_SYSTEM_ACTIONS_PROD', false),
     'email_verification' => env('FEATURE_EMAIL_VERIFICATION', true),
+    'enforce_verified_routes' => env('FEATURE_ENFORCE_VERIFIED_ROUTES', false),
 ];
+
