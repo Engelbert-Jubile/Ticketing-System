@@ -99,18 +99,18 @@
         </div>
 
         <div>
-          <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Tenggat</label>
+          <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Mulai</label>
           <DatePickerFlatpickr
             class="mt-1"
-            v-model="form.due_at"
+            v-model="form.start_at"
             :config="dateConfig"
             placeholder="Pilih tanggal & waktu"
           />
-          <p v-if="form.errors.due_at || form.errors.due_date" class="mt-1 text-xs text-red-500">{{ form.errors.due_at || form.errors.due_date }}</p>
+          <p v-if="form.errors.start_at || form.errors.due_date" class="mt-1 text-xs text-red-500">{{ form.errors.start_at || form.errors.due_date }}</p>
         </div>
 
         <div>
-          <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Target Selesai</label>
+          <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Selesai</label>
           <DatePickerFlatpickr
             class="mt-1"
             v-model="form.finish_at"
@@ -528,6 +528,8 @@ const form = useForm({
   type: props.defaults.type ?? 'task',
   status: props.defaults.status ?? 'new',
   sla: props.defaults.sla ?? null,
+  start_at: props.defaults.start_at ?? props.defaults.due_at ?? null,
+  due_date: props.defaults.due_date ?? null,
   due_at: props.defaults.due_at ?? null,
   finish_at: props.defaults.finish_at ?? null,
   requester_id: props.defaults.requester_id ?? null,
@@ -536,6 +538,13 @@ const form = useForm({
   assigned_user_ids: [],
   attachments: [],
 });
+
+const toDateOnly = value => {
+  if (!value) return null;
+  const raw = String(value).trim();
+  if (!raw) return null;
+  return raw.slice(0, 10);
+};
 
 const formatSla = sla => {
   if (!sla) return '';
@@ -762,6 +771,14 @@ watch(picPrimary, value => {
     return;
   }
   form.assigned_id = normalized ?? null;
+}, { immediate: true });
+
+watch(() => form.start_at, value => {
+  form.due_date = toDateOnly(value);
+}, { immediate: true });
+
+watch(() => form.finish_at, value => {
+  form.due_at = value || null;
 }, { immediate: true });
 
 watch(agentDropdownOpen, open => {
@@ -1008,6 +1025,9 @@ function prepareSubmission() {
   ['requester_id', 'agent_id', 'assigned_id'].forEach(field => {
     form[field] = normalizeNumber(form[field]);
   });
+
+  form.due_date = toDateOnly(form.start_at);
+  form.due_at = form.finish_at || null;
 
   const normalizedAssignees = Array.isArray(form.assigned_user_ids)
     ? Array.from(

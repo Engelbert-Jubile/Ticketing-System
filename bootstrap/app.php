@@ -50,7 +50,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'auth' => \App\Http\Middleware\Authenticate::class,
             'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
-            'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+            'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
             'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
             'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
             'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,

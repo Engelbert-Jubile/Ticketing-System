@@ -600,6 +600,11 @@ class TicketController extends Controller
         $data['due_at'] = $this->normalizeDateTimeInput($data['due_at'] ?? $this->composeDateTime($request->input('due_date'), $request->input('due_time')));
         $data['finish_at'] = $this->normalizeDateTimeInput($data['finish_at'] ?? $this->composeDateTime($request->input('finish_date'), $request->input('finish_time')));
 
+        // Untuk flow create terbaru: nilai "Selesai" dipakai sebagai tenggat.
+        if (! empty($data['finish_at'])) {
+            $data['due_at'] = $data['finish_at'];
+        }
+
         if (empty($data['due_date']) && $data['due_at']) {
             $data['due_date'] = Carbon::parse($data['due_at'])->toDateString();
         }

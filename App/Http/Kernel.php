@@ -4,6 +4,7 @@ namespace App\Http;
 
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\EncryptCookies;
+use App\Http\Middleware\EnsureEmailIsVerified as EnsureEmailIsVerifiedMiddleware;
 use App\Http\Middleware\EnsureSuperAdmin;
 use App\Http\Middleware\EnsureStrictTransportSecurity;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -16,7 +17,6 @@ use App\Http\Middleware\TrustProxies;
 use App\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Auth\Middleware\AuthenticateWithBasicAuth;
 use Illuminate\Auth\Middleware\Authorize;
-use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
 use Illuminate\Auth\Middleware\RequirePassword;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
@@ -86,7 +86,7 @@ class Kernel extends HttpKernel
         'password.confirm' => RequirePassword::class,
         'signed' => ValidateSignature::class,
         'throttle' => ThrottleRequests::class,
-        'verified' => EnsureEmailIsVerified::class,
+        'verified' => EnsureEmailIsVerifiedMiddleware::class,
         'idle.timeout' => IdleTimeout::class,
         'superadmin' => EnsureSuperAdmin::class,
         'set-locale-from-url' => SetLocaleFromUrl::class,
