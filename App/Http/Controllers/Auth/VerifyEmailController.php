@@ -14,7 +14,7 @@ class VerifyEmailController extends Controller
     /**
      * Mark a user's email address as verified.
      */
-    public function __invoke(Request $request, string $id, string $hash): RedirectResponse
+    public function __invoke(Request $request, string $locale, string $id, string $hash): RedirectResponse
     {
         /** @var User|null $user */
         $user = User::query()->find($id);
