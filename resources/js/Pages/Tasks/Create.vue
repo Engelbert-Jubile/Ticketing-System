@@ -452,26 +452,21 @@
 
         <div class="mt-4 grid gap-4 md:grid-cols-2">
           <div>
-            <label class="field-label">Tenggat</label>
-            <DatePickerFlatpickr v-model="form.due_at" :config="dateConfig" placeholder="Pilih tanggal & waktu" />
-            <p v-if="form.errors.due_at || form.errors.due_date" class="field-error">{{ form.errors.due_at || form.errors.due_date }}</p>
+            <label class="field-label">Mulai</label>
+            <DatePickerFlatpickr v-model="form.start_at" :config="dateConfig" placeholder="Pilih tanggal & waktu" />
+            <p v-if="form.errors.start_at || form.errors.start_date" class="field-error">{{ form.errors.start_at || form.errors.start_date }}</p>
           </div>
           <div>
-            <label class="field-label">Output</label>
-            <FancySelect v-model="form.output_type" :options="outputOptions" />
+            <label class="field-label"> Selesai</label>
+            <DatePickerFlatpickr v-model="form.end_at" :config="dateConfig" placeholder="Pilih tanggal & waktu" />
+            <p v-if="form.errors.end_at || form.errors.end_date || form.errors.due_at" class="field-error">{{ form.errors.end_at || form.errors.end_date || form.errors.due_at }}</p>
           </div>
         </div>
 
         <div class="mt-4 grid gap-4 md:grid-cols-2">
-          <div>
-            <label class="field-label">Mulai</label>
-            <DatePickerFlatpickr v-model="form.start_date" :config="dateOnlyConfig" placeholder="Pilih tanggal mulai" />
-            <p v-if="form.errors.start_date" class="field-error">{{ form.errors.start_date }}</p>
-          </div>
-          <div>
-            <label class="field-label"> Selesai</label>
-            <DatePickerFlatpickr v-model="form.end_date" :config="dateOnlyConfig" placeholder="Pilih tanggal selesai" />
-            <p v-if="form.errors.end_date" class="field-error">{{ form.errors.end_date }}</p>
+          <div class="md:col-start-2">
+            <label class="field-label">Output</label>
+            <FancySelect v-model="form.output_type" :options="outputOptions" />
           </div>
         </div>
 
@@ -585,6 +580,8 @@ const stepFieldGroups = {
     'requester_id',
     'due_at',
     'due_date',
+    'start_at',
+    'end_at',
     'start_date',
     'end_date',
     'output_type',
@@ -612,6 +609,8 @@ const form = useForm({
   assignee_id: null,
   assigned_to: [],
   requester_id: props.defaults.requester_id ?? null,
+  start_at: null,
+  end_at: null,
   due_at: null,
   start_date: null,
   end_date: null,
@@ -865,11 +864,12 @@ const dateConfig = computed(() => ({
   dateFormat: 'Y-m-d H:i',
 }));
 
-const dateOnlyConfig = computed(() => ({
-  altInput: true,
-  altFormat: 'd M Y',
-  dateFormat: 'Y-m-d',
-}));
+const toDatePart = value => {
+  if (!value) return null;
+  const raw = String(value).trim();
+  if (!raw) return null;
+  return raw.slice(0, 10);
+};
 
 function showStep(key) {
   return currentStepKey.value === key;
@@ -1279,6 +1279,9 @@ function resetForm() {
   form.assignees = [];
   form.assignee_id = null;
   form.assigned_to = [];
+  form.start_at = null;
+  form.end_at = null;
+  form.due_at = null;
   form.start_date = null;
   form.end_date = null;
   form.requester_id = props.defaults.requester_id ?? null;
@@ -1313,6 +1316,9 @@ function handleSubmit() {
 function submitForm() {
   uploadError.value = '';
   syncAssignedArray();
+  form.start_date = toDatePart(form.start_at);
+  form.end_date = toDatePart(form.end_at);
+  form.due_at = form.end_at || null;
   form.transform(data => ({
     ...data,
     title: (data.title ?? '').toString().trim(),

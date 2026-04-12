@@ -775,6 +775,30 @@ final class TaskController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        if ($request->filled('start_at')) {
+            try {
+                $request->merge([
+                    'start_date' => Carbon::parse($request->input('start_at'))->format('Y-m-d'),
+                ]);
+            } catch (\Throwable) {
+                // ignore parse error; validation below will handle invalid date
+            }
+        }
+
+        if ($request->filled('end_at')) {
+            try {
+                $endAt = Carbon::parse($request->input('end_at'));
+                $request->merge([
+                    'end_date' => $endAt->format('Y-m-d'),
+                    'due_at' => $endAt->format('Y-m-d H:i:s'),
+                    'due_date' => $endAt->format('Y-m-d'),
+                    'due_time' => $endAt->format('H:i'),
+                ]);
+            } catch (\Throwable) {
+                // ignore parse error; validation below will handle invalid date
+            }
+        }
+
         if ($request->filled('due_at')) {
             try {
                 $due = Carbon::parse($request->input('due_at'));
@@ -1052,6 +1076,30 @@ final class TaskController extends Controller
                 'input_status' => $request->input('status'),
             ]);
         } catch (\Throwable) {
+        }
+
+        if ($request->filled('start_at')) {
+            try {
+                $request->merge([
+                    'start_date' => Carbon::parse($request->input('start_at'))->format('Y-m-d'),
+                ]);
+            } catch (\Throwable) {
+                // ignore parse error; validation below will handle invalid date
+            }
+        }
+
+        if ($request->filled('end_at')) {
+            try {
+                $endAt = Carbon::parse($request->input('end_at'));
+                $request->merge([
+                    'end_date' => $endAt->format('Y-m-d'),
+                    'due_at' => $endAt->format('Y-m-d H:i:s'),
+                    'due_date' => $endAt->format('Y-m-d'),
+                    'due_time' => $endAt->format('H:i'),
+                ]);
+            } catch (\Throwable) {
+                // ignore parse error; validation below will handle invalid date
+            }
         }
 
         if ($request->filled('due_at')) {
