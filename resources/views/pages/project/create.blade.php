@@ -178,11 +178,11 @@ $statusIdLabel = $defaultStatusCode;
                 <div class="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label class="mb-1 block text-sm font-medium">Tanggal Mulai</label>
-                    <input type="text" id="project_start_date" name="start_date" value="{{ old('start_date') }}" placeholder="dd/mm/yyyy" class="w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-teal-400 focus:ring-teal-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                    <input type="text" id="project_start_date" name="start_date" value="{{ old('start_date') }}" placeholder="dd/mm/yyyy hh:mm" class="w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-teal-400 focus:ring-teal-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
                   </div>
                   <div>
                     <label class="mb-1 block text-sm font-medium">Tanggal Selesai</label>
-                    <input type="text" id="project_end_date" name="end_date" value="{{ old('end_date') }}" placeholder="dd/mm/yyyy" class="w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-teal-400 focus:ring-teal-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                    <input type="text" id="project_end_date" name="end_date" value="{{ old('end_date') }}" placeholder="dd/mm/yyyy hh:mm" class="w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-teal-400 focus:ring-teal-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
                   </div>
                 </div>
               </div>
@@ -1224,10 +1224,12 @@ $statusIdLabel = $defaultStatusCode;
       if (element._flatpickr) return;
 
       const flatpickrOpts = {
-        dateFormat: 'Y-m-d',
+        dateFormat: 'Y-m-d H:i',
+        enableTime: true,
+        time_24hr: true,
         allowInput: true,
         altInput: true,
-        altFormat: 'd/m/Y'
+        altFormat: 'd/m/Y H:i'
       };
 
       if (flatpickr.l10ns?.id) {
@@ -1291,15 +1293,22 @@ $statusIdLabel = $defaultStatusCode;
 
     const toDateValue = (value) => {
       if (!value) return '';
-      if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
-      if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value)) return value.slice(0, 10);
+      if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}(:\d{2})?$/.test(value)) return value.slice(0, 16);
+      if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value)) return value.replace('T', ' ').slice(0, 16);
+      if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return `${value} 00:00`;
+      if (/^\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}$/.test(value)) {
+        const [datePart, timePart] = value.split(' ');
+        const [d, m, y] = datePart.split('/');
+        return `${y}-${m}-${d} ${timePart}`;
+      }
       if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
         const [d, m, y] = value.split('/');
-        return `${y}-${m}-${d}`;
+        return `${y}-${m}-${d} 00:00`;
       }
       const date = new Date(value);
       if (!Number.isNaN(date.getTime())) {
-        return date.toISOString().slice(0, 10);
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
       }
       return '';
     };
@@ -2058,10 +2067,16 @@ $statusIdLabel = $defaultStatusCode;
 
     const convertDateFormat = (value) => {
       if (!value) return '';
-      if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+      if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}$/.test(value)) return value;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return `${value} 00:00`;
+      if (/^\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}$/.test(value)) {
+        const [datePart, timePart] = value.split(' ');
+        const [day, month, year] = datePart.split('/');
+        return `${year}-${month}-${day} ${timePart}`;
+      }
       if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
         const [day, month, year] = value.split('/');
-        return `${year}-${month}-${day}`;
+        return `${year}-${month}-${day} 00:00`;
       }
       return value;
     };

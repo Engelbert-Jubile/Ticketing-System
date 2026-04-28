@@ -193,11 +193,11 @@ $statusIdLabel = $defaultStatusCode;
                 <div class="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label class="mb-1 block text-sm font-medium">Tanggal Mulai</label>
-                    <input type="text" id="project_start_date" name="start_date" value="{{ old('start_date', optional($project->start_date)->format('d/m/Y')) }}" placeholder="dd/mm/yyyy" class="w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-teal-400 focus:ring-teal-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                    <input type="text" id="project_start_date" name="start_date" value="{{ old('start_date', optional($project->start_date)->format('d/m/Y H:i')) }}" placeholder="dd/mm/yyyy hh:mm" class="w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-teal-400 focus:ring-teal-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
                   </div>
                   <div>
                     <label class="mb-1 block text-sm font-medium">Tanggal Selesai</label>
-                    <input type="text" id="project_end_date" name="end_date" value="{{ old('end_date', optional($project->end_date)->format('d/m/Y')) }}" placeholder="dd/mm/yyyy" class="w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-teal-400 focus:ring-teal-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                    <input type="text" id="project_end_date" name="end_date" value="{{ old('end_date', optional($project->end_date)->format('d/m/Y H:i')) }}" placeholder="dd/mm/yyyy hh:mm" class="w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-teal-400 focus:ring-teal-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
                   </div>
                 </div>
               </div>
@@ -968,7 +968,9 @@ $statusIdLabel = $defaultStatusCode;
           // Date pickers
           if (typeof flatpickr !== 'undefined') {
             flatpickr('#project_start_date, #project_end_date', {
-              dateFormat: 'd/m/Y',
+              dateFormat: 'd/m/Y H:i',
+              enableTime: true,
+              time_24hr: true,
               allowInput: true,
             });
           }
