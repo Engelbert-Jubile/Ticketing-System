@@ -155,17 +155,6 @@ class InjectLoginLoadingOverlay
   font-size:13px;
   color:#475569;
 }
-#loginOverlay .close-btn{
-  position:absolute;
-  top:18px; right:18px;
-  border:none;
-  background:transparent;
-  color:rgba(15,23,42,.7);
-  font-size:22px;
-  cursor:pointer;
-  padding:0;
-  z-index:2;
-}
 @keyframes orbit{to{transform:rotate(360deg)}}
 @keyframes drift{
   0%{transform:translate(-18px,-8px)}
@@ -175,7 +164,6 @@ class InjectLoginLoadingOverlay
 </style>
 
 <div id="loginOverlay" aria-hidden="true">
-  <button type="button" class="close-btn" aria-label="Tutup overlay">&times;</button>
   <div class="panel">
     <div class="emblem">
       <span class="orbit" aria-hidden="true"></span>
