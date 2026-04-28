@@ -524,7 +524,9 @@ class ProjectController extends Controller
 
         app(WorkItemNotifier::class)->notifyProjectCreated($project, Auth::user());
 
-        return redirect()->route('projects.create')
+        return redirect()->route('projects.create', [
+            'locale' => $request->route('locale') ?? app()->getLocale(),
+        ])
             ->with('success', 'Project berhasil dibuat.');
     }
 
