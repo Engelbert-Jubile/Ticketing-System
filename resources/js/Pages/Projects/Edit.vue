@@ -182,12 +182,12 @@
             </div>
             <div class="panel-field">
               <label>Mulai Project</label>
-              <DatePickerFlatpickr v-model="form.start_date" :config="dateConfig" placeholder="dd/mm/yyyy" />
+              <DatePickerFlatpickr v-model="form.start_date" :config="dateTimeConfig" placeholder="dd/mm/yyyy hh:mm" />
               <p v-if="form.errors.start_date" class="field-error">{{ form.errors.start_date }}</p>
             </div>
             <div class="panel-field">
               <label>Selesai Project</label>
-              <DatePickerFlatpickr v-model="form.end_date" :config="dateConfig" placeholder="dd/mm/yyyy" />
+              <DatePickerFlatpickr v-model="form.end_date" :config="dateTimeConfig" placeholder="dd/mm/yyyy hh:mm" />
               <p v-if="form.errors.end_date" class="field-error">{{ form.errors.end_date }}</p>
             </div>
             <div class="panel-field panel-field--full timeline-hint text-xs text-slate-400">
@@ -545,12 +545,12 @@
                 </div>
                 <div class="panel-field">
                   <label>Mulai</label>
-                  <DatePickerFlatpickr v-model="action.start_date" :config="dateConfig" placeholder="dd/mm/yyyy" />
+                  <DatePickerFlatpickr v-model="action.start_date" :config="dateTimeConfig" placeholder="dd/mm/yyyy hh:mm" />
                   <p v-if="form.errors[`project_actions.${index}.start_date`]" class="field-error">{{ form.errors[`project_actions.${index}.start_date`] }}</p>
                 </div>
                 <div class="panel-field">
                   <label>Selesai</label>
-                  <DatePickerFlatpickr v-model="action.end_date" :config="dateConfig" placeholder="dd/mm/yyyy" />
+                  <DatePickerFlatpickr v-model="action.end_date" :config="dateTimeConfig" placeholder="dd/mm/yyyy hh:mm" />
                   <p v-if="form.errors[`project_actions.${index}.end_date`]" class="field-error">{{ form.errors[`project_actions.${index}.end_date`] }}</p>
                 </div>
                 <div class="panel-field col-span-2">
@@ -1801,8 +1801,8 @@ function removeExistingAttachment(item) {
 }
 
 function sanitizeArrays() {
-  form.start_date = toIsoDate(form.start_date);
-  form.end_date = toIsoDate(form.end_date);
+  form.start_date = toIsoDateTime(form.start_date);
+  form.end_date = toIsoDateTime(form.end_date);
 
   form.project_pics = form.project_pics
     .filter(member => member.user_id && member.position?.trim())
@@ -1820,15 +1820,15 @@ function sanitizeArrays() {
     .filter(action => action.title?.trim())
     .map(action => {
       const next = { ...action };
-      next.start_date = toIsoDate(next.start_date);
-      next.end_date = toIsoDate(next.end_date);
+      next.start_date = toIsoDateTime(next.start_date);
+      next.end_date = toIsoDateTime(next.end_date);
       if (Array.isArray(next.subactions)) {
         next.subactions = next.subactions
           .filter(sub => sub.title?.trim())
           .map(sub => ({
             ...sub,
-            start_date: toIsoDate(sub.start_date),
-            end_date: toIsoDate(sub.end_date),
+            start_date: toIsoDateTime(sub.start_date),
+            end_date: toIsoDateTime(sub.end_date),
           }));
       }
       return next;
