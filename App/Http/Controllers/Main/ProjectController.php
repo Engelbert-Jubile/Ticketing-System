@@ -1098,8 +1098,8 @@ class ProjectController extends Controller
                     'status_id' => $actionStatus,
                     'progress' => $actionData['progress'] ?? 0,
                     'pic_id' => $picId,
-                    'start_date' => $this->parseDate($actionData['start_date'] ?? null),
-                    'end_date' => $this->parseDate($actionData['end_date'] ?? null),
+                'start_date' => $this->parseDate($actionData['start_date'] ?? null, true),
+                'end_date' => $this->parseDate($actionData['end_date'] ?? null, true),
                 ]);
 
                 foreach ($actionData['subactions'] ?? [] as $subData) {
@@ -1121,8 +1121,8 @@ class ProjectController extends Controller
                         'status_id' => $subStatus,
                         'progress' => $subData['progress'] ?? 0,
                         'pic_id' => $subPicId,
-                        'start_date' => $this->parseDate($subData['start_date'] ?? null),
-                        'end_date' => $this->parseDate($subData['end_date'] ?? null),
+                    'start_date' => $this->parseDate($subData['start_date'] ?? null, true),
+                    'end_date' => $this->parseDate($subData['end_date'] ?? null, true),
                     ]);
                 }
             }
@@ -1290,6 +1290,9 @@ class ProjectController extends Controller
                 }
                 if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $value)) {
                     return Carbon::createFromFormat('d/m/Y', $value)->startOfDay()->format('Y-m-d H:i:s');
+                }
+                if (preg_match('/^\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}$/', $value)) {
+                    return Carbon::createFromFormat('d/m/Y H:i', $value)->format('Y-m-d H:i:s');
                 }
 
                 return Carbon::parse($value)->format('Y-m-d H:i:s');

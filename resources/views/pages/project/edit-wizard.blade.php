@@ -365,11 +365,11 @@ $statusIdLabel = $defaultStatusCode;
                   <div class="grid gap-3 sm:grid-cols-2">
                     <div>
                       <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Mulai</label>
-                      <input type="text" name="project_actions[__INDEX__][start_date]" placeholder="dd/mm/yyyy" class="action-start-date w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-400 focus:ring-indigo-200 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
+                      <input type="text" name="project_actions[__INDEX__][start_date]" placeholder="dd/mm/yyyy hh:mm" class="action-start-date w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-400 focus:ring-indigo-200 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
                     </div>
                     <div>
                       <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Selesai</label>
-                      <input type="text" name="project_actions[__INDEX__][end_date]" placeholder="dd/mm/yyyy" class="action-end-date w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-400 focus:ring-indigo-200 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
+                      <input type="text" name="project_actions[__INDEX__][end_date]" placeholder="dd/mm/yyyy hh:mm" class="action-end-date w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-400 focus:ring-indigo-200 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
                     </div>
                   </div>
                   <div class="md:col-span-2">
@@ -420,11 +420,11 @@ $statusIdLabel = $defaultStatusCode;
                   <div class="grid gap-3 sm:grid-cols-2">
                     <div>
                       <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Mulai</label>
-                      <input type="text" name="project_actions[__ACTION_INDEX__][subactions][__SUB_INDEX__][start_date]" placeholder="dd/mm/yyyy" class="subaction-start-date w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-400 focus:ring-indigo-200 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
+                      <input type="text" name="project_actions[__ACTION_INDEX__][subactions][__SUB_INDEX__][start_date]" placeholder="dd/mm/yyyy hh:mm" class="subaction-start-date w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-400 focus:ring-indigo-200 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
                     </div>
                     <div>
                       <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Selesai</label>
-                      <input type="text" name="project_actions[__ACTION_INDEX__][subactions][__SUB_INDEX__][end_date]" placeholder="dd/mm/yyyy" class="subaction-end-date w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-400 focus:ring-indigo-200 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
+                      <input type="text" name="project_actions[__ACTION_INDEX__][subactions][__SUB_INDEX__][end_date]" placeholder="dd/mm/yyyy hh:mm" class="subaction-end-date w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-400 focus:ring-indigo-200 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
                     </div>
                   </div>
                   <div class="md:col-span-2">
