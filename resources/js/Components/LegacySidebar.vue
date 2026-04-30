@@ -27,7 +27,7 @@
         </button>
       </div>
 
-      <div class="sidebar__body">
+      <div ref="bodyRef" class="sidebar__body">
         <nav class="sidebar__menu">
           <ul>
           <li
@@ -35,6 +35,7 @@
             :key="item.key"
             class="nav-item"
             :class="navItemClass(item)"
+            :ref="el => setItemRef(item.key, el)"
           >
             <SidebarLink
               v-if="item.type === 'link'"
@@ -74,7 +75,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import SidebarLink from './SidebarLink.vue'
 import SidebarGroup from './SidebarGroup.vue'
 import { useI18n } from '../i18n'
@@ -107,6 +108,8 @@ const emit = defineEmits(['update:sidebarLocked', 'update:sidebarOpen', 'logout'
 const { t } = useI18n()
 
 const hovering = ref(false)
+const bodyRef = ref(null)
+const itemRefs = ref(new Map())
 
 const STORAGE_OPEN = 'sb:openKey'
 
@@ -158,9 +161,42 @@ const handleMouseLeave = () => {
 
 const toggleGroup = key => {
   openGroup.value = openGroup.value === key ? null : key
+  if (openGroup.value) {
+    ensureItemVisible(openGroup.value)
+  }
 }
 
 const isGroupExpanded = key => openGroup.value === key
+
+const setItemRef = (key, el) => {
+  if (!key) return
+  if (el) {
+    itemRefs.value.set(key, el)
+    return
+  }
+  itemRefs.value.delete(key)
+}
+
+const ensureItemVisible = key => {
+  nextTick(() => {
+    const container = bodyRef.value
+    const itemEl = itemRefs.value.get(key)
+    if (!container || !itemEl || !props.sidebarOpen) {
+      return
+    }
+
+    const containerRect = container.getBoundingClientRect()
+    const itemRect = itemEl.getBoundingClientRect()
+    const overflowBottom = itemRect.bottom - containerRect.bottom
+    const overflowTop = containerRect.top - itemRect.top
+
+    if (overflowBottom > 0) {
+      container.scrollTop += overflowBottom + 12
+    } else if (overflowTop > 0) {
+      container.scrollTop -= overflowTop + 12
+    }
+  })
+}
 
 const isActive = item => {
   if (!item) return false
@@ -285,6 +321,10 @@ watch(openGroup, value => {
       localStorage.removeItem(STORAGE_OPEN)
     }
   } catch (error) {}
+
+  if (value) {
+    ensureItemVisible(value)
+  }
 })
 
 onMounted(() => {
@@ -363,6 +403,7 @@ onMounted(() => {
   flex: 1 1 auto;
   overflow-y: auto;
   padding-right: 0.35rem;
+  padding-bottom: 1rem;
   margin-right: -0.2rem;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
@@ -602,4 +643,3 @@ onMounted(() => {
   }
 }
 </style>
-
