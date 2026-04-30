@@ -656,8 +656,10 @@ watch(
 <style scoped>
 .app-shell {
   min-height: 100vh;
+  min-height: 100dvh;
   background: #f1f5f9;
   color: #0f172a;
+  overflow-x: clip;
 }
 
 .app-shell--dark {
@@ -668,11 +670,16 @@ watch(
 .app-content {
   padding-top: var(--topbar-h, 72px);
   transition: margin-left 0.25s ease;
+  min-width: 0;
+  overflow-x: clip;
 }
 
 .app-main {
   min-height: calc(100vh - var(--topbar-h, 72px));
+  min-height: calc(100dvh - var(--topbar-h, 72px));
   padding: 1.5rem;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 .overlay {
@@ -680,5 +687,15 @@ watch(
   inset: var(--topbar-h, 72px) 0 0;
   background: rgba(15, 23, 42, 0.45);
   z-index: 30;
+}
+
+@media (max-width: 1023px) {
+  .app-content {
+    transition: none;
+  }
+
+  .app-main {
+    padding: 1rem 0.875rem 1.25rem;
+  }
 }
 </style>

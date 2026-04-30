@@ -890,10 +890,7 @@ textarea {
     display: flex !important;
     align-items: center !important;
     gap: 0.65rem !important;
-    flex-wrap: nowrap !important; /* kunci horizontal */
-    white-space: nowrap !important; /* cegah turun baris */
-    min-width: max-content !important; /* paksa cukup ruang */
-    flex: 0 0 auto !important;
+    min-width: 0 !important;
   }
 
   .topbar__brand {
@@ -901,15 +898,15 @@ textarea {
   }
 
   .topbar__brand-text {
-    margin-left: -0.5rem !important;
+    margin-left: 0 !important;
   }
 
   .topbar-search input[type='search'] {
-    padding-left: 4rem !important;
+    padding-left: 3rem !important;
   }
 
   .topbar-search__icon {
-    inset-inline-start: 1.5rem !important;
+    inset-inline-start: 1rem !important;
     font-size: 1rem !important;
   }
 
@@ -927,18 +924,42 @@ textarea {
     backdrop-filter: none !important;
     box-shadow: 0 28px 60px -28px rgba(0, 0, 0, 0.85) !important;
   }
+
+  @media (min-width: 768px) {
+    .topbar__right,
+    .topbar__actions {
+      flex-wrap: nowrap !important;
+      white-space: nowrap !important;
+    }
+
+    .topbar__right {
+      min-width: max-content !important;
+      flex: 0 0 auto !important;
+    }
+
+    .topbar__brand-text {
+      margin-left: -0.5rem !important;
+    }
+
+    .topbar-search input[type='search'] {
+      padding-left: 4rem !important;
+    }
+
+    .topbar-search__icon {
+      inset-inline-start: 1.5rem !important;
+    }
+  }
 }
 
-/* Force animations even if OS requests reduced motion */
+/* Respect reduced-motion to cut expensive animations on low-power/mobile contexts */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    transition-property: all !important;
-    transition-duration: 0.25s !important;
-    transition-timing-function: ease !important;
-    animation-duration: 0.25s !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
   }
 }
 
@@ -972,6 +993,14 @@ textarea:focus-visible {
 /* Prevent caret/focus flicker caused by transitions on inputs */
 input, textarea {
   transition: none !important;
+}
+
+body.is-inertia-loading {
+  cursor: progress;
+}
+
+body.is-inertia-loading .app-main {
+  pointer-events: none;
 }
 
 /* GPU-safe auth surfaces/inputs to avoid Chromium caret compositing glitches */

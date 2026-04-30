@@ -323,29 +323,17 @@ const submitSearch = () => {
 
 const markAllNotifications = () => {
   notificationItems.value = notificationItems.value.map(item => ({ ...item, read_at: item.read_at || new Date().toISOString() }))
-  fetch(resolveRoute('notifications.read-all'), {
-    method: 'POST',
-    headers: buildHeaders(),
-    credentials: 'same-origin',
-  }).catch(() => {})
+  emit('mark-all-notifications')
 }
 
 const markNotification = id => {
   notificationItems.value = notificationItems.value.map(item => (item.id === id ? { ...item, read_at: item.read_at || new Date().toISOString() } : item))
-  fetch(resolveRoute('notifications.mark', { id }), {
-    method: 'POST',
-    headers: buildHeaders(),
-    credentials: 'same-origin',
-  }).catch(() => {})
+  emit('mark-notification', id)
 }
 
 const deleteNotification = id => {
   notificationItems.value = notificationItems.value.filter(item => item.id !== id)
-  fetch(resolveRoute('notifications.destroy', { id }), {
-    method: 'DELETE',
-    headers: buildHeaders(),
-    credentials: 'same-origin',
-  }).catch(() => {})
+  emit('delete-notification', id)
 }
 
 const logout = () => {
@@ -372,15 +360,6 @@ const toggleAccount = () => {
   accountOpen.value = !accountOpen.value
   if (accountOpen.value) {
     notificationsOpen.value = false
-  }
-}
-
-const buildHeaders = () => {
-  const token = document.querySelector('meta[name=\"csrf-token\"]')?.getAttribute('content') || ''
-  return {
-    'X-CSRF-TOKEN': token,
-    'X-Requested-With': 'XMLHttpRequest',
-    Accept: 'application/json',
   }
 }
 
@@ -412,17 +391,31 @@ const updateTopbarHeight = () => {
   document.documentElement.style.setProperty('--topbar-h', `${height}px`)
 }
 
+let topbarHeightRaf = null
+const scheduleTopbarHeightUpdate = () => {
+  if (typeof window === 'undefined') return
+  if (topbarHeightRaf !== null) return
+  topbarHeightRaf = window.requestAnimationFrame(() => {
+    topbarHeightRaf = null
+    updateTopbarHeight()
+  })
+}
+
 onMounted(() => {
   document.addEventListener('click', handleClickOutside, true)
   document.addEventListener('keydown', handleEsc)
-  nextTick(updateTopbarHeight)
-  window.addEventListener('resize', updateTopbarHeight, { passive: true })
+  nextTick(scheduleTopbarHeightUpdate)
+  window.addEventListener('resize', scheduleTopbarHeightUpdate, { passive: true })
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside, true)
   document.removeEventListener('keydown', handleEsc)
-  window.removeEventListener('resize', updateTopbarHeight, { passive: true })
+  window.removeEventListener('resize', scheduleTopbarHeightUpdate, { passive: true })
+  if (topbarHeightRaf !== null && typeof window !== 'undefined') {
+    window.cancelAnimationFrame(topbarHeightRaf)
+    topbarHeightRaf = null
+  }
 })
 
 watch(
@@ -433,7 +426,7 @@ watch(
 )
 
 watch([notificationsOpen, accountOpen], () => {
-  nextTick(updateTopbarHeight)
+  nextTick(scheduleTopbarHeightUpdate)
 })
 
 defineExpose({

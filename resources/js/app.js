@@ -5,6 +5,7 @@ import '../css/header-fixes.css';
 import '../css/animations.css';
 import { createApp, h } from 'vue';
 import { createInertiaApp, router } from '@inertiajs/vue3';
+import { progress as inertiaProgress } from '@inertiajs/progress';
 import { ZiggyVue } from 'ziggy-js/dist/vue.m';
 import { Ziggy } from './ziggy';
 import AppLayout from './Layouts/AppLayout.vue';
@@ -87,6 +88,13 @@ createInertiaApp({
     });
   },
 });
+
+inertiaProgress.start({
+  delay: 120,
+  color: '#2563eb',
+  includeCSS: true,
+  showSpinner: false,
+})
 
 const finishProgress = () => document.body.classList.remove('is-inertia-loading');
 
