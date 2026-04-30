@@ -535,6 +535,7 @@
 .report-table tbody tr:focus-within {
   background: rgba(148, 163, 184, 0.12);
 }
+
 </style>
 
 <script setup>
