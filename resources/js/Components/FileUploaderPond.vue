@@ -41,11 +41,18 @@ const props = defineProps({
 });
 
 const resolveRoute = (name, params = {}) => {
+  const locale = typeof window !== 'undefined'
+    ? (window.location.pathname.match(/^\/(en|id)\b/)?.[1] ?? '')
+    : ''
+  const finalParams = (params && typeof params === 'object' && !Array.isArray(params))
+    ? (locale && !('locale' in params) ? { locale, ...params } : params)
+    : params
+
   try {
-    return ziggyRoute(name, params, false);
+    return ziggyRoute(name, finalParams, false);
   } catch (_) {
     if (typeof window !== 'undefined' && typeof window.route === 'function') {
-      return window.route(name, params, false);
+      return window.route(name, finalParams, false);
     }
     return '#';
   }
