@@ -7,6 +7,7 @@ use App\Models\Attachment;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\Ticket;
+use App\Support\RoleHelpers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
@@ -107,6 +108,10 @@ class AttachmentController extends BaseController
         $user = Auth::user();
         if (! $user) {
             return false;
+        }
+
+        if (RoleHelpers::userIsSuperAdmin($user)) {
+            return true;
         }
 
         if ((int) ($attachment->uploaded_by ?? 0) === (int) $user->id) {

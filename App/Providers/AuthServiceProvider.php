@@ -4,7 +4,9 @@ namespace App\Providers;
 
 use App\Models\User;
 use App\Policies\UserPolicy;
+use App\Support\RoleHelpers;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -24,6 +26,8 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        // Gate::before tidak diperlukan karena sudah ditangani di UserPolicy::before()
+        Gate::before(function ($user, string $ability) {
+            return RoleHelpers::userIsSuperAdmin($user) ? true : null;
+        });
     }
 }
