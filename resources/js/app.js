@@ -5,7 +5,7 @@ import '../css/header-fixes.css';
 import '../css/animations.css';
 import { createApp, h } from 'vue';
 import { createInertiaApp, router } from '@inertiajs/vue3';
-import { progress as inertiaProgress } from '@inertiajs/progress';
+import { InertiaProgress } from '@inertiajs/progress';
 import { ZiggyVue } from 'ziggy-js/dist/vue.m';
 import { Ziggy } from './ziggy';
 import AppLayout from './Layouts/AppLayout.vue';
@@ -89,7 +89,7 @@ createInertiaApp({
   },
 });
 
-inertiaProgress.start({
+InertiaProgress.init({
   delay: 120,
   color: '#2563eb',
   includeCSS: true,
