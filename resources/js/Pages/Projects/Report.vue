@@ -170,8 +170,8 @@
               </div>
 
               <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white px-0 pb-4 pt-3 mt-4 dark:border-slate-700 dark:bg-slate-900">
-                <div class="overflow-x-auto">
-                  <table class="report-table w-full min-w-[1120px] divide-y divide-slate-200 text-sm dark:divide-slate-700">
+                <div class="overflow-x-auto pb-1">
+                  <table class="report-table w-full min-w-[1240px] divide-y divide-slate-200 text-sm dark:divide-slate-700">
                     <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-300">
                       <tr>
                         <th class="px-4 py-3 text-left">#</th>
@@ -182,7 +182,7 @@
                         <th class="px-4 py-3 text-left">Due</th>
                         <th class="px-4 py-3 text-left">Dibuat</th>
                         <th class="px-4 py-3 text-left">Diperbarui</th>
-                        <th class="px-4 py-3 text-right">Aksi</th>
+                        <th class="px-4 py-3 text-right whitespace-nowrap min-w-[220px]">Aksi</th>
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200 bg-white dark:divide-slate-700 dark:bg-slate-900">
@@ -222,8 +222,8 @@
                             <td class="px-4 py-3 text-slate-600 dark:text-slate-200">{{ group.primary.due_display }}</td>
                             <td class="px-4 py-3 text-slate-600 dark:text-slate-200">{{ group.primary.created_display }}</td>
                             <td class="px-4 py-3 text-slate-600 dark:text-slate-200">{{ group.primary.updated_display }}</td>
-                            <td class="px-4 py-3">
-                              <div class="flex items-center justify-end gap-3">
+                            <td class="px-4 py-3 pr-6 whitespace-nowrap">
+                              <div class="flex min-w-max items-center justify-end gap-3 whitespace-nowrap">
                                 <Link :href="group.primary.links.show" class="text-sm text-blue-600 hover:underline dark:text-blue-400">Lihat</Link>
                                 <Link v-if="group.primary.links.edit" :href="group.primary.links.edit" class="text-sm text-blue-600 hover:underline dark:text-blue-400">Edit</Link>
                                 <Link v-if="group.primary.links.ticket" :href="group.primary.links.ticket" class="text-sm text-blue-600 hover:underline dark:text-blue-400">Ticket</Link>
@@ -307,8 +307,8 @@
               </div>
 
               <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white px-0 pb-4 pt-3 mt-4 dark:border-slate-700 dark:bg-slate-900">
-                <div class="overflow-x-auto">
-                  <table class="report-table w-full min-w-[1100px] divide-y divide-slate-200 text-sm dark:divide-slate-700">
+                <div class="overflow-x-auto pb-1">
+                  <table class="report-table w-full min-w-[1240px] divide-y divide-slate-200 text-sm dark:divide-slate-700">
                     <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-300">
                       <tr>
                         <th class="px-4 py-3 text-left">#</th>
@@ -319,7 +319,7 @@
                         <th class="px-4 py-3 text-left">End</th>
                         <th class="px-4 py-3 text-left">Dibuat</th>
                         <th class="px-4 py-3 text-left">Diperbarui</th>
-                        <th class="px-4 py-3 text-right">Aksi</th>
+                        <th class="px-4 py-3 text-right whitespace-nowrap min-w-[220px]">Aksi</th>
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200 bg-white dark:divide-slate-700 dark:bg-slate-900">
@@ -350,8 +350,8 @@
                             <td class="px-4 py-3 text-slate-600 dark:text-slate-200">{{ row.due_display }}</td>
                             <td class="px-4 py-3 text-slate-600 dark:text-slate-200">{{ row.created_display }}</td>
                             <td class="px-4 py-3 text-slate-600 dark:text-slate-200">{{ row.updated_display }}</td>
-                            <td class="px-4 py-3">
-                              <div class="flex items-center justify-end gap-3">
+                            <td class="px-4 py-3 pr-6 whitespace-nowrap">
+                              <div class="flex min-w-max items-center justify-end gap-3 whitespace-nowrap">
                                 <Link :href="row.links.show" class="text-sm text-blue-600 hover:underline dark:text-blue-400">Lihat</Link>
                                 <Link v-if="row.links.edit" :href="row.links.edit" class="text-sm text-blue-600 hover:underline dark:text-blue-400">Edit</Link>
                               <button
