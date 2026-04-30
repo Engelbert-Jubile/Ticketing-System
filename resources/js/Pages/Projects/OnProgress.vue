@@ -5,7 +5,7 @@
         <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Project In Progress</h1>
         <p class="text-sm text-slate-500 dark:text-slate-300">Daftar project yang sedang berjalan.</p>
       </div>
-      <div class="flex items-center gap-3">
+      <div class="flex flex-wrap items-center gap-3">
         <label class="text-sm text-slate-600 dark:text-slate-300">
           Tampilkan
           <select class="ml-2 rounded-lg border border-slate-300 px-3 py-1 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200" :value="filters.per_page" @change="changePerPage">
@@ -19,7 +19,8 @@
     </header>
 
     <section class="overflow-hidden rounded-3xl border border-slate-200 bg-white/90 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
-      <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-700">
+      <div class="overflow-x-auto">
+      <table class="min-w-[820px] divide-y divide-slate-200 text-sm dark:divide-slate-700">
         <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-400">
           <tr>
             <th class="px-4 py-2 text-left">#</th>
@@ -52,6 +53,7 @@
           </tr>
         </tbody>
       </table>
+      </div>
     </section>
 
     <nav v-if="projects.links?.length > 3" class="flex flex-wrap items-center justify-end gap-2">

@@ -42,7 +42,8 @@
     </section>
 
     <div class="overflow-hidden rounded-3xl border border-slate-200/70 bg-white/90 shadow-sm backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/70">
-      <table class="min-w-full divide-y divide-slate-200/70 text-sm dark:divide-slate-700/60">
+      <div class="overflow-x-auto">
+      <table class="min-w-[820px] divide-y divide-slate-200/70 text-sm dark:divide-slate-700/60">
         <thead class="bg-slate-50/80 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800/70 dark:text-slate-300">
           <tr>
             <th class="px-4 py-3">Title</th>
@@ -94,6 +95,7 @@
           </tr>
         </tbody>
       </table>
+      </div>
     </div>
   </div>
 </template>

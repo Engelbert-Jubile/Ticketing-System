@@ -57,6 +57,7 @@ const navigate = () => {
   justify-content: space-between;
   gap: 0.5rem;
   flex: 1 1 auto;
+  min-width: 0;
 }
 
 .nav-link:hover {
@@ -86,7 +87,10 @@ const navigate = () => {
 }
 
 .nav-label {
+  min-width: 0;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .nav-badge {

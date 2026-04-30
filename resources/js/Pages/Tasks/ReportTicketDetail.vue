@@ -108,7 +108,7 @@
 
       <div class="mt-5 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700">
         <div class="overflow-x-auto">
-          <table class="w-full min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-700">
+        <table class="w-full min-w-[860px] divide-y divide-slate-200 text-sm dark:divide-slate-700">
             <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-300">
               <tr>
                 <th class="px-4 py-3 text-left">#</th>

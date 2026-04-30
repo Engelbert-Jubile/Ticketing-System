@@ -5,8 +5,8 @@
         <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100">{{ project.title }}</h1>
         <p class="text-sm text-slate-500 dark:text-slate-300">Nomor Project: {{ project.project_no || '—' }}</p>
       </div>
-      <div class="flex flex-col items-end gap-2">
-        <div class="flex flex-wrap items-center gap-2">
+      <div class="flex w-full flex-col items-start gap-2 sm:w-auto sm:items-end">
+        <div class="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
           <Link
             v-if="project.links?.edit"
             :href="project.links.edit"
@@ -100,7 +100,7 @@
 
       <div class="mt-5 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700">
         <div class="overflow-x-auto">
-          <table class="w-full min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-700">
+          <table class="w-full min-w-[820px] divide-y divide-slate-200 text-sm dark:divide-slate-700">
             <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-300">
               <tr>
                 <th class="px-4 py-3 text-left">#</th>
@@ -211,7 +211,7 @@
     <section v-if="project.costs.length" class="rounded-3xl border border-amber-200 bg-amber-50/80 p-6 shadow-sm dark:border-amber-900/60 dark:bg-amber-950/40">
       <h2 class="text-lg font-semibold text-amber-900 dark:text-amber-200">Rincian Biaya</h2>
       <div class="mt-4 overflow-x-auto">
-        <table class="min-w-full divide-y divide-amber-200 text-sm text-amber-900 dark:divide-amber-800 dark:text-amber-100">
+        <table class="min-w-[760px] divide-y divide-amber-200 text-sm text-amber-900 dark:divide-amber-800 dark:text-amber-100">
           <thead class="bg-amber-100/80 text-xs uppercase dark:bg-amber-900/60">
             <tr>
               <th class="px-3 py-2 text-left">Item</th>
@@ -270,9 +270,9 @@
     <section v-if="project.attachments.length" class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
       <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Lampiran Project</h2>
       <ul class="mt-4 space-y-2 text-sm">
-        <li v-for="file in project.attachments" :key="file.id" class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 dark:border-slate-600 dark:bg-slate-800">
+        <li v-for="file in project.attachments" :key="file.id" class="flex flex-col items-start gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 sm:flex-row sm:items-center sm:justify-between dark:border-slate-600 dark:bg-slate-800">
           <span class="text-slate-700 dark:text-slate-200">{{ file.name }}</span>
-          <div class="flex items-center gap-3 text-xs">
+          <div class="flex w-full flex-wrap items-center gap-3 text-xs sm:w-auto sm:justify-end">
             <span class="text-slate-400 dark:text-slate-500">{{ formatSize(file.size) }}</span>
             <a :href="file.view_url" target="_blank" class="text-blue-600 hover:underline dark:text-blue-400">Preview</a>
             <a :href="file.download_url" class="text-blue-600 hover:underline dark:text-blue-400">Download</a>

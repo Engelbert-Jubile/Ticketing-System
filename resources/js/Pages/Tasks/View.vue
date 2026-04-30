@@ -1,7 +1,7 @@
 <template>
   <div class="mx-auto max-w-5xl space-y-6 px-4 py-6 lg:px-6">
     <header class="flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white/95 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-      <div class="flex items-start justify-between gap-4">
+      <div class="flex flex-col items-start gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">{{ task.title }}</h1>
           <p v-if="task.task_no" class="text-sm text-slate-500 dark:text-slate-400">Task No: {{ task.task_no }}</p>
@@ -72,12 +72,12 @@
     <section v-if="task.attachments.length" class="rounded-3xl border border-slate-200 bg-white/95 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
       <h2 class="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">Lampiran</h2>
       <ul class="space-y-2 text-sm text-slate-600 dark:text-slate-300">
-        <li v-for="attachment in task.attachments" :key="attachment.id" class="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-800/60">
-          <div class="flex-1 truncate">
+        <li v-for="attachment in task.attachments" :key="attachment.id" class="flex flex-col items-start gap-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-slate-700 dark:bg-slate-800/60">
+          <div class="w-full flex-1 truncate sm:w-auto">
             <div class="font-medium text-slate-900 dark:text-slate-100">{{ attachment.name }}</div>
             <div v-if="formatSize(attachment.size)" class="text-xs text-slate-400">{{ formatSize(attachment.size) }}</div>
           </div>
-          <div class="ml-4 flex items-center gap-2">
+          <div class="flex w-full flex-wrap items-center gap-2 sm:ml-4 sm:w-auto sm:justify-end">
             <a :href="attachment.view_url" target="_blank" class="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-semibold text-blue-600 transition hover:bg-blue-50 dark:border-blue-400/40 dark:text-blue-200 dark:hover:bg-blue-500/10">Lihat</a>
             <a :href="attachment.download_url" class="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800">Unduh</a>
           </div>

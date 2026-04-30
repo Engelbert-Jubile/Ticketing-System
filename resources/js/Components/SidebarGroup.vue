@@ -120,6 +120,7 @@ const childActive = child => {
   gap: 0.5rem;
   flex: 1 1 auto;
   justify-content: space-between;
+  min-width: 0;
 }
 
 .nav-btn:hover {
@@ -146,6 +147,10 @@ const childActive = child => {
 .nav-label {
   flex: 1 1 auto;
   text-align: left;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .nav-caret {
@@ -174,6 +179,14 @@ const childActive = child => {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+}
+
+.nav-sub__label {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .nav-sub__link:hover {
@@ -277,5 +290,17 @@ const childActive = child => {
 .collapse-leave-to {
   opacity: 0;
   transform: translateY(-4px);
+}
+
+@media (max-width: 1023px) {
+  .nav-sub {
+    padding-left: 0.75rem;
+  }
+
+  .nav-btn,
+  .nav-sub__link {
+    padding-left: 0.65rem;
+    padding-right: 0.65rem;
+  }
 }
 </style>

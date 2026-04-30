@@ -1,11 +1,11 @@
 <template>
   <div class="mx-auto max-w-6xl space-y-6 px-4 py-6 lg:px-6">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Task In Progress</h1>
         <p class="text-sm text-slate-500 dark:text-slate-300">Daftar task yang sedang dikerjakan.</p>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex flex-wrap items-center gap-2">
         <Link
           :href="route('tasks.create')"
           class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
@@ -27,7 +27,8 @@
     </div>
 
     <section class="overflow-hidden rounded-3xl border border-slate-200 bg-white/90 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
-      <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-700">
+      <div class="overflow-x-auto">
+      <table class="min-w-[800px] divide-y divide-slate-200 text-sm dark:divide-slate-700">
         <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-400">
           <tr>
             <th class="px-4 py-2 text-left">#</th>
@@ -62,6 +63,7 @@
           </tr>
         </tbody>
       </table>
+      </div>
     </section>
   </div>
 </template>

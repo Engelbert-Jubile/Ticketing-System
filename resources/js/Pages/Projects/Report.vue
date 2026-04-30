@@ -134,7 +134,7 @@
       <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <button
           type="button"
-          class="flex w-full items-center justify-between gap-3 bg-blue-100 px-6 py-4 text-left text-blue-900 transition dark:bg-blue-900/30 dark:text-blue-100"
+          class="flex w-full flex-col items-start gap-2 bg-blue-100 px-4 py-4 text-left text-blue-900 transition sm:flex-row sm:items-center sm:justify-between sm:px-6 dark:bg-blue-900/30 dark:text-blue-100"
           @click="toggleSection('ticket')"
           :aria-expanded="accordion.ticket"
         >
@@ -171,7 +171,7 @@
 
               <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white px-0 pb-4 pt-3 mt-4 dark:border-slate-700 dark:bg-slate-900">
                 <div class="overflow-x-auto">
-                  <table class="report-table w-full min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-700">
+                  <table class="report-table w-full min-w-[1120px] divide-y divide-slate-200 text-sm dark:divide-slate-700">
                     <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-300">
                       <tr>
                         <th class="px-4 py-3 text-left">#</th>
@@ -271,7 +271,7 @@
       <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <button
           type="button"
-          class="flex w-full items-center justify-between gap-3 bg-purple-100 px-6 py-4 text-left text-purple-900 transition dark:bg-purple-900/30 dark:text-purple-100"
+          class="flex w-full flex-col items-start gap-2 bg-purple-100 px-4 py-4 text-left text-purple-900 transition sm:flex-row sm:items-center sm:justify-between sm:px-6 dark:bg-purple-900/30 dark:text-purple-100"
           @click="toggleSection('standalone')"
           :aria-expanded="accordion.standalone"
         >
@@ -308,7 +308,7 @@
 
               <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white px-0 pb-4 pt-3 mt-4 dark:border-slate-700 dark:bg-slate-900">
                 <div class="overflow-x-auto">
-                  <table class="report-table w-full min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-700">
+                  <table class="report-table w-full min-w-[1100px] divide-y divide-slate-200 text-sm dark:divide-slate-700">
                     <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-300">
                       <tr>
                         <th class="px-4 py-3 text-left">#</th>
@@ -2166,6 +2166,13 @@ function destroyProject(row, scope) {
 
   .accordion-body {
     padding: 0 1.4rem 1.6rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .report-accordion__content {
+    padding: 0 0.875rem 1rem;
+    gap: 0.9rem;
   }
 }
 </style>
