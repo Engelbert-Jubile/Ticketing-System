@@ -480,7 +480,7 @@ defineExpose({
   width: 100%;
   max-width: min(1536px, 100%);
   margin-inline: auto;
-  min-height: var(--topbar-h, 72px);
+  min-height: 4rem;
   padding: 0.75rem 1rem;
   box-sizing: border-box;
 }
