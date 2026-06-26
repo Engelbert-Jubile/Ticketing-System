@@ -517,7 +517,7 @@
               <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold uppercase tracking-wide dark:border-slate-700 dark:bg-slate-800">
                 <span>Notifications</span>
                 @if($notifCount > 0)
-                <form method="POST" action="{{ route('notifications.read-all') }}">
+                <form method="POST" action="{{ route('notifications.read-all', ['locale' => request()->route('locale') ?? app()->getLocale()]) }}">
                   @csrf
                   <button type="submit" class="text-xs font-semibold text-blue-600 transition hover:text-blue-500 dark:text-blue-300">Tandai semua</button>
                 </form>
@@ -544,17 +544,17 @@
                       </div>
                       <p class="text-xs text-slate-600 dark:text-slate-300 truncate">{{ $n->data['message'] ?? '' }}</p>
                       <p class="text-[11px] uppercase tracking-wide text-slate-400">{{ optional($n->created_at)->diffForHumans() }}</p>
-                      @if(!empty($n->data['url']))<a href="{{ $n->data['url'] }}" class="text-xs font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-300">Buka</a>@endif
+                      @if(!empty($n->data['url']))<a href="{{ route('notifications.read', ['locale' => request()->route('locale') ?? app()->getLocale(), 'id' => $n->id]) }}" class="text-xs font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-300">Buka</a>@endif
                     </div>
                     <div class="flex shrink-0 items-center gap-1">
                       @if($unread)
-                      <form method="POST" action="{{ route('notifications.mark', $n->id) }}">@csrf
+                      <form method="POST" action="{{ route('notifications.mark', ['locale' => request()->route('locale') ?? app()->getLocale(), 'id' => $n->id]) }}">@csrf
                         <button title="Tandai sudah dibaca" class="topbar-icon-btn h-8 w-8 rounded-[8px] bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 dark:bg-blue-400/15 dark:text-blue-200">
                           <span class="material-icons text-[18px]">check</span>
                         </button>
                       </form>
                       @endif
-                      <form method="POST" action="{{ route('notifications.destroy', $n->id) }}">@csrf @method('DELETE')
+                      <form method="POST" action="{{ route('notifications.destroy', ['locale' => request()->route('locale') ?? app()->getLocale(), 'id' => $n->id]) }}">@csrf @method('DELETE')
                         <button title="Hapus" class="topbar-icon-btn h-8 w-8 rounded-[8px] bg-red-500/10 text-red-600 hover:bg-red-500/20 dark:bg-red-400/15 dark:text-red-300">
                           <span class="material-icons text-[18px]">close</span>
                         </button>
