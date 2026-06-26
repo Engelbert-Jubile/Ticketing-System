@@ -422,18 +422,18 @@ const navItems = computed(() => {
 const documentTitle = computed(() => {
   const path = currentPath.value
 
-  const flatten = (items) => (items || []).flatMap((item) => {
+  const flatten = items => (items || []).flatMap(item => {
     if (item && Array.isArray(item.children)) return [item, ...flatten(item.children)]
     return [item]
   })
 
   const items = flatten(navItems.value)
-  const matches = items.filter((item) => typeof item?.match === "function" && item.match(path))
+  const matches = items.filter(item => typeof item?.match === 'function' && item.match(path))
 
-  matches.sort((a, b) => String(b?.href || "").length - String(a?.href || "").length)
+  matches.sort((a, b) => String(b?.href || '').length - String(a?.href || '').length)
 
   const best = matches[0]
-  return best?.label || t("nav.dashboard")
+  return best?.label || t('nav.dashboard')
 })
 
 
@@ -560,34 +560,44 @@ const performSearch = query => {
   router.get(resolveRouteName('search'), params, { preserveState: true })
 }
 
-const syncNotifications = () => {
-  router.reload({
-    only: ['notifications'],
-    preserveScroll: true,
-    preserveState: true,
-    onSuccess: page => {
-      notificationsState.value = cloneNotifications(page.props.notifications)
-    },
-  })
+const syncNotifications = page => {
+  const source = page?.props?.notifications ?? page.props.notifications
+  notificationsState.value = cloneNotifications(source)
 }
 
-const notificationRequest = async (method, url, applyLocalChange) => {
+const notificationVisit = (method, url, applyLocalChange) => {
   const previous = cloneNotifications(notificationsState.value)
 
   if (typeof applyLocalChange === 'function') {
     applyLocalChange()
   }
 
-  try {
-    await window.axios({ method, url })
-  } catch (error) {
-    notificationsState.value = previous
-    throw error
+  const options = {
+    only: ['notifications'],
+    preserveScroll: true,
+    preserveState: true,
+    replace: true,
+    onSuccess: resultPage => {
+      syncNotifications(resultPage)
+    },
+    onError: () => {
+      notificationsState.value = previous
+    },
+    onCancel: () => {
+      notificationsState.value = previous
+    },
   }
+
+  if (method === 'delete') {
+    router.delete(url, options)
+    return
+  }
+
+  router.post(url, {}, options)
 }
 
-const markAllNotifications = async () => {
-  await notificationRequest('post', resolveRouteName('notifications.read-all'), () => {
+const markAllNotifications = () => {
+  notificationVisit('post', resolveRouteName('notifications.read-all'), () => {
     notificationsState.value = {
       ...notificationsState.value,
       unread_count: 0,
@@ -599,8 +609,8 @@ const markAllNotifications = async () => {
   })
 }
 
-const markNotification = async id => {
-  await notificationRequest('post', resolveRouteName('notifications.mark', { id }), () => {
+const markNotification = id => {
+  notificationVisit('post', resolveRouteName('notifications.mark', { id }), () => {
     let unreadCount = notificationsState.value.unread_count
     const items = notificationsState.value.items.map(item => {
       if (item.id !== id || item.read_at) return item
@@ -615,8 +625,8 @@ const markNotification = async id => {
   })
 }
 
-const deleteNotification = async id => {
-  await notificationRequest('delete', resolveRouteName('notifications.destroy', { id }), () => {
+const deleteNotification = id => {
+  notificationVisit('delete', resolveRouteName('notifications.destroy', { id }), () => {
     const target = notificationsState.value.items.find(item => item.id === id)
     const unreadCount = target && !target.read_at
       ? Math.max(0, notificationsState.value.unread_count - 1)
