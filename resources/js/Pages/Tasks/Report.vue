@@ -93,7 +93,7 @@
         <transition name="accordion">
           <div v-show="accordion.ticket" class="border-t border-slate-200 bg-blue-50/70 py-5 dark:border-slate-700 dark:bg-blue-500/10 report-accordion__content">
             <div class="space-y-5 px-6">
-              <div class="grid gap-4 sm:grid-cols-3 lg:gap-5">
+              <div class="grid gap-3 sm:grid-cols-3">
                 <div class="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 dark:border-blue-500/40 dark:bg-blue-500/10">
                   <p class="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-200">Total</p>
                   <p class="mt-1 text-2xl font-semibold text-blue-800 dark:text-blue-100">{{ ticketSummary.total }}</p>
@@ -235,7 +235,7 @@
         <transition name="accordion">
           <div v-show="accordion.standalone" class="border-t border-slate-200 bg-purple-50/70 py-5 dark:border-slate-700 dark:bg-purple-500/10 report-accordion__content">
             <div class="space-y-5 px-6">
-              <div class="grid gap-4 sm:grid-cols-3 lg:gap-5">
+              <div class="grid gap-3 sm:grid-cols-3">
                 <div class="rounded-2xl border border-purple-100 bg-purple-50 px-4 py-3 dark:border-purple-500/40 dark:bg-purple-500/10">
                   <p class="text-xs font-semibold uppercase tracking-wide text-purple-600 dark:text-purple-200">Total</p>
                   <p class="mt-1 text-2xl font-semibold text-purple-700 dark:text-purple-100">{{ standaloneSummary.total }}</p>
@@ -359,7 +359,7 @@
 }
 
 .report-accordion__content {
-  padding: 0 1.5rem 1.5rem;
+  padding: 1.25rem 1.5rem 1.5rem;
   display: grid;
   gap: 1.25rem;
   border-top: 1px solid rgba(15, 23, 42, 0.06);
@@ -384,7 +384,7 @@
 
 @media (max-width: 640px) {
   .report-accordion__content {
-    padding: 0 0.875rem 1rem;
+    padding: 0.875rem 0.875rem 1rem;
     gap: 0.9rem;
   }
 }
