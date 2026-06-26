@@ -154,7 +154,7 @@
             class="border-t border-slate-200 bg-blue-50/70 py-5 dark:border-slate-700 dark:bg-blue-500/10 report-accordion__content"
           >
             <div class="space-y-5 px-6">
-              <div class="grid gap-3 sm:grid-cols-3">
+              <div class="grid gap-4 sm:grid-cols-3 lg:gap-5">
                 <div class="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                   <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Total</p>
                   <p class="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ ticketSummary.total }}</p>
@@ -291,7 +291,7 @@
             class="border-t border-slate-200 bg-amber-50/70 py-5 dark:border-slate-700 dark:bg-amber-500/10 report-accordion__content"
           >
             <div class="space-y-5 px-6">
-              <div class="grid gap-3 sm:grid-cols-3">
+              <div class="grid gap-4 sm:grid-cols-3 lg:gap-5">
                 <div class="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-600 dark:bg-slate-900">
                   <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Total</p>
                   <p class="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ standaloneSummary.total }}</p>

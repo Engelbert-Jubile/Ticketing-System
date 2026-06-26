@@ -91,7 +91,7 @@
         <transition name="accordion">
           <div v-show="accordion.task" class="border-t border-slate-200 bg-blue-50/70 py-5 dark:border-slate-700 dark:bg-blue-500/10 report-accordion__content">
             <div class="space-y-5 px-6">
-              <div class="grid gap-3 sm:grid-cols-3">
+              <div class="grid gap-4 sm:grid-cols-3 lg:gap-5">
                 <div class="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 dark:border-blue-500/40 dark:bg-blue-500/10">
                   <p class="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-200">Total</p>
                   <p class="mt-1 text-2xl font-semibold text-blue-800 dark:text-blue-100">{{ taskSummary.total }}</p>
@@ -306,7 +306,7 @@
         <transition name="accordion">
           <div v-show="accordion.project" class="border-t border-slate-200 bg-purple-50/70 py-5 dark:border-slate-700 dark:bg-purple-500/10 report-accordion__content">
             <div class="space-y-5 px-6">
-              <div class="grid gap-3 sm:grid-cols-3">
+              <div class="grid gap-4 sm:grid-cols-3 lg:gap-5">
                 <div class="rounded-2xl border border-purple-100 bg-purple-50 px-4 py-3 dark:border-purple-500/40 dark:bg-purple-500/10">
                   <p class="text-xs font-semibold uppercase tracking-wide text-purple-600 dark:text-purple-200">Total</p>
                   <p class="mt-1 text-2xl font-semibold text-purple-700 dark:text-purple-100">{{ projectSummary.total }}</p>
