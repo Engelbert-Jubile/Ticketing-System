@@ -565,45 +565,97 @@ const syncNotifications = page => {
   notificationsState.value = cloneNotifications(source)
 }
 
-const submitNotificationForm = (url, method = 'post') => {
-  if (typeof document === 'undefined') {
-    return
+const refreshNotifications = () => new Promise((resolve, reject) => {
+  router.reload({
+    only: ['notifications'],
+    preserveScroll: true,
+    preserveState: true,
+    replace: true,
+    onSuccess: resultPage => {
+      syncNotifications(resultPage)
+      resolve(resultPage)
+    },
+    onError: errors => {
+      reject(errors)
+    },
+    onCancel: () => {
+      reject(new Error('Notification refresh cancelled'))
+    },
+  })
+})
+
+const notificationVisit = async (method, url, applyLocalChange) => {
+  const previous = cloneNotifications(notificationsState.value)
+
+  if (typeof applyLocalChange === 'function') {
+    applyLocalChange()
   }
 
-  const token = document.head.querySelector("meta[name='csrf-token']")?.getAttribute('content') || ''
-  const form = document.createElement('form')
-  form.method = 'POST'
-  form.action = url
-  form.style.display = 'none'
+  try {
+    const token = document.head.querySelector("meta[name='csrf-token']")?.getAttribute('content') || ''
 
-  const csrfField = document.createElement('input')
-  csrfField.type = 'hidden'
-  csrfField.name = '_token'
-  csrfField.value = token
-  form.appendChild(csrfField)
+    const response = await fetch(url, {
+      method: method === 'delete' ? 'DELETE' : 'POST',
+      credentials: 'same-origin',
+      headers: {
+        Accept: 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+        ...(token ? { 'X-CSRF-TOKEN': token } : {}),
+      },
+    })
 
-  if (method.toLowerCase() === 'delete') {
-    const methodField = document.createElement('input')
-    methodField.type = 'hidden'
-    methodField.name = '_method'
-    methodField.value = 'DELETE'
-    form.appendChild(methodField)
+    if (!response.ok) {
+      throw new Error(`Notification request failed with status ${response.status}`)
+    }
+
+    await refreshNotifications()
+  } catch (error) {
+    notificationsState.value = previous
+    throw error
   }
-
-  document.body.appendChild(form)
-  form.submit()
 }
 
 const markAllNotifications = () => {
-  submitNotificationForm(resolveRouteName('notifications.read-all'))
+  void notificationVisit('post', resolveRouteName('notifications.read-all'), () => {
+    notificationsState.value = {
+      ...notificationsState.value,
+      unread_count: 0,
+      items: notificationsState.value.items.map(item => ({
+        ...item,
+        read_at: item.read_at || new Date().toISOString(),
+      })),
+    }
+  })
 }
 
 const markNotification = id => {
-  submitNotificationForm(resolveRouteName('notifications.mark', { id }))
+  void notificationVisit('post', resolveRouteName('notifications.mark', { id }), () => {
+    let unreadCount = notificationsState.value.unread_count
+    const items = notificationsState.value.items.map(item => {
+      if (item.id !== id || item.read_at) return item
+      unreadCount = Math.max(0, unreadCount - 1)
+      return { ...item, read_at: new Date().toISOString() }
+    })
+
+    notificationsState.value = {
+      unread_count: unreadCount,
+      items,
+    }
+  })
 }
 
 const deleteNotification = id => {
-  submitNotificationForm(resolveRouteName('notifications.destroy', { id }), 'delete')
+  void notificationVisit('delete', resolveRouteName('notifications.destroy', { id }), () => {
+    const target = notificationsState.value.items.find(item => item.id === id)
+    const unreadCount = target && !target.read_at
+      ? Math.max(0, notificationsState.value.unread_count - 1)
+      : notificationsState.value.unread_count
+
+    notificationsState.value = {
+      unread_count: unreadCount,
+      items: notificationsState.value.items.filter(item => item.id !== id),
+    }
+  })
 }
 
 const stopImpersonation = () => {
