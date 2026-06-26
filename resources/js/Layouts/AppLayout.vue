@@ -84,6 +84,7 @@
 
 <script setup>
 import { Head, router, usePage } from '@inertiajs/vue3'
+import axios from 'axios'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import LegacySidebar from '../Components/LegacySidebar.vue'
 import LegacyTopbar from '../Components/LegacyTopbar.vue'
@@ -593,9 +594,9 @@ const notificationVisit = async (method, url, applyLocalChange) => {
 
   try {
     if (method === 'delete') {
-      await window.axios.delete(url)
+      await axios.delete(url)
     } else {
-      await window.axios.post(url)
+      await axios.post(url)
     }
 
     await refreshNotifications()
@@ -789,4 +790,5 @@ watch(
   }
 }
 </style>
+
 
