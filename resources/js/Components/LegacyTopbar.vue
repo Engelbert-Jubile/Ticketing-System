@@ -64,7 +64,7 @@
                     v-if="unreadCount > 0"
                     type="button"
                     class="dropdown-header__action"
-                    @click="markAllNotifications"
+                    @click.prevent="markAllNotifications"
                   >
                     {{ t('topbar.markAll') }}
                   </button>
@@ -106,7 +106,7 @@
                       <button
                         type="button"
                         class="notif-btn"
-                        @click.stop="markNotification(item.id)"
+                        @click.stop.prevent="markNotification(item.id)"
                         aria-label="Tandai sudah dibaca"
                       >
                         <span class="material-icons">check</span>
@@ -114,7 +114,7 @@
                       <button
                         type="button"
                         class="notif-btn notif-btn--danger"
-                        @click.stop="deleteNotification(item.id)"
+                        @click.stop.prevent="deleteNotification(item.id)"
                         aria-label="Hapus notifikasi"
                       >
                         <span class="material-icons">close</span>
@@ -1189,3 +1189,4 @@ defineExpose({
   opacity: 0;
 }
 </style>
+

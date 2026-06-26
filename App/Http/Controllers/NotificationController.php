@@ -21,12 +21,13 @@ class NotificationController extends Controller
     public function read(Request $request, string $id): RedirectResponse
     {
         $user = $request->user();
-        $notif = $user->notifications()->where('id', $id)->firstOrFail();
-        if (! $notif->read_at) {
+        $notif = $user?->notifications()->where('id', $id)->first();
+
+        if ($notif && ! $notif->read_at) {
             $notif->markAsRead();
         }
 
-        $url = $notif->data['url'] ?? null;
+        $url = $notif?->data['url'] ?? null;
         if ($url && is_string($url)) {
             return redirect()->to($url);
         }
@@ -38,8 +39,9 @@ class NotificationController extends Controller
     public function mark(Request $request, string $id): RedirectResponse|JsonResponse
     {
         $user = $request->user();
-        $notif = $user->notifications()->where('id', $id)->firstOrFail();
-        if (! $notif->read_at) {
+        $notif = $user?->notifications()->where('id', $id)->first();
+
+        if ($notif && ! $notif->read_at) {
             $notif->markAsRead();
         }
 
@@ -49,7 +51,7 @@ class NotificationController extends Controller
     /** Tandai semua sebagai dibaca. */
     public function readAll(Request $request): RedirectResponse|JsonResponse
     {
-        $request->user()->unreadNotifications->markAsRead();
+        $request->user()?->unreadNotifications->markAsRead();
 
         return $this->notificationResponse($request);
     }
@@ -57,7 +59,7 @@ class NotificationController extends Controller
     /** Hapus satu notifikasi milik user. */
     public function destroy(Request $request, string $id): RedirectResponse|JsonResponse
     {
-        $request->user()->notifications()->where('id', $id)->delete();
+        $request->user()?->notifications()->where('id', $id)->delete();
 
         return $this->notificationResponse($request);
     }
