@@ -565,80 +565,45 @@ const syncNotifications = page => {
   notificationsState.value = cloneNotifications(source)
 }
 
-const notificationVisit = async (method, url, applyLocalChange) => {
-  const previous = cloneNotifications(notificationsState.value)
-
-  if (typeof applyLocalChange === 'function') {
-    applyLocalChange()
+const submitNotificationForm = (url, method = 'post') => {
+  if (typeof document === 'undefined') {
+    return
   }
 
-  try {
-    const token = typeof document !== 'undefined'
-      ? document.head.querySelector("meta[name='csrf-token']")?.getAttribute('content')
-      : ''
+  const token = document.head.querySelector("meta[name='csrf-token']")?.getAttribute('content') || ''
+  const form = document.createElement('form')
+  form.method = 'POST'
+  form.action = url
+  form.style.display = 'none'
 
-    const response = await fetch(url, {
-      method: method === 'delete' ? 'DELETE' : 'POST',
-      credentials: 'same-origin',
-      headers: {
-        Accept: 'application/json',
-        'X-Requested-With': 'XMLHttpRequest',
-        ...(token ? { 'X-CSRF-TOKEN': token } : {}),
-      },
-    })
+  const csrfField = document.createElement('input')
+  csrfField.type = 'hidden'
+  csrfField.name = '_token'
+  csrfField.value = token
+  form.appendChild(csrfField)
 
-    if (!response.ok) {
-      throw new Error(`Notification request failed with status ${response.status}`)
-    }
-
-    window.location.reload()
-  } catch (error) {
-    notificationsState.value = previous
-    throw error
+  if (method.toLowerCase() === 'delete') {
+    const methodField = document.createElement('input')
+    methodField.type = 'hidden'
+    methodField.name = '_method'
+    methodField.value = 'DELETE'
+    form.appendChild(methodField)
   }
+
+  document.body.appendChild(form)
+  form.submit()
 }
 
 const markAllNotifications = () => {
-  void notificationVisit('post', resolveRouteName('notifications.read-all'), () => {
-    notificationsState.value = {
-      ...notificationsState.value,
-      unread_count: 0,
-      items: notificationsState.value.items.map(item => ({
-        ...item,
-        read_at: item.read_at || new Date().toISOString(),
-      })),
-    }
-  })
+  submitNotificationForm(resolveRouteName('notifications.read-all'))
 }
 
 const markNotification = id => {
-  void notificationVisit('post', resolveRouteName('notifications.mark', { id }), () => {
-    let unreadCount = notificationsState.value.unread_count
-    const items = notificationsState.value.items.map(item => {
-      if (item.id !== id || item.read_at) return item
-      unreadCount = Math.max(0, unreadCount - 1)
-      return { ...item, read_at: new Date().toISOString() }
-    })
-
-    notificationsState.value = {
-      unread_count: unreadCount,
-      items,
-    }
-  })
+  submitNotificationForm(resolveRouteName('notifications.mark', { id }))
 }
 
 const deleteNotification = id => {
-  void notificationVisit('delete', resolveRouteName('notifications.destroy', { id }), () => {
-    const target = notificationsState.value.items.find(item => item.id === id)
-    const unreadCount = target && !target.read_at
-      ? Math.max(0, notificationsState.value.unread_count - 1)
-      : notificationsState.value.unread_count
-
-    notificationsState.value = {
-      unread_count: unreadCount,
-      items: notificationsState.value.items.filter(item => item.id !== id),
-    }
-  })
+  submitNotificationForm(resolveRouteName('notifications.destroy', { id }), 'delete')
 }
 
 const stopImpersonation = () => {
