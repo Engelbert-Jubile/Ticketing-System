@@ -115,7 +115,13 @@ const isLimitedUser = computed(() => {
   if (hasAdmin) return false
   return roles.includes('user')
 })
-const notifications = computed(() => page.props.notifications ?? { unread_count: 0, items: [] })
+const cloneNotifications = source => ({
+  unread_count: Number(source?.unread_count ?? 0),
+  items: Array.isArray(source?.items) ? source.items.map(item => ({ ...item })) : [],
+})
+
+const notificationsState = ref(cloneNotifications(page.props.notifications))
+const notifications = computed(() => notificationsState.value)
 const sidebarMetrics = computed(() => page.props.sidebarMetrics ?? {
   tickets_in_progress_count: 0,
   tasks_in_progress_count: 0,
@@ -555,28 +561,72 @@ const performSearch = query => {
 }
 
 const syncNotifications = () => {
-  router.reload({ only: ['notifications'], preserveScroll: true, preserveState: true })
+  router.reload({
+    only: ['notifications'],
+    preserveScroll: true,
+    preserveState: true,
+    onSuccess: page => {
+      notificationsState.value = cloneNotifications(page.props.notifications)
+    },
+  })
 }
 
-const notificationRequest = async (method, url) => {
+const notificationRequest = async (method, url, applyLocalChange) => {
+  const previous = cloneNotifications(notificationsState.value)
+
+  if (typeof applyLocalChange === 'function') {
+    applyLocalChange()
+  }
+
   try {
     await window.axios({ method, url })
   } catch (error) {
-    syncNotifications()
+    notificationsState.value = previous
     throw error
   }
 }
 
 const markAllNotifications = async () => {
-  await notificationRequest('post', resolveRouteName('notifications.read-all'))
+  await notificationRequest('post', resolveRouteName('notifications.read-all'), () => {
+    notificationsState.value = {
+      ...notificationsState.value,
+      unread_count: 0,
+      items: notificationsState.value.items.map(item => ({
+        ...item,
+        read_at: item.read_at || new Date().toISOString(),
+      })),
+    }
+  })
 }
 
 const markNotification = async id => {
-  await notificationRequest('post', resolveRouteName('notifications.mark', { id }))
+  await notificationRequest('post', resolveRouteName('notifications.mark', { id }), () => {
+    let unreadCount = notificationsState.value.unread_count
+    const items = notificationsState.value.items.map(item => {
+      if (item.id !== id || item.read_at) return item
+      unreadCount = Math.max(0, unreadCount - 1)
+      return { ...item, read_at: new Date().toISOString() }
+    })
+
+    notificationsState.value = {
+      unread_count: unreadCount,
+      items,
+    }
+  })
 }
 
 const deleteNotification = async id => {
-  await notificationRequest('delete', resolveRouteName('notifications.destroy', { id }))
+  await notificationRequest('delete', resolveRouteName('notifications.destroy', { id }), () => {
+    const target = notificationsState.value.items.find(item => item.id === id)
+    const unreadCount = target && !target.read_at
+      ? Math.max(0, notificationsState.value.unread_count - 1)
+      : notificationsState.value.unread_count
+
+    notificationsState.value = {
+      unread_count: unreadCount,
+      items: notificationsState.value.items.filter(item => item.id !== id),
+    }
+  })
 }
 
 const stopImpersonation = () => {
@@ -657,6 +707,14 @@ onBeforeUnmount(() => {
 watch([announcementKey, announcement], () => {
   syncAnnouncement()
 })
+
+watch(
+  () => page.props.notifications,
+  value => {
+    notificationsState.value = cloneNotifications(value)
+  },
+  { deep: true }
+)
 
 watch(
   () => page.props.locale,

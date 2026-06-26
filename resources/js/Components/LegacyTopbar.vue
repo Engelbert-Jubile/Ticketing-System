@@ -106,7 +106,7 @@
                       <button
                         type="button"
                         class="notif-btn"
-                        @click="markNotification(item.id)"
+                        @click.stop="markNotification(item.id)"
                         aria-label="Tandai sudah dibaca"
                       >
                         <span class="material-icons">check</span>
@@ -114,7 +114,7 @@
                       <button
                         type="button"
                         class="notif-btn notif-btn--danger"
-                        @click="deleteNotification(item.id)"
+                        @click.stop="deleteNotification(item.id)"
                         aria-label="Hapus notifikasi"
                       >
                         <span class="material-icons">close</span>
@@ -257,16 +257,7 @@ const accountOpen = ref(false)
 const notificationsRef = ref(null)
 const accountRef = ref(null)
 
-const notificationItems = ref(Array.isArray(props.notifications?.items) ? props.notifications.items : [])
-
-watch(
-  () => props.notifications,
-  val => {
-    notificationItems.value = Array.isArray(val?.items) ? val.items : []
-  },
-  { deep: true }
-)
-
+const notificationItems = computed(() => (Array.isArray(props.notifications?.items) ? props.notifications.items : []))
 const unreadCount = computed(() => notificationItems.value.filter(item => item.read_at == null).length)
 const themeIcon = computed(() => (props.theme === 'dark' ? 'light_mode' : 'dark_mode'))
 const themeToggleTitle = computed(() => (props.theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'))
@@ -322,17 +313,14 @@ const submitSearch = () => {
 }
 
 const markAllNotifications = () => {
-  notificationItems.value = notificationItems.value.map(item => ({ ...item, read_at: item.read_at || new Date().toISOString() }))
   emit('mark-all-notifications')
 }
 
 const markNotification = id => {
-  notificationItems.value = notificationItems.value.map(item => (item.id === id ? { ...item, read_at: item.read_at || new Date().toISOString() } : item))
   emit('mark-notification', id)
 }
 
 const deleteNotification = id => {
-  notificationItems.value = notificationItems.value.filter(item => item.id !== id)
   emit('delete-notification', id)
 }
 
