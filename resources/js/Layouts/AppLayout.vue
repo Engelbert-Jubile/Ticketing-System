@@ -565,39 +565,48 @@ const syncNotifications = page => {
   notificationsState.value = cloneNotifications(source)
 }
 
-const notificationVisit = (method, url, applyLocalChange) => {
-  const previous = cloneNotifications(notificationsState.value)
-
-  if (typeof applyLocalChange === 'function') {
-    applyLocalChange()
-  }
-
-  const options = {
+const refreshNotifications = () => new Promise((resolve, reject) => {
+  router.reload({
     only: ['notifications'],
     preserveScroll: true,
     preserveState: true,
     replace: true,
     onSuccess: resultPage => {
       syncNotifications(resultPage)
+      resolve(resultPage)
     },
-    onError: () => {
-      notificationsState.value = previous
+    onError: errors => {
+      reject(errors)
     },
     onCancel: () => {
-      notificationsState.value = previous
+      reject(new Error('Notification refresh cancelled'))
     },
+  })
+})
+
+const notificationVisit = async (method, url, applyLocalChange) => {
+  const previous = cloneNotifications(notificationsState.value)
+
+  if (typeof applyLocalChange === 'function') {
+    applyLocalChange()
   }
 
-  if (method === 'delete') {
-    router.delete(url, options)
-    return
-  }
+  try {
+    if (method === 'delete') {
+      await window.axios.delete(url)
+    } else {
+      await window.axios.post(url)
+    }
 
-  router.post(url, {}, options)
+    await refreshNotifications()
+  } catch (error) {
+    notificationsState.value = previous
+    throw error
+  }
 }
 
 const markAllNotifications = () => {
-  notificationVisit('post', resolveRouteName('notifications.read-all'), () => {
+  void notificationVisit('post', resolveRouteName('notifications.read-all'), () => {
     notificationsState.value = {
       ...notificationsState.value,
       unread_count: 0,
@@ -610,7 +619,7 @@ const markAllNotifications = () => {
 }
 
 const markNotification = id => {
-  notificationVisit('post', resolveRouteName('notifications.mark', { id }), () => {
+  void notificationVisit('post', resolveRouteName('notifications.mark', { id }), () => {
     let unreadCount = notificationsState.value.unread_count
     const items = notificationsState.value.items.map(item => {
       if (item.id !== id || item.read_at) return item
@@ -626,7 +635,7 @@ const markNotification = id => {
 }
 
 const deleteNotification = id => {
-  notificationVisit('delete', resolveRouteName('notifications.destroy', { id }), () => {
+  void notificationVisit('delete', resolveRouteName('notifications.destroy', { id }), () => {
     const target = notificationsState.value.items.find(item => item.id === id)
     const unreadCount = target && !target.read_at
       ? Math.max(0, notificationsState.value.unread_count - 1)
@@ -780,3 +789,4 @@ watch(
   }
 }
 </style>
+
