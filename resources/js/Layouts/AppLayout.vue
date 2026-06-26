@@ -554,16 +554,29 @@ const performSearch = query => {
   router.get(resolveRouteName('search'), params, { preserveState: true })
 }
 
-const markAllNotifications = () => {
-  router.post(resolveRouteName('notifications.read-all'), {}, { preserveScroll: true })
+const syncNotifications = () => {
+  router.reload({ only: ['notifications'], preserveScroll: true, preserveState: true })
 }
 
-const markNotification = id => {
-  router.post(resolveRouteName('notifications.mark', { id }), {}, { preserveScroll: true })
+const notificationRequest = async (method, url) => {
+  try {
+    await window.axios({ method, url })
+  } catch (error) {
+    syncNotifications()
+    throw error
+  }
 }
 
-const deleteNotification = id => {
-  router.delete(resolveRouteName('notifications.destroy', { id }), { preserveScroll: true })
+const markAllNotifications = async () => {
+  await notificationRequest('post', resolveRouteName('notifications.read-all'))
+}
+
+const markNotification = async id => {
+  await notificationRequest('post', resolveRouteName('notifications.mark', { id }))
+}
+
+const deleteNotification = async id => {
+  await notificationRequest('delete', resolveRouteName('notifications.destroy', { id }))
 }
 
 const stopImpersonation = () => {
