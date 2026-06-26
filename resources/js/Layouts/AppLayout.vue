@@ -84,7 +84,6 @@
 
 <script setup>
 import { Head, router, usePage } from '@inertiajs/vue3'
-import axios from 'axios'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import LegacySidebar from '../Components/LegacySidebar.vue'
 import LegacyTopbar from '../Components/LegacyTopbar.vue'
@@ -566,25 +565,6 @@ const syncNotifications = page => {
   notificationsState.value = cloneNotifications(source)
 }
 
-const refreshNotifications = () => new Promise((resolve, reject) => {
-  router.reload({
-    only: ['notifications'],
-    preserveScroll: true,
-    preserveState: true,
-    replace: true,
-    onSuccess: resultPage => {
-      syncNotifications(resultPage)
-      resolve(resultPage)
-    },
-    onError: errors => {
-      reject(errors)
-    },
-    onCancel: () => {
-      reject(new Error('Notification refresh cancelled'))
-    },
-  })
-})
-
 const notificationVisit = async (method, url, applyLocalChange) => {
   const previous = cloneNotifications(notificationsState.value)
 
@@ -593,13 +573,25 @@ const notificationVisit = async (method, url, applyLocalChange) => {
   }
 
   try {
-    if (method === 'delete') {
-      await axios.delete(url)
-    } else {
-      await axios.post(url)
+    const token = typeof document !== 'undefined'
+      ? document.head.querySelector("meta[name='csrf-token']")?.getAttribute('content')
+      : ''
+
+    const response = await fetch(url, {
+      method: method === 'delete' ? 'DELETE' : 'POST',
+      credentials: 'same-origin',
+      headers: {
+        Accept: 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+        ...(token ? { 'X-CSRF-TOKEN': token } : {}),
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(`Notification request failed with status ${response.status}`)
     }
 
-    await refreshNotifications()
+    window.location.reload()
   } catch (error) {
     notificationsState.value = previous
     throw error
