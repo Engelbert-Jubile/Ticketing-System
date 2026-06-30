@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class NotificationController extends Controller
 {
@@ -23,8 +24,10 @@ class NotificationController extends Controller
         $user = $request->user();
         $notif = $user?->notifications()->where('id', $id)->first();
 
-        if ($notif && ! $notif->read_at) {
-            $notif->forceFill(['read_at' => now()])->save();
+        if ($notif) {
+            DB::table('notifications')
+                ->where('id', $id)
+                ->update(['read_at' => now()]);
         }
 
         $url = $notif?->data['url'] ?? null;
@@ -41,8 +44,10 @@ class NotificationController extends Controller
         $user = $request->user();
         $notif = $user?->notifications()->where('id', $id)->first();
 
-        if ($notif && ! $notif->read_at) {
-            $notif->forceFill(['read_at' => now()])->save();
+        if ($notif) {
+            DB::table('notifications')
+                ->where('id', $id)
+                ->update(['read_at' => now()]);
         }
 
         return $this->notificationResponse($request);
