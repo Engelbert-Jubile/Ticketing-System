@@ -24,7 +24,7 @@ class NotificationController extends Controller
         $notif = $user?->notifications()->where('id', $id)->first();
 
         if ($notif && ! $notif->read_at) {
-            $notif->markAsRead();
+            $notif->forceFill(['read_at' => now()])->save();
         }
 
         $url = $notif?->data['url'] ?? null;
@@ -42,7 +42,7 @@ class NotificationController extends Controller
         $notif = $user?->notifications()->where('id', $id)->first();
 
         if ($notif && ! $notif->read_at) {
-            $notif->markAsRead();
+            $notif->forceFill(['read_at' => now()])->save();
         }
 
         return $this->notificationResponse($request);
@@ -51,7 +51,7 @@ class NotificationController extends Controller
     /** Tandai semua sebagai dibaca. */
     public function readAll(Request $request): RedirectResponse|JsonResponse
     {
-        $request->user()?->unreadNotifications->markAsRead();
+        $request->user()?->unreadNotifications()->update(['read_at' => now()]);
 
         return $this->notificationResponse($request);
     }
