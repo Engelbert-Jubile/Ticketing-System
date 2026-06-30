@@ -565,25 +565,6 @@ const syncNotifications = page => {
   notificationsState.value = cloneNotifications(source)
 }
 
-const refreshNotifications = () => new Promise((resolve, reject) => {
-  router.reload({
-    only: ['notifications'],
-    preserveScroll: true,
-    preserveState: true,
-    replace: true,
-    onSuccess: resultPage => {
-      syncNotifications(resultPage)
-      resolve(resultPage)
-    },
-    onError: errors => {
-      reject(errors)
-    },
-    onCancel: () => {
-      reject(new Error('Notification refresh cancelled'))
-    },
-  })
-})
-
 const notificationVisit = async (method, url, applyLocalChange) => {
   const previous = cloneNotifications(notificationsState.value)
 
@@ -608,7 +589,6 @@ const notificationVisit = async (method, url, applyLocalChange) => {
       throw new Error(`Notification request failed with status ${response.status}`)
     }
 
-    await refreshNotifications()
   } catch (error) {
     notificationsState.value = previous
     throw error
