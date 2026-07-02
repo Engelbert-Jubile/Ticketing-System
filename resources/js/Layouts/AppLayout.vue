@@ -589,12 +589,16 @@ const notificationVisit = async (method, url, applyLocalChange) => {
       throw new Error(`Notification request failed with status ${response.status}`)
     }
 
+    const payload = await response.json().catch(() => null)
+
+    if (payload?.notifications) {
+      notificationsState.value = cloneNotifications(payload.notifications)
+    }
   } catch (error) {
     notificationsState.value = previous
     throw error
   }
 }
-
 const markAllNotifications = () => {
   void notificationVisit('post', resolveRouteName('notifications.read-all'), () => {
     notificationsState.value = {
