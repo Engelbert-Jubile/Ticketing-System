@@ -19,14 +19,10 @@ class NotificationController extends Controller
             ];
         }
 
-        $query = DatabaseNotification::query()
-            ->where('notifiable_type', $user::class)
-            ->where('notifiable_id', $user->getKey());
-
-        $notifications = (clone $query)->latest()->limit(15)->get();
+        $notifications = $user->notifications()->latest()->limit(15)->get();
 
         return [
-            'unread_count' => (clone $query)->whereNull('read_at')->count(),
+            'unread_count' => $user->unreadNotifications()->count(),
             'items' => $notifications->map(function ($notification) {
                 return [
                     'id' => $notification->id,
@@ -58,9 +54,9 @@ class NotificationController extends Controller
     {
         $user = $request->user();
 
-        return DatabaseNotification::query()
+        return DB::table('notifications')
             ->where('id', $id)
-            ->where('notifiable_type', $user?->getMorphClass() ?? $user::class)
+            ->where('notifiable_type', $user?->getMorphClass())
             ->where('notifiable_id', $user?->getKey());
     }
 
@@ -119,3 +115,4 @@ class NotificationController extends Controller
         return $this->notificationResponse($request);
     }
 }
+

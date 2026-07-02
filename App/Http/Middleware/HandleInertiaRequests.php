@@ -210,14 +210,11 @@ class HandleInertiaRequests extends Middleware
     private function mapNotifications($user): array
     {
         try {
-            $query = DatabaseNotification::query()
-                ->where('notifiable_type', $user::class)
-                ->where('notifiable_id', $user->getKey());
-
-            $notifications = (clone $query)->latest()->limit(15)->get();
+            $unreadCount = $user->unreadNotifications()->count();
+            $notifications = $user->notifications()->latest()->limit(15)->get();
 
             return [
-                'unread_count' => (clone $query)->whereNull('read_at')->count(),
+                'unread_count' => $unreadCount,
                 'items' => $notifications->map(function ($notification) {
                     return [
                         'id' => $notification->id,
@@ -330,4 +327,5 @@ class HandleInertiaRequests extends Middleware
         }
     }
 }
+
 
