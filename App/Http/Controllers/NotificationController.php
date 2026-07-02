@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Facades\DB;
 
 class NotificationController extends Controller
 {
@@ -17,10 +19,14 @@ class NotificationController extends Controller
             ];
         }
 
-        $notifications = $user->notifications()->latest()->limit(15)->get();
+        $query = DatabaseNotification::query()
+            ->where('notifiable_type', $user::class)
+            ->where('notifiable_id', $user->getKey());
+
+        $notifications = (clone $query)->latest()->limit(15)->get();
 
         return [
-            'unread_count' => $user->unreadNotifications()->count(),
+            'unread_count' => (clone $query)->whereNull('read_at')->count(),
             'items' => $notifications->map(function ($notification) {
                 return [
                     'id' => $notification->id,
@@ -48,13 +54,25 @@ class NotificationController extends Controller
         return back();
     }
 
-    public function read(Request $request, string $id): RedirectResponse
+    protected function userNotificationQuery(Request $request, string $id)
     {
         $user = $request->user();
-        $notif = $user?->notifications()->where('id', $id)->first();
+
+        return DatabaseNotification::query()
+            ->where('id', $id)
+            ->where('notifiable_type', $user?->getMorphClass() ?? $user::class)
+            ->where('notifiable_id', $user?->getKey());
+    }
+
+    public function read(Request $request, string $id): RedirectResponse
+    {
+        $notif = $this->userNotificationQuery($request, $id)->first();
 
         if ($notif) {
-            $notif->markAsRead();
+            $this->userNotificationQuery($request, $id)->update([
+                'read_at' => now(),
+                'updated_at' => now(),
+            ]);
             $notif->refresh();
         }
 
@@ -68,27 +86,35 @@ class NotificationController extends Controller
 
     public function mark(Request $request, string $id): RedirectResponse|JsonResponse
     {
-        $user = $request->user();
-        $notif = $user?->notifications()->where('id', $id)->first();
-
-        if ($notif) {
-            $notif->markAsRead();
-            $notif->refresh();
-        }
+        $this->userNotificationQuery($request, $id)->update([
+            'read_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         return $this->notificationResponse($request);
     }
 
     public function readAll(Request $request): RedirectResponse|JsonResponse
     {
-        $request->user()?->unreadNotifications->markAsRead();
+        $user = $request->user();
+
+        if ($user) {
+            DB::table('notifications')
+                ->where('notifiable_type', $user->getMorphClass())
+                ->where('notifiable_id', $user->getKey())
+                ->whereNull('read_at')
+                ->update([
+                    'read_at' => now(),
+                    'updated_at' => now(),
+                ]);
+        }
 
         return $this->notificationResponse($request);
     }
 
     public function destroy(Request $request, string $id): RedirectResponse|JsonResponse
     {
-        $request->user()?->notifications()->where('id', $id)->delete();
+        $this->userNotificationQuery($request, $id)->delete();
 
         return $this->notificationResponse($request);
     }
