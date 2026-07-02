@@ -3,7 +3,7 @@
     <header class="space-y-4">
       <div>
         <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100">Service Level Agreement Reports</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-300">Pantau performa SLA ticket, task, dan project secara menyeluruh.</p>
+        <p class="text-sm text-slate-500 dark:text-slate-300">Pantau performa SLA ticket dan task secara menyeluruh.</p>
       </div>
     </header>
 
@@ -187,30 +187,6 @@
               </div>
             </details>
 
-            <details v-if="entry.project" class="mt-4 rounded-xl border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-700 dark:bg-indigo-900/30">
-              <summary class="cursor-pointer text-sm font-semibold text-indigo-700 dark:text-indigo-200">Project terkait</summary>
-              <dl class="mt-3 grid gap-3 text-sm text-slate-700 dark:text-slate-200 md:grid-cols-2">
-                <div>
-                  <dt class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Project</dt>
-                  <dd class="font-semibold">{{ entry.project.number ?? '—' }} · {{ entry.project.title ?? '—' }}</dd>
-                </div>
-                <div>
-                  <dt class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Status</dt>
-                  <dd>{{ entry.project.status ?? '—' }}</dd>
-                </div>
-                <div>
-                  <dt class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Deadline</dt>
-                  <dd>{{ displayDate(entry.project.deadline) }}</dd>
-                </div>
-                <div>
-                  <dt class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">SLA</dt>
-                  <dd>
-                    {{ entry.project.sla?.label ?? '—' }}
-                    <span class="block text-xs text-slate-500 dark:text-slate-300">{{ entry.project.sla?.delta_human ?? '—' }}</span>
-                  </dd>
-                </div>
-              </dl>
-            </details>
           </article>
         </div>
       </template>
@@ -279,6 +255,8 @@ import { route } from 'ziggy-js';
 import DatePickerFlatpickr from '@/Components/DatePickerFlatpickr.vue';
 import StatusPill from '@/Components/StatusPill.vue';
 import FancySelect from '@/Components/FancySelect.vue';
+
+const showProjectSla = false
 
 const props = defineProps({
   type: { type: String, default: 'ticket' },
@@ -356,7 +334,7 @@ watch(
   }
 );
 
-const typeOptions = computed(() => props.availableTypes ?? []);
+const typeOptions = computed(() => showProjectSla ? (props.availableTypes ?? []) : (props.availableTypes ?? []).filter(option => !['project', 'ticket_work'].includes(option?.value)));
 const stats = computed(() => props.stats ?? {});
 
 const records = ref(props.records || null);
@@ -381,7 +359,6 @@ const columns = computed(() => {
         { key: 'status', label: 'Status' },
         { key: 'assignee', label: 'Assignee' },
         { key: 'ticket_no', label: 'Ticket' },
-        { key: 'project_no', label: 'Project' },
         { key: 'deadline', label: 'Deadline' },
         { key: 'completed_at', label: 'Selesai' },
         { key: 'sla_label', label: 'SLA' },
@@ -407,7 +384,6 @@ const columns = computed(() => {
         { key: 'deadline', label: 'Deadline' },
         { key: 'sla_label', label: 'SLA Ticket' },
         { key: 'tasks_summary', label: 'Ringkasan Task' },
-        { key: 'project_sla', label: 'SLA Project' },
       ];
     default:
       return [
@@ -642,11 +618,9 @@ function buildRow(item) {
       },
       render: {
         sla_label: StatusPill,
-        project_sla: StatusPill,
       },
       renderProps: {
         sla_label: slaPill(ticket.sla?.status),
-        project_sla: slaPill(project?.sla?.status),
       },
       links: ticketLinks,
     };

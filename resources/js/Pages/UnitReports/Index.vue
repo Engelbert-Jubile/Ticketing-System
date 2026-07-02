@@ -36,11 +36,6 @@
         <p class="summary-hint">Done: {{ tasksDone }} · Active: {{ tasksActive }}</p>
       </div>
       <div class="summary-card">
-        <div class="summary-label">Projects</div>
-        <div class="summary-value text-indigo-600">{{ projectsTotal }}</div>
-        <p class="summary-hint">Done: {{ projectsCompleted }} · Active: {{ projectsActive }}</p>
-      </div>
-      <div class="summary-card">
         <div class="summary-label">Member Unit</div>
         <div class="summary-value text-amber-600">{{ usersCount }}</div>
         <p class="summary-hint">Active Agent</p>
@@ -78,20 +73,6 @@
         </div>
       </div>
 
-      <div class="panel">
-        <header class="panel-head">
-          <div>
-            <p class="panel-kicker">Performa Unit</p>
-            <h2 class="panel-title">Project</h2>
-          </div>
-          <span class="panel-badge">{{ projectsCompletion }}% selesai</span>
-        </header>
-        <div class="panel-body">
-          <div class="meter" :class="meterClass(projectsCompletion)"><i :style="`--w:${projectsCompletion}%`"></i></div>
-          <p class="panel-hint">Selesai: {{ projectsCompleted }} • Total: {{ projectsTotal }}</p>
-          <p class="panel-hint">Periode: {{ projectsPeriod }}</p>
-        </div>
-      </div>
     </section>
 
     <section class="panel">
@@ -126,12 +107,11 @@
                 <th class="py-2 text-center">Users</th>
                 <th class="py-2 text-center">Tickets</th>
                 <th class="py-2 text-center">Tasks</th>
-                <th class="py-2 text-center">Projects</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="!unitSummary.length">
-                <td colspan="5" class="py-4 text-center text-sm text-slate-500">Belum ada data unit.</td>
+                <td colspan="4" class="py-4 text-center text-sm text-slate-500">Belum ada data unit.</td>
               </tr>
               <tr
                 v-for="row in unitSummary"
@@ -146,7 +126,6 @@
                 <td class="py-3 text-center font-semibold">{{ row.users }}</td>
                 <td class="py-3 text-center font-semibold">{{ row.tickets }}</td>
                 <td class="py-3 text-center font-semibold">{{ row.tasks }}</td>
-                <td class="py-3 text-center font-semibold">{{ row.projects }}</td>
               </tr>
             </tbody>
           </table>
@@ -160,12 +139,11 @@
                 <th class="py-2">Email</th>
                 <th class="py-2 text-center">Tickets</th>
                 <th class="py-2 text-center">Tasks</th>
-                <th class="py-2 text-center">Projects</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="!agents.length">
-                <td colspan="5" class="py-4 text-center text-sm text-slate-500">Belum ada anggota di unit ini.</td>
+                <td colspan="4" class="py-4 text-center text-sm text-slate-500">Belum ada anggota di unit ini.</td>
               </tr>
               <tr
                 v-for="agent in agents"
@@ -176,7 +154,6 @@
                 <td class="py-3 text-slate-600 dark:text-slate-300">{{ agent.email || "—" }}</td>
                 <td class="py-3 text-center font-semibold">{{ agent.tickets }}</td>
                 <td class="py-3 text-center font-semibold">{{ agent.tasks }}</td>
-                <td class="py-3 text-center font-semibold">{{ agent.projects }}</td>
               </tr>
             </tbody>
           </table>
@@ -190,6 +167,8 @@ import { Link, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import resolveRoute from '../../utils/resolveRoute';
 import FancySelect from "../../Components/FancySelect.vue";
+
+const showProjectUnit = false
 
 const props = defineProps({
   pageTitle: { type: String, default: 'Unit Reports' },
@@ -244,7 +223,7 @@ const selectedUnitModel = computed({
 
 
 const titleText = computed(() => props.pageTitle || 'Unit Reports');
-const subtitleText = computed(() => props.pageSubtitle || 'Ringkasan unit.');
+const subtitleText = computed(() => (props.pageSubtitle || 'Ringkasan unit.').replace('ticket, task, dan project untuk unit', 'ticket dan task untuk unit').replace('ticket, task, dan project', 'ticket dan task'));
 
 const ticketsNew = computed(() => Number(props.ticketsNew ?? 0));
 const ticketsInProgress = computed(() => Number(props.ticketsInProgress ?? 0));
@@ -291,13 +270,6 @@ const quickActions = computed(() => [
     iconClass: 'text-emerald-600 dark:text-emerald-400',
     label: 'Tambah Task',
     description: 'Breakdown pekerjaan tim unit',
-  },
-  {
-    href: resolveRoute('projects.create'),
-    icon: 'folder_open',
-    iconClass: 'text-indigo-600 dark:text-indigo-400',
-    label: 'Project Baru',
-    description: 'Kelola scope & progress unit',
   },
 ]);
 </script>

@@ -56,7 +56,7 @@
         <div class="kpi-cap mt-1">{{ t('dashboard.cards.period', { period: tasksPeriod || t('common.none') }) }}</div>
       </div>
 
-      <div class="card">
+      <div v-if="showProjectDashboard" class="card">
         <div class="flex items-center justify-between">
           <div class="text-sm font-semibold">{{ t('dashboard.cards.projectCompletion') }}</div>
           <div class="kpi-cap">{{ projectsCompleted }}/{{ projectsTotal }}</div>
@@ -107,7 +107,7 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-1 gap-5 lg:grid-cols-3">
+    <div v-if="showProjectDashboard" class="grid grid-cols-1 gap-5 lg:grid-cols-3">
       <div class="chart-card">
         <h3 class="chart-title">{{ t('dashboard.charts.projectsCreated') }}</h3>
         <span id="projectsCreatedHint" class="chart-hint"></span>
@@ -191,6 +191,7 @@ const toJson = value => JSON.stringify(value ?? []);
 const sumArray = values => (values ?? []).reduce((total, value) => total + Number(value ?? 0), 0);
 
 const { t } = useI18n();
+const showProjectDashboard = false
 
 const titleText = computed(() => t('dashboard.title'));
 const subtitleText = computed(() => t('dashboard.subtitle'));
@@ -268,14 +269,6 @@ const quickActions = computed(() => [
     description: t('dashboard.quickActions.createTask.subtitle'),
     variant: 'qa-emerald',
   },
-  {
-    href: resolveRoute('projects.create'),
-    icon: 'folder_open',
-    iconClass: 'text-violet-600 dark:text-violet-400',
-    label: t('dashboard.quickActions.createProject.title'),
-    description: t('dashboard.quickActions.createProject.subtitle'),
-    variant: 'qa-violet',
-  },
 ]);
 
 const kpiCards = computed(() => [
@@ -313,13 +306,6 @@ const kpiCards = computed(() => [
     icon: 'check_circle',
     iconClass: 'text-sky-500',
     caption: t('dashboard.kpis.tasksDone.caption'),
-  },
-  {
-    title: t('dashboard.kpis.projectsDone.title'),
-    value: projectsCompleted.value,
-    icon: 'done_all',
-    iconClass: 'text-pink-500',
-    caption: t('dashboard.kpis.projectsDone.caption'),
   },
 ]);
 
