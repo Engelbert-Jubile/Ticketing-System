@@ -116,10 +116,50 @@ const isLimitedUser = computed(() => {
   if (hasAdmin) return false
   return roles.includes('user')
 })
-const cloneNotifications = source => ({
-  unread_count: Number(source?.unread_count ?? 0),
-  items: Array.isArray(source?.items) ? source.items.map(item => ({ ...item })) : [],
-})
+const notificationReadStorageKey = computed(() => `tickora:notifications:read:${authUser.value?.id ?? 'guest'}`)
+
+const loadStoredReadNotificationIds = () => {
+  if (typeof window === 'undefined') return new Set()
+
+  try {
+    const raw = localStorage.getItem(notificationReadStorageKey.value)
+    const parsed = JSON.parse(raw ?? '[]')
+
+    if (!Array.isArray(parsed)) return new Set()
+
+    return new Set(parsed.map(value => String(value)))
+  } catch (error) {
+    return new Set()
+  }
+}
+
+const readNotificationIds = ref(loadStoredReadNotificationIds())
+
+const persistReadNotificationIds = () => {
+  if (typeof window === 'undefined') return
+
+  try {
+    localStorage.setItem(notificationReadStorageKey.value, JSON.stringify(Array.from(readNotificationIds.value)))
+  } catch (error) {}
+}
+
+const cloneNotifications = source => {
+  const items = Array.isArray(source?.items)
+    ? source.items.map(item => {
+        const isLocallyRead = readNotificationIds.value.has(String(item.id))
+
+        return {
+          ...item,
+          read_at: isLocallyRead ? (item.read_at || new Date().toISOString()) : (item.read_at ?? null),
+        }
+      })
+    : []
+
+  return {
+    unread_count: items.filter(item => item.read_at == null).length,
+    items,
+  }
+}
 
 const notificationsState = ref(cloneNotifications(page.props.notifications))
 const notifications = computed(() => notificationsState.value)
@@ -593,32 +633,25 @@ const notificationVisit = async (method, url, applyLocalChange) => {
   return false
 }
 const markAllNotifications = () => {
-  void notificationVisit('post', resolveRouteName('notifications.read-all'), () => {
-    notificationsState.value = {
-      ...notificationsState.value,
-      unread_count: 0,
-      items: notificationsState.value.items.map(item => ({
-        ...item,
-        read_at: item.read_at || new Date().toISOString(),
-      })),
+  const next = new Set(readNotificationIds.value)
+
+  notificationsState.value.items.forEach(item => {
+    if (item.read_at == null) {
+      next.add(String(item.id))
     }
   })
+
+  readNotificationIds.value = next
+  persistReadNotificationIds()
+  notificationsState.value = cloneNotifications(notificationsState.value)
 }
 
 const markNotification = id => {
-  void notificationVisit('post', resolveRouteName('notifications.mark', { id }), () => {
-    let unreadCount = notificationsState.value.unread_count
-    const items = notificationsState.value.items.map(item => {
-      if (item.id !== id || item.read_at) return item
-      unreadCount = Math.max(0, unreadCount - 1)
-      return { ...item, read_at: new Date().toISOString() }
-    })
-
-    notificationsState.value = {
-      unread_count: unreadCount,
-      items,
-    }
-  })
+  const next = new Set(readNotificationIds.value)
+  next.add(String(id))
+  readNotificationIds.value = next
+  persistReadNotificationIds()
+  notificationsState.value = cloneNotifications(notificationsState.value)
 }
 
 const deleteNotification = id => {
@@ -713,6 +746,14 @@ onBeforeUnmount(() => {
 watch([announcementKey, announcement], () => {
   syncAnnouncement()
 })
+
+watch(
+  notificationReadStorageKey,
+  () => {
+    readNotificationIds.value = loadStoredReadNotificationIds()
+    notificationsState.value = cloneNotifications(page.props.notifications)
+  }
+)
 
 watch(
   () => page.props.notifications,
