@@ -8,7 +8,7 @@
       <div class="text-sm text-slate-500 dark:text-slate-400">{{ dateLabel }}</div>
     </div>
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-3 fade-in">
+    <div class="grid grid-cols-1 gap-4 fade-in" :class="showProjectDashboard ? 'md:grid-cols-3' : 'md:grid-cols-2'">
       <Link
         v-for="action in quickActions"
         :key="action.label"
@@ -24,7 +24,7 @@
       </Link>
     </div>
 
-    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-6">
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2" :class="showProjectDashboard ? 'lg:grid-cols-6' : 'lg:grid-cols-5'">
       <div v-for="card in kpiCards" :key="card.title" class="card card--kpi">
         <div class="flex items-center justify-between">
           <div class="ttl">{{ card.title }}</div>
@@ -35,7 +35,7 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-3 fade-in">
+    <div class="grid grid-cols-1 gap-4 fade-in" :class="showProjectDashboard ? 'md:grid-cols-3' : 'md:grid-cols-2'">
       <div class="card">
         <div class="flex items-center justify-between">
           <div class="text-sm font-semibold">{{ t('dashboard.cards.ticketCompletion') }}</div>
@@ -191,7 +191,7 @@ const toJson = value => JSON.stringify(value ?? []);
 const sumArray = values => (values ?? []).reduce((total, value) => total + Number(value ?? 0), 0);
 
 const { t } = useI18n();
-const showProjectDashboard = false
+const showProjectDashboard = false;
 
 const titleText = computed(() => t('dashboard.title'));
 const subtitleText = computed(() => t('dashboard.subtitle'));

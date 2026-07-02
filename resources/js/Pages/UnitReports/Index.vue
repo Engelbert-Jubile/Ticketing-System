@@ -1,20 +1,20 @@
-<template>
-  <div class="space-y-8 px-4 py-6 md:px-6">
+﻿<template>
+  <div class="unit-reports-page space-y-8 px-4 py-6 md:px-6">
     <header class="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
       <div>
-        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Unit {{ unitName || '—' }}</p>
+        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Unit {{ unitName || '-' }}</p>
         <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">{{ titleText }}</h1>
         <p class="text-sm text-slate-500 dark:text-slate-400">{{ subtitleText }}</p>
       </div>
       <div class="text-sm text-slate-500 dark:text-slate-400">{{ dateLabel }}</div>
     </header>
 
-    <section class="grid grid-cols-1 gap-4 md:grid-cols-3">
+    <section class="grid grid-cols-1 gap-4" :class="showProjectUnit ? 'md:grid-cols-3' : 'md:grid-cols-2'">
       <Link
         v-for="action in quickActions"
         :key="action.label"
         :href="action.href"
-        class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-700 dark:bg-slate-900"
+        class="quick-action"
       >
         <span class="material-icons text-2xl" :class="action.iconClass">{{ action.icon }}</span>
         <div>
@@ -24,16 +24,16 @@
       </Link>
     </section>
 
-    <section class="grid grid-cols-1 gap-4 md:grid-cols-4">
+    <section class="grid grid-cols-1 gap-4 sm:grid-cols-2" :class="showProjectUnit ? 'xl:grid-cols-4' : 'xl:grid-cols-3'">
       <div class="summary-card">
         <div class="summary-label">Tickets</div>
         <div class="summary-value text-blue-600">{{ ticketsTotal }}</div>
-        <p class="summary-hint">New: {{ ticketsNew }} · Progress: {{ ticketsInProgress }} · Done: {{ ticketsDone }}</p>
+        <p class="summary-hint">New: {{ ticketsNew }} - Progress: {{ ticketsInProgress }} - Done: {{ ticketsDone }}</p>
       </div>
       <div class="summary-card">
         <div class="summary-label">Tasks</div>
         <div class="summary-value text-emerald-600">{{ tasksTotal }}</div>
-        <p class="summary-hint">Done: {{ tasksDone }} · Active: {{ tasksActive }}</p>
+        <p class="summary-hint">Done: {{ tasksDone }} - Active: {{ tasksActive }}</p>
       </div>
       <div class="summary-card">
         <div class="summary-label">Member Unit</div>
@@ -42,7 +42,7 @@
       </div>
     </section>
 
-    <section class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+    <section class="grid grid-cols-1 gap-4" :class="showProjectUnit ? 'xl:grid-cols-3' : 'xl:grid-cols-2'">
       <div class="panel">
         <header class="panel-head">
           <div>
@@ -53,8 +53,8 @@
         </header>
         <div class="panel-body">
           <div class="meter" :class="meterClass(ticketsCompletion)"><i :style="`--w:${ticketsCompletion}%`"></i></div>
-          <p class="panel-hint">New: {{ ticketsNew }} • In Progress: {{ ticketsInProgress }} • Done: {{ ticketsDone }}</p>
-          <p class="panel-hint">Periode: {{ projectsPeriod }}</p>
+          <p class="panel-hint">New: {{ ticketsNew }} - In Progress: {{ ticketsInProgress }} - Done: {{ ticketsDone }}</p>
+          <p class="panel-hint">Periode: {{ tasksPeriod }}</p>
         </div>
       </div>
 
@@ -68,7 +68,7 @@
         </header>
         <div class="panel-body">
           <div class="meter" :class="meterClass(tasksCompletion)"><i :style="`--w:${tasksCompletion}%`"></i></div>
-          <p class="panel-hint">Selesai: {{ tasksDone }} • Total: {{ tasksTotal }}</p>
+          <p class="panel-hint">Selesai: {{ tasksDone }} - Total: {{ tasksTotal }}</p>
           <p class="panel-hint">Periode: {{ tasksPeriod }}</p>
         </div>
       </div>
@@ -151,7 +151,7 @@
                 class="border-t border-slate-200 text-sm dark:border-slate-700"
               >
                 <td class="py-3 font-semibold text-slate-900 dark:text-slate-100">{{ agent.name }}</td>
-                <td class="py-3 text-slate-600 dark:text-slate-300">{{ agent.email || "—" }}</td>
+                <td class="py-3 text-slate-600 dark:text-slate-300">{{ agent.email || "-" }}</td>
                 <td class="py-3 text-center font-semibold">{{ agent.tickets }}</td>
                 <td class="py-3 text-center font-semibold">{{ agent.tasks }}</td>
               </tr>
@@ -168,7 +168,7 @@ import { computed } from 'vue';
 import resolveRoute from '../../utils/resolveRoute';
 import FancySelect from "../../Components/FancySelect.vue";
 
-const showProjectUnit = false
+const showProjectUnit = false;
 
 const props = defineProps({
   pageTitle: { type: String, default: 'Unit Reports' },
@@ -223,7 +223,10 @@ const selectedUnitModel = computed({
 
 
 const titleText = computed(() => props.pageTitle || 'Unit Reports');
-const subtitleText = computed(() => (props.pageSubtitle || 'Ringkasan unit.').replace('ticket, task, dan project untuk unit', 'ticket dan task untuk unit').replace('ticket, task, dan project', 'ticket dan task'));
+const subtitleText = computed(() => (props.pageSubtitle || 'Ringkasan ticket dan task untuk unit.').replace('ticket, task, dan project untuk unit', 'ticket dan task untuk unit').replace('ticket, task, dan project', 'ticket dan task'));
+const dateLabel = computed(() => props.dateLabel || '');
+const usersCount = computed(() => Number(props.usersCount ?? 0));
+const tasksPeriod = computed(() => props.tasksPeriod || '-');
 
 const ticketsNew = computed(() => Number(props.ticketsNew ?? 0));
 const ticketsInProgress = computed(() => Number(props.ticketsInProgress ?? 0));
@@ -275,6 +278,13 @@ const quickActions = computed(() => [
 </script>
 
 <style scoped>
+.unit-reports-page {
+  max-width: 1280px;
+  margin-inline: auto;
+}
+.quick-action {
+  @apply flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-700 dark:bg-slate-900;
+}
 .summary-card {
   @apply rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900;
 }
@@ -329,3 +339,6 @@ const quickActions = computed(() => [
   background: linear-gradient(90deg, #f59e0b, #22c55e);
 }
 </style>
+
+
+
