@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class NotificationController extends Controller
 {
@@ -49,16 +48,14 @@ class NotificationController extends Controller
         return back();
     }
 
-    /** Tandai satu notifikasi sebagai dibaca lalu redirect ke URL tujuannya (bila ada). */
     public function read(Request $request, string $id): RedirectResponse
     {
         $user = $request->user();
         $notif = $user?->notifications()->where('id', $id)->first();
 
         if ($notif) {
-            DB::table('notifications')
-                ->where('id', $id)
-                ->update(['read_at' => now()]);
+            $notif->markAsRead();
+            $notif->refresh();
         }
 
         $url = $notif?->data['url'] ?? null;
@@ -69,30 +66,26 @@ class NotificationController extends Controller
         return back();
     }
 
-    /** Tandai dibaca lalu kembali (tanpa redirect ke URL). */
     public function mark(Request $request, string $id): RedirectResponse|JsonResponse
     {
         $user = $request->user();
         $notif = $user?->notifications()->where('id', $id)->first();
 
         if ($notif) {
-            DB::table('notifications')
-                ->where('id', $id)
-                ->update(['read_at' => now()]);
+            $notif->markAsRead();
+            $notif->refresh();
         }
 
         return $this->notificationResponse($request);
     }
 
-    /** Tandai semua sebagai dibaca. */
     public function readAll(Request $request): RedirectResponse|JsonResponse
     {
-        $request->user()?->unreadNotifications()->update(['read_at' => now()]);
+        $request->user()?->unreadNotifications->markAsRead();
 
         return $this->notificationResponse($request);
     }
 
-    /** Hapus satu notifikasi milik user. */
     public function destroy(Request $request, string $id): RedirectResponse|JsonResponse
     {
         $request->user()?->notifications()->where('id', $id)->delete();
@@ -100,4 +93,3 @@ class NotificationController extends Controller
         return $this->notificationResponse($request);
     }
 }
-

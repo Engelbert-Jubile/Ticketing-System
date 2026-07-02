@@ -84,6 +84,7 @@
 
 <script setup>
 import { Head, router, usePage } from '@inertiajs/vue3'
+import axios from 'axios'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import LegacySidebar from '../Components/LegacySidebar.vue'
 import LegacyTopbar from '../Components/LegacyTopbar.vue'
@@ -564,7 +565,6 @@ const syncNotifications = page => {
   const source = page?.props?.notifications ?? page.props.notifications
   notificationsState.value = cloneNotifications(source)
 }
-
 const notificationVisit = async (method, url, applyLocalChange) => {
   const previous = cloneNotifications(notificationsState.value)
 
@@ -574,39 +574,24 @@ const notificationVisit = async (method, url, applyLocalChange) => {
 
   if (!url || url === '#') {
     notificationsState.value = previous
-    return
+    return false
   }
 
   try {
-    const token = document.head.querySelector("meta[name='csrf-token']")?.getAttribute('content') || ''
+    const response = method === 'delete'
+      ? await axios.delete(url)
+      : await axios.post(url)
 
-    const response = await fetch(url, {
-      method: method === 'delete' ? 'DELETE' : 'POST',
-      credentials: 'same-origin',
-      headers: {
-        Accept: 'application/json',
-        'X-Requested-With': 'XMLHttpRequest',
-        ...(token ? { 'X-CSRF-TOKEN': token } : {}),
-      },
-    })
-
-    if (!response.ok) {
-      throw new Error(`Notification request failed with status ${response.status}`)
+    if (response?.data?.notifications) {
+      notificationsState.value = cloneNotifications(response.data.notifications)
+      return true
     }
-
-    const payload = await response.json().catch(() => null)
-
-    if (payload?.notifications) {
-      notificationsState.value = cloneNotifications(payload.notifications)
-      return
-    }
-
-    notificationsState.value = previous
   } catch (error) {
-    notificationsState.value = previous
   }
-}
 
+  notificationsState.value = previous
+  return false
+}
 const markAllNotifications = () => {
   void notificationVisit('post', resolveRouteName('notifications.read-all'), () => {
     notificationsState.value = {
@@ -791,6 +776,8 @@ watch(
   }
 }
 </style>
+
+
 
 
 
