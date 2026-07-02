@@ -565,40 +565,38 @@ const syncNotifications = page => {
   notificationsState.value = cloneNotifications(source)
 }
 
-const notificationVisit = async (method, url, applyLocalChange) => {
+const notificationVisit = (method, url, applyLocalChange) => {
   const previous = cloneNotifications(notificationsState.value)
 
   if (typeof applyLocalChange === 'function') {
     applyLocalChange()
   }
 
-  try {
-    const token = document.head.querySelector("meta[name='csrf-token']")?.getAttribute('content') || ''
-
-    const response = await fetch(url, {
-      method: method === 'delete' ? 'DELETE' : 'POST',
-      credentials: 'same-origin',
-      headers: {
-        Accept: 'application/json',
-        'X-Requested-With': 'XMLHttpRequest',
-        ...(token ? { 'X-CSRF-TOKEN': token } : {}),
-      },
-    })
-
-    if (!response.ok) {
-      throw new Error(`Notification request failed with status ${response.status}`)
-    }
-
-    const payload = await response.json().catch(() => null)
-
-    if (payload?.notifications) {
-      notificationsState.value = cloneNotifications(payload.notifications)
-    }
-  } catch (error) {
+  if (!url || url === '#') {
     notificationsState.value = previous
-    throw error
+    return
   }
+
+  const requestOptions = {
+    preserveScroll: true,
+    preserveState: true,
+    only: ['notifications'],
+    onSuccess: page => {
+      syncNotifications(page)
+    },
+    onError: () => {
+      notificationsState.value = previous
+    },
+  }
+
+  if (method === 'delete') {
+    router.delete(url, requestOptions)
+    return
+  }
+
+  router.post(url, {}, requestOptions)
 }
+
 const markAllNotifications = () => {
   void notificationVisit('post', resolveRouteName('notifications.read-all'), () => {
     notificationsState.value = {
@@ -783,5 +781,6 @@ watch(
   }
 }
 </style>
+
 
 
