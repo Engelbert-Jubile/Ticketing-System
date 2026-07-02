@@ -107,6 +107,7 @@ const inertiaUrl = computed(() => page.url ?? '/')
 const authUser = computed(() => page.props.auth?.user ?? null)
 const userRoles = computed(() => (authUser.value?.roles ?? []).map(role => String(role).toLowerCase()))
 const isSuperAdmin = computed(() => userRoles.value.includes('superadmin'))
+const showProjectsMenu = false
 const impersonation = computed(() => page.props.impersonation ?? { active: false })
 const impersonationActive = computed(() => Boolean(impersonation.value?.active))
 const isLimitedUser = computed(() => {
@@ -311,7 +312,10 @@ const navItems = computed(() => {
       ],
       match: path => pathStartsWith(path, '/dashboard/tasks'),
     },
-    {
+  ]
+
+  if (showProjectsMenu) {
+    items.push({
       type: 'group',
       key: 'projects',
       label: t('nav.projects'),
@@ -339,9 +343,8 @@ const navItems = computed(() => {
         },
       ],
       match: path => pathStartsWith(path, '/dashboard/projects'),
-    },
-  ]
-
+    })
+  }
   const unit = String(authUser.value?.unit ?? '').trim()
 
   if (isSuperAdmin.value) {
