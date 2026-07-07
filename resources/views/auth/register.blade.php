@@ -31,6 +31,24 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
   #register-form input[type="text"],
   #register-form input[type="password"] {
     cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M12 4v16M9 4h6M9 20h6' stroke='%230f172a' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E") 12 12, text !important;
+    .password-toggle-btn {
+      overflow: hidden;
+    }
+
+    .password-toggle-icon {
+      transform-origin: center;
+      transition: opacity .18s ease, transform .2s ease;
+    }
+
+    .password-toggle-icon.is-active {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+
+    .password-toggle-icon:not(.is-active) {
+      opacity: .75;
+      transform: scale(.92) rotate(-8deg);
+    }
   }
 </style>
   <meta charset="UTF-8">
@@ -893,3 +911,4 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 </script>
+

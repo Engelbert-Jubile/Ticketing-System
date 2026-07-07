@@ -1,4 +1,4 @@
-@php
+﻿@php
 $recaptcha = app(\App\Services\Security\RecaptchaVerifier::class);
 $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
 @endphp
@@ -414,6 +414,72 @@ rgba(0,0,0,0.15), rgba(0,0,0,0.55), rgba(0,0,0,0.15));
 
   
 
+<script nonce="{{ $nonce }}">
+(function () {
+  function animatePasswordToggle(btn) {
+    var targetId = btn.getAttribute('data-password-toggle');
+    var input = document.getElementById(targetId);
+    var openIcon = btn.querySelector('[data-eye="open"]');
+    var closedIcon = btn.querySelector('[data-eye="closed"]');
+    if (!input || !openIcon || !closedIcon) return;
+
+    var visible = input.getAttribute('type') === 'text';
+    var activeIcon = visible ? openIcon : closedIcon;
+    var inactiveIcon = visible ? closedIcon : openIcon;
+    var label = visible ? 'Sembunyikan password' : 'Tampilkan password';
+
+    btn.setAttribute('aria-pressed', visible ? 'true' : 'false');
+    btn.setAttribute('aria-label', label);
+    btn.setAttribute('title', label);
+
+    openIcon.classList.toggle('hidden', !visible);
+    closedIcon.classList.toggle('hidden', visible);
+    openIcon.classList.toggle('is-active', visible);
+    closedIcon.classList.toggle('is-active', !visible);
+
+    if (btn.animate) {
+      btn.animate([
+        { transform: 'scale(1)' },
+        { transform: 'scale(1.04)' },
+        { transform: 'scale(1)' }
+      ], {
+        duration: 180,
+        easing: 'ease-out'
+      });
+    }
+
+    if (activeIcon.animate) {
+      activeIcon.animate([
+        { opacity: 0.55, transform: 'scale(0.82) rotate(-10deg)' },
+        { opacity: 1, transform: 'scale(1.08) rotate(6deg)' },
+        { opacity: 1, transform: 'scale(1) rotate(0deg)' }
+      ], {
+        duration: 200,
+        easing: 'ease-out'
+      });
+    }
+
+    if (inactiveIcon.classList.contains('hidden')) {
+      inactiveIcon.style.removeProperty('transform');
+      inactiveIcon.style.removeProperty('opacity');
+    }
+  }
+
+  document.querySelectorAll('[data-password-toggle]').forEach(function (btn) {
+    btn.classList.add('password-toggle-btn');
+    btn.querySelectorAll('[data-eye]').forEach(function (icon) {
+      icon.classList.add('password-toggle-icon');
+    });
+
+    animatePasswordToggle(btn);
+    btn.addEventListener('click', function () {
+      requestAnimationFrame(function () {
+        animatePasswordToggle(btn);
+      });
+    });
+  });
+})();
+</script>
 @if ($recaptcha->isEnabled())
 <script nonce="{{ $nonce }}">
 (function() {
@@ -472,3 +538,4 @@ rgba(0,0,0,0.15), rgba(0,0,0,0.55), rgba(0,0,0,0.15));
 </body>
 
 </html>
+
