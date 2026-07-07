@@ -1,4 +1,4 @@
-@php
+﻿@php
 $recaptcha = app(\App\Services\Security\RecaptchaVerifier::class);
 $unitOptions = $units ?? \App\Support\UserUnitOptions::values();
 $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
@@ -80,11 +80,38 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
     }
 
     .unit-select[data-open="true"] .unit-menu {
-      max-height: 18rem;
+      max-height: min(24rem, calc(100vh - 9rem));
       opacity: 1;
       transform: translateY(0) scale(1);
       pointer-events: auto;
-      overflow: auto;
+    }
+
+    .unit-select .unit-menu-panel {
+      overflow: hidden;
+    }
+
+    .unit-select .unit-menu-head {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: rgba(255, 255, 255, .98);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .dark .unit-select .unit-menu-head {
+      background: rgba(2, 6, 23, .96);
+    }
+
+    .unit-select .unit-options {
+      max-height: min(16.5rem, calc(100vh - 14rem));
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .unit-select .unit-search-input::-webkit-search-cancel-button {
+      -webkit-appearance: none;
     }
 
     .unit-select .unit-chevron {
@@ -252,19 +279,38 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
                   </svg>
                 </span>
 
-                <div id="unitListbox" role="listbox" tabindex="-1"
-                  class="unit-menu absolute left-0 right-0 top-full z-30 mt-2 rounded-2xl border border-slate-200 bg-white/95 shadow-xl shadow-slate-200/60 ring-1 ring-slate-200/60 backdrop-blur dark:border-slate-800 dark:bg-slate-950/85 dark:shadow-none">
-                  <div class="py-1">
-                    <button type="button" class="unit-option w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-900/50"
-                      data-unit-option data-value="" role="option" aria-selected="{{ old('unit') ? 'false' : 'true' }}">
-                      Pilih Unit
-                    </button>
+                <div
+                  class="unit-menu unit-menu-panel absolute left-0 right-0 top-full z-30 mt-2 rounded-2xl border border-slate-200 bg-white/95 shadow-xl shadow-slate-200/60 ring-1 ring-slate-200/60 backdrop-blur dark:border-slate-800 dark:bg-slate-950/85 dark:shadow-none">
+                  <div class="unit-menu-head rounded-t-2xl border-b border-slate-200/80 px-4 py-3 dark:border-slate-800/80">
+                    <p class="text-sm font-semibold text-slate-800 dark:text-slate-100">Pilih Unit</p>
+                    <div class="relative mt-3">
+                      <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                          <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                          <circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="1.8" />
+                        </svg>
+                      </span>
+                      <input
+                        id="unitSearch"
+                        type="search"
+                        autocomplete="off"
+                        spellcheck="false"
+                        aria-label="Cari unit"
+                        placeholder="Cari unit..."
+                        class="unit-search-input w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 pl-9 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950/60 dark:text-slate-100"
+                      />
+                    </div>
+                  </div>
+                  <div id="unitListbox" role="listbox" tabindex="-1" class="unit-options py-1">
                     @foreach($unitOptions as $unit)
-                    <button type="button" class="unit-option w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-900/50"
-                      data-unit-option data-value="{{ $unit }}" role="option" aria-selected="{{ old('unit') === $unit ? 'true' : 'false' }}">
+                    <button type="button" class="unit-option w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-100 focus:bg-slate-100 focus:outline-none dark:text-slate-200 dark:hover:bg-slate-900/50 dark:focus:bg-slate-900/50"
+                      data-unit-option data-value="{{ $unit }}" data-label="{{ $unit }}" role="option" aria-selected="{{ old('unit') === $unit ? 'true' : 'false' }}">
                       {{ $unit }}
                     </button>
                     @endforeach
+                    <div id="unitEmptyState" class="hidden px-4 py-4 text-sm text-slate-500 dark:text-slate-400">
+                      Unit tidak ditemukan
+                    </div>
                   </div>
                 </div>
               </div>
@@ -469,61 +515,102 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
 
   <script nonce="{{ $nonce }}">
     (function() {
-      var selectRoot = document.getElementById('unitSelect');
-      var input = document.getElementById('unit');
-      var button = document.getElementById('unitButton');
-      var buttonLabel = document.getElementById('unitButtonLabel');
-      var listbox = document.getElementById('unitListbox');
-      var clientError = document.getElementById('unitClientError');
-      if (!selectRoot || !input || !button || !buttonLabel || !listbox) return;
+      var selectRoot = document.getElementById("unitSelect");
+      var input = document.getElementById("unit");
+      var button = document.getElementById("unitButton");
+      var buttonLabel = document.getElementById("unitButtonLabel");
+      var listbox = document.getElementById("unitListbox");
+      var searchInput = document.getElementById("unitSearch");
+      var emptyState = document.getElementById("unitEmptyState");
+      var clientError = document.getElementById("unitClientError");
+      if (!selectRoot || !input || !button || !buttonLabel || !listbox || !searchInput || !emptyState) return;
 
-      var options = Array.prototype.slice.call(selectRoot.querySelectorAll('[data-unit-option]'));
+      var options = Array.prototype.slice.call(selectRoot.querySelectorAll("[data-unit-option]"));
 
       function setOpen(nextOpen) {
-        selectRoot.setAttribute('data-open', nextOpen ? 'true' : 'false');
-        button.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
+        selectRoot.setAttribute("data-open", nextOpen ? "true" : "false");
+        button.setAttribute("aria-expanded", nextOpen ? "true" : "false");
         if (!nextOpen) {
-          listbox.setAttribute('tabindex', '-1');
+          listbox.setAttribute("tabindex", "-1");
         }
       }
 
       function isOpen() {
-        return selectRoot.getAttribute('data-open') === 'true';
+        return selectRoot.getAttribute("data-open") === "true";
+      }
+
+      function normalizeKeyword(value) {
+        return String(value || "").trim().toLowerCase();
+      }
+
+      function getVisibleOptions() {
+        return options.filter(function(optionButton) {
+          return !optionButton.classList.contains("hidden");
+        });
+      }
+
+      function scrollOptionIntoView(optionButton) {
+        if (!optionButton) return;
+        optionButton.scrollIntoView({ block: "nearest" });
+      }
+
+      function applyFilter() {
+        var keyword = normalizeKeyword(searchInput.value);
+
+        options.forEach(function(optionButton) {
+          var label = normalizeKeyword(optionButton.getAttribute("data-label") || optionButton.textContent);
+          var matches = !keyword || label.indexOf(keyword) !== -1;
+          optionButton.classList.toggle("hidden", !matches);
+        });
+
+        emptyState.classList.toggle("hidden", getVisibleOptions().length > 0);
+        listbox.scrollTop = 0;
+      }
+
+      function resetSearch() {
+        searchInput.value = "";
+        applyFilter();
       }
 
       function setSelectedValue(value) {
-        input.value = value || '';
+        input.value = value || "";
         var hasValue = Boolean(value);
-        buttonLabel.textContent = hasValue ? value : 'Pilih Unit';
-        buttonLabel.classList.toggle('text-slate-500', !hasValue);
-        buttonLabel.classList.toggle('dark:text-slate-400', !hasValue);
+        buttonLabel.textContent = hasValue ? value : "Pilih Unit";
+        buttonLabel.classList.toggle("text-slate-500", !hasValue);
+        buttonLabel.classList.toggle("dark:text-slate-400", !hasValue);
         options.forEach(function(optionButton) {
-          var selected = optionButton.getAttribute('data-value') === (value || '');
-          optionButton.setAttribute('aria-selected', selected ? 'true' : 'false');
-          optionButton.classList.toggle('bg-slate-100', selected);
-          optionButton.classList.toggle('dark:bg-slate-900/60', selected);
+          var selected = optionButton.getAttribute("data-value") === (value || "");
+          optionButton.setAttribute("aria-selected", selected ? "true" : "false");
+          optionButton.classList.toggle("bg-slate-100", selected);
+          optionButton.classList.toggle("dark:bg-slate-900/60", selected);
         });
-        if (clientError) clientError.classList.add('hidden');
+        if (clientError) clientError.classList.add("hidden");
       }
 
       function focusSelectedOption() {
-        var selected = options.find(function(optionButton) {
-          return optionButton.getAttribute('data-value') === (input.value || '');
-        }) || options[0];
-        if (selected) selected.focus();
+        var visibleOptions = getVisibleOptions();
+        var selected = visibleOptions.find(function(optionButton) {
+          return optionButton.getAttribute("data-value") === (input.value || "");
+        }) || visibleOptions[0];
+        if (selected) {
+          selected.focus();
+          scrollOptionIntoView(selected);
+        }
       }
 
       function openMenu() {
         if (isOpen()) return;
         setOpen(true);
         requestAnimationFrame(function() {
-          focusSelectedOption();
+          resetSearch();
+          searchInput.focus();
         });
       }
 
       function closeMenu() {
         if (!isOpen()) return;
         setOpen(false);
+        resetSearch();
       }
 
       function toggleMenu() {
@@ -531,63 +618,104 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
         else openMenu();
       }
 
-      button.addEventListener('click', function() {
+      button.addEventListener("click", function() {
         toggleMenu();
       });
 
-      button.addEventListener('keydown', function(e) {
-        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      button.addEventListener("keydown", function(e) {
+        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
           e.preventDefault();
           openMenu();
         }
-        if (e.key === 'Enter' || e.key === ' ') {
+        if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           toggleMenu();
         }
       });
 
-      options.forEach(function(optionButton, index) {
-        optionButton.addEventListener('click', function() {
-          setSelectedValue(optionButton.getAttribute('data-value') || '');
+      searchInput.addEventListener("input", function() {
+        applyFilter();
+      });
+
+      searchInput.addEventListener("keydown", function(e) {
+        if (e.key === "Escape") {
+          e.preventDefault();
+          closeMenu();
+          button.focus();
+          return;
+        }
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          focusSelectedOption();
+          return;
+        }
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          var visibleOptions = getVisibleOptions();
+          var lastVisible = visibleOptions[visibleOptions.length - 1];
+          if (lastVisible) {
+            lastVisible.focus();
+            scrollOptionIntoView(lastVisible);
+          }
+        }
+      });
+
+      options.forEach(function(optionButton) {
+        optionButton.addEventListener("click", function() {
+          setSelectedValue(optionButton.getAttribute("data-value") || "");
           closeMenu();
           button.focus();
         });
 
-        optionButton.addEventListener('keydown', function(e) {
-          if (e.key === 'Escape') {
+        optionButton.addEventListener("keydown", function(e) {
+          if (e.key === "Escape") {
             e.preventDefault();
             closeMenu();
             button.focus();
             return;
           }
-          if (e.key === 'ArrowDown') {
+          if (e.key === "ArrowDown") {
             e.preventDefault();
-            var next = options[index + 1] || options[0];
-            next.focus();
+            var visibleOptions = getVisibleOptions();
+            var currentIndex = visibleOptions.indexOf(optionButton);
+            var next = visibleOptions[currentIndex + 1] || visibleOptions[0];
+            if (next) {
+              next.focus();
+              scrollOptionIntoView(next);
+            }
             return;
           }
-          if (e.key === 'ArrowUp') {
+          if (e.key === "ArrowUp") {
             e.preventDefault();
-            var prev = options[index - 1] || options[options.length - 1];
-            prev.focus();
+            var visibleOptions = getVisibleOptions();
+            var currentIndex = visibleOptions.indexOf(optionButton);
+            if (currentIndex <= 0) {
+              searchInput.focus();
+              return;
+            }
+            var prev = visibleOptions[currentIndex - 1];
+            if (prev) {
+              prev.focus();
+              scrollOptionIntoView(prev);
+            }
             return;
           }
-          if (e.key === 'Enter' || e.key === ' ') {
+          if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             optionButton.click();
           }
         });
       });
 
-      document.addEventListener('click', function(e) {
+      document.addEventListener("click", function(e) {
         if (!isOpen()) return;
         if (selectRoot.contains(e.target)) return;
         closeMenu();
       });
 
-      document.addEventListener('keydown', function(e) {
+      document.addEventListener("keydown", function(e) {
         if (!isOpen()) return;
-        if (e.key === 'Escape') {
+        if (e.key === "Escape") {
           e.preventDefault();
           closeMenu();
           button.focus();
@@ -597,8 +725,9 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
       if (input.value) {
         setSelectedValue(input.value);
       } else {
-        setSelectedValue('');
+        setSelectedValue("");
       }
+      applyFilter();
     })();
   </script>
 
