@@ -70,20 +70,38 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
       pointer-events: none;
     }
 
+    .unit-select {
+      --unit-dropdown-offset: .5rem;
+      --unit-dropdown-max-height: min(24rem, calc(100vh - 9rem));
+      --unit-list-max-height: min(16.5rem, calc(100vh - 14rem));
+      --unit-menu-closed-translate: -6px;
+    }
+
     .unit-select .unit-menu {
+      top: calc(100% + var(--unit-dropdown-offset));
+      bottom: auto;
       max-height: 0;
       opacity: 0;
-      transform: translateY(-6px) scale(.985);
+      transform: translateY(var(--unit-menu-closed-translate)) scale(.985);
       pointer-events: none;
       overflow: hidden;
       transition: max-height .22s ease, opacity .18s ease, transform .18s ease;
     }
 
     .unit-select[data-open="true"] .unit-menu {
-      max-height: min(24rem, calc(100vh - 9rem));
+      max-height: var(--unit-dropdown-max-height);
       opacity: 1;
       transform: translateY(0) scale(1);
       pointer-events: auto;
+    }
+
+    .unit-select[data-side="top"] {
+      --unit-menu-closed-translate: 6px;
+    }
+
+    .unit-select[data-side="top"] .unit-menu {
+      top: auto;
+      bottom: calc(100% + var(--unit-dropdown-offset));
     }
 
     .unit-select .unit-menu-panel {
@@ -104,7 +122,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
     }
 
     .unit-select .unit-options {
-      max-height: min(16.5rem, calc(100vh - 14rem));
+      max-height: var(--unit-list-max-height);
       overflow-y: auto;
       overscroll-behavior: contain;
       -webkit-overflow-scrolling: touch;
@@ -257,7 +275,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
 
             <div class="space-y-1">
               <label for="unitButton" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Unit</label>
-              <div class="unit-select relative" id="unitSelect" data-open="false">
+              <div class="unit-select relative" id="unitSelect" data-open="false" data-side="bottom">
                 <input id="unit" type="hidden" name="unit" value="{{ old('unit') }}" />
                 <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                   <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -280,7 +298,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
                 </span>
 
                 <div
-                  class="unit-menu unit-menu-panel absolute left-0 right-0 top-full z-30 mt-2 rounded-2xl border border-slate-200 bg-white/95 shadow-xl shadow-slate-200/60 ring-1 ring-slate-200/60 backdrop-blur dark:border-slate-800 dark:bg-slate-950/85 dark:shadow-none">
+                  class="unit-menu unit-menu-panel absolute left-0 right-0 z-30 rounded-2xl border border-slate-200 bg-white/95 shadow-xl shadow-slate-200/60 ring-1 ring-slate-200/60 backdrop-blur dark:border-slate-800 dark:bg-slate-950/85 dark:shadow-none">
                   <div class="unit-menu-head rounded-t-2xl border-b border-slate-200/80 px-4 py-3 dark:border-slate-800/80">
                     <p class="text-sm font-semibold text-slate-800 dark:text-slate-100">Pilih Unit</p>
                     <div class="relative mt-3">
@@ -523,15 +541,38 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
       var searchInput = document.getElementById("unitSearch");
       var emptyState = document.getElementById("unitEmptyState");
       var clientError = document.getElementById("unitClientError");
-      if (!selectRoot || !input || !button || !buttonLabel || !listbox || !searchInput || !emptyState) return;
+      var menuPanel = selectRoot ? selectRoot.querySelector(".unit-menu") : null;
+      var menuHead = selectRoot ? selectRoot.querySelector(".unit-menu-head") : null;
+      if (!selectRoot || !input || !button || !buttonLabel || !listbox || !searchInput || !emptyState || !menuPanel || !menuHead) return;
 
       var options = Array.prototype.slice.call(selectRoot.querySelectorAll("[data-unit-option]"));
+      var MENU_VIEWPORT_MARGIN = 16;
+      var MENU_MIN_HEIGHT = 180;
+      var LIST_MIN_HEIGHT = 96;
+      var LIST_MAX_HEIGHT = 264;
+
+      function updateMenuLayout() {
+        var triggerRect = button.getBoundingClientRect();
+        var viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+        var spaceBelow = Math.max(0, viewportHeight - triggerRect.bottom - MENU_VIEWPORT_MARGIN);
+        var spaceAbove = Math.max(0, triggerRect.top - MENU_VIEWPORT_MARGIN);
+        var preferTop = spaceBelow < 220 && spaceAbove > spaceBelow;
+        var headHeight = menuHead.offsetHeight || 88;
+        var availableSpace = preferTop ? spaceAbove : spaceBelow;
+        var listHeight = Math.min(LIST_MAX_HEIGHT, Math.max(LIST_MIN_HEIGHT, availableSpace - headHeight - 8));
+        var menuHeight = Math.max(MENU_MIN_HEIGHT, listHeight + headHeight);
+
+        selectRoot.setAttribute("data-side", preferTop ? "top" : "bottom");
+        selectRoot.style.setProperty("--unit-list-max-height", listHeight + "px");
+        selectRoot.style.setProperty("--unit-dropdown-max-height", menuHeight + "px");
+      }
 
       function setOpen(nextOpen) {
         selectRoot.setAttribute("data-open", nextOpen ? "true" : "false");
         button.setAttribute("aria-expanded", nextOpen ? "true" : "false");
         if (!nextOpen) {
           listbox.setAttribute("tabindex", "-1");
+          selectRoot.setAttribute("data-side", "bottom");
         }
       }
 
@@ -565,6 +606,9 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
 
         emptyState.classList.toggle("hidden", getVisibleOptions().length > 0);
         listbox.scrollTop = 0;
+        if (isOpen()) {
+          updateMenuLayout();
+        }
       }
 
       function resetSearch() {
@@ -603,6 +647,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
         setOpen(true);
         requestAnimationFrame(function() {
           resetSearch();
+          updateMenuLayout();
           searchInput.focus();
         });
       }
@@ -721,6 +766,16 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
           button.focus();
         }
       });
+
+      window.addEventListener("resize", function() {
+        if (!isOpen()) return;
+        updateMenuLayout();
+      });
+
+      window.addEventListener("scroll", function() {
+        if (!isOpen()) return;
+        updateMenuLayout();
+      }, true);
 
       if (input.value) {
         setSelectedValue(input.value);
