@@ -3,7 +3,7 @@
     <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Ticket Baru</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-300">Lengkapi detail ticket dan pilih agent terbaik untuk tugas ini.</p>
+        <p class="text-sm text-slate-500 dark:text-slate-300">Lengkapi detail ticket dan pilih PIC utama untuk tugas ini.</p>
       </div>
     </header>
 
@@ -66,7 +66,7 @@
         <div>
           <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Jenis Ticket</label>
           <div class="mt-1 w-full">
-            <FancySelect v-model="form.type" :options="typeOptions" accent="blue" />
+            <FancySelect v-model="form.type" :options="typeOptions" :disabled="true" accent="blue" />
           </div>
           <p v-if="form.errors.type" class="mt-1 text-xs text-red-500">{{ form.errors.type }}</p>
         </div>
@@ -103,8 +103,8 @@
           <DatePickerFlatpickr
             class="mt-1"
             v-model="form.start_at"
-            :config="dateConfig"
-            placeholder="Pilih tanggal & waktu"
+            :config="startDateConfig"
+            placeholder="Pilih tanggal"
           />
           <p v-if="form.errors.start_at || form.errors.due_date" class="mt-1 text-xs text-red-500">{{ form.errors.start_at || form.errors.due_date }}</p>
         </div>
@@ -114,8 +114,8 @@
           <DatePickerFlatpickr
             class="mt-1"
             v-model="form.finish_at"
-            :config="dateConfig"
-            placeholder="Pilih tanggal & waktu"
+            :config="finishDateConfig"
+            placeholder="Pilih tanggal"
           />
           <p v-if="form.errors.finish_at || form.errors.finish_date" class="mt-1 text-xs text-red-500">{{ form.errors.finish_at || form.errors.finish_date }}</p>
         </div>
@@ -124,170 +124,80 @@
       <section class="space-y-6">
         <div class="grid gap-4 md:grid-cols-2">
           <div class="md:col-span-2">
-          <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Requester</label>
-          <template v-if="canSelectRequester">
-            <div ref="requesterCardRef" class="relative mt-1 w-full">
-              <button
-                ref="requesterTriggerRef"
-                type="button"
-                class="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-700 shadow-sm transition hover:border-blue-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                @click="toggleRequesterDropdown"
-              >
-                <span class="truncate">
-                  {{ selectedRequester?.label || 'Pilih requester' }}
-                </span>
-                <span class="material-icons text-base text-slate-400 transition duration-200" :class="requesterDropdownOpen ? 'rotate-180 text-blue-500' : ''">expand_more</span>
-              </button>
-              <transition name="fade-scale">
-                <div
-                  v-if="requesterDropdownOpen"
-                  ref="requesterDropdownRef"
-                  class="absolute left-0 right-0 top-full mt-2 z-[9999] w-full rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-slate-700 dark:bg-slate-900"
-                  style="width:100%;min-width:100%;max-width:100%;box-sizing:border-box;"
+            <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Requester</label>
+            <template v-if="canSelectRequester">
+              <div ref="requesterCardRef" class="relative mt-1 w-full">
+                <button
+                  ref="requesterTriggerRef"
+                  type="button"
+                  class="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-700 shadow-sm transition hover:border-blue-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  @click="toggleRequesterDropdown"
                 >
-                  <div class="flex flex-wrap gap-2 border-b border-slate-100 pb-3 dark:border-slate-800">
-                    <button
-                      v-for="unit in allUnits"
-                      :key="`requester-unit-${unit}`"
-                      type="button"
-                      class="rounded-full border px-3 py-1 text-xs font-semibold transition"
-                      :class="activeRequesterUnit === unit
-                        ? 'border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-500/10 dark:text-blue-200'
-                        : 'border-slate-200 text-slate-500 hover:border-blue-300 hover:text-blue-600 dark:border-slate-700 dark:text-slate-300'"
-                      @click="activeRequesterUnit = unit"
-                    >
-                      {{ unit }}
-                    </button>
-                  </div>
-                  <div class="mt-3 max-h-64 space-y-2 overflow-y-auto pr-1">
-                    <template v-if="activeRequesterUnit">
-                      <button
-                        v-for="option in activeRequesterList"
-                        :key="`requester-option-${option.id}`"
-                        type="button"
-                        class="flex w-full items-start justify-between gap-3 rounded-xl border border-slate-200 px-3 py-2 text-sm text-left shadow-sm transition hover:border-blue-400 dark:border-slate-700"
-                        :class="form.requester_id === option.id ? 'border-blue-400 dark:border-blue-500' : ''"
-                        @click="setRequesterSelection(option.id)"
-                      >
-                        <div class="space-y-0.5">
-                          <p class="font-semibold text-slate-700 dark:text-slate-100">{{ option.label }}</p>
-                          <p class="text-xs text-slate-400">{{ option.email || '—' }}</p>
-                        </div>
-                        <span
-                          class="material-icons text-base"
-                          :class="form.requester_id === option.id ? 'text-blue-500' : 'text-transparent'"
-                        >
-                          check
-                        </span>
-                      </button>
-                      <p v-if="!activeRequesterList.length" class="text-sm text-slate-400">Belum ada requester pada unit ini.</p>
-                    </template>
-                    <p v-else class="text-sm text-slate-400">Pilih unit untuk melihat requester.</p>
-                  </div>
-                </div>
-              </transition>
-            </div>
-          </template>
-          <template v-else>
-            <div class="mt-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200">
-              {{ requesterLabel || 'Menggunakan akun Anda' }}
-            </div>
-          </template>
-          <p v-if="form.errors.requester_id" class="mt-1 text-xs text-red-500">{{ form.errors.requester_id }}</p>
-        </div>
-
-          <div class="md:col-span-2">
-          <div class="grid w-full gap-6 lg:grid-cols-2 items-stretch">
-              <div ref="agentCardRef" class="relative overflow-visible rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                <div class="flex items-start justify-between gap-3">
-                  <div>
-                    <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">Agent</p>
-                    <p class="text-xs text-slate-400">Pilih beberapa agent lalu tandai yang utama.</p>
-                  </div>
-                  <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                    {{ agentSelections.length ? agentSelections.length + ' agent dipilih' : 'Belum ada pilihan' }}
+                  <span class="truncate">
+                    {{ selectedRequester?.label || 'Pilih requester' }}
                   </span>
-                </div>
-                <div class="relative mt-3 w-full">
-                  <button
-                    ref="agentTriggerRef"
-                    type="button"
-                    class="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-700 shadow-sm transition hover:border-blue-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                    @click="toggleAgentDropdown"
+                  <span class="material-icons text-base text-slate-400 transition duration-200" :class="requesterDropdownOpen ? 'rotate-180 text-blue-500' : ''">expand_more</span>
+                </button>
+                <transition name="fade-scale">
+                  <div
+                    v-if="requesterDropdownOpen"
+                    ref="requesterDropdownRef"
+                    class="absolute left-0 right-0 top-full mt-2 z-[9999] w-full rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-slate-700 dark:bg-slate-900"
+                    style="width:100%;min-width:100%;max-width:100%;box-sizing:border-box;"
                   >
-                  <div class="flex flex-1 flex-wrap gap-1.5">
-                    <span
-                      v-for="person in selectedAgentDetails"
-                      :key="`chip-agent-${person.id}`"
-                      class="inline-flex items-center gap-1 rounded-lg border border-blue-200/70 bg-white px-2 py-1 text-xs font-medium text-blue-700 dark:border-blue-500/40 dark:bg-slate-900/70 dark:text-blue-200"
-                    >
-                      {{ person.label }}
-                      <button type="button" class="text-slate-400 transition hover:text-rose-500" @click.stop="removeAgentSelection(person.id)">
-                        <span class="material-icons text-[13px]">close</span>
-                      </button>
-                    </span>
-                    <span v-if="!selectedAgentDetails.length" class="text-xs font-normal text-slate-400">Belum ada agent dipilih</span>
-                  </div>
-                  <span class="material-icons text-base text-slate-400 transition duration-200" :class="agentDropdownOpen ? 'rotate-180 text-blue-500' : ''">expand_more</span>
-                  </button>
-                  <transition name="fade-scale">
-                    <div
-                      ref="agentDropdownRef"
-                      v-if="agentDropdownOpen"
-                      class="absolute left-0 right-0 top-full mt-2 z-[9999] w-full min-w-full max-w-full rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl box-border dark:border-slate-700 dark:bg-slate-900"
-                      style="width:100%;min-width:100%;max-width:100%;box-sizing:border-box;"
-                    >
                     <div class="flex flex-wrap gap-2 border-b border-slate-100 pb-3 dark:border-slate-800">
                       <button
                         v-for="unit in allUnits"
-                        :key="`agent-unit-${unit}`"
+                        :key="`requester-unit-${unit}`"
                         type="button"
                         class="rounded-full border px-3 py-1 text-xs font-semibold transition"
-                        :class="activeAgentUnit === unit ? 'border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-500/10 dark:text-blue-200' : 'border-slate-200 text-slate-500 hover:border-blue-300 hover:text-blue-600 dark:border-slate-700 dark:text-slate-300'"
-                        @click="activeAgentUnit = unit"
+                        :class="activeRequesterUnit === unit
+                          ? 'border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-500/10 dark:text-blue-200'
+                          : 'border-slate-200 text-slate-500 hover:border-blue-300 hover:text-blue-600 dark:border-slate-700 dark:text-slate-300'"
+                        @click="activeRequesterUnit = unit"
                       >
                         {{ unit }}
                       </button>
                     </div>
                     <div class="mt-3 max-h-64 space-y-2 overflow-y-auto pr-1">
-                      <template v-if="activeAgentUnit">
-                        <label
-                          v-for="option in activeAgentList"
-                          :key="`agent-option-${option.id}`"
-                          class="flex items-start justify-between gap-3 rounded-xl border border-slate-200 px-3 py-2 text-sm shadow-sm transition hover:border-blue-400 dark:border-slate-700"
-                        >
-                        <div class="flex items-start gap-3">
-                          <input
-                            type="checkbox"
-                            class="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                            :checked="isAgentSelected(option.id)"
-                            @change="toggleAgentSelection(option.id)"
-                          />
-                          <div>
-                            <p class="font-semibold text-slate-700 dark:text-slate-100">{{ option.label }}</p>
-                            <p class="text-xs text-slate-400">{{ option.email || '—' }} · {{ option.unit || unitPlaceholderLabel }}</p>
-                          </div>
-                        </div>
+                      <template v-if="activeRequesterUnit">
                         <button
+                          v-for="option in activeRequesterList"
+                          :key="`requester-option-${option.id}`"
                           type="button"
-                          class="rounded-full px-2 py-1 text-[11px] font-semibold uppercase tracking-wide transition"
-                          :class="agentPrimary === normalizeSelectionId(option.id) ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/20 dark:text-blue-100' : 'text-slate-400 hover:text-blue-500'"
-                          @click.stop="setAgentPrimary(option.id)"
+                          class="flex w-full items-start justify-between gap-3 rounded-xl border border-slate-200 px-3 py-2 text-sm text-left shadow-sm transition hover:border-blue-400 dark:border-slate-700"
+                          :class="form.requester_id === option.id ? 'border-blue-400 dark:border-blue-500' : ''"
+                          @click="setRequesterSelection(option.id)"
                         >
-                          {{ agentPrimary === normalizeSelectionId(option.id) ? 'Utama' : 'Jadikan Utama' }}
+                          <div class="space-y-0.5">
+                            <p class="font-semibold text-slate-700 dark:text-slate-100">{{ option.label }}</p>
+                            <p class="text-xs text-slate-400">{{ option.email || '-' }}</p>
+                          </div>
+                          <span
+                            class="material-icons text-base"
+                            :class="form.requester_id === option.id ? 'text-blue-500' : 'text-transparent'"
+                          >
+                            check
+                          </span>
                         </button>
-                      </label>
-                      <p v-if="!activeAgentList.length" class="text-sm text-slate-400">Belum ada agent pada unit ini.</p>
+                        <p v-if="!activeRequesterList.length" class="text-sm text-slate-400">Belum ada requester pada unit ini.</p>
                       </template>
-                      <p v-else class="text-sm text-slate-400">Pilih unit terlebih dahulu untuk melihat agent.</p>
+                      <p v-else class="text-sm text-slate-400">Pilih unit untuk melihat requester.</p>
                     </div>
-                    </div>
-                  </transition>
-                </div>
-                <p class="mt-2 text-xs text-slate-400">{{ agentSelections.length ? agentSelections.length + ' agent terhubung' : 'Belum ada agent terpilih' }}</p>
-                <p v-if="form.errors.agent_id" class="mt-2 text-xs text-red-500">{{ form.errors.agent_id }}</p>
+                  </div>
+                </transition>
               </div>
+            </template>
+            <template v-else>
+              <div class="mt-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200">
+                {{ requesterLabel || 'Menggunakan akun Anda' }}
+              </div>
+            </template>
+            <p v-if="form.errors.requester_id" class="mt-1 text-xs text-red-500">{{ form.errors.requester_id }}</p>
+          </div>
 
+          <div class="md:col-span-2">
+            <div class="grid w-full gap-6 items-stretch">
               <div ref="picCardRef" class="relative overflow-visible rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                 <div class="flex items-start justify-between gap-3">
                   <div>
@@ -305,72 +215,84 @@
                     class="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-700 shadow-sm transition hover:border-emerald-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                     @click="togglePicDropdown"
                   >
-                  <div class="flex flex-1 flex-wrap gap-1.5">
-                    <span
-                      v-for="person in selectedPicDetails"
-                      :key="`chip-pic-${person.id}`"
-                      class="inline-flex items-center gap-1 rounded-lg border border-emerald-200/70 bg-white px-2 py-1 text-xs font-medium text-emerald-700 dark:border-emerald-500/40 dark:bg-slate-900/70 dark:text-emerald-200"
-                    >
-                      {{ person.label }}
-                      <button type="button" class="text-slate-400 transition hover:text-rose-500" @click.stop="removePicSelection(person.id)">
-                        <span class="material-icons text-[13px]">close</span>
-                      </button>
-                    </span>
-                    <span v-if="!selectedPicDetails.length" class="text-xs font-normal text-slate-400">Belum ada PIC dipilih</span>
-                  </div>
-                  <span class="material-icons text-base text-slate-400 transition duration-200" :class="picDropdownOpen ? 'rotate-180 text-emerald-500' : ''">expand_more</span>
+                    <div class="flex flex-1 flex-wrap gap-1.5">
+                      <span
+                        v-for="person in selectedPicDetails"
+                        :key="`chip-pic-${person.id}`"
+                        class="inline-flex items-center gap-1 rounded-lg border border-emerald-200/70 bg-white px-2 py-1 text-xs font-medium text-emerald-700 dark:border-emerald-500/40 dark:bg-slate-900/70 dark:text-emerald-200"
+                      >
+                        {{ person.label }}
+                        <button type="button" class="text-slate-400 transition hover:text-rose-500" @click.stop="removePicSelection(person.id)">
+                          <span class="material-icons text-[13px]">close</span>
+                        </button>
+                      </span>
+                      <span v-if="!selectedPicDetails.length" class="text-xs font-normal text-slate-400">Belum ada PIC dipilih</span>
+                    </div>
+                    <span class="material-icons text-base text-slate-400 transition duration-200" :class="picDropdownOpen ? 'rotate-180 text-emerald-500' : ''">expand_more</span>
                   </button>
                   <transition name="fade-scale">
                     <div
                       ref="picDropdownRef"
                       v-if="picDropdownOpen"
-                      class="absolute left-0 right-0 top-full mt-2 z-[9999] w-full min-w-full max-w-full rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl box-border dark:border-slate-700 dark:bg-slate-900"
-                      style="width:100%;min-width:100%;max-width:100%;box-sizing:border-box;"
+                      class="absolute left-0 right-0 z-[9999] w-full min-w-full max-w-full rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl box-border dark:border-slate-700 dark:bg-slate-900"
+                      :class="picDropdownPlacement === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'"
+                      :style="picDropdownStyle"
                     >
-                    <div class="flex flex-wrap gap-2 border-b border-slate-100 pb-3 dark:border-slate-800">
-                      <button
-                        v-for="unit in allUnits"
-                        :key="`pic-unit-${unit}`"
-                        type="button"
-                        class="rounded-full border px-3 py-1 text-xs font-semibold transition"
-                        :class="activePicUnit === unit ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:border-emerald-400 dark:bg-emerald-500/10 dark:text-emerald-200' : 'border-slate-200 text-slate-500 hover:border-emerald-300 hover:text-emerald-600 dark:border-slate-700 dark:text-slate-300'"
-                        @click="activePicUnit = unit"
-                      >
-                        {{ unit }}
-                      </button>
-                    </div>
-                    <div class="mt-3 max-h-64 space-y-2 overflow-y-auto pr-1">
-                      <template v-if="activePicUnit">
-                        <label
-                          v-for="option in activePicList"
-                          :key="`pic-option-${option.id}`"
-                          class="flex items-start justify-between gap-3 rounded-xl border border-slate-200 px-3 py-2 text-sm shadow-sm transition hover:border-emerald-400 dark:border-slate-700"
-                        >
-                        <div class="flex items-start gap-3">
-                          <input
-                            type="checkbox"
-                            class="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                            :checked="isPicSelected(option.id)"
-                            @change="togglePicSelection(option.id)"
-                          />
-                          <div>
-                            <p class="font-semibold text-slate-700 dark:text-slate-100">{{ option.label }}</p>
-                            <p class="text-xs text-slate-400">{{ option.email || '—' }} · {{ option.unit || unitPlaceholderLabel }}</p>
-                          </div>
-                        </div>
+                      <div class="flex flex-wrap gap-2 border-b border-slate-100 pb-3 dark:border-slate-800">
                         <button
+                          v-for="unit in allUnits"
+                          :key="`pic-unit-${unit}`"
                           type="button"
-                          class="rounded-full px-2 py-1 text-[11px] font-semibold uppercase tracking-wide transition"
-                          :class="picPrimary === normalizeSelectionId(option.id) ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-100' : 'text-slate-400 hover:text-emerald-500'"
-                          @click.stop="setPicPrimary(option.id)"
+                          class="rounded-full border px-3 py-1 text-xs font-semibold transition"
+                          :class="activePicUnit === unit ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:border-emerald-400 dark:bg-emerald-500/10 dark:text-emerald-200' : 'border-slate-200 text-slate-500 hover:border-emerald-300 hover:text-emerald-600 dark:border-slate-700 dark:text-slate-300'"
+                          @click="activePicUnit = unit"
                         >
-                          {{ picPrimary === normalizeSelectionId(option.id) ? 'Utama' : 'Jadikan Utama' }}
+                          {{ unit }}
                         </button>
-                      </label>
-                      <p v-if="!activePicList.length" class="text-sm text-slate-400">Belum ada PIC pada unit ini.</p>
-                      </template>
-                      <p v-else class="text-sm text-slate-400">Pilih unit terlebih dahulu untuk melihat PIC.</p>
-                    </div>
+                      </div>
+                      <div class="mt-3">
+                        <input
+                          ref="picSearchInputRef"
+                          v-model="picSearchQuery"
+                          type="text"
+                          placeholder="Cari nama user atau unit"
+                          class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-emerald-500 dark:focus:ring-emerald-500/40"
+                        />
+                      </div>
+                      <div class="mt-3 space-y-2 overflow-y-auto pr-1" :style="{ maxHeight: `${picDropdownListMaxHeight}px` }">
+                        <template v-if="activePicUnit || normalizedPicSearch">
+                          <label
+                            v-for="option in activePicList"
+                            :key="`pic-option-${option.id}`"
+                            class="flex items-start justify-between gap-3 rounded-xl border border-slate-200 px-3 py-2 text-sm shadow-sm transition hover:border-emerald-400 dark:border-slate-700"
+                          >
+                            <div class="flex items-start gap-3">
+                              <input
+                                type="checkbox"
+                                class="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                                :checked="isPicSelected(option.id)"
+                                @change="togglePicSelection(option.id)"
+                              />
+                              <div>
+                                <p class="font-semibold text-slate-700 dark:text-slate-100">{{ option.label }}</p>
+                                <p class="text-xs text-slate-400">{{ option.email || '-' }} | {{ option.unit || unitPlaceholderLabel }}</p>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              class="rounded-full px-2 py-1 text-[11px] font-semibold uppercase tracking-wide transition"
+                              :class="picPrimary === normalizeSelectionId(option.id) ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-100' : 'text-slate-400 hover:text-emerald-500'"
+                              @click.stop="setPicPrimary(option.id)"
+                            >
+                              {{ picPrimary === normalizeSelectionId(option.id) ? 'Utama' : 'Jadikan Utama' }}
+                            </button>
+                          </label>
+                          <p v-if="!activePicList.length" class="text-sm text-slate-400">
+                            {{ normalizedPicSearch ? 'PIC tidak ditemukan untuk kata kunci tersebut.' : 'Belum ada PIC pada unit ini.' }}
+                          </p>
+                        </template>
+                        <p v-else class="text-sm text-slate-400">Pilih unit terlebih dahulu atau gunakan pencarian untuk melihat PIC.</p>
+                      </div>
                     </div>
                   </transition>
                 </div>
@@ -382,23 +304,7 @@
 
           <div class="md:col-span-2 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-700 dark:bg-slate-900/60">
             <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-100">Ringkasan Pilihan</h3>
-            <div class="mt-3 grid gap-3 sm:grid-cols-2">
-              <div class="rounded-xl border border-blue-200/60 bg-white p-3 dark:border-blue-500/30 dark:bg-slate-900">
-                <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-blue-700 dark:text-blue-200">
-                  <span class="material-icons text-base">groups</span>
-                  <span>Agent ({{ selectedAgentDetails.length }})</span>
-                </div>
-                <div class="flex flex-wrap gap-1">
-                  <span
-                    v-for="person in selectedAgentDetails"
-                    :key="`summary-agent-${person.id}`"
-                    class="text-xs rounded-md border border-blue-200 bg-white px-2 py-0.5 text-blue-600 dark:border-blue-400/40 dark:bg-slate-900 dark:text-blue-100"
-                  >
-                    {{ person.label }}
-                  </span>
-                  <span v-if="!selectedAgentDetails.length" class="text-xs text-slate-400">Belum ada data</span>
-                </div>
-              </div>
+            <div class="mt-3 grid gap-3">
               <div class="rounded-xl border border-emerald-200/60 bg-white p-3 dark:border-emerald-500/30 dark:bg-slate-900">
                 <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-200">
                   <span class="material-icons text-base">verified_user</span>
@@ -524,14 +430,15 @@ const form = useForm({
   description: '',
   reason: '',
   letter_no: '',
-  priority: props.defaults.priority ?? 'medium',
+  priority: props.defaults.priority ?? null,
   type: props.defaults.type ?? 'task',
   status: props.defaults.status ?? 'new',
   sla: props.defaults.sla ?? null,
-  start_at: props.defaults.start_at ?? props.defaults.due_at ?? null,
+  start_at: props.defaults.start_at ?? props.defaults.due_date ?? null,
   due_date: props.defaults.due_date ?? null,
   due_at: props.defaults.due_at ?? null,
-  finish_at: props.defaults.finish_at ?? null,
+  finish_date: props.defaults.finish_date ?? null,
+  finish_at: props.defaults.finish_at ?? props.defaults.finish_date ?? null,
   requester_id: props.defaults.requester_id ?? null,
   agent_id: null,
   assigned_id: null,
@@ -545,6 +452,13 @@ const toDateOnly = value => {
   if (!raw) return null;
   return raw.slice(0, 10);
 };
+
+const normalizeDateValue = value => {
+  const normalized = toDateOnly(value);
+  return normalized && /^\d{4}-\d{2}-\d{2}$/.test(normalized) ? normalized : null;
+};
+
+const isDateBefore = (left, right) => Boolean(left && right && left < right);
 
 const formatSla = sla => {
   if (!sla) return '';
@@ -567,22 +481,23 @@ const attachmentFilterHint = computed(() => (
 const uploaderRef = ref(null);
 
 const userOptions = computed(() => props.userOptions ?? []);
-const statusGuide = computed(() => props.meta?.statusGuide ?? null);
-const statusDefaultLabel = computed(() => props.meta?.statusDefault ?? 'New');
 const statusLocked = computed(() => Boolean(props.meta?.lockStatus));
+const canSelectRequester = computed(() => Boolean(props.meta?.canSelectRequester));
+const requesterLabel = computed(() => props.meta?.requesterLabel ?? '');
+const minTicketDate = computed(() => props.meta?.minTicketDate ?? new Date().toISOString().slice(0, 10));
 const slaSelectOptions = computed(() => (
   (Array.isArray(props.slaOptions) ? props.slaOptions : []).map(option => ({
     value: option,
     label: formatSla(option),
   }))
 ));
+
 watchEffect(() => {
+  form.type = 'task';
   if (statusLocked.value) {
     form.status = props.defaults?.status ?? 'new';
   }
 });
-const canSelectRequester = computed(() => Boolean(props.meta?.canSelectRequester));
-const requesterLabel = computed(() => props.meta?.requesterLabel ?? '');
 const userLookup = computed(() => {
   const map = new Map();
   userOptions.value.forEach(option => {
@@ -612,21 +527,7 @@ const allUnits = computed(() => {
   return Array.from(set);
 });
 
-const agentsByUnit = computed(() => {
-  const map = {};
-  allUnits.value.forEach(unit => {
-    map[unit] = [];
-  });
-  userOptions.value.forEach(option => {
-    const key = typeof option.unit === 'string' && option.unit.trim() !== '' ? option.unit.trim() : unitPlaceholderLabel;
-    if (!map[key]) {
-      map[key] = [];
-    }
-    map[key].push(option);
-  });
-  return map;
-});
-const requestersByUnit = computed(() => {
+const usersByUnit = computed(() => {
   const map = {};
   allUnits.value.forEach(unit => {
     map[unit] = [];
@@ -641,26 +542,24 @@ const requestersByUnit = computed(() => {
   return map;
 });
 
-const agentCardRef = ref(null);
-const picCardRef = ref(null);
 const requesterCardRef = ref(null);
-const agentTriggerRef = ref(null);
-const picTriggerRef = ref(null);
+const picCardRef = ref(null);
 const requesterTriggerRef = ref(null);
-const agentDropdownRef = ref(null);
-const picDropdownRef = ref(null);
+const picTriggerRef = ref(null);
 const requesterDropdownRef = ref(null);
-const agentDropdownOpen = ref(false);
-const picDropdownOpen = ref(false);
+const picDropdownRef = ref(null);
+const picSearchInputRef = ref(null);
 const requesterDropdownOpen = ref(false);
-const activeAgentUnit = ref('');
-const activePicUnit = ref('');
+const picDropdownOpen = ref(false);
 const activeRequesterUnit = ref(null);
-
-const agentSelections = ref([]);
+const activePicUnit = ref('');
 const picSelections = ref([]);
-const agentPrimary = ref(null);
 const picPrimary = ref(null);
+const picSearchQuery = ref('');
+const picDropdownPlacement = ref('bottom');
+const picDropdownStyle = ref({});
+const picDropdownListMaxHeight = ref(320);
+
 const requesterOptions = computed(() => userOptions.value.map(option => ({
   ...option,
   label: formatUserOptionLabel(option),
@@ -678,15 +577,18 @@ const normalizeSelectionId = value => {
   return null;
 };
 
-const activeAgentList = computed(() => agentsByUnit.value[activeAgentUnit.value] ?? []);
-const activePicList = computed(() => agentsByUnit.value[activePicUnit.value] ?? []);
-const activeRequesterList = computed(() => requestersByUnit.value[activeRequesterUnit.value] ?? []);
-
-const selectedAgentDetails = computed(() => {
-  const lookup = userLookup.value;
-  return agentSelections.value
-    .map(id => lookup.get(String(normalizeSelectionId(id))))
-    .filter(Boolean);
+const activeRequesterList = computed(() => usersByUnit.value[activeRequesterUnit.value] ?? []);
+const normalizedPicSearch = computed(() => picSearchQuery.value.trim().toLowerCase());
+const activePicList = computed(() => {
+  const query = normalizedPicSearch.value;
+  if (query) {
+    return userOptions.value.filter(option => {
+      const name = String(option?.label ?? '').toLowerCase();
+      const unit = String(option?.unit ?? unitPlaceholderLabel).toLowerCase();
+      return name.includes(query) || unit.includes(query);
+    });
+  }
+  return activePicUnit.value ? (usersByUnit.value[activePicUnit.value] ?? []) : [];
 });
 
 const selectedPicDetails = computed(() => {
@@ -696,30 +598,21 @@ const selectedPicDetails = computed(() => {
     .filter(Boolean);
 });
 
-const isAgentSelected = id => agentSelections.value
-  .map(normalizeSelectionId)
-  .includes(normalizeSelectionId(id));
 const isPicSelected = id => picSelections.value
   .map(normalizeSelectionId)
   .includes(normalizeSelectionId(id));
 
 const syncAssignedUsers = () => {
-  const merged = Array.from(new Set([
-    ...agentSelections.value.map(normalizeSelectionId),
-    ...picSelections.value.map(normalizeSelectionId),
-  ])).filter(value => value !== null && value !== '');
-  form.assigned_user_ids = merged;
+  form.assigned_user_ids = Array.from(new Set(
+    picSelections.value.map(normalizeSelectionId)
+  )).filter(value => value !== null && value !== '');
 };
 
 watch(allUnits, units => {
   if (!units.length) {
-    activeAgentUnit.value = '';
     activePicUnit.value = '';
     activeRequesterUnit.value = null;
     return;
-  }
-  if (activeAgentUnit.value && !units.includes(activeAgentUnit.value)) {
-    activeAgentUnit.value = units[0];
   }
   if (activePicUnit.value && !units.includes(activePicUnit.value)) {
     activePicUnit.value = units[0];
@@ -728,20 +621,6 @@ watch(allUnits, units => {
     activeRequesterUnit.value = null;
   }
 }, { immediate: true });
-
-watch(agentSelections, value => {
-  const normalized = value.map(normalizeSelectionId).filter(val => val !== null && val !== '');
-  if (normalized.length !== value.length) {
-    agentSelections.value = normalized;
-    return;
-  }
-  if (!normalized.length) {
-    agentPrimary.value = null;
-  } else if (!normalized.includes(normalizeSelectionId(agentPrimary.value))) {
-    agentPrimary.value = normalized[0];
-  }
-  syncAssignedUsers();
-}, { deep: true });
 
 watch(picSelections, value => {
   const normalized = value.map(normalizeSelectionId).filter(val => val !== null && val !== '');
@@ -757,14 +636,6 @@ watch(picSelections, value => {
   syncAssignedUsers();
 }, { deep: true });
 
-watch(agentPrimary, value => {
-  const normalized = normalizeSelectionId(value);
-  if (normalized && !agentSelections.value.map(normalizeSelectionId).includes(normalized)) {
-    return;
-  }
-  form.agent_id = normalized ?? null;
-}, { immediate: true });
-
 watch(picPrimary, value => {
   const normalized = normalizeSelectionId(value);
   if (normalized && !picSelections.value.map(normalizeSelectionId).includes(normalized)) {
@@ -774,24 +645,26 @@ watch(picPrimary, value => {
 }, { immediate: true });
 
 watch(() => form.start_at, value => {
-  form.due_date = toDateOnly(value);
+  const normalized = normalizeDateValue(value);
+  if (normalized !== value) {
+    form.start_at = normalized;
+    return;
+  }
+  form.due_date = normalized;
+  if (normalized && form.finish_at && isDateBefore(form.finish_at, normalized)) {
+    form.finish_at = null;
+    form.finish_date = null;
+  }
 }, { immediate: true });
 
 watch(() => form.finish_at, value => {
-  form.due_at = value || null;
+  const normalized = normalizeDateValue(value);
+  if (normalized !== value) {
+    form.finish_at = normalized;
+    return;
+  }
+  form.finish_date = normalized;
 }, { immediate: true });
-
-watch(agentDropdownOpen, open => {
-  if (open) {
-    nextTick(() => syncDropdownWidth(agentTriggerRef, agentDropdownRef));
-  }
-});
-
-watch(picDropdownOpen, open => {
-  if (open) {
-    nextTick(() => syncDropdownWidth(picTriggerRef, picDropdownRef));
-  }
-});
 
 watch(requesterDropdownOpen, open => {
   if (open) {
@@ -799,17 +672,11 @@ watch(requesterDropdownOpen, open => {
   }
 });
 
-function toggleAgentSelection(rawId) {
-  const id = normalizeSelectionId(rawId);
-  if (id === null || id === '') return;
-  const set = new Set(agentSelections.value.map(normalizeSelectionId));
-  if (set.has(id)) {
-    set.delete(id);
-  } else {
-    set.add(id);
+watch(picDropdownOpen, open => {
+  if (open) {
+    nextTick(() => positionPicDropdown(true));
   }
-  agentSelections.value = Array.from(set);
-}
+});
 
 function togglePicSelection(rawId) {
   const id = normalizeSelectionId(rawId);
@@ -823,15 +690,6 @@ function togglePicSelection(rawId) {
   picSelections.value = Array.from(set);
 }
 
-function removeAgentSelection(rawId) {
-  const id = normalizeSelectionId(rawId);
-  if (id === null) return;
-  agentSelections.value = agentSelections.value.filter(value => normalizeSelectionId(value) !== id);
-  if (normalizeSelectionId(agentPrimary.value) === id) {
-    agentPrimary.value = agentSelections.value[0] ?? null;
-  }
-}
-
 function removePicSelection(rawId) {
   const id = normalizeSelectionId(rawId);
   if (id === null) return;
@@ -839,16 +697,6 @@ function removePicSelection(rawId) {
   if (normalizeSelectionId(picPrimary.value) === id) {
     picPrimary.value = picSelections.value[0] ?? null;
   }
-}
-
-function setAgentPrimary(rawId) {
-  const id = normalizeSelectionId(rawId);
-  if (id === null) return;
-  if (!isAgentSelected(id)) {
-    toggleAgentSelection(id);
-  }
-  agentPrimary.value = id;
-  form.agent_id = id;
 }
 
 function setPicPrimary(rawId) {
@@ -866,7 +714,6 @@ function setRequesterSelection(rawId) {
   form.requester_id = id;
   requesterDropdownOpen.value = false;
 }
-
 const syncDropdownWidth = (triggerRef, dropdownRef) => {
   const trigger = triggerRef?.value;
   const dropdown = dropdownRef?.value;
@@ -877,44 +724,53 @@ const syncDropdownWidth = (triggerRef, dropdownRef) => {
   dropdown.style.maxWidth = `${width}px`;
 };
 
-function toggleAgentDropdown() {
-  agentDropdownOpen.value = !agentDropdownOpen.value;
-  if (agentDropdownOpen.value) {
-    picDropdownOpen.value = false;
-    requesterDropdownOpen.value = false;
-    if (!activeAgentUnit.value && allUnits.value.length) {
-      activeAgentUnit.value = allUnits.value[0];
-    }
-    nextTick(() => syncDropdownWidth(agentTriggerRef, agentDropdownRef));
+function positionPicDropdown(focusSearch = false) {
+  syncDropdownWidth(picTriggerRef, picDropdownRef);
+  const trigger = picTriggerRef?.value;
+  if (!trigger) return;
+  const rect = trigger.getBoundingClientRect();
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+  const spaceBelow = Math.max(viewportHeight - rect.bottom - 16, 160);
+  const spaceAbove = Math.max(rect.top - 16, 160);
+  const openUpward = spaceBelow < 340 && spaceAbove > spaceBelow;
+  picDropdownPlacement.value = openUpward ? 'top' : 'bottom';
+  picDropdownStyle.value = {
+    width: `${rect.width}px`,
+    minWidth: `${rect.width}px`,
+    maxWidth: `${rect.width}px`,
+  };
+  const availableSpace = openUpward ? spaceAbove : spaceBelow;
+  picDropdownListMaxHeight.value = Math.max(Math.min(availableSpace - 120, 360), 160);
+  if (focusSearch) {
+    picSearchInputRef.value?.focus();
   }
 }
 
 function togglePicDropdown() {
   picDropdownOpen.value = !picDropdownOpen.value;
   if (picDropdownOpen.value) {
-    agentDropdownOpen.value = false;
     requesterDropdownOpen.value = false;
+    picSearchQuery.value = '';
     if (!activePicUnit.value && allUnits.value.length) {
       activePicUnit.value = allUnits.value[0];
     }
-    nextTick(() => syncDropdownWidth(picTriggerRef, picDropdownRef));
+    nextTick(() => positionPicDropdown(true));
   }
 }
 
 function toggleRequesterDropdown() {
   requesterDropdownOpen.value = !requesterDropdownOpen.value;
   if (requesterDropdownOpen.value) {
-    agentDropdownOpen.value = false;
     picDropdownOpen.value = false;
+    if (!activeRequesterUnit.value && allUnits.value.length) {
+      activeRequesterUnit.value = allUnits.value[0];
+    }
     nextTick(() => syncDropdownWidth(requesterTriggerRef, requesterDropdownRef));
   }
 }
 
 function handleOutsideClick(event) {
   const target = event.target;
-  if (agentDropdownOpen.value && agentCardRef.value && !agentCardRef.value.contains(target)) {
-    agentDropdownOpen.value = false;
-  }
   if (picDropdownOpen.value && picCardRef.value && !picCardRef.value.contains(target)) {
     picDropdownOpen.value = false;
   }
@@ -924,13 +780,10 @@ function handleOutsideClick(event) {
 }
 
 const handleResize = () => {
-  if (agentDropdownOpen.value) {
-    syncDropdownWidth(agentTriggerRef, agentDropdownRef);
-  }
   if (picDropdownOpen.value) {
-    syncDropdownWidth(picTriggerRef, picDropdownRef);
+    positionPicDropdown();
   }
-   if (requesterDropdownOpen.value) {
+  if (requesterDropdownOpen.value) {
     syncDropdownWidth(requesterTriggerRef, requesterDropdownRef);
   }
 };
@@ -938,18 +791,30 @@ const handleResize = () => {
 onMounted(() => {
   window.addEventListener('click', handleOutsideClick, true);
   window.addEventListener('resize', handleResize);
+  window.addEventListener('scroll', handleResize, true);
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener('click', handleOutsideClick, true);
   window.removeEventListener('resize', handleResize);
+  window.removeEventListener('scroll', handleResize, true);
 });
 
-const dateConfig = computed(() => ({
-  enableTime: true,
+const baseDateConfig = computed(() => ({
+  enableTime: false,
   altInput: true,
-  altFormat: 'd M Y, H:i',
-  dateFormat: 'Y-m-d H:i',
+  altFormat: 'd M Y',
+  dateFormat: 'Y-m-d',
+  minDate: minTicketDate.value,
+}));
+
+const startDateConfig = computed(() => ({
+  ...baseDateConfig.value,
+}));
+
+const finishDateConfig = computed(() => ({
+  ...baseDateConfig.value,
+  minDate: form.start_at || minTicketDate.value,
 }));
 
 function handleUploaded(payload) {
@@ -996,23 +861,32 @@ watch(selectedAttachmentFilter, () => {
 
 function resetForm() {
   form.reset();
-  attachmentIds.value = [];
-  uploadError.value = '';
-  selectedAttachmentFilter.value = '';
-  uploaderRef.value?.reset();
-  agentSelections.value = [];
-  picSelections.value = [];
-  agentPrimary.value = null;
-  picPrimary.value = null;
+  form.priority = props.defaults.priority ?? null;
+  form.type = 'task';
+  form.status = props.defaults.status ?? 'new';
+  form.start_at = props.defaults.start_at ?? props.defaults.due_date ?? null;
+  form.due_date = props.defaults.due_date ?? null;
+  form.due_at = props.defaults.due_at ?? null;
+  form.finish_date = props.defaults.finish_date ?? null;
+  form.finish_at = props.defaults.finish_at ?? props.defaults.finish_date ?? null;
   form.agent_id = null;
   form.assigned_id = null;
   form.assigned_user_ids = [];
+  attachmentIds.value = [];
+  uploadError.value = '';
+  submitError.value = '';
+  selectedAttachmentFilter.value = '';
+  uploaderRef.value?.reset();
+  picSelections.value = [];
+  picPrimary.value = null;
+  picSearchQuery.value = '';
   requesterDropdownOpen.value = false;
-  agentDropdownOpen.value = false;
   picDropdownOpen.value = false;
-  activeAgentUnit.value = '';
   activePicUnit.value = '';
   activeRequesterUnit.value = '';
+  if (typeof form.clearErrors === 'function') {
+    form.clearErrors();
+  }
 }
 
 const normalizeNumber = value => {
@@ -1021,13 +895,52 @@ const normalizeNumber = value => {
   return Number.isFinite(numeric) ? numeric : null;
 };
 
+function validateForm() {
+  if (typeof form.clearErrors === 'function') {
+    form.clearErrors('priority', 'due_date', 'finish_date', 'start_at', 'finish_at');
+  }
+
+  const errors = {};
+  const startDate = normalizeDateValue(form.start_at);
+  const finishDate = normalizeDateValue(form.finish_at);
+
+  if (!form.priority) {
+    errors.priority = 'Pilih prioritas ticket.';
+  }
+  if (startDate && isDateBefore(startDate, minTicketDate.value)) {
+    errors.due_date = 'Tanggal mulai tidak boleh sebelum hari ini.';
+  }
+  if (finishDate && isDateBefore(finishDate, minTicketDate.value)) {
+    errors.finish_date = 'Tanggal selesai tidak boleh sebelum hari ini.';
+  }
+  if (startDate && finishDate && isDateBefore(finishDate, startDate)) {
+    errors.finish_date = 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai.';
+  }
+
+  if (Object.keys(errors).length) {
+    if (typeof form.setError === 'function') {
+      form.setError(errors);
+    }
+    submitError.value = 'Gagal membuat ticket. Periksa kembali input yang berwarna merah.';
+    return false;
+  }
+
+  return true;
+}
+
 function prepareSubmission() {
   ['requester_id', 'agent_id', 'assigned_id'].forEach(field => {
     form[field] = normalizeNumber(form[field]);
   });
 
-  form.due_date = toDateOnly(form.start_at);
-  form.due_at = form.finish_at || null;
+  form.type = 'task';
+  form.agent_id = null;
+  form.start_at = normalizeDateValue(form.start_at);
+  form.finish_at = normalizeDateValue(form.finish_at);
+  form.due_date = form.start_at || null;
+  form.finish_date = form.finish_at || null;
+  form.due_at = form.start_at || null;
+  form.finish_at = form.finish_date || null;
 
   const normalizedAssignees = Array.isArray(form.assigned_user_ids)
     ? Array.from(
@@ -1051,6 +964,9 @@ function submit() {
   uploadError.value = '';
   submitError.value = '';
   prepareSubmission();
+  if (!validateForm()) {
+    return;
+  }
   form.post(resolveRoute('tickets.store'), {
     forceFormData: true,
     preserveScroll: false,
@@ -1063,22 +979,7 @@ function submit() {
       }
     },
     onSuccess: () => {
-      form.reset();
-      attachmentIds.value = [];
-      selectedAttachmentFilter.value = '';
-      uploaderRef.value?.reset();
-      agentSelections.value = [];
-      picSelections.value = [];
-      agentPrimary.value = null;
-      picPrimary.value = null;
-      form.agent_id = null;
-      form.assigned_id = null;
-      form.assigned_user_ids = [];
-      requesterDropdownOpen.value = false;
-      agentDropdownOpen.value = false;
-      picDropdownOpen.value = false;
-      activeAgentUnit.value = '';
-      activePicUnit.value = '';
+      resetForm();
       try {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (error) {
@@ -1096,14 +997,14 @@ const formatUserOptionLabel = option => {
   if (option.label) {
     parts.push(option.label);
   }
-  if (option.agent_label && option.agent_label !== '—') {
+  if (option.agent_label && option.agent_label !== '-') {
     parts.push(`(${option.agent_label})`);
   }
   const base = parts.join(' ').replace(/\s+/g, ' ').trim();
   if (!base) {
     return option.email ?? '';
   }
-  return option.email ? `${base} · ${option.email}` : base;
+  return option.email ? `${base} | ${option.email}` : base;
 };
 </script>
 

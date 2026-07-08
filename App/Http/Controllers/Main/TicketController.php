@@ -396,9 +396,9 @@ class TicketController extends Controller
         return null;
     }
 
-    /** ───────────────────── Helper mapping Task ───────────────────── */
+    /** â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Helper mapping Task â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
-    /** Ticket.status → Task.status (sesuaikan enum Task) */
+    /** Ticket.status â†’ Task.status (sesuaikan enum Task) */
     private function mapTaskStatus(?string $s): string
     {
         $s = strtolower((string) $s);
@@ -431,7 +431,7 @@ class TicketController extends Controller
         return $payload;
     }
 
-    /** ───────────────────── End Helper ───────────────────── */
+    /** â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ End Helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     public function index(Request $request): RedirectResponse
     {
         $query = $request->getQueryString();
@@ -460,7 +460,7 @@ class TicketController extends Controller
             ])
             ->values();
 
-        $typeOptions = collect($this->types())
+        $typeOptions = collect(['task'])
             ->map(fn (string $type) => [
                 'value' => $type,
                 'label' => ucfirst($type),
@@ -475,14 +475,14 @@ class TicketController extends Controller
         $allowedStatuses = $this->allowedTicketStatuses($viewer);
         $lockStatus = empty($allowedStatuses);
 
-        $defaultPriorityOption = $priorityOptions->first();
-        $defaultTypeOption = $typeOptions->first();
-
         $defaults = [
-            'priority' => is_array($defaultPriorityOption) ? ($defaultPriorityOption['value'] ?? 'medium') : 'medium',
-            'type' => is_array($defaultTypeOption) ? ($defaultTypeOption['value'] ?? 'task') : 'task',
+            'priority' => null,
+            'type' => 'task',
             'status' => WorkflowStatus::normalize(WorkflowStatus::default()),
+            'start_at' => null,
+            'due_date' => null,
             'due_at' => null,
+            'finish_date' => null,
             'finish_at' => null,
             'requester_id' => $viewer?->id,
         ];
@@ -502,6 +502,7 @@ class TicketController extends Controller
                 'lockStatus' => $lockStatus,
                 'unitOptions' => $unitOptions,
                 'allowedStatuses' => $allowedStatuses,
+                'minTicketDate' => now(config('app.timezone'))->toDateString(),
             ],
         ]);
     }
@@ -521,11 +522,16 @@ class TicketController extends Controller
         }
 
         $currentStatus = WorkflowStatus::default();
+        $today = now(config('app.timezone'))->startOfDay()->toDateString();
         $statusProvided = $request->has('status');
         $requestedStatus = WorkflowStatus::normalize($request->input('status', $currentStatus));
         $finalStatus = $statusProvided ? $requestedStatus : $currentStatus;
 
-        $request->merge(['status' => $currentStatus]);
+        $request->merge([
+            'status' => $currentStatus,
+            'type' => 'task',
+            'agent_id' => null,
+        ]);
 
         $missingValue = '__input_missing__';
         $statusInputRaw = $request->input('status', $missingValue);
@@ -563,17 +569,17 @@ class TicketController extends Controller
             'reason' => ['nullable', 'string', 'max:255'],
             'letter_no' => ['nullable', 'string', 'max:255'],
             'priority' => ['required', Rule::in($this->priorities())],
-            'type' => ['required', Rule::in($this->types())],
+            'type' => ['required', Rule::in(['task'])],
             'status' => ['nullable', Rule::in($this->statuses())],
             'requester_id' => ['nullable', 'integer', 'min:1', Rule::exists('users', 'id')],
-            'agent_id' => ['nullable', 'integer', 'min:1', Rule::exists('users', 'id')],
+            'agent_id' => ['nullable'],
             'assigned_id' => $assignedRule,
             'assigned_user_ids' => ['nullable', 'array'],
             'assigned_user_ids.*' => ['integer', 'min:1', 'exists:users,id'],
-            'due_date' => ['nullable', 'string'],
-            'finish_date' => ['nullable', 'string'],
-            'due_at' => ['nullable', 'date'],
-            'finish_at' => ['nullable', 'date'],
+            'due_date' => ['nullable', 'date', 'after_or_equal:'.$today],
+            'finish_date' => ['nullable', 'date', 'after_or_equal:due_date', 'after_or_equal:'.$today],
+            'due_at' => ['nullable', 'date', 'after_or_equal:'.$today],
+            'finish_at' => ['nullable', 'date', 'after_or_equal:due_at', 'after_or_equal:'.$today],
             'sla' => ['nullable', Rule::in($this->slas())],
             'attachments' => ['nullable', 'array'],
             'attachments.*' => ['string'],
@@ -589,6 +595,8 @@ class TicketController extends Controller
         }
 
         $data['requester_id'] = $data['requester_id'] ? (int) $data['requester_id'] : null;
+        $data['type'] = 'task';
+        $data['agent_id'] = null;
         if (! empty($data['description'])) {
             $data['description'] = $this->sanitizeDescription($data['description']);
             $data['description'] = mb_substr($data['description'], 0, 255);
@@ -600,10 +608,6 @@ class TicketController extends Controller
         $data['due_at'] = $this->normalizeDateTimeInput($data['due_at'] ?? $this->composeDateTime($request->input('due_date'), $request->input('due_time')));
         $data['finish_at'] = $this->normalizeDateTimeInput($data['finish_at'] ?? $this->composeDateTime($request->input('finish_date'), $request->input('finish_time')));
 
-        // Untuk flow create terbaru: nilai "Selesai" dipakai sebagai tenggat.
-        if (! empty($data['finish_at'])) {
-            $data['due_at'] = $data['finish_at'];
-        }
 
         if (empty($data['due_date']) && $data['due_at']) {
             $data['due_date'] = Carbon::parse($data['due_at'])->toDateString();
@@ -804,7 +808,7 @@ class TicketController extends Controller
             ])
             ->values();
 
-        $typeOptions = collect($this->types())
+        $typeOptions = collect(['task'])
             ->map(fn (string $type) => [
                 'value' => $type,
                 'label' => ucfirst($type),
@@ -1039,6 +1043,8 @@ class TicketController extends Controller
         if ($canPickRequester) {
             if (array_key_exists('requester_id', $data)) {
                 $data['requester_id'] = $data['requester_id'] ? (int) $data['requester_id'] : null;
+        $data['type'] = 'task';
+        $data['agent_id'] = null;
             } else {
                 $data['requester_id'] = $ticket->requester_id;
             }
@@ -1380,11 +1386,11 @@ class TicketController extends Controller
             $status = WorkflowStatus::normalize($ticket->status ?? WorkflowStatus::NEW);
 
             return [
-                $ticket->ticket_no ?? '—',
-                $ticket->title ?? '—',
+                $ticket->ticket_no ?? 'â€”',
+                $ticket->title ?? 'â€”',
                 WorkflowStatus::label($status),
-                ucfirst($ticket->priority ?? '—'),
-                ucfirst($ticket->type ?? '—'),
+                ucfirst($ticket->priority ?? 'â€”'),
+                ucfirst($ticket->type ?? 'â€”'),
                 $this->formatDate($ticket->due_at ?: $ticket->due_date, 'd M Y H:i', $tz),
                 $this->formatDate($ticket->updated_at, 'd M Y H:i', $tz),
                 $this->userDisplayName($ticket->requester),
@@ -1606,7 +1612,7 @@ class TicketController extends Controller
             'title' => $ticket->title,
             'description' => $ticket->description ? $this->sanitizeDescription($ticket->description) : null,
             'priority' => $ticket->priority,
-            'priority_label' => ucfirst($ticket->priority ?? '—'),
+            'priority_label' => ucfirst($ticket->priority ?? 'â€”'),
             'type' => $ticket->type,
             'status' => $status,
             'status_label' => WorkflowStatus::label($status),
@@ -1798,7 +1804,7 @@ class TicketController extends Controller
 
         $attachments = collect($detail['attachments'] ?? [])->map(function (array $attachment) {
             return [
-                'name' => $attachment['name'] ?? '—',
+                'name' => $attachment['name'] ?? 'â€”',
                 'size' => $this->formatFileSize($attachment['size'] ?? null),
             ];
         })->values()->all();
@@ -2153,7 +2159,7 @@ class TicketController extends Controller
     private function formatDate($value, string $format, ?string $tz = null): string
     {
         if (empty($value)) {
-            return '—';
+            return 'â€”';
         }
 
         try {
@@ -2174,15 +2180,15 @@ class TicketController extends Controller
         $startLabel = $this->formatDate($start, 'd M Y', $tz);
         $endLabel = $this->formatDate($end, 'd M Y', $tz);
 
-        if ($startLabel === '—' && $endLabel === '—') {
-            return '—';
+        if ($startLabel === 'â€”' && $endLabel === 'â€”') {
+            return 'â€”';
         }
 
-        if ($startLabel === '—') {
+        if ($startLabel === 'â€”') {
             return 'Sampai '.$endLabel;
         }
 
-        if ($endLabel === '—') {
+        if ($endLabel === 'â€”') {
             return 'Mulai '.$startLabel;
         }
 
@@ -2192,7 +2198,7 @@ class TicketController extends Controller
     private function formatFileSize($bytes): string
     {
         if (! is_numeric($bytes)) {
-            return '—';
+            return 'â€”';
         }
 
         $bytes = (int) $bytes;
@@ -2210,3 +2216,4 @@ class TicketController extends Controller
         return number_format($value, $precision).' '.$units[$exp];
     }
 }
+
