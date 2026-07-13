@@ -19,13 +19,21 @@ class WorkflowController extends Controller
     public function index(Request $request): Response
     {
         $this->authorize('viewAny', Workflow::class);
-        $filters = $request->only(['search', 'type', 'status']);
+        $filters = [
+            'search' => trim($request->string('search')->toString()),
+            'type' => $request->string('type')->toString(),
+            'status' => $request->string('status')->toString(),
+        ];
+        $filters['type'] = in_array($filters['type'], ['ticket', 'task'], true) ? $filters['type'] : '';
+        $filters['status'] = in_array($filters['status'], ['active', 'inactive'], true) ? $filters['status'] : '';
         $canUpdate = $request->user()->can('update workflows');
         $workflows = Workflow::query()->with('creator')->withCount(['stages', 'instances'])
             ->when(! $canUpdate, fn ($q) => $q->where('is_active', true))
-            ->when($filters['search'] ?? null, fn ($q, $value) => $q->where(fn ($sub) => $sub->where('name', 'like', "%{$value}%")->orWhere('code', 'like', "%{$value}%")))
-            ->when($filters['type'] ?? null, fn ($q, $value) => $q->where('entity_type', $value))
-            ->when(($filters['status'] ?? '') !== '', fn ($q) => $q->where('is_active', $filters['status'] === 'active'))
+            ->when($filters['search'] !== '', fn ($q) => $q->where(fn ($sub) => $sub
+                ->where('name', 'like', '%'.$filters['search'].'%')
+                ->orWhere('code', 'like', '%'.$filters['search'].'%')))
+            ->when($filters['type'] !== '', fn ($q) => $q->where('entity_type', $filters['type']))
+            ->when($filters['status'] !== '', fn ($q) => $q->where('is_active', $filters['status'] === 'active'))
             ->latest('updated_at')->paginate(min(50, max(5, $request->integer('per_page', 10))))
             ->withQueryString()->through(fn (Workflow $workflow) => $this->payload($workflow));
 

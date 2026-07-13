@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use App\Models\Workflow;
+use Database\Seeders\WorkflowSeeder;
 use Illuminate\Support\Facades\Artisan;
 use Spatie\Permission\PermissionRegistrar;
 
@@ -95,6 +96,48 @@ test('user can browse index and view active workflow only', function () {
     $this->actingAs($user)
         ->get(route('workflows.show', ['locale' => 'id', 'workflow' => $inactive]))
         ->assertForbidden();
+});
+
+test('workflow seeder creates ticket and task defaults idempotently', function () {
+    Artisan::call('db:seed', ['--class' => WorkflowSeeder::class, '--force' => true]);
+    Artisan::call('db:seed', ['--class' => WorkflowSeeder::class, '--force' => true]);
+
+    expect(Workflow::query()->count())->toBe(2)
+        ->and(Workflow::query()->where('entity_type', 'project')->count())->toBe(0)
+        ->and(Workflow::query()->where('code', 'TICKET_DEFAULT')->where('is_active', true)->exists())->toBeTrue()
+        ->and(Workflow::query()->where('code', 'TASK_DEFAULT')->where('is_active', true)->exists())->toBeTrue()
+        ->and(Workflow::query()->where('code', 'TICKET_DEFAULT')->first()->stages()->count())->toBe(4)
+        ->and(Workflow::query()->where('code', 'TASK_DEFAULT')->first()->stages()->count())->toBe(3);
+});
+
+test('workflow index applies search type status pagination and permissions', function () {
+    $user = workflowUserWithRole('user');
+    $admin = workflowUserWithRole('admin');
+    Workflow::create(['name' => 'Ticket Match', 'code' => 'TICKET_MATCH', 'entity_type' => 'ticket', 'is_active' => true]);
+    Workflow::create(['name' => 'Task Match', 'code' => 'TASK_MATCH', 'entity_type' => 'task', 'is_active' => true]);
+    Workflow::create(['name' => 'Task Hidden', 'code' => 'TASK_HIDDEN', 'entity_type' => 'task', 'is_active' => false]);
+
+    $this->actingAs($user)->withHeaders(workflowInertiaHeaders())
+        ->get(route('workflows.index', ['locale' => 'id', 'search' => 'Match', 'type' => 'task', 'status' => 'active']))
+        ->assertOk()->assertJsonCount(1, 'props.workflows.data')
+        ->assertJsonPath('props.workflows.data.0.code', 'TASK_MATCH')
+        ->assertJsonPath('props.can.create', false)->assertJsonPath('props.can.delete', false);
+
+    $this->actingAs($admin)->withHeaders(workflowInertiaHeaders())
+        ->get(route('workflows.index', ['locale' => 'id', 'type' => 'task', 'status' => 'inactive']))
+        ->assertOk()->assertJsonCount(1, 'props.workflows.data')
+        ->assertJsonPath('props.workflows.data.0.code', 'TASK_HIDDEN')
+        ->assertJsonPath('props.can.create', true)->assertJsonPath('props.can.delete', false);
+
+    foreach (range(1, 11) as $number) {
+        Workflow::create(['name' => 'Page '.$number, 'code' => 'PAGE_'.$number, 'entity_type' => 'ticket', 'is_active' => true]);
+    }
+
+    $this->actingAs($admin)->withHeaders(workflowInertiaHeaders())
+        ->get(route('workflows.index', ['locale' => 'id', 'search' => 'Page']))
+        ->assertOk()->assertJsonCount(10, 'props.workflows.data')
+        ->assertJsonPath('props.workflows.total', 11)
+        ->assertJsonPath('props.workflows.last_page', 2);
 });
 
 test('user cannot create update toggle or delete workflows', function () {

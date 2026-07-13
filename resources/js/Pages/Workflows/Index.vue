@@ -17,12 +17,8 @@
           <span class="material-icons pointer-events-none absolute left-3 top-2.5 text-lg text-slate-400">search</span>
           <input v-model="search" type="search" placeholder="Cari nama atau kode workflow..." class="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-3 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white" @keyup.enter="applyFilters" />
         </label>
-        <select v-model="type" class="rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white">
-          <option value="">Semua tipe</option><option value="ticket">Ticket</option><option value="task">Task</option>
-        </select>
-        <select v-model="status" class="rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white">
-          <option value="">Semua status</option><option value="active">Aktif</option><option value="inactive">Nonaktif</option>
-        </select>
+        <FancySelect v-model="type" :options="typeOptions" accent="blue" aria-label="Filter tipe workflow" />
+        <FancySelect v-model="status" :options="statusOptions" accent="blue" aria-label="Filter status workflow" />
         <button type="button" class="rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-100 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300" @click="applyFilters">Terapkan</button>
       </div>
 
@@ -75,11 +71,14 @@
 <script setup>
 import { Link, router } from '@inertiajs/vue3'
 import { ref } from 'vue'
+import FancySelect from '../../Components/FancySelect.vue'
 import AppLayout from '../../Layouts/AppLayout.vue'
 import resolveRoute from '../../utils/resolveRoute'
 
 defineOptions({ layout: AppLayout })
 const props = defineProps({ workflows: { type: Object, required: true }, filters: { type: Object, default: () => ({}) }, can: { type: Object, default: () => ({}) } })
+const typeOptions = [{ value: '', label: 'Semua tipe' }, { value: 'ticket', label: 'Ticket' }, { value: 'task', label: 'Task' }]
+const statusOptions = [{ value: '', label: 'Semua status' }, { value: 'active', label: 'Aktif' }, { value: 'inactive', label: 'Nonaktif' }]
 const search = ref(props.filters.search || ''), type = ref(props.filters.type || ''), status = ref(props.filters.status || ''), loading = ref(false)
 const dialog = ref({ open: false, title: '', message: '', action: null })
 const applyFilters = () => { loading.value = true; router.get(resolveRoute('workflows.index'), { search: search.value || undefined, type: type.value || undefined, status: status.value || undefined }, { preserveState: true, replace: true, onFinish: () => { loading.value = false } }) }

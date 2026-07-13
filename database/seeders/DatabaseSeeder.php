@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RolePermissionSeeder::class, // pastikan roles 'user|admin|superadmin' ada (guard 'web')
             StatusSeeder::class,
+            WorkflowSeeder::class,
             SetSuperAdminSeeder::class,  // memastikan superadmin utama sesuai konfigurasi
             AppSettingsSeeder::class,
         ]);
