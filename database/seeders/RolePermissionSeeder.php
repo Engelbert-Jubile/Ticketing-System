@@ -46,6 +46,13 @@ class RolePermissionSeeder extends Seeder
 
             // Misc / reporting
             'view reports',
+
+            // Workflow
+            'view workflows',
+            'create workflows',
+            'update workflows',
+            'toggle workflows',
+            'delete workflows',
         ];
 
         foreach ($permissions as $permName) {
@@ -71,12 +78,14 @@ class RolePermissionSeeder extends Seeder
             'view projects', 'create projects', 'update projects', 'delete projects',
             'view users', 'create users', 'update users', 'delete users',
             'view reports',
+            'view workflows', 'create workflows', 'update workflows', 'toggle workflows',
             // jangan berikan 'assign roles' ke admin bila kamu tidak ingin admin assign role sensitif
         ]);
 
         // user -> permission minimal
         $userRole->givePermissionTo([
             'view tickets', 'create tickets', 'view projects', 'view tasks',
+            'view workflows',
         ]);
 
         // 6) Jika belum ada super-admin di DB, buat satu akun super-admin awal

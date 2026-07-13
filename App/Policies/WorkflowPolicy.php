@@ -4,14 +4,36 @@ namespace App\Policies;
 
 use App\Models\User;
 use App\Models\Workflow;
-use App\Support\RoleHelpers;
-
 class WorkflowPolicy
 {
-    private function manages(User $user): bool { return RoleHelpers::userIsSuperAdmin($user) || $user->hasRole('admin'); }
-    public function viewAny(User $user): bool { return $this->manages($user); }
-    public function view(User $user, Workflow $workflow): bool { return $this->manages($user); }
-    public function create(User $user): bool { return $this->manages($user); }
-    public function update(User $user, Workflow $workflow): bool { return $this->manages($user); }
-    public function delete(User $user, Workflow $workflow): bool { return $this->manages($user); }
+    public function viewAny(User $user): bool
+    {
+        return $user->can('view workflows');
+    }
+
+    public function view(User $user, Workflow $workflow): bool
+    {
+        return $user->can('view workflows')
+            && ($workflow->is_active || $user->can('update workflows'));
+    }
+
+    public function create(User $user): bool
+    {
+        return $user->can('create workflows');
+    }
+
+    public function update(User $user, Workflow $workflow): bool
+    {
+        return $user->can('update workflows');
+    }
+
+    public function toggle(User $user, Workflow $workflow): bool
+    {
+        return $user->can('toggle workflows');
+    }
+
+    public function delete(User $user, Workflow $workflow): bool
+    {
+        return $user->can('delete workflows');
+    }
 }

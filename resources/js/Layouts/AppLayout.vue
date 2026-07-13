@@ -345,6 +345,16 @@ const navItems = computed(() => {
       match: path => pathStartsWith(path, '/dashboard/projects'),
     })
   }
+
+  items.push({
+    type: 'link',
+    key: 'workflows',
+    label: 'Workflows',
+    icon: 'account_tree',
+    href: resolveRouteName('workflows.index'),
+    match: path => pathStartsWith(path, '/dashboard/workflows'),
+  })
+
   const unit = String(authUser.value?.unit ?? '').trim()
 
   if (isSuperAdmin.value) {

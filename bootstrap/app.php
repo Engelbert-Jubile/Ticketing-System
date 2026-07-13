@@ -8,6 +8,9 @@ use App\Http\Middleware\EnforceAccessControls;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\Response;
 
 $app = Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -65,7 +68,24 @@ $app = Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        // Optional: custom exception handler
+        $exceptions->respond(function (Response $response, \Throwable $exception, Request $request) {
+            if ($response->getStatusCode() !== 403 || $request->expectsJson()) {
+                return $response;
+            }
+
+            $locale = $request->route('locale') ?? app()->getLocale() ?? 'id';
+            $message = trim($exception->getMessage());
+            if ($message === '' || str_contains(strtolower($message), 'unauthorized')) {
+                $message = 'Anda tidak memiliki izin untuk melakukan aksi ini.';
+            }
+
+            return Inertia::render('Errors/Forbidden', [
+                'title' => '403 - Akses Ditolak',
+                'message' => $message,
+                'buttonLabel' => 'Kembali ke Dashboard',
+                'buttonUrl' => url("/{$locale}/dashboard"),
+            ])->toResponse($request)->setStatusCode(403);
+        });
     })
     ->create();
 

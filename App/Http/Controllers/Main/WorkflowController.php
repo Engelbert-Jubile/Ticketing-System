@@ -20,7 +20,9 @@ class WorkflowController extends Controller
     {
         $this->authorize('viewAny', Workflow::class);
         $filters = $request->only(['search', 'type', 'status']);
+        $canUpdate = $request->user()->can('update workflows');
         $workflows = Workflow::query()->with('creator')->withCount(['stages', 'instances'])
+            ->when(! $canUpdate, fn ($q) => $q->where('is_active', true))
             ->when($filters['search'] ?? null, fn ($q, $value) => $q->where(fn ($sub) => $sub->where('name', 'like', "%{$value}%")->orWhere('code', 'like', "%{$value}%")))
             ->when($filters['type'] ?? null, fn ($q, $value) => $q->where('entity_type', $value))
             ->when(($filters['status'] ?? '') !== '', fn ($q) => $q->where('is_active', $filters['status'] === 'active'))
@@ -30,7 +32,12 @@ class WorkflowController extends Controller
         return Inertia::render('Workflows/Index', [
             'workflows' => $workflows,
             'filters' => $filters,
-            'can' => ['create' => $request->user()->can('create', Workflow::class)],
+            'can' => [
+                'create' => $request->user()->can('create workflows'),
+                'update' => $request->user()->can('update workflows'),
+                'toggle' => $request->user()->can('toggle workflows'),
+                'delete' => $request->user()->can('delete workflows'),
+            ],
         ]);
     }
 
@@ -59,7 +66,11 @@ class WorkflowController extends Controller
         $workflow->load(['stages.responsibleUser', 'creator', 'updater', 'histories.actor'])->loadCount('instances');
         return Inertia::render('Workflows/Show', [
             'workflow' => $this->payload($workflow, true),
-            'can' => ['update' => $request->user()->can('update', $workflow), 'delete' => $request->user()->can('delete', $workflow)],
+            'can' => [
+                'update' => $request->user()->can('update', $workflow),
+                'toggle' => $request->user()->can('toggle', $workflow),
+                'delete' => $request->user()->can('delete', $workflow),
+            ],
         ]);
     }
 
@@ -72,7 +83,7 @@ class WorkflowController extends Controller
 
     public function update(Request $request, string $locale, Workflow $workflow): RedirectResponse
     {
-        $this->authorize('update', $workflow);
+        $this->authorize('toggle', $workflow);
         $data = $this->validated($request, $workflow);
         DB::transaction(function () use ($data, $request, $workflow) {
             $before = $workflow->only(['name', 'code', 'entity_type', 'description', 'trigger_conditions', 'is_active']);

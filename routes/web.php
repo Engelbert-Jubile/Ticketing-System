@@ -19,6 +19,7 @@ use App\Http\Controllers\Main\TaskController;
 use App\Http\Controllers\Main\TicketController;
 use App\Http\Controllers\Main\UnitReportsController;
 use App\Http\Controllers\Main\UserController;
+use App\Http\Controllers\Main\WorkflowController;
 use App\Http\Controllers\SearchController;
 use App\Support\UserUnitOptions;
 use App\Models\Task;
@@ -301,6 +302,18 @@ Route::middleware($emailVerificationEnabled
         Route::get('/', [ReportController::class, 'index'])->name('index');
     });
 
+    /* 🔀 Workflow Management */
+    Route::prefix('dashboard/workflows')->name('workflows.')->group(function () {
+        Route::get('/', [WorkflowController::class, 'index'])->middleware('permission:view workflows')->name('index');
+        Route::get('/create', [WorkflowController::class, 'create'])->middleware('permission:create workflows')->name('create');
+        Route::post('/', [WorkflowController::class, 'store'])->middleware('permission:create workflows')->name('store');
+        Route::get('/{workflow}', [WorkflowController::class, 'show'])->middleware('permission:view workflows')->name('show');
+        Route::get('/{workflow}/edit', [WorkflowController::class, 'edit'])->middleware('permission:update workflows')->name('edit');
+        Route::put('/{workflow}', [WorkflowController::class, 'update'])->middleware('permission:update workflows')->name('update');
+        Route::patch('/{workflow}/toggle', [WorkflowController::class, 'toggle'])->middleware('permission:toggle workflows')->name('toggle');
+        Route::delete('/{workflow}', [WorkflowController::class, 'destroy'])->middleware('permission:delete workflows')->name('destroy');
+    });
+
     /* ⏱ SLA Reports */
     Route::prefix('dashboard/sla')->group(function () {
         Route::get('/', [SLAReportController::class, 'index'])->name('dashboard.sla');
@@ -400,4 +413,3 @@ Route::get('{path}', function (Request $request, string $path) use ($resolveLoca
     'path',
     '^(?!(en|id)(/|$))(?!(livewire|storage|_debugbar|vendor)(/|$)).*$'
 );
-
