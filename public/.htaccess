@@ -17,6 +17,11 @@
     RewriteCond %{HTTP:x-xsrf-token} .
     RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
 
+    # Workflow pages are always dynamic Laravel/Inertia responses.
+    # Bypass stale LiteSpeed/static mappings before the generic file checks.
+    RewriteCond %{REQUEST_URI} ^/(en|id)/dashboard/workflows(?:/|$) [NC]
+    RewriteRule ^ index.php [E=Cache-Control:no-cache,L]
+
     # Redirect Trailing Slashes If Not A Folder...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} (.+)/$
