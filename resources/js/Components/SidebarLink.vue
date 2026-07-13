@@ -1,5 +1,5 @@
 <template>
-  <button type="button" class="nav-link" :class="{ 'nav-link--active': active }" @click="navigate">
+  <Link :href="item.href" class="nav-link" :class="{ 'nav-link--active': active }">
     <span class="material-icons">{{ item.icon }}</span>
 
     <div v-if="sidebarOpen" class="nav-main">
@@ -8,10 +8,12 @@
     </div>
 
     <span v-else-if="item.badge !== undefined" class="nav-dot"></span>
-  </button>
+  </Link>
 </template>
 
 <script setup>
+import { Link } from '@inertiajs/vue3'
+
 const props = defineProps({
   item: {
     type: Object,
@@ -27,11 +29,6 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['navigate'])
-
-const navigate = () => {
-  emit('navigate', props.item.href)
-}
 </script>
 
 <style scoped>

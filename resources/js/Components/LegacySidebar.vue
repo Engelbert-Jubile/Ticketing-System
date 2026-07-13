@@ -41,7 +41,6 @@
               :item="item"
               :active="isActive(item)"
               :sidebar-open="sidebarOpen"
-              @navigate="handleNavigate"
             />
 
             <SidebarGroup
