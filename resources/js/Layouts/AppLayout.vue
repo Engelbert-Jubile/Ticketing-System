@@ -238,18 +238,6 @@ const resolveRouteName = (name, params = {}) => resolveRoute(name, { locale: act
 
 const pathStartsWith = (path, prefix) => path.startsWith(prefix)
 
-const isCurrentRoute = name => {
-  if (typeof window === 'undefined' || typeof window.route !== 'function') {
-    return false
-  }
-
-  try {
-    return Boolean(window.route().current(name))
-  } catch (error) {
-    return false
-  }
-}
-
 const navItems = computed(() => {
   const metrics = sidebarMetrics.value ?? {}
   const badgeValue = value => {
@@ -364,7 +352,7 @@ const navItems = computed(() => {
     label: 'Workflows',
     icon: 'account_tree',
     href: resolveRouteName('workflows.index'),
-    match: () => isCurrentRoute('workflows.*'),
+    match: path => pathStartsWith(path, '/dashboard/workflows'),
   })
 
   const unit = String(authUser.value?.unit ?? '').trim()

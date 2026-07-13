@@ -59,19 +59,34 @@ function workflowPayload(array $overrides = []): array
     ], $overrides);
 }
 
+function workflowInertiaHeaders(): array
+{
+    return [
+        'X-Inertia' => 'true',
+        'X-Inertia-Version' => hash_file('xxh128', public_path('build/manifest.json')),
+    ];
+}
+
 test('user can browse index and view active workflow only', function () {
     $user = workflowUserWithRole('user');
     $active = Workflow::create(['name' => 'Active Flow', 'code' => 'ACTIVE_FLOW', 'entity_type' => 'ticket', 'is_active' => true]);
     $inactive = Workflow::create(['name' => 'Inactive Flow', 'code' => 'INACTIVE_FLOW', 'entity_type' => 'task', 'is_active' => false]);
 
     $indexResponse = $this->actingAs($user)
-        ->get(route('workflows.index', ['locale' => 'id']))
+        ->get(route('workflows.index', ['locale' => 'en']))
         ->assertOk()
         ->assertSee('Active Flow')
         ->assertDontSee('Inactive Flow');
 
     expect($indexResponse->headers->get('Content-Type'))->toContain('text/html');
     expect(ltrim($indexResponse->getContent()))->toStartWith('<!DOCTYPE html>');
+
+    $this->actingAs($user)
+        ->withHeaders(workflowInertiaHeaders())
+        ->get(route('workflows.index', ['locale' => 'en']))
+        ->assertOk()
+        ->assertHeader('X-Inertia', 'true')
+        ->assertJsonPath('component', 'Workflows/Index');
 
     $this->actingAs($user)
         ->get(route('workflows.show', ['locale' => 'id', 'workflow' => $active]))
@@ -120,7 +135,12 @@ test('superadmin can browse view create update toggle and delete workflows', fun
     $superadmin = workflowUserWithRole('superadmin');
     $workflow = Workflow::create(['name' => 'Super Flow', 'code' => 'SUPER_FLOW', 'entity_type' => 'task', 'is_active' => false]);
 
-    $this->actingAs($superadmin)->get(route('workflows.index', ['locale' => 'id']))->assertOk();
+    $this->actingAs($superadmin)
+        ->withHeaders(workflowInertiaHeaders())
+        ->get(route('workflows.index', ['locale' => 'en']))
+        ->assertOk()
+        ->assertHeader('X-Inertia', 'true')
+        ->assertJsonPath('component', 'Workflows/Index');
     $this->actingAs($superadmin)->get(route('workflows.show', ['locale' => 'id', 'workflow' => $workflow]))->assertOk();
     $this->actingAs($superadmin)->get(route('workflows.create', ['locale' => 'id']))->assertOk();
     $this->actingAs($superadmin)->post(route('workflows.store', ['locale' => 'id']), workflowPayload(['code' => 'SUPER_CREATED']))->assertRedirect();
