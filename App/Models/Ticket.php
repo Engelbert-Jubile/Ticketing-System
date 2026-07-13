@@ -191,6 +191,11 @@ class Ticket extends Model
         return $this->morphMany(Attachment::class, 'attachable');
     }
 
+    public function workflowInstances(): MorphMany
+    {
+        return $this->morphMany(WorkflowInstance::class, 'subject');
+    }
+
     public function statusRelation(): BelongsTo
     {
         return $this->belongsTo(Status::class, 'status_id');

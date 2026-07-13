@@ -174,6 +174,11 @@ class Task extends Model
         return $this->morphMany(Attachment::class, 'attachable');
     }
 
+    public function workflowInstances(): MorphMany
+    {
+        return $this->morphMany(WorkflowInstance::class, 'subject');
+    }
+
     public function getStatusLabelAttribute(): string
     {
         $status = (string) $this->status;

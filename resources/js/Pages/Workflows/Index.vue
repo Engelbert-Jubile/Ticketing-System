@@ -31,15 +31,16 @@
         <p class="mt-1 max-w-md text-sm text-slate-500">Buat workflow pertama untuk mendefinisikan alur Ticket atau Task.</p>
       </div>
       <div v-else class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+        <table class="min-w-[1180px] divide-y divide-slate-200 dark:divide-slate-700">
           <thead class="bg-slate-50 dark:bg-slate-800/70"><tr class="text-left text-xs font-bold uppercase tracking-wider text-slate-500">
-            <th class="px-5 py-3">Workflow</th><th class="px-5 py-3">Tipe</th><th class="px-5 py-3">Tahapan</th><th class="px-5 py-3">Status</th><th class="px-5 py-3">Diperbarui</th><th class="px-5 py-3 text-right">Aksi</th>
+            <th class="px-5 py-3">Workflow</th><th class="px-5 py-3">Tipe</th><th class="px-5 py-3">Ringkasan Item</th><th class="px-5 py-3">Per Tahap</th><th class="px-5 py-3">Status</th><th class="px-5 py-3">Diperbarui</th><th class="px-5 py-3 text-right">Aksi</th>
           </tr></thead>
           <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
             <tr v-for="item in workflows.data" :key="item.uuid" class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50">
               <td class="px-5 py-4"><Link :href="resolveRoute('workflows.show', { workflow: item.uuid })" class="font-semibold text-slate-900 hover:text-blue-600 dark:text-white">{{ item.name }}</Link><p class="mt-0.5 font-mono text-xs text-slate-400">{{ item.code }}</p></td>
               <td class="px-5 py-4"><span class="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold capitalize text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">{{ item.entity_type }}</span></td>
-              <td class="px-5 py-4 text-sm text-slate-600 dark:text-slate-300">{{ item.stages_count }} tahap</td>
+              <td class="px-5 py-4"><div class="grid grid-cols-3 gap-2 text-center"><div class="metric"><b>{{ item.total_items_count }}</b><span>Total</span></div><div class="metric text-amber-600"><b>{{ item.running_items_count }}</b><span>Berjalan</span></div><div class="metric text-emerald-600"><b>{{ item.completed_items_count }}</b><span>Selesai</span></div></div></td>
+              <td class="px-5 py-4"><div class="flex max-w-xs flex-wrap gap-1.5"><span v-for="stage in item.stage_counts" :key="stage.status_key" class="rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">{{ stage.label }}: {{ stage.count }}</span></div></td>
               <td class="px-5 py-4"><span :class="item.is_active ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'" class="rounded-full px-2.5 py-1 text-xs font-semibold">{{ item.is_active ? 'Aktif' : 'Nonaktif' }}</span></td>
               <td class="px-5 py-4 text-sm text-slate-500">{{ formatDate(item.updated_at) }}</td>
               <td class="px-5 py-4"><div class="flex justify-end gap-1">
@@ -94,4 +95,8 @@ const formatDate = value => value ? new Intl.DateTimeFormat('id-ID', { dateStyle
 .action { display: inline-flex; height: 2.25rem; width: 2.25rem; align-items: center; justify-content: center; border-radius: .65rem; color: #64748b; transition: .2s; }
 .action:hover { background: #eff6ff; color: #2563eb; }
 .action .material-icons { font-size: 1.15rem; }
+.metric { display: flex; min-width: 3.6rem; flex-direction: column; border-radius: .65rem; background: #f8fafc; padding: .4rem .5rem; color: #475569; }
+.metric b { font-size: 1rem; line-height: 1.2; }
+.metric span { margin-top: .15rem; font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.dark .metric { background: #1e293b; color: #cbd5e1; }
 </style>

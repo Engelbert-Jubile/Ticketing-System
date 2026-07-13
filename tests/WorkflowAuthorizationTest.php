@@ -1,9 +1,13 @@
 <?php
 
+use App\Models\Task;
+use App\Models\Ticket;
 use App\Models\User;
 use App\Models\Workflow;
+use App\Models\WorkflowInstance;
 use Database\Seeders\WorkflowSeeder;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\PermissionRegistrar;
 
 beforeEach(function () {
@@ -20,6 +24,48 @@ beforeEach(function () {
     ]);
 
     app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+    Schema::create('tickets', function ($table) {
+        $table->id();
+        $table->uuid('uuid')->nullable()->unique();
+        $table->string('ticket_no')->nullable();
+        $table->string('title');
+        $table->text('description')->nullable();
+        $table->string('priority')->default('medium');
+        $table->string('type')->default('incident');
+        $table->string('status_id')->nullable();
+        $table->string('status')->default('new');
+        $table->foreignId('requester_id')->nullable();
+        $table->foreignId('agent_id')->nullable();
+        $table->foreignId('assigned_id')->nullable();
+        $table->timestamps();
+    });
+    Schema::create('tasks', function ($table) {
+        $table->id();
+        $table->uuid('uuid')->nullable()->unique();
+        $table->string('task_no')->nullable();
+        $table->foreignId('ticket_id')->nullable();
+        $table->foreignId('project_id')->nullable();
+        $table->foreignId('assignee_id')->nullable();
+        $table->string('title');
+        $table->text('description')->nullable();
+        $table->string('status')->default('new');
+        $table->date('start_date')->nullable();
+        $table->date('end_date')->nullable();
+        $table->foreignId('created_by')->nullable();
+        $table->text('planning')->nullable();
+        $table->string('priority')->nullable();
+        $table->text('assigned_to')->nullable();
+        $table->timestamp('due_at')->nullable();
+        $table->timestamp('completed_at')->nullable();
+        $table->string('public_slug')->nullable();
+        $table->timestamps();
+    });
+    Schema::create('ticket_assignees', function ($table) {
+        $table->foreignId('ticket_id');
+        $table->foreignId('user_id');
+        $table->timestamps();
+    });
 });
 
 function workflowUserWithRole(string $role): User
@@ -106,8 +152,83 @@ test('workflow seeder creates ticket and task defaults idempotently', function (
         ->and(Workflow::query()->where('entity_type', 'project')->count())->toBe(0)
         ->and(Workflow::query()->where('code', 'TICKET_DEFAULT')->where('is_active', true)->exists())->toBeTrue()
         ->and(Workflow::query()->where('code', 'TASK_DEFAULT')->where('is_active', true)->exists())->toBeTrue()
-        ->and(Workflow::query()->where('code', 'TICKET_DEFAULT')->first()->stages()->count())->toBe(4)
-        ->and(Workflow::query()->where('code', 'TASK_DEFAULT')->first()->stages()->count())->toBe(3);
+        ->and(Workflow::query()->where('code', 'TICKET_DEFAULT')->first()->stages()->count())->toBe(7)
+        ->and(Workflow::query()->where('code', 'TASK_DEFAULT')->first()->stages()->count())->toBe(7);
+});
+
+test('existing tickets and tasks use default workflows and follow status changes', function () {
+    Artisan::call('db:seed', ['--class' => WorkflowSeeder::class, '--force' => true]);
+    $viewer = workflowUserWithRole('superadmin');
+    $requester = User::factory()->create(['first_name' => 'Rina', 'last_name' => 'Requester']);
+    $pic = User::factory()->create(['first_name' => 'Budi', 'last_name' => 'PIC']);
+
+    $ticket = Ticket::create([
+        'ticket_no' => 'TCK-REAL-001',
+        'title' => 'Ticket production existing',
+        'status' => 'new',
+        'requester_id' => $requester->id,
+        'assigned_id' => $pic->id,
+    ]);
+    $task = Task::create([
+        'task_no' => 'TSK-REAL-001',
+        'title' => 'Task production existing',
+        'status' => 'in_progress',
+        'created_by' => $requester->id,
+        'assignee_id' => $pic->id,
+        'assigned_to' => json_encode([$pic->id]),
+    ]);
+
+    expect(Ticket::query()->count())->toBe(1)
+        ->and(Task::query()->count())->toBe(1)
+        ->and(WorkflowInstance::query()->count())->toBe(2)
+        ->and(WorkflowInstance::query()->where('subject_type', \App\Models\Project::class)->count())->toBe(0);
+
+    $ticket->update(['status' => 'in_progress']);
+    $task->update(['status' => 'done']);
+
+    $ticketInstance = WorkflowInstance::query()->where('subject_type', Ticket::class)->with('currentStage')->firstOrFail();
+    $taskInstance = WorkflowInstance::query()->where('subject_type', Task::class)->with('currentStage')->firstOrFail();
+    expect($ticketInstance->currentStage->status_key)->toBe('in_progress')
+        ->and($ticketInstance->status)->toBe('running')
+        ->and($taskInstance->currentStage->status_key)->toBe('done')
+        ->and($taskInstance->status)->toBe('completed')
+        ->and($taskInstance->completed_at)->not->toBeNull();
+
+    $this->actingAs($viewer)->withHeaders(workflowInertiaHeaders())
+        ->get(route('workflows.index', ['locale' => 'id']))
+        ->assertOk()
+        ->assertJsonFragment([
+            'code' => 'TICKET_DEFAULT',
+            'total_items_count' => 1,
+            'running_items_count' => 1,
+            'completed_items_count' => 0,
+        ])
+        ->assertJsonFragment([
+            'code' => 'TASK_DEFAULT',
+            'total_items_count' => 1,
+            'running_items_count' => 0,
+            'completed_items_count' => 1,
+        ]);
+
+    $ticketWorkflow = Workflow::query()->where('code', 'TICKET_DEFAULT')->firstOrFail();
+    $this->actingAs($viewer)->withHeaders(workflowInertiaHeaders())
+        ->get(route('workflows.show', ['locale' => 'id', 'workflow' => $ticketWorkflow]))
+        ->assertOk()
+        ->assertJsonPath('props.instances.total', 1)
+        ->assertJsonPath('props.instances.data.0.number', 'TCK-REAL-001')
+        ->assertJsonPath('props.instances.data.0.requester', 'Rina Requester')
+        ->assertJsonPath('props.instances.data.0.pic', 'Budi PIC')
+        ->assertJsonPath('props.instances.data.0.status', 'in_progress')
+        ->assertJsonPath('props.workflow.stages.1.instances_count', 1);
+
+    $taskWorkflow = Workflow::query()->where('code', 'TASK_DEFAULT')->firstOrFail();
+    $this->actingAs($viewer)->withHeaders(workflowInertiaHeaders())
+        ->get(route('workflows.show', ['locale' => 'id', 'workflow' => $taskWorkflow]))
+        ->assertOk()
+        ->assertJsonPath('props.instances.total', 1)
+        ->assertJsonPath('props.instances.data.0.number', 'TSK-REAL-001')
+        ->assertJsonPath('props.instances.data.0.pic', 'Budi PIC')
+        ->assertJsonPath('props.instances.data.0.status', 'done');
 });
 
 test('workflow index applies search type status pagination and permissions', function () {

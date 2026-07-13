@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\Ticket;
+use App\Services\WorkflowRuntimeService;
 
 final class TicketStatusSync
 {
@@ -15,19 +16,17 @@ final class TicketStatusSync
 
     public static function handleTaskSaved(Task $task): void
     {
-        // Status task tidak lagi mensinkronkan status ticket.
-        return;
+        app(WorkflowRuntimeService::class)->sync($task);
     }
 
     public static function handleProjectSaved(Project $project): void
     {
         // Status project tidak lagi mensinkronkan status ticket.
-        return;
+
     }
 
     public static function handleTicketSaved(Ticket $ticket): void
     {
-        // Status ticket tidak lagi dipaksakan ke task/project.
-        return;
+        app(WorkflowRuntimeService::class)->sync($ticket);
     }
 }
