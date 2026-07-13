@@ -56,16 +56,31 @@ class RolePermissionSeeder extends Seeder
         ];
 
         foreach ($permissions as $permName) {
-            Permission::firstOrCreate(['name' => $permName]);
+            Permission::firstOrCreate(['name' => $permName, 'guard_name' => 'web']);
         }
 
         // 3) Clear cache sebelum assign role
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         // 4) Buat roles
-        $superAdmin = Role::firstOrCreate(['name' => 'superadmin']);
-        $admin = Role::firstOrCreate(['name' => 'admin']);
-        $userRole = Role::firstOrCreate(['name' => 'user']);
+        $superAdmin = Role::firstOrCreate(['name' => 'superadmin', 'guard_name' => 'web']);
+        $admin = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        $userRole = Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
+
+        $workflowPermissions = Permission::query()
+            ->where('guard_name', 'web')
+            ->whereIn('name', [
+                'view workflows',
+                'create workflows',
+                'update workflows',
+                'toggle workflows',
+                'delete workflows',
+            ])
+            ->get();
+
+        foreach ([$superAdmin, $admin, $userRole] as $role) {
+            $role->revokePermissionTo($workflowPermissions);
+        }
 
         // 5) Assign permissions:
         // super-admin -> semua permission

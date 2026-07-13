@@ -143,7 +143,12 @@ Route::get('/welcome', function () use ($publicWelcomeProps) {
 })->name('welcome');
 
 Route::get('/403', function (Request $request) {
-    return response()->view('errors.403', [], 403);
+    return Inertia::render('Errors/Forbidden', [
+        'title' => '403 - Akses Ditolak',
+        'message' => 'Anda tidak memiliki izin untuk mengakses halaman ini.',
+        'buttonLabel' => 'Kembali ke Dashboard',
+        'buttonUrl' => url('/'.$request->route('locale').'/dashboard'),
+    ])->toResponse($request)->setStatusCode(403);
 })->name('errors.forbidden');
 
 Route::get('/inertia-health', function () {

@@ -69,7 +69,9 @@ $app = Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->respond(function (Response $response, \Throwable $exception, Request $request) {
-            if ($response->getStatusCode() !== 403 || $request->expectsJson()) {
+            $isInertiaRequest = $request->header('X-Inertia') === 'true';
+
+            if ($response->getStatusCode() !== 403 || ($request->expectsJson() && ! $isInertiaRequest)) {
                 return $response;
             }
 
@@ -79,12 +81,16 @@ $app = Application::configure(basePath: dirname(__DIR__))
                 $message = 'Anda tidak memiliki izin untuk melakukan aksi ini.';
             }
 
-            return Inertia::render('Errors/Forbidden', [
+            $forbidden = Inertia::render('Errors/Forbidden', [
                 'title' => '403 - Akses Ditolak',
                 'message' => $message,
                 'buttonLabel' => 'Kembali ke Dashboard',
                 'buttonUrl' => url("/{$locale}/dashboard"),
             ])->toResponse($request)->setStatusCode(403);
+
+            $forbidden->headers->set('X-Content-Type-Options', 'nosniff');
+
+            return $forbidden;
         });
     })
     ->create();

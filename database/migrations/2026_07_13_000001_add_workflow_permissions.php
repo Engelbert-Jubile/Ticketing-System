@@ -27,6 +27,15 @@ return new class extends Migration
         $admin = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
         $superadmin = Role::firstOrCreate(['name' => 'superadmin', 'guard_name' => 'web']);
 
+        $workflowPermissions = Permission::query()
+            ->where('guard_name', 'web')
+            ->whereIn('name', self::PERMISSIONS)
+            ->get();
+
+        foreach ([$user, $admin, $superadmin] as $role) {
+            $role->revokePermissionTo($workflowPermissions);
+        }
+
         $user->givePermissionTo(['view workflows']);
         $admin->givePermissionTo(['view workflows', 'create workflows', 'update workflows', 'toggle workflows']);
         $superadmin->givePermissionTo(self::PERMISSIONS);

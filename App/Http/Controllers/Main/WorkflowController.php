@@ -83,7 +83,7 @@ class WorkflowController extends Controller
 
     public function update(Request $request, string $locale, Workflow $workflow): RedirectResponse
     {
-        $this->authorize('toggle', $workflow);
+        $this->authorize('update', $workflow);
         $data = $this->validated($request, $workflow);
         DB::transaction(function () use ($data, $request, $workflow) {
             $before = $workflow->only(['name', 'code', 'entity_type', 'description', 'trigger_conditions', 'is_active']);
@@ -96,7 +96,7 @@ class WorkflowController extends Controller
 
     public function toggle(Request $request, string $locale, Workflow $workflow): RedirectResponse
     {
-        $this->authorize('update', $workflow);
+        $this->authorize('toggle', $workflow);
         $workflow->update(['is_active' => ! $workflow->is_active, 'updated_by' => $request->user()->id]);
         $this->history($workflow, $request, $workflow->is_active ? 'activated' : 'deactivated', ['is_active' => $workflow->is_active]);
         return back()->with('success', $workflow->is_active ? 'Workflow diaktifkan.' : 'Workflow dinonaktifkan.');
