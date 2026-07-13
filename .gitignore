@@ -87,6 +87,12 @@ fonts/
 html/
 html-starter/
 js/
+!resources/js/
+resources/js/*
+!resources/js/Pages/
+resources/js/Pages/*
+!resources/js/Pages/Workflows/
+!resources/js/Pages/Workflows/*.vue
 libs/
 scss/
 scripts/
