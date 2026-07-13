@@ -7,6 +7,7 @@ use App\Models\Workflow;
 use App\Models\WorkflowInstance;
 use Database\Seeders\WorkflowSeeder;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\PermissionRegistrar;
 
@@ -154,6 +155,66 @@ test('workflow seeder creates ticket and task defaults idempotently', function (
         ->and(Workflow::query()->where('code', 'TASK_DEFAULT')->where('is_active', true)->exists())->toBeTrue()
         ->and(Workflow::query()->where('code', 'TICKET_DEFAULT')->first()->stages()->count())->toBe(7)
         ->and(Workflow::query()->where('code', 'TASK_DEFAULT')->first()->stages()->count())->toBe(7);
+});
+
+test('sync existing command backfills legacy statuses idempotently with scoped counts', function () {
+    $user = workflowUserWithRole('user');
+    $superadmin = workflowUserWithRole('superadmin');
+    $other = User::factory()->create();
+    $now = now();
+
+    DB::table('tickets')->insert([
+        ['ticket_no' => 'TCK-LEGACY-CLOSED', 'title' => 'Legacy closed ticket', 'status' => 'closed', 'requester_id' => $user->id, 'created_at' => $now, 'updated_at' => $now],
+        ['ticket_no' => 'TCK-LEGACY-OPEN', 'title' => 'Legacy open ticket', 'status' => 'open', 'requester_id' => $user->id, 'created_at' => $now, 'updated_at' => $now],
+        ['ticket_no' => 'TCK-LEGACY-PROGRESS', 'title' => 'Legacy progress ticket', 'status' => 'on_progress', 'requester_id' => $other->id, 'created_at' => $now, 'updated_at' => $now],
+    ]);
+    DB::table('tasks')->insert([
+        ['task_no' => 'TSK-LEGACY-COMPLETED', 'title' => 'Legacy completed task', 'status' => 'completed', 'created_by' => $user->id, 'created_at' => $now, 'updated_at' => $now],
+        ['task_no' => 'TSK-LEGACY-PENDING', 'title' => 'Legacy pending task', 'status' => 'pending', 'created_by' => $other->id, 'created_at' => $now, 'updated_at' => $now],
+        ['task_no' => 'TSK-LEGACY-CONF', 'title' => 'Legacy confirmation task', 'status' => 'CONF', 'created_by' => $other->id, 'created_at' => $now, 'updated_at' => $now],
+    ]);
+
+    expect(WorkflowInstance::query()->count())->toBe(0);
+    expect(Artisan::call('workflows:sync-existing'))->toBe(0);
+    expect(WorkflowInstance::query()->count())->toBe(6);
+    expect(Artisan::call('workflows:sync-existing'))->toBe(0);
+    expect(WorkflowInstance::query()->count())->toBe(6);
+
+    $expectedStages = [
+        'TCK-LEGACY-CLOSED' => 'done',
+        'TCK-LEGACY-OPEN' => 'new',
+        'TCK-LEGACY-PROGRESS' => 'in_progress',
+        'TSK-LEGACY-COMPLETED' => 'done',
+        'TSK-LEGACY-PENDING' => 'in_progress',
+        'TSK-LEGACY-CONF' => 'confirmation',
+    ];
+    foreach ($expectedStages as $number => $expectedStage) {
+        $subject = str_starts_with($number, 'TCK-')
+            ? Ticket::query()->where('ticket_no', $number)->firstOrFail()
+            : Task::query()->where('task_no', $number)->firstOrFail();
+        $instance = WorkflowInstance::query()
+            ->where('subject_type', $subject::class)
+            ->where('subject_id', $subject->id)
+            ->with('currentStage')
+            ->sole();
+        expect($instance->currentStage->status_key)->toBe($expectedStage);
+    }
+
+    $this->actingAs($user)->withHeaders(workflowInertiaHeaders())
+        ->get(route('workflows.index', ['locale' => 'id']))
+        ->assertOk()
+        ->assertJsonPath('props.summary.total', 3)
+        ->assertJsonPath('props.summary.completed', 2)
+        ->assertJsonCount(3, 'props.items.data');
+
+    $this->actingAs($superadmin)->withHeaders(workflowInertiaHeaders())
+        ->get(route('workflows.index', ['locale' => 'id']))
+        ->assertOk()
+        ->assertJsonPath('props.summary.total', 6)
+        ->assertJsonPath('props.summary.completed', 2)
+        ->assertJsonCount(6, 'props.items.data')
+        ->assertJsonFragment(['status_key' => 'in_progress', 'label' => 'In Progress', 'count' => 2])
+        ->assertJsonFragment(['status_key' => 'confirmation', 'label' => 'Confirmation', 'count' => 1]);
 });
 
 test('existing tickets and tasks use default workflows and follow status changes', function () {

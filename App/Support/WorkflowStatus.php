@@ -67,11 +67,16 @@ final class WorkflowStatus
 
     /** Legacy aliases map -> normalized status */
     private const ALIASES = [
+        'open' => self::NEW,
         'on_progress' => self::IN_PROGRESS,
         'inprogress' => self::IN_PROGRESS,
+        'inpr' => self::IN_PROGRESS,
         'pending' => self::IN_PROGRESS,
+        'conf' => self::CONFIRMATION,
+        'revs' => self::REVISION,
         'completed' => self::DONE,
         'complete' => self::DONE,
+        'closed' => self::DONE,
         'canc' => self::CANCELLED,
         'cancel' => self::CANCELLED,
         'hold' => self::ON_HOLD,
