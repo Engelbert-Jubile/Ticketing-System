@@ -107,6 +107,52 @@ class UnitVisibility
     });
 }
 
+    public static function scopeWorkflowTickets(Builder $query, ?User $user): Builder
+    {
+        if (! $user || RoleHelpers::userIsSuperAdmin($user)) {
+            return $query;
+        }
+
+        $userId = (int) $user->id;
+
+        return $query->where(function (Builder $ticketQuery) use ($userId) {
+            $ticketQuery->where('requester_id', $userId)
+                ->orWhere('agent_id', $userId)
+                ->orWhere('assigned_id', $userId)
+                ->orWhereHas('assignedUsers', fn (Builder $assignedQuery) => $assignedQuery->where('users.id', $userId))
+                ->orWhereHas('tasks', function (Builder $taskQuery) use ($userId) {
+                    $taskQuery->where('created_by', $userId)
+                        ->orWhere('assignee_id', $userId)
+                        ->orWhere(function (Builder $assignedQuery) use ($userId) {
+                            self::orWhereJsonAssignmentContains($assignedQuery, 'assigned_to', $userId);
+                        });
+                });
+        });
+    }
+
+    public static function scopeWorkflowTasks(Builder $query, ?User $user): Builder
+    {
+        if (! $user || RoleHelpers::userIsSuperAdmin($user)) {
+            return $query;
+        }
+
+        $userId = (int) $user->id;
+
+        return $query->where(function (Builder $taskQuery) use ($userId) {
+            $taskQuery->where('created_by', $userId)
+                ->orWhere('assignee_id', $userId)
+                ->orWhere(function (Builder $assignedQuery) use ($userId) {
+                    self::orWhereJsonAssignmentContains($assignedQuery, 'assigned_to', $userId);
+                })
+                ->orWhereHas('ticket', function (Builder $ticketQuery) use ($userId) {
+                    $ticketQuery->where('requester_id', $userId)
+                        ->orWhere('agent_id', $userId)
+                        ->orWhere('assigned_id', $userId)
+                        ->orWhereHas('assignedUsers', fn (Builder $assignedQuery) => $assignedQuery->where('users.id', $userId));
+                });
+        });
+    }
+
 
 
 

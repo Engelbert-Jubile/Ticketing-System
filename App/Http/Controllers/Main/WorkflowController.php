@@ -9,7 +9,9 @@ use App\Models\User;
 use App\Models\Workflow;
 use App\Models\WorkflowInstance;
 use App\Services\WorkflowRuntimeService;
+use App\Support\UnitVisibility;
 use App\Support\WorkflowStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,30 +32,29 @@ class WorkflowController extends Controller
             'status' => $request->string('status')->toString(),
         ];
         $filters['type'] = in_array($filters['type'], ['ticket', 'task'], true) ? $filters['type'] : '';
-        $filters['status'] = in_array($filters['status'], ['active', 'inactive'], true) ? $filters['status'] : '';
-        $canUpdate = $request->user()->can('update workflows');
-        $workflows = Workflow::query()
-            ->with([
-                'creator',
-                'stages' => fn ($query) => $query->withCount('instances'),
-            ])
-            ->withCount([
-                'stages',
-                'instances',
-                'instances as running_instances_count' => fn ($query) => $query->where('status', 'running'),
-                'instances as completed_instances_count' => fn ($query) => $query->where('status', 'completed'),
-            ])
-            ->when(! $canUpdate, fn ($q) => $q->where('is_active', true))
-            ->when($filters['search'] !== '', fn ($q) => $q->where(fn ($sub) => $sub
-                ->where('name', 'like', '%'.$filters['search'].'%')
-                ->orWhere('code', 'like', '%'.$filters['search'].'%')))
-            ->when($filters['type'] !== '', fn ($q) => $q->where('entity_type', $filters['type']))
-            ->when($filters['status'] !== '', fn ($q) => $q->where('is_active', $filters['status'] === 'active'))
-            ->latest('updated_at')->paginate(min(50, max(5, $request->integer('per_page', 10))))
-            ->withQueryString()->through(fn (Workflow $workflow) => $this->payload($workflow));
+        $filters['status'] = in_array($filters['status'], WorkflowStatus::all(), true) ? $filters['status'] : '';
+
+        $scopedItems = $this->scopedItemsQuery($request->user());
+        $this->applyItemFilters($scopedItems, $filters, false);
+        $summary = $this->itemSummary(clone $scopedItems);
+        $this->applyItemStatusFilter($scopedItems, $filters['status']);
+
+        $items = $this->withItemRelations($scopedItems)
+            ->latest('workflow_instances.updated_at')
+            ->paginate(min(50, max(5, $request->integer('per_page', 10))))
+            ->withQueryString();
+        $taskAssignees = User::query()
+            ->whereIn('id', $this->taskAssigneeIds($items->getCollection()))
+            ->get()
+            ->keyBy('id');
+        $locale = (string) $request->route('locale');
+        $items->through(
+            fn (WorkflowInstance $instance) => $this->instancePayload($instance, $locale, $taskAssignees)
+        );
 
         return Inertia::render('Workflows/Index', [
-            'workflows' => $workflows,
+            'items' => $items,
+            'summary' => $summary,
             'filters' => $filters,
             'can' => [
                 'create' => $request->user()->can('create workflows'),
@@ -90,30 +91,25 @@ class WorkflowController extends Controller
     {
         $this->authorize('view', $workflow);
         $workflow->load([
-            'stages' => fn ($query) => $query->with('responsibleUser')->withCount('instances'),
+            'stages.responsibleUser',
             'creator',
             'updater',
             'histories.actor',
-        ])->loadCount([
-            'instances',
-            'instances as running_instances_count' => fn ($query) => $query->where('status', 'running'),
-            'instances as completed_instances_count' => fn ($query) => $query->where('status', 'completed'),
         ]);
 
-        $subjectClass = $workflow->entity_type === 'ticket' ? Ticket::class : Task::class;
-        $instances = $workflow->instances()
-            ->where('subject_type', $subjectClass)
-            ->whereHasMorph('subject', [$subjectClass])
-            ->with([
-                'currentStage',
-                'subject' => function (MorphTo $morphTo): void {
-                    $morphTo->morphWith([
-                        Ticket::class => ['requester', 'agent', 'assignee', 'assignedUsers'],
-                        Task::class => ['requester', 'assignee'],
-                    ]);
-                },
-            ])
-            ->latest('updated_at')
+        $scopedItems = $this->scopedItemsQuery($request->user())
+            ->where('workflow_instances.workflow_id', $workflow->id);
+        $summary = $this->itemSummary(clone $scopedItems);
+        $stageCounts = collect($summary['stages'])->keyBy('status_key');
+        $workflow->setAttribute('instances_count', $summary['total']);
+        $workflow->setAttribute('running_instances_count', $summary['in_progress']);
+        $workflow->setAttribute('completed_instances_count', $summary['completed']);
+        $workflow->stages->each(function ($stage) use ($stageCounts): void {
+            $stage->setAttribute('instances_count', (int) data_get($stageCounts, $stage->status_key.'.count', 0));
+        });
+
+        $instances = $this->withItemRelations($scopedItems)
+            ->latest('workflow_instances.updated_at')
             ->paginate(10)
             ->withQueryString();
 
@@ -266,6 +262,113 @@ class WorkflowController extends Controller
         return $payload;
     }
 
+    private function scopedItemsQuery(User $user): Builder
+    {
+        return WorkflowInstance::query()->where(function (Builder $instanceQuery) use ($user) {
+            $instanceQuery
+                ->where(function (Builder $ticketInstances) use ($user) {
+                    $ticketInstances
+                        ->where('subject_type', Ticket::class)
+                        ->whereHasMorph('subject', [Ticket::class], function (Builder $ticketQuery) use ($user) {
+                            UnitVisibility::scopeWorkflowTickets($ticketQuery, $user);
+                        });
+                })
+                ->orWhere(function (Builder $taskInstances) use ($user) {
+                    $taskInstances
+                        ->where('subject_type', Task::class)
+                        ->whereHasMorph('subject', [Task::class], function (Builder $taskQuery) use ($user) {
+                            UnitVisibility::scopeWorkflowTasks($taskQuery, $user);
+                        });
+                });
+        });
+    }
+
+    private function applyItemFilters(Builder $query, array $filters, bool $includeStatus = true): void
+    {
+        if ($filters['type'] !== '') {
+            $query->where('subject_type', $filters['type'] === 'ticket' ? Ticket::class : Task::class);
+        }
+
+        if ($filters['search'] !== '') {
+            $search = '%'.$filters['search'].'%';
+            $query->where(function (Builder $searchQuery) use ($search) {
+                $searchQuery
+                    ->whereHasMorph('subject', [Ticket::class], function (Builder $ticketQuery) use ($search) {
+                        $ticketQuery->where(function (Builder $subjectQuery) use ($search) {
+                            $subjectQuery->where('title', 'like', $search)
+                                ->orWhere('ticket_no', 'like', $search)
+                                ->orWhereHas('requester', fn (Builder $userQuery) => $this->searchUser($userQuery, $search))
+                                ->orWhereHas('agent', fn (Builder $userQuery) => $this->searchUser($userQuery, $search))
+                                ->orWhereHas('assignee', fn (Builder $userQuery) => $this->searchUser($userQuery, $search))
+                                ->orWhereHas('assignedUsers', fn (Builder $userQuery) => $this->searchUser($userQuery, $search));
+                        });
+                    })
+                    ->orWhereHasMorph('subject', [Task::class], function (Builder $taskQuery) use ($search) {
+                        $taskQuery->where(function (Builder $subjectQuery) use ($search) {
+                            $subjectQuery->where('title', 'like', $search)
+                                ->orWhere('task_no', 'like', $search)
+                                ->orWhereHas('requester', fn (Builder $userQuery) => $this->searchUser($userQuery, $search))
+                                ->orWhereHas('assignee', fn (Builder $userQuery) => $this->searchUser($userQuery, $search));
+                        });
+                    });
+            });
+        }
+
+        if ($includeStatus) {
+            $this->applyItemStatusFilter($query, $filters['status']);
+        }
+    }
+
+    private function applyItemStatusFilter(Builder $query, string $status): void
+    {
+        if ($status !== '') {
+            $query->whereHas('currentStage', fn (Builder $stageQuery) => $stageQuery->where('status_key', $status));
+        }
+    }
+
+    private function searchUser(Builder $query, string $search): Builder
+    {
+        return $query->where(function (Builder $userQuery) use ($search) {
+            $userQuery->where('first_name', 'like', $search)
+                ->orWhere('last_name', 'like', $search)
+                ->orWhere('username', 'like', $search)
+                ->orWhere('email', 'like', $search);
+        });
+    }
+
+    private function itemSummary(Builder $query): array
+    {
+        $stageRows = (clone $query)
+            ->join('workflow_stages', 'workflow_stages.id', '=', 'workflow_instances.current_stage_id')
+            ->selectRaw('workflow_stages.status_key, COUNT(*) as aggregate')
+            ->groupBy('workflow_stages.status_key')
+            ->pluck('aggregate', 'status_key');
+
+        return [
+            'total' => (clone $query)->count(),
+            'in_progress' => (clone $query)->where('workflow_instances.status', 'running')->count(),
+            'completed' => (clone $query)->where('workflow_instances.status', 'completed')->count(),
+            'stages' => collect(WorkflowStatus::all())->map(fn (string $status) => [
+                'status_key' => $status,
+                'label' => WorkflowStatus::label($status),
+                'count' => (int) ($stageRows[$status] ?? 0),
+            ])->values(),
+        ];
+    }
+
+    private function withItemRelations(Builder $query): Builder
+    {
+        return $query->with([
+            'currentStage',
+            'subject' => function (MorphTo $morphTo): void {
+                $morphTo->morphWith([
+                    Ticket::class => ['requester', 'agent', 'assignee', 'assignedUsers'],
+                    Task::class => ['requester', 'assignee'],
+                ]);
+            },
+        ]);
+    }
+
     private function taskAssigneeIds($instances): array
     {
         return $instances
@@ -316,12 +419,14 @@ class WorkflowController extends Controller
             'id' => $instance->id,
             'number' => $number,
             'title' => $subject->title,
+            'type' => $isTicket ? 'ticket' : 'task',
             'requester' => $requester,
             'pic' => $pic->unique()->values()->implode(', ') ?: '—',
             'status' => $status,
             'status_label' => WorkflowStatus::label($status),
             'stage_name' => $instance->currentStage?->name ?? WorkflowStatus::label($status),
-            'date' => $subject->created_at?->toIso8601String(),
+            'updated_at' => $subject->updated_at?->toIso8601String(),
+            'date' => $subject->updated_at?->toIso8601String(),
             'detail_url' => $detailUrl,
         ];
     }
