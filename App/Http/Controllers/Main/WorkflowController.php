@@ -89,6 +89,105 @@ class WorkflowController extends Controller
         return redirect()->route('workflows.show', ['locale' => $request->route('locale'), 'workflow' => $workflow])->with('success', 'Workflow berhasil dibuat.');
     }
 
+    public function showInstance(Request $request, string $locale, WorkflowInstance $instance): Response
+    {
+        abort_unless($this->scopedItemsQuery($request->user())->whereKey($instance->id)->exists(), 403);
+        $instance->load([
+            'workflow.stages.responsibleUser',
+            'workflow.creator',
+            'workflow.updater',
+            'currentStage',
+            'histories.actor',
+            'subject' => function (MorphTo $morphTo): void {
+                $morphTo->morphWith([
+                    Ticket::class => ['requester', 'agent', 'assignee', 'assignedUsers', 'tasks'],
+                    Task::class => ['requester', 'assignee', 'ticket'],
+                ]);
+            },
+        ]);
+
+        $taskAssignees = User::query()
+            ->whereIn('id', $this->taskAssigneeIds(collect([$instance])))
+            ->get()
+            ->keyBy('id');
+        $item = $this->instancePayload($instance, $locale, $taskAssignees, $request->user());
+        $subject = $instance->subject;
+        $isTicket = $subject instanceof Ticket;
+        $targetDate = $isTicket ? ($subject->due_at ?? $subject->due_date) : ($subject->due_at ?? $subject->end_date);
+        $finishedAt = $isTicket ? ($subject->finish_at ?? $subject->finish_date) : $subject->completed_at;
+        $finishedAt = $finishedAt ? \Illuminate\Support\Carbon::parse($finishedAt) : null;
+        $sla = $isTicket ? $subject->sla : $subject->ticket?->sla;
+        $historyByStatus = $instance->histories->groupBy('to_status');
+        $currentPosition = (int) ($instance->currentStage?->position ?? 0);
+
+        $item['description'] = $subject->description;
+        $item['sla'] = [
+            'label' => $sla ?: 'Tidak ditentukan',
+            'started_at' => $instance->started_at?->toIso8601String(),
+            'target_at' => $targetDate?->toIso8601String(),
+            'finished_at' => $finishedAt?->toIso8601String(),
+            'state' => $instance->status === 'completed'
+                ? 'completed'
+                : ($instance->status === 'cancelled' ? 'cancelled' : ($targetDate?->isPast() ? 'overdue' : ($targetDate ? 'on_track' : 'not_set'))),
+        ];
+        $item['related'] = $isTicket ? [
+            'type' => $subject->type,
+            'reason' => $subject->reason,
+            'tasks_count' => $subject->tasks->count(),
+            'parent_number' => null,
+            'parent_title' => null,
+            'parent_url' => null,
+        ] : [
+            'type' => 'task',
+            'reason' => null,
+            'tasks_count' => null,
+            'parent_number' => $subject->ticket?->ticket_no,
+            'parent_title' => $subject->ticket?->title,
+            'parent_url' => $subject->ticket ? route('tickets.show', ['locale' => $locale, 'ticket' => $subject->ticket]) : null,
+        ];
+        $item['timeline'] = $instance->workflow->stages->map(function (WorkflowStage $stage) use ($instance, $historyByStatus, $currentPosition): array {
+            $entries = $historyByStatus->get($stage->status_key, collect())->sortBy('created_at');
+            $active = (int) $instance->current_stage_id === (int) $stage->id;
+            $reached = $active || $entries->isNotEmpty() || $stage->position < $currentPosition;
+            $leftAt = $instance->histories->first(fn ($history) => $history->from_status === $stage->status_key)?->created_at;
+
+            return [
+                'id' => $stage->id,
+                'position' => $stage->position,
+                'name' => $stage->name,
+                'status_key' => $stage->status_key,
+                'status_label' => WorkflowStatus::label($stage->status_key),
+                'responsible_role' => $stage->responsible_role,
+                'responsible_user' => $stage->responsibleUser?->display_name,
+                'is_required' => (bool) $stage->is_required,
+                'notes' => $stage->instructions,
+                'action_label' => $stage->action_label,
+                'state' => $active ? 'active' : ($reached ? 'completed' : 'pending'),
+                'entered_at' => ($active ? ($instance->stage_started_at ?? $entries->first()?->created_at ?? $instance->started_at) : $entries->first()?->created_at)?->toIso8601String(),
+                'completed_at' => $leftAt?->toIso8601String(),
+            ];
+        })->values();
+        $item['history'] = $instance->histories->map(fn ($history) => [
+            'id' => $history->id,
+            'event' => $history->event,
+            'actor_name' => $history->actor?->display_name ?? 'Sistem',
+            'from_status' => $history->from_status,
+            'to_status' => $history->to_status,
+            'from_stage' => $history->from_stage_name,
+            'to_stage' => $history->to_stage_name,
+            'metadata' => $history->metadata,
+            'created_at' => $history->created_at?->toIso8601String(),
+        ])->values();
+
+        return Inertia::render('Workflows/InstanceShow', [
+            'item' => $item,
+            'workflow' => [
+                ...$this->payload($instance->workflow),
+                'description' => $instance->workflow->description,
+            ],
+        ]);
+    }
+
     public function show(Request $request, string $locale, Workflow $workflow): Response
     {
         $this->authorize('view', $workflow);
@@ -534,7 +633,7 @@ class WorkflowController extends Controller
             'subject' => function (MorphTo $morphTo): void {
                 $morphTo->morphWith([
                     Ticket::class => ['requester', 'agent', 'assignee', 'assignedUsers'],
-                    Task::class => ['requester', 'assignee'],
+                    Task::class => ['requester', 'assignee', 'ticket'],
                 ]);
             },
         ]);
@@ -615,7 +714,8 @@ class WorkflowController extends Controller
             'updated_at' => $subject->updated_at?->toIso8601String(),
             'date' => $subject->updated_at?->toIso8601String(),
             'stage_started_at' => $instance->stage_started_at?->toIso8601String(),
-            'detail_url' => $detailUrl,
+            'detail_url' => route('workflows.instances.show', ['locale' => $locale, 'instance' => $instance]),
+            'related_url' => $detailUrl,
             'edit_url' => $editUrl,
             'status_options' => $statusOptions,
             'status_update_url' => route('workflows.instances.status', ['locale' => $locale, 'instance' => $instance]),

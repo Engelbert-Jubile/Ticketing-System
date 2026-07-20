@@ -34,6 +34,11 @@ beforeEach(function () {
         $table->string('title');
         $table->text('description')->nullable();
         $table->string('priority')->default('medium');
+        $table->date('due_date')->nullable();
+        $table->date('finish_date')->nullable();
+        $table->string('sla')->nullable();
+        $table->timestamp('due_at')->nullable();
+        $table->timestamp('finish_at')->nullable();
         $table->string('type')->default('incident');
         $table->string('status_id')->nullable();
         $table->string('status')->default('new');
@@ -538,4 +543,56 @@ test('active workflow edits preserve referenced stages and related records', fun
     expect($ticket->fresh())->not->toBeNull()
         ->and($instance->fresh()->current_stage_id)->toBe($first->id)
         ->and($workflow->fresh()->version)->toBe(2);
+});
+
+test('workflow instance detail is accurate responsive data and role scoped', function () {
+    Artisan::call('db:seed', ['--class' => WorkflowSeeder::class, '--force' => true]);
+    $user = workflowUserWithRole('user');
+    $unrelated = workflowUserWithRole('user');
+    $admin = workflowUserWithRole('admin');
+    $superadmin = workflowUserWithRole('superadmin');
+    $target = now()->addDay()->startOfMinute();
+    $ticket = Ticket::create([
+        'ticket_no' => 'TCK-DETAIL-001',
+        'title' => 'Workflow detail accuracy',
+        'description' => 'Detailed workflow runtime information.',
+        'status' => 'new',
+        'priority' => 'high',
+        'sla' => '1_day',
+        'due_at' => $target,
+        'requester_id' => $user->id,
+        'assigned_id' => $user->id,
+    ]);
+    $instance = $ticket->workflowInstances()->with(['workflow.stages', 'histories'])->sole();
+
+    $this->actingAs($user)->withHeaders(workflowInertiaHeaders())
+        ->get(route('workflows.instances.show', ['locale' => 'id', 'instance' => $instance]))
+        ->assertOk()
+        ->assertJsonPath('component', 'Workflows/InstanceShow')
+        ->assertJsonPath('props.item.number', 'TCK-DETAIL-001')
+        ->assertJsonPath('props.item.title', 'Workflow detail accuracy')
+        ->assertJsonPath('props.item.priority', 'high')
+        ->assertJsonPath('props.item.sla.label', '1_day')
+        ->assertJsonPath('props.item.sla.state', 'on_track')
+        ->assertJsonPath('props.item.timeline.0.state', 'active')
+        ->assertJsonPath('props.item.history.0.event', 'started')
+        ->assertJsonPath('props.item.can_update_workflow', false)
+        ->assertJsonPath('props.item.can_update_status', true)
+        ->assertJsonCount(7, 'props.item.timeline');
+
+    $this->actingAs($unrelated)
+        ->get(route('workflows.instances.show', ['locale' => 'id', 'instance' => $instance]))
+        ->assertForbidden();
+
+    $adminTicket = Ticket::create(['ticket_no' => 'TCK-DETAIL-ADMIN', 'title' => 'Admin detail', 'status' => 'new', 'requester_id' => $admin->id]);
+    $adminInstance = $adminTicket->workflowInstances()->sole();
+    $this->actingAs($admin)->withHeaders(workflowInertiaHeaders())
+        ->get(route('workflows.instances.show', ['locale' => 'id', 'instance' => $adminInstance]))
+        ->assertOk()
+        ->assertJsonPath('props.item.can_update_workflow', true);
+
+    $this->actingAs($superadmin)->withHeaders(workflowInertiaHeaders())
+        ->get(route('workflows.instances.show', ['locale' => 'id', 'instance' => $instance]))
+        ->assertOk()
+        ->assertJsonPath('props.item.can_update_workflow', true);
 });

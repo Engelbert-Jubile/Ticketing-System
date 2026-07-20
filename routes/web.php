@@ -312,6 +312,7 @@ Route::middleware($emailVerificationEnabled
         Route::get('/', [WorkflowController::class, 'index'])->middleware('permission:view workflows')->name('index');
         Route::get('/create', [WorkflowController::class, 'create'])->middleware('permission:create workflows')->name('create');
         Route::post('/', [WorkflowController::class, 'store'])->middleware('permission:create workflows')->name('store');
+        Route::get('/instances/{instance}', [WorkflowController::class, 'showInstance'])->middleware('permission:view workflows')->name('instances.show');
         Route::get('/{workflow}', [WorkflowController::class, 'show'])->middleware('permission:view workflows')->name('show');
         Route::get('/{workflow}/edit', [WorkflowController::class, 'edit'])->middleware('permission:update workflows')->name('edit');
         Route::put('/{workflow}', [WorkflowController::class, 'update'])->middleware('permission:update workflows')->name('update');
