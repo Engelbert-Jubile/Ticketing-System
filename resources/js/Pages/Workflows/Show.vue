@@ -33,6 +33,7 @@
 <script setup>
 import { Link, router, useForm, usePage } from '@inertiajs/vue3'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import axios from 'axios'
 import Dropdown from '../../Components/Dropdown.vue'; import AppLayout from '../../Layouts/AppLayout.vue'
 import WorkflowSelect from '../../Components/WorkflowSelect.vue'; import resolveRoute from '../../utils/resolveRoute'
 defineOptions({layout:AppLayout})
@@ -52,7 +53,7 @@ const moveStage=(index,direction)=>{const ids=props.workflow.stages.map(s=>s.id)
 const confirmStageDelete=stage=>confirmation.value={title:'Hapus tahap?',message:`Tahap “${stage.name}” akan dihapus dari definisi. Ticket dan Task tidak ikut terhapus.`,method:'delete',url:resolveRoute('workflows.stages.destroy',{workflow:props.workflow.slug,stage:stage.id})}
 const confirmWorkflow=action=>confirmation.value=action==='toggle'?{title:props.workflow.is_active?'Nonaktifkan workflow?':'Aktifkan workflow?',message:'Instance dan seluruh data terkait tetap dipertahankan.',method:'patch',url:resolveRoute('workflows.toggle',{workflow:props.workflow.slug})}:{title:'Hapus workflow?',message:'Penghapusan hanya diizinkan jika workflow belum pernah digunakan.',method:'delete',url:resolveRoute('workflows.destroy',{workflow:props.workflow.slug})}
 const runConfirmation=()=>{busy.value=true;const options={preserveScroll:true,onSuccess:()=>confirmation.value=null,onFinish:()=>busy.value=false};confirmation.value.method==='delete'?router.delete(confirmation.value.url,options):router.patch(confirmation.value.url,{},options)}
-const openRuntime=item=>{runtimeItem.value=item;runtimeForm.reset();runtimeForm.clearErrors()}; const saveRuntime=()=>runtimeForm.patch(runtimeItem.value.status_update_url,{preserveScroll:true,onSuccess:()=>runtimeItem.value=null})
+const openRuntime=item=>{runtimeItem.value=item;runtimeForm.reset();runtimeForm.clearErrors()}; const saveRuntime=async()=>{if(!runtimeItem.value||runtimeForm.processing)return;runtimeForm.clearErrors();runtimeForm.processing=true;try{const {data}=await axios.patch(runtimeItem.value.status_update_url,{status:runtimeForm.status},{headers:{Accept:'application/json'}});runtimeItem.value=null;notice.value={type:'success',message:data.message||'Status workflow berhasil diperbarui.'};router.reload({only:['workflow','instances'],preserveScroll:true,preserveState:true})}catch(error){const message=error.response?.data?.errors?.status?.[0]||error.response?.data?.message||'Status gagal diperbarui. Periksa transisi dan izin Anda.';runtimeForm.setError('status',message);notice.value={type:'error',message}}finally{runtimeForm.processing=false}}
 const operator=v=>({equals:'sama dengan',not_equals:'tidak sama dengan',contains:'mengandung'}[v]||v), labelStatus=v=>String(v).replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase()), progress=count=>`${props.workflow.total_items_count?Math.round(count/props.workflow.total_items_count*100):0}%`, formatDate=(v,time=true)=>v?new Intl.DateTimeFormat('id-ID',time?{dateStyle:'medium',timeStyle:'short'}:{dateStyle:'medium'}).format(new Date(v)):'—', statusClass=v=>v==='done'?'bg-emerald-50 text-emerald-700':v==='cancelled'?'bg-rose-50 text-rose-700':'bg-cyan-50 text-cyan-700'
 </script>
 

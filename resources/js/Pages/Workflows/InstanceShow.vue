@@ -33,6 +33,7 @@
 <script setup>
 import { Link, router, useForm, usePage } from '@inertiajs/vue3'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import axios from 'axios'
 import Dropdown from '../../Components/Dropdown.vue'
 import AppLayout from '../../Layouts/AppLayout.vue'
 import WorkflowSelect from '../../Components/WorkflowSelect.vue'
@@ -52,7 +53,7 @@ watch(() => [page.props.flash?.success, page.props.flash?.error], ([success, err
 onBeforeUnmount(() => { if (typeof document === 'undefined') return; document.documentElement.classList.remove('workflow-modal-open'); document.body.classList.remove('workflow-modal-open') })
 const openStatus = () => { statusForm.reset(); statusForm.clearErrors(); statusModal.value = true }
 const closeStatus = () => { if (!statusForm.processing) statusModal.value = false }
-const saveStatus = () => statusForm.patch(props.item.status_update_url, { preserveScroll: true, onSuccess: () => { statusModal.value = false }, onError: () => { notice.value = { type: 'error', message: 'Status gagal diperbarui. Periksa transisi dan izin Anda.' } } })
+const saveStatus = async () => { if (statusForm.processing) return; statusForm.clearErrors(); statusForm.processing = true; try { const { data } = await axios.patch(props.item.status_update_url, { status: statusForm.status }, { headers: { Accept: 'application/json' } }); statusModal.value = false; notice.value = { type: 'success', message: data.message || 'Status workflow berhasil diperbarui.' }; router.reload({ only: ['item', 'workflow'], preserveScroll: true, preserveState: true }) } catch (error) { const message = error.response?.data?.errors?.status?.[0] || error.response?.data?.message || 'Status gagal diperbarui. Periksa transisi dan izin Anda.'; statusForm.setError('status', message); notice.value = { type: 'error', message } } finally { statusForm.processing = false } }
 const confirmToggle = () => { confirmation.value = true }
 const toggleWorkflow = () => { toggleBusy.value = true; router.patch(props.item.workflow_toggle_url, {}, { preserveScroll: true, onSuccess: () => { confirmation.value = false }, onFinish: () => { toggleBusy.value = false } }) }
 const stageStateLabel = state => ({ active: 'Aktif', completed: 'Terlewati', pending: 'Menunggu' }[state] || state)

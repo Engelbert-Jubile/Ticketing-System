@@ -14,6 +14,7 @@ use App\Support\UnitVisibility;
 use App\Support\WorkflowStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -294,7 +295,7 @@ class WorkflowController extends Controller
         return redirect()->route('workflows.index', ['locale' => $locale])->with('success', 'Workflow berhasil dihapus.');
     }
 
-    public function updateInstanceStatus(Request $request, string $locale, string $instance): RedirectResponse
+    public function updateInstanceStatus(Request $request, string $locale, string $instance): JsonResponse|RedirectResponse
     {
         $instance = $this->resolveInstance($instance);
         abort_unless($this->scopedItemsQuery($request->user())->whereKey($instance->id)->exists(), 403);
@@ -315,6 +316,10 @@ class WorkflowController extends Controller
             throw ValidationException::withMessages(['status' => 'Tahap tujuan tidak tersedia pada workflow ini.']);
         }
         $subject->update(['status' => $to]);
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Status workflow berhasil diperbarui.']);
+        }
 
         return back()->with('success', 'Status workflow berhasil diperbarui.');
     }

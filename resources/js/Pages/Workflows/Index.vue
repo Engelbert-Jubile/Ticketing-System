@@ -53,6 +53,7 @@
 <script setup>
 import { Link, router, useForm, usePage } from '@inertiajs/vue3'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import axios from 'axios'
 import Dropdown from '../../Components/Dropdown.vue'
 import WorkflowSelect from '../../Components/WorkflowSelect.vue'
 import AppLayout from '../../Layouts/AppLayout.vue'
@@ -72,7 +73,7 @@ watch(() => [page.props.flash?.success, page.props.flash?.error], ([success, err
 const applyFilters = () => { loading.value = true; router.get(resolveRoute('workflows.index'), { search: search.value || undefined, type: type.value || undefined, status: status.value || undefined }, { preserveState: true, replace: true, onFinish: () => { loading.value = false } }) }
 const filterStage = value => { status.value = status.value === value ? '' : value; applyFilters() }
 const openStatus = item => { statusItem.value = item; statusForm.reset(); statusForm.clearErrors() }
-const submitStatus = () => statusForm.patch(statusItem.value.status_update_url, { preserveScroll: true, onSuccess: () => { statusItem.value = null }, onError: () => { notice.value = { type: 'error', message: 'Status gagal diperbarui. Periksa pilihan Anda.' } } })
+const submitStatus = async () => { if (!statusItem.value || statusForm.processing) return; statusForm.clearErrors(); statusForm.processing = true; try { const { data } = await axios.patch(statusItem.value.status_update_url, { status: statusForm.status }, { headers: { Accept: 'application/json' } }); statusItem.value = null; notice.value = { type: 'success', message: data.message || 'Status workflow berhasil diperbarui.' }; router.reload({ only: ['items', 'summary'], preserveScroll: true, preserveState: true }) } catch (error) { const message = error.response?.data?.errors?.status?.[0] || error.response?.data?.message || 'Status gagal diperbarui. Periksa pilihan Anda.'; statusForm.setError('status', message); notice.value = { type: 'error', message } } finally { statusForm.processing = false } }
 const confirmToggle = item => { confirmation.value = { title: item.workflow_active ? 'Nonaktifkan workflow?' : 'Aktifkan workflow?', message: `Perubahan berlaku pada definisi ${item.workflow_name} tanpa menghapus Ticket atau Task terkait.`, method: 'patch', url: item.workflow_toggle_url } }
 const confirmDelete = item => { confirmation.value = { title: 'Hapus workflow?', message: 'Workflow hanya dapat dihapus jika belum pernah digunakan. Data Ticket atau Task tidak akan dihapus.', method: 'delete', url: item.workflow_delete_url } }
 const runConfirmation = () => { processing.value = true; const options = { preserveScroll: true, onSuccess: () => { confirmation.value = null }, onFinish: () => { processing.value = false } }; confirmation.value.method === 'delete' ? router.delete(confirmation.value.url, options) : router.patch(confirmation.value.url, {}, options) }
