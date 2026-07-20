@@ -89,6 +89,9 @@ html-starter/
 js/
 !resources/js/
 resources/js/*
+!resources/js/Components/
+resources/js/Components/*
+!resources/js/Components/WorkflowSelect.vue
 !resources/js/Pages/
 resources/js/Pages/*
 !resources/js/Pages/Workflows/

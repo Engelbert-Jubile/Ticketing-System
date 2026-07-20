@@ -21,6 +21,7 @@ beforeEach(function () {
             'database/migrations/2026_07_13_000001_add_workflow_permissions.php',
             'database/migrations/2026_07_13_000002_repair_workflow_management_tables.php',
             'database/migrations/2026_07_20_000000_upgrade_workflow_runtime_audit.php',
+            'database/migrations/2026_07_20_120000_add_semantic_workflow_identifiers.php',
         ],
         '--force' => true,
     ]);
@@ -566,7 +567,7 @@ test('workflow instance detail is accurate responsive data and role scoped', fun
     $instance = $ticket->workflowInstances()->with(['workflow.stages', 'histories'])->sole();
 
     $this->actingAs($user)->withHeaders(workflowInertiaHeaders())
-        ->get(route('workflows.instances.show', ['locale' => 'id', 'instance' => $instance]))
+        ->get(route('workflows.instances.show', ['locale' => 'id', 'instance' => 'TCK-DETAIL-001']))
         ->assertOk()
         ->assertJsonPath('component', 'Workflows/InstanceShow')
         ->assertJsonPath('props.item.number', 'TCK-DETAIL-001')
@@ -581,18 +582,18 @@ test('workflow instance detail is accurate responsive data and role scoped', fun
         ->assertJsonCount(7, 'props.item.timeline');
 
     $this->actingAs($unrelated)
-        ->get(route('workflows.instances.show', ['locale' => 'id', 'instance' => $instance]))
+        ->get(route('workflows.instances.show', ['locale' => 'id', 'instance' => 'TCK-DETAIL-001']))
         ->assertForbidden();
 
     $adminTicket = Ticket::create(['ticket_no' => 'TCK-DETAIL-ADMIN', 'title' => 'Admin detail', 'status' => 'new', 'requester_id' => $admin->id]);
     $adminInstance = $adminTicket->workflowInstances()->sole();
     $this->actingAs($admin)->withHeaders(workflowInertiaHeaders())
-        ->get(route('workflows.instances.show', ['locale' => 'id', 'instance' => $adminInstance]))
+        ->get(route('workflows.instances.show', ['locale' => 'id', 'instance' => 'TCK-DETAIL-ADMIN']))
         ->assertOk()
         ->assertJsonPath('props.item.can_update_workflow', true);
 
     $this->actingAs($superadmin)->withHeaders(workflowInertiaHeaders())
-        ->get(route('workflows.instances.show', ['locale' => 'id', 'instance' => $instance]))
+        ->get(route('workflows.instances.show', ['locale' => 'id', 'instance' => 'TCK-DETAIL-001']))
         ->assertOk()
         ->assertJsonPath('props.item.can_update_workflow', true);
 });

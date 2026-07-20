@@ -89,9 +89,14 @@ class WorkflowController extends Controller
         return redirect()->route('workflows.show', ['locale' => $request->route('locale'), 'workflow' => $workflow])->with('success', 'Workflow berhasil dibuat.');
     }
 
-    public function showInstance(Request $request, string $locale, WorkflowInstance $instance): Response
+    public function showInstance(Request $request, string $locale, string $instance): Response|RedirectResponse
     {
+        $legacyIdentifier = ctype_digit($instance);
+        $instance = $this->resolveInstance($instance);
         abort_unless($this->scopedItemsQuery($request->user())->whereKey($instance->id)->exists(), 403);
+        if ($legacyIdentifier) {
+            return redirect()->route('workflows.instances.show', ['locale' => $locale, 'instance' => $this->instancePublicIdentifier($instance)]);
+        }
         $instance->load([
             'workflow.stages.responsibleUser',
             'workflow.creator',
@@ -188,6 +193,13 @@ class WorkflowController extends Controller
         ]);
     }
 
+    public function legacyWorkflow(Request $request, string $locale, string $workflow): RedirectResponse
+    {
+        $definition = Workflow::withTrashed()->where('uuid', $workflow)->orWhere('id', $workflow)->firstOrFail();
+        $this->authorize('view', $definition);
+
+        return redirect()->route('workflows.show', ['locale' => $locale, 'workflow' => $definition]);
+    }
     public function show(Request $request, string $locale, Workflow $workflow): Response
     {
         $this->authorize('view', $workflow);
@@ -282,8 +294,9 @@ class WorkflowController extends Controller
         return redirect()->route('workflows.index', ['locale' => $locale])->with('success', 'Workflow berhasil dihapus.');
     }
 
-    public function updateInstanceStatus(Request $request, string $locale, WorkflowInstance $instance): RedirectResponse
+    public function updateInstanceStatus(Request $request, string $locale, string $instance): RedirectResponse
     {
+        $instance = $this->resolveInstance($instance);
         abort_unless($this->scopedItemsQuery($request->user())->whereKey($instance->id)->exists(), 403);
         $instance->load(['workflow.stages', 'currentStage', 'subject']);
         abort_unless($instance->workflow?->is_active, 422, 'Workflow sedang nonaktif.');
@@ -493,7 +506,7 @@ class WorkflowController extends Controller
     {
         $display = fn ($user) => $user?->display_name ?? 'Sistem';
         $payload = [
-            'uuid' => $workflow->uuid, 'name' => $workflow->name, 'code' => $workflow->code, 'entity_type' => $workflow->entity_type,
+            'uuid' => $workflow->uuid, 'slug' => $workflow->slug, 'name' => $workflow->name, 'code' => $workflow->code, 'entity_type' => $workflow->entity_type,
             'description' => $workflow->description, 'trigger_conditions' => $workflow->trigger_conditions ?? [], 'is_active' => $workflow->is_active,
             'version' => $workflow->version, 'stages_count' => $workflow->stages_count ?? ($workflow->relationLoaded('stages') ? $workflow->stages->count() : 0),
             'instances_count' => $workflow->instances_count ?? 0, 'creator_name' => $display($workflow->creator), 'updater_name' => $display($workflow->updater),
@@ -531,6 +544,27 @@ class WorkflowController extends Controller
         return $payload;
     }
 
+    private function resolveInstance(string $identifier): WorkflowInstance
+    {
+        $query = WorkflowInstance::query();
+        if (ctype_digit($identifier)) {
+            return $query->findOrFail((int) $identifier);
+        }
+
+        return $query->where(function (Builder $builder) use ($identifier): void {
+            $builder->whereHasMorph('subject', [Ticket::class], fn (Builder $subject) => $subject->where('ticket_no', $identifier))
+                ->orWhereHasMorph('subject', [Task::class], fn (Builder $subject) => $subject->where('task_no', $identifier));
+        })->firstOrFail();
+    }
+
+    private function instancePublicIdentifier(WorkflowInstance $instance): string
+    {
+        $instance->loadMissing('subject');
+
+        return $instance->subject instanceof Ticket
+            ? ($instance->subject->ticket_no ?: (string) $instance->id)
+            : ($instance->subject->task_no ?: (string) $instance->id);
+    }
     private function scopedItemsQuery(User $user): Builder
     {
         return WorkflowInstance::query()->where(function (Builder $instanceQuery) use ($user) {
@@ -697,6 +731,7 @@ class WorkflowController extends Controller
         return [
             'id' => $instance->id,
             'workflow_uuid' => $instance->workflow?->uuid,
+            'workflow_slug' => $instance->workflow?->slug,
             'workflow_name' => $instance->workflow?->name,
             'workflow_active' => (bool) $instance->workflow?->is_active,
             'number' => $number,
@@ -714,11 +749,11 @@ class WorkflowController extends Controller
             'updated_at' => $subject->updated_at?->toIso8601String(),
             'date' => $subject->updated_at?->toIso8601String(),
             'stage_started_at' => $instance->stage_started_at?->toIso8601String(),
-            'detail_url' => route('workflows.instances.show', ['locale' => $locale, 'instance' => $instance]),
+            'detail_url' => route('workflows.instances.show', ['locale' => $locale, 'instance' => $number]),
             'related_url' => $detailUrl,
             'edit_url' => $editUrl,
             'status_options' => $statusOptions,
-            'status_update_url' => route('workflows.instances.status', ['locale' => $locale, 'instance' => $instance]),
+            'status_update_url' => route('workflows.instances.status', ['locale' => $locale, 'instance' => $number]),
             'can_view_workflow' => $viewer->can('view', $instance->workflow),
             'can_edit' => $viewer->can($isTicket ? 'update tickets' : 'update tasks'),
             'can_update_status' => $statusOptions->isNotEmpty(),

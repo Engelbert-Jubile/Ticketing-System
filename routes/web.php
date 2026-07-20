@@ -5,9 +5,9 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\GeminiAIController;
 use App\Http\Controllers\Main\AccountController;
 use App\Http\Controllers\Main\AttachmentController;
-/* ─────────────────────────────────────────────────────────
+/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
  |  Controllers
- ───────────────────────────────────────────────────────── */
+ Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 use App\Http\Controllers\Main\AttachmentUploadController;
 use App\Http\Controllers\Main\DashboardController;
 use App\Http\Controllers\Main\ProfileController;
@@ -128,9 +128,9 @@ Route::group([
     'where' => ['locale' => 'en|id'],
 ], function () use ($emailVerificationEnabled, $publicWelcomeProps) {
 
-/* ─────────────────────────────────────────────────────────
+/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
  |  PUBLIC ROUTES
- ───────────────────────────────────────────────────────── */
+ Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 
 Route::get('/', function (Request $request) use ($publicWelcomeProps) {
     return $request->user()
@@ -155,7 +155,7 @@ Route::get('/inertia-health', function () {
     return Inertia::render('Health/Ok', ['msg' => 'Inertia alive']);
 })->name('inertia.health');
 
-/* 🔐 Auth (Login & Register) — hanya untuk guest */
+/* Ã°Å¸â€Â Auth (Login & Register) Ã¢â‚¬â€ hanya untuk guest */
 Route::middleware('guest')->group(function () {
     Route::view('/login', 'auth.login')->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.store');
@@ -167,7 +167,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [AuthController::class, 'register'])->name('register.store');
 });
 
-/* 📧 Email Verification */
+/* Ã°Å¸â€œÂ§ Email Verification */
 if ($emailVerificationEnabled) {
 Route::middleware('auth')->group(function () {
     Route::get('/email/verify', fn () => Inertia::render('Auth/VerifyEmail'))
@@ -204,30 +204,30 @@ Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)
     })->name('verification.notice');
 }
 
-/* ─────────────────────────────────────────────────────────
+/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
  |  PROTECTED ROUTES  (auth)
- ───────────────────────────────────────────────────────── */
+ Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 Route::middleware($emailVerificationEnabled
     ? ['auth', 'verified', 'idle.timeout', 'access.restrict']
     : ['auth', 'idle.timeout', 'access.restrict']
 )->group(function () {
 
-    /* 📊 Dashboard Home */
+    /* Ã°Å¸â€œÅ  Dashboard Home */
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/unit-reports', [UnitReportsController::class, 'index'])->name('dashboard.unit-reports');
 
-    /* 🤖 Gemini AI Assistant */
+    /* Ã°Å¸Â¤â€“ Gemini AI Assistant */
     Route::post('/dashboard/ai/gemini', [GeminiAIController::class, 'respond'])->name('ai.gemini.chat');
 
-    /* 🔍 Global Search */
+    /* Ã°Å¸â€Â Global Search */
     Route::get('/search', [SearchController::class, 'index'])->name('search');
 
-    /* 👤 Profil user */
+    /* Ã°Å¸â€˜Â¤ Profil user */
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    /* 🎫 Tickets */
+    /* Ã°Å¸Å½Â« Tickets */
     Route::prefix('dashboard/tickets')->name('tickets.')->group(function () {
         Route::get('/', [TicketController::class, 'index'])->name('index');
         Route::get('/create', [TicketController::class, 'create'])->name('create');
@@ -249,7 +249,7 @@ Route::middleware($emailVerificationEnabled
         Route::put('/{ticket}/attachments', [TicketController::class, 'updateAttachments'])->name('attachments.update');
     });
 
-    // 🔔 Notifications
+    // Ã°Å¸â€â€ Notifications
     Route::prefix('dashboard/notifications')->name('notifications.')->group(function () {
         Route::post('/read-all', [\App\Http\Controllers\NotificationController::class, 'readAll'])->name('read-all');
         Route::post('/{id}/read', [\App\Http\Controllers\NotificationController::class, 'read'])->name('read');
@@ -257,7 +257,7 @@ Route::middleware($emailVerificationEnabled
         Route::delete('/{id}', [\App\Http\Controllers\NotificationController::class, 'destroy'])->name('destroy');
     });
 
-    /* 📋 Tasks */
+    /* Ã°Å¸â€œâ€¹ Tasks */
     Route::prefix('dashboard/tasks')->name('tasks.')->group(function () {
         Route::get('/', [TaskController::class, 'index'])->name('index');
         Route::get('/create', [TaskController::class, 'create'])->name('create');
@@ -280,7 +280,7 @@ Route::middleware($emailVerificationEnabled
         Route::post('/{task}/promote', [TaskController::class, 'promoteToProject'])->name('promote');
     });
 
-    /* 🗂 Projects */
+    /* Ã°Å¸â€”â€š Projects */
     Route::prefix('dashboard/projects')->name('projects.')->group(function () {
         Route::get('/', [ProjectController::class, 'index'])->name('index');
         Route::get('/create', [ProjectController::class, 'create'])->name('create');
@@ -302,37 +302,40 @@ Route::middleware($emailVerificationEnabled
         Route::delete('/{project}', [ProjectController::class, 'destroy'])->name('destroy');
     });
 
-    /* 📈 Reports */
+    /* Ã°Å¸â€œË† Reports */
     Route::prefix('dashboard/reports')->name('reports.')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('index');
     });
 
-    /* 🔀 Workflow Management */
+    /* Workflow Management */
     Route::prefix('dashboard/workflows')->name('workflows.')->group(function () {
         Route::get('/', [WorkflowController::class, 'index'])->middleware('permission:view workflows')->name('index');
         Route::get('/create', [WorkflowController::class, 'create'])->middleware('permission:create workflows')->name('create');
         Route::post('/', [WorkflowController::class, 'store'])->middleware('permission:create workflows')->name('store');
         Route::get('/instances/{instance}', [WorkflowController::class, 'showInstance'])->middleware('permission:view workflows')->name('instances.show');
-        Route::get('/{workflow}', [WorkflowController::class, 'show'])->middleware('permission:view workflows')->name('show');
-        Route::get('/{workflow}/edit', [WorkflowController::class, 'edit'])->middleware('permission:update workflows')->name('edit');
-        Route::put('/{workflow}', [WorkflowController::class, 'update'])->middleware('permission:update workflows')->name('update');
         Route::patch('/instances/{instance}/status', [WorkflowController::class, 'updateInstanceStatus'])->middleware('permission:view workflows')->name('instances.status');
-        Route::post('/{workflow}/stages', [WorkflowController::class, 'storeStage'])->middleware('permission:update workflows')->name('stages.store');
-        Route::put('/{workflow}/stages/{stage}', [WorkflowController::class, 'updateStage'])->middleware('permission:update workflows')->name('stages.update');
-        Route::delete('/{workflow}/stages/{stage}', [WorkflowController::class, 'destroyStage'])->middleware('permission:update workflows')->name('stages.destroy');
-        Route::patch('/{workflow}/stages/reorder', [WorkflowController::class, 'reorderStages'])->middleware('permission:update workflows')->name('stages.reorder');
-        Route::patch('/{workflow}/toggle', [WorkflowController::class, 'toggle'])->middleware('permission:toggle workflows')->name('toggle');
-        Route::delete('/{workflow}', [WorkflowController::class, 'destroy'])->middleware('permission:delete workflows')->name('destroy');
+        Route::prefix('definitions')->group(function () {
+            Route::get('/{workflow}', [WorkflowController::class, 'show'])->middleware('permission:view workflows')->name('show');
+            Route::get('/{workflow}/edit', [WorkflowController::class, 'edit'])->middleware('permission:update workflows')->name('edit');
+            Route::put('/{workflow}', [WorkflowController::class, 'update'])->middleware('permission:update workflows')->name('update');
+            Route::post('/{workflow}/stages', [WorkflowController::class, 'storeStage'])->middleware('permission:update workflows')->name('stages.store');
+            Route::put('/{workflow}/stages/{stage}', [WorkflowController::class, 'updateStage'])->middleware('permission:update workflows')->name('stages.update');
+            Route::delete('/{workflow}/stages/{stage}', [WorkflowController::class, 'destroyStage'])->middleware('permission:update workflows')->name('stages.destroy');
+            Route::patch('/{workflow}/stages/reorder', [WorkflowController::class, 'reorderStages'])->middleware('permission:update workflows')->name('stages.reorder');
+            Route::patch('/{workflow}/toggle', [WorkflowController::class, 'toggle'])->middleware('permission:toggle workflows')->name('toggle');
+            Route::delete('/{workflow}', [WorkflowController::class, 'destroy'])->middleware('permission:delete workflows')->name('destroy');
+        });
+        Route::get('/{workflow}', [WorkflowController::class, 'legacyWorkflow'])->middleware('permission:view workflows')->name('legacy.show');
     });
 
-    /* ⏱ SLA Reports */
+    /* Ã¢ÂÂ± SLA Reports */
     Route::prefix('dashboard/sla')->group(function () {
         Route::get('/', [SLAReportController::class, 'index'])->name('dashboard.sla');
         Route::get('/download', [SLAReportController::class, 'download'])->name('sla.download');
         Route::get('/{type}/{id}/pdf', [SLAReportController::class, 'downloadDetail'])->name('sla.detail.download');
     });
 
-    /* ⚙️ Settings */
+    /* Ã¢Å¡â„¢Ã¯Â¸Â Settings */
     Route::prefix('dashboard/settings')
         ->middleware('superadmin')
         ->group(function () {
@@ -358,7 +361,7 @@ Route::middleware($emailVerificationEnabled
     Route::post('/dashboard/settings/impersonate/stop', [SettingsController::class, 'stopImpersonate'])
         ->name('settings.impersonate.stop');
 
-    /* 👥 Users (ADMIN) */
+    /* Ã°Å¸â€˜Â¥ Users (ADMIN) */
     Route::prefix('dashboard/users')
         ->name('users.')
         ->middleware('can:viewAny,App\Models\User')
@@ -373,7 +376,7 @@ Route::middleware($emailVerificationEnabled
             Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
         });
 
-    /* ⚙️ Account */
+    /* Ã¢Å¡â„¢Ã¯Â¸Â Account */
     Route::prefix('dashboard/account')->name('account.')->group(function () {
         Route::get('/profile', [AccountController::class, 'profile'])->name('profile');
         Route::put('/profile', [AccountController::class, 'updateProfile'])->name('update-profile');
@@ -381,7 +384,7 @@ Route::middleware($emailVerificationEnabled
         Route::put('/change-password', [AccountController::class, 'updatePassword'])->name('password.update');
     });
 
-    /* 🚪 Logout (POST utama + GET fallback) */
+    /* Ã°Å¸Å¡Âª Logout (POST utama + GET fallback) */
     Route::post('/logout', [AuthController::class, 'logout'])
         ->withoutMiddleware(['verified'])
         ->name('logout');
@@ -391,10 +394,10 @@ Route::middleware($emailVerificationEnabled
         ->name('logout.get');
 });
 
-/* ─────────────────────────────────────────────────────────
- |  ATTACHMENTS (FilePond) — auth saja (tanpa verified)
+/* Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+ |  ATTACHMENTS (FilePond) Ã¢â‚¬â€ auth saja (tanpa verified)
  |  Agar request dari FilePond tidak gagal karena email belum verified.
- ───────────────────────────────────────────────────────── */
+ Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 Route::middleware(['auth'])
     ->prefix('dashboard/attachments')
     ->name('attachments.')

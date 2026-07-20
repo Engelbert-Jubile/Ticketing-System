@@ -12,7 +12,7 @@ class Workflow extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['uuid', 'name', 'code', 'entity_type', 'description', 'trigger_conditions', 'is_active', 'version', 'created_by', 'updated_by'];
+    protected $fillable = ['uuid', 'slug', 'name', 'code', 'entity_type', 'description', 'trigger_conditions', 'is_active', 'version', 'created_by', 'updated_by'];
 
     protected $casts = ['trigger_conditions' => 'array', 'is_active' => 'boolean', 'version' => 'integer'];
 
@@ -20,14 +20,26 @@ class Workflow extends Model
     {
         static::creating(function (Workflow $workflow) {
             $workflow->uuid ??= (string) Str::uuid();
+            $workflow->slug ??= static::uniqueSlug($workflow->name ?: $workflow->code);
         });
     }
 
     public function getRouteKeyName(): string
     {
-        return 'uuid';
+        return 'slug';
     }
 
+    private static function uniqueSlug(string $value): string
+    {
+        $base = Str::slug($value) ?: 'workflow';
+        $slug = $base;
+        $suffix = 2;
+        while (static::withTrashed()->where('slug', $slug)->exists()) {
+            $slug = $base.'-'.$suffix++;
+        }
+
+        return $slug;
+    }
     public function stages(): HasMany
     {
         return $this->hasMany(WorkflowStage::class)->orderBy('position');
