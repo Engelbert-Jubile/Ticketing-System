@@ -20,6 +20,7 @@ beforeEach(function () {
             'database/migrations/2026_07_13_000000_create_workflow_management_tables.php',
             'database/migrations/2026_07_13_000001_add_workflow_permissions.php',
             'database/migrations/2026_07_13_000002_repair_workflow_management_tables.php',
+            'database/migrations/2026_07_20_000000_upgrade_workflow_runtime_audit.php',
         ],
         '--force' => true,
     ]);
@@ -138,7 +139,7 @@ test('user can browse index and view active workflow only', function () {
 
     $this->actingAs($user)
         ->get(route('workflows.show', ['locale' => 'id', 'workflow' => $active]))
-        ->assertOk();
+        ->assertForbidden();
 
     $this->actingAs($user)
         ->get(route('workflows.show', ['locale' => 'id', 'workflow' => $inactive]))
@@ -451,4 +452,90 @@ test('superadmin can browse view create update toggle and delete workflows', fun
         ->assertRedirect(route('workflows.index', ['locale' => 'id']));
 
     expect($workflow->fresh()->trashed())->toBeTrue();
+});
+
+test('related runtime actions enforce transitions scope and audit history', function () {
+    Artisan::call('db:seed', ['--class' => WorkflowSeeder::class, '--force' => true]);
+    $actor = workflowUserWithRole('user');
+    $unrelated = workflowUserWithRole('user');
+    $ticket = Ticket::create([
+        'ticket_no' => 'TCK-RUNTIME-001',
+        'title' => 'Runtime transition',
+        'status' => 'new',
+        'requester_id' => $actor->id,
+        'assigned_id' => $actor->id,
+    ]);
+    $instance = $ticket->workflowInstances()->with('currentStage')->sole();
+
+    $this->actingAs($actor)->patch(route('workflows.instances.status', [
+        'locale' => 'id', 'instance' => $instance,
+    ]), ['status' => 'in_progress'])->assertRedirect();
+
+    expect($ticket->fresh()->status)->toBe('in_progress')
+        ->and($instance->fresh()->currentStage->status_key)->toBe('in_progress')
+        ->and($instance->histories()->where('event', 'status_changed')->exists())->toBeTrue();
+
+    $this->actingAs($actor)->patch(route('workflows.instances.status', [
+        'locale' => 'id', 'instance' => $instance,
+    ]), ['status' => 'done'])->assertSessionHasErrors('status');
+    expect($ticket->fresh()->status)->toBe('in_progress');
+
+    $this->actingAs($unrelated)->patch(route('workflows.instances.status', [
+        'locale' => 'id', 'instance' => $instance,
+    ]), ['status' => 'confirmation'])->assertForbidden();
+});
+
+test('admin manages stages safely while users remain forbidden', function () {
+    $admin = workflowUserWithRole('admin');
+    $user = workflowUserWithRole('user');
+    $workflow = Workflow::create(['name' => 'Safe Flow', 'code' => 'SAFE_FLOW', 'entity_type' => 'ticket', 'is_active' => true]);
+    $first = $workflow->stages()->create(['position' => 1, 'name' => 'New', 'status_key' => 'new', 'is_required' => true]);
+    $workflow->stages()->create(['position' => 2, 'name' => 'Done', 'status_key' => 'done', 'is_required' => true]);
+
+    $stagePayload = [
+        'position' => 2, 'name' => 'Confirmation', 'status_key' => 'confirmation',
+        'responsible_role' => 'admin', 'responsible_user_id' => null,
+        'is_required' => true, 'action_label' => 'Confirm', 'instructions' => null,
+    ];
+    $this->actingAs($user)->post(route('workflows.stages.store', ['locale' => 'id', 'workflow' => $workflow]), $stagePayload)->assertForbidden();
+    $this->actingAs($admin)->post(route('workflows.stages.store', ['locale' => 'id', 'workflow' => $workflow]), $stagePayload)->assertRedirect();
+    $added = $workflow->stages()->where('status_key', 'confirmation')->sole();
+
+    $this->actingAs($admin)->put(route('workflows.stages.update', ['locale' => 'id', 'workflow' => $workflow, 'stage' => $added]), [
+        ...$stagePayload, 'name' => 'Quality Confirmation',
+    ])->assertRedirect();
+    expect($added->fresh()->name)->toBe('Quality Confirmation');
+
+    $orderedIds = [$added->id, $first->id, $workflow->stages()->where('status_key', 'done')->value('id')];
+    $this->actingAs($admin)->patch(route('workflows.stages.reorder', ['locale' => 'id', 'workflow' => $workflow]), ['stage_ids' => $orderedIds])->assertRedirect();
+    expect($workflow->stages()->pluck('id')->all())->toBe($orderedIds);
+
+    $this->actingAs($admin)->delete(route('workflows.stages.destroy', ['locale' => 'id', 'workflow' => $workflow, 'stage' => $added]))->assertRedirect();
+    expect($workflow->stages()->count())->toBe(2)
+        ->and($workflow->histories()->whereIn('event', ['stage_created', 'stage_updated', 'stages_reordered', 'stage_deleted'])->count())->toBe(4);
+});
+
+test('active workflow edits preserve referenced stages and related records', function () {
+    $superadmin = workflowUserWithRole('superadmin');
+    $workflow = Workflow::create(['name' => 'Versioned Flow', 'code' => 'VERSIONED_FLOW', 'entity_type' => 'ticket', 'is_active' => true]);
+    $first = $workflow->stages()->create(['position' => 1, 'name' => 'New', 'status_key' => 'new', 'is_required' => true]);
+    $last = $workflow->stages()->create(['position' => 2, 'name' => 'Done', 'status_key' => 'done', 'is_required' => true]);
+    $ticket = Ticket::create(['ticket_no' => 'TCK-SAFE-001', 'title' => 'Must survive', 'status' => 'new', 'requester_id' => $superadmin->id]);
+    $instance = WorkflowInstance::query()->where('subject_id', $ticket->id)->first();
+    if (! $instance || $instance->workflow_id !== $workflow->id) {
+        $instance?->delete();
+        $instance = WorkflowInstance::create(['workflow_id' => $workflow->id, 'workflow_version' => 1, 'subject_type' => Ticket::class, 'subject_id' => $ticket->id, 'current_stage_id' => $first->id, 'status' => 'running']);
+    }
+
+    $this->actingAs($superadmin)->put(route('workflows.update', ['locale' => 'id', 'workflow' => $workflow]), workflowPayload([
+        'name' => 'Versioned Flow Updated', 'code' => 'VERSIONED_FLOW',
+        'stages' => [
+            ['id' => $first->id, 'name' => 'New Queue', 'status_key' => 'new', 'responsible_role' => null, 'responsible_user_id' => null, 'is_required' => true, 'action_label' => null, 'instructions' => null],
+            ['id' => $last->id, 'name' => 'Done', 'status_key' => 'done', 'responsible_role' => null, 'responsible_user_id' => null, 'is_required' => true, 'action_label' => null, 'instructions' => null],
+        ],
+    ]))->assertRedirect();
+
+    expect($ticket->fresh())->not->toBeNull()
+        ->and($instance->fresh()->current_stage_id)->toBe($first->id)
+        ->and($workflow->fresh()->version)->toBe(2);
 });

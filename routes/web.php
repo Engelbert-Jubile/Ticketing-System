@@ -315,6 +315,11 @@ Route::middleware($emailVerificationEnabled
         Route::get('/{workflow}', [WorkflowController::class, 'show'])->middleware('permission:view workflows')->name('show');
         Route::get('/{workflow}/edit', [WorkflowController::class, 'edit'])->middleware('permission:update workflows')->name('edit');
         Route::put('/{workflow}', [WorkflowController::class, 'update'])->middleware('permission:update workflows')->name('update');
+        Route::patch('/instances/{instance}/status', [WorkflowController::class, 'updateInstanceStatus'])->middleware('permission:view workflows')->name('instances.status');
+        Route::post('/{workflow}/stages', [WorkflowController::class, 'storeStage'])->middleware('permission:update workflows')->name('stages.store');
+        Route::put('/{workflow}/stages/{stage}', [WorkflowController::class, 'updateStage'])->middleware('permission:update workflows')->name('stages.update');
+        Route::delete('/{workflow}/stages/{stage}', [WorkflowController::class, 'destroyStage'])->middleware('permission:update workflows')->name('stages.destroy');
+        Route::patch('/{workflow}/stages/reorder', [WorkflowController::class, 'reorderStages'])->middleware('permission:update workflows')->name('stages.reorder');
         Route::patch('/{workflow}/toggle', [WorkflowController::class, 'toggle'])->middleware('permission:toggle workflows')->name('toggle');
         Route::delete('/{workflow}', [WorkflowController::class, 'destroy'])->middleware('permission:delete workflows')->name('destroy');
     });

@@ -36,13 +36,25 @@ class WorkflowRuntimeService
 
             $instance = WorkflowInstance::create([
                 'workflow_id' => $workflow->id,
+                'workflow_version' => $workflow->version,
                 'subject_type' => $subject::class,
                 'subject_id' => $subject->getKey(),
                 'current_stage_id' => $first->id,
                 'status' => 'running',
                 'started_at' => now(),
+                'stage_started_at' => now(),
             ]);
             $instance->setRelation('workflow', $workflow);
+            if (Schema::hasTable('workflow_instance_histories')) {
+                $instance->histories()->create([
+                    'workflow_id' => $workflow->id,
+                    'user_id' => \Illuminate\Support\Facades\Auth::id(),
+                    'event' => 'started',
+                    'to_status' => $first->status_key,
+                    'to_stage_name' => $first->name,
+                    'metadata' => ['workflow_version' => $workflow->version],
+                ]);
+            }
         }
 
         $status = WorkflowStatus::normalize((string) ($subject->status ?? ''));
@@ -55,11 +67,28 @@ class WorkflowRuntimeService
 
         $completed = $status === WorkflowStatus::DONE;
         $cancelled = $status === WorkflowStatus::CANCELLED;
+        $previousStage = $instance->currentStage;
+        $stageChanged = (int) $instance->current_stage_id !== (int) $stage->id;
         $instance->update([
             'current_stage_id' => $stage->id,
+            'workflow_version' => $instance->workflow->version,
             'status' => $completed ? 'completed' : ($cancelled ? 'cancelled' : 'running'),
+            'stage_started_at' => $stageChanged ? now() : ($instance->stage_started_at ?? $instance->started_at),
             'completed_at' => $completed ? ($instance->completed_at ?? now()) : null,
         ]);
+
+        if ($stageChanged && \Illuminate\Support\Facades\Schema::hasTable('workflow_instance_histories')) {
+            $instance->histories()->create([
+                'workflow_id' => $instance->workflow_id,
+                'user_id' => \Illuminate\Support\Facades\Auth::id(),
+                'event' => 'status_changed',
+                'from_status' => $previousStage?->status_key,
+                'to_status' => $stage->status_key,
+                'from_stage_name' => $previousStage?->name,
+                'to_stage_name' => $stage->name,
+                'metadata' => ['workflow_version' => $instance->workflow->version],
+            ]);
+        }
     }
 
     public function syncExisting(): array

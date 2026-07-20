@@ -160,6 +160,28 @@ final class WorkflowStatus
         return self::NEW;
     }
 
+    /** @return string[] */
+    public static function allowedTransitions(string $status): array
+    {
+        return match (self::normalize($status)) {
+            self::NEW => [self::IN_PROGRESS, self::CANCELLED],
+            self::IN_PROGRESS => [self::CONFIRMATION, self::ON_HOLD, self::CANCELLED],
+            self::CONFIRMATION => [self::DONE, self::REVISION, self::ON_HOLD, self::CANCELLED],
+            self::REVISION => [self::IN_PROGRESS, self::CONFIRMATION, self::ON_HOLD, self::CANCELLED],
+            self::ON_HOLD => [self::IN_PROGRESS, self::CANCELLED],
+            self::DONE, self::CANCELLED => [],
+            default => [],
+        };
+    }
+
+    public static function canTransition(string $from, string $to): bool
+    {
+        $from = self::normalize($from);
+        $to = self::normalize($to);
+
+        return $from === $to || in_array($to, self::allowedTransitions($from), true);
+    }
+
     /**
      * Mengurutkan map sesuai self::ORDER.
      *

@@ -8,6 +8,7 @@ use App\Models\Ticket;
 use App\Models\User;
 use App\Models\Workflow;
 use App\Models\WorkflowInstance;
+use App\Models\WorkflowStage;
 use App\Services\WorkflowRuntimeService;
 use App\Support\UnitVisibility;
 use App\Support\WorkflowStatus;
@@ -17,6 +18,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Role;
@@ -49,7 +51,7 @@ class WorkflowController extends Controller
             ->keyBy('id');
         $locale = (string) $request->route('locale');
         $items->through(
-            fn (WorkflowInstance $instance) => $this->instancePayload($instance, $locale, $taskAssignees)
+            fn (WorkflowInstance $instance) => $this->instancePayload($instance, $locale, $taskAssignees, $request->user())
         );
 
         return Inertia::render('Workflows/Index', [
@@ -95,6 +97,7 @@ class WorkflowController extends Controller
             'creator',
             'updater',
             'histories.actor',
+            'instanceHistories.actor',
         ]);
 
         $scopedItems = $this->scopedItemsQuery($request->user())
@@ -118,16 +121,20 @@ class WorkflowController extends Controller
             ->get()
             ->keyBy('id');
         $instances->through(
-            fn (WorkflowInstance $instance) => $this->instancePayload($instance, $locale, $taskAssignees)
+            fn (WorkflowInstance $instance) => $this->instancePayload($instance, $locale, $taskAssignees, $request->user())
         );
 
         return Inertia::render('Workflows/Show', [
             'workflow' => $this->payload($workflow, true),
             'instances' => $instances,
+            'roles' => Role::query()->orderBy('name')->pluck('name'),
+            'users' => User::query()->orderBy('first_name')->get()->map(fn (User $user) => ['id' => $user->id, 'name' => $user->display_name]),
+            'statusOptions' => collect(WorkflowStatus::all())->map(fn ($value) => ['value' => $value, 'label' => WorkflowStatus::label($value)]),
             'can' => [
                 'update' => $request->user()->can('update', $workflow),
                 'toggle' => $request->user()->can('toggle', $workflow),
-                'delete' => $request->user()->can('delete', $workflow),
+                'delete' => $request->user()->can('delete', $workflow) && ! $workflow->instances()->exists(),
+                'structure' => $request->user()->can('update', $workflow),
             ],
         ]);
     }
@@ -170,9 +177,130 @@ class WorkflowController extends Controller
         if ($workflow->instances()->exists()) {
             return back()->with('error', 'Workflow yang sudah digunakan tidak dapat dihapus. Nonaktifkan workflow sebagai gantinya.');
         }
+        $this->history($workflow, $request, 'deleted', ['workflow' => $workflow->only(['name', 'code', 'entity_type', 'version'])]);
         $workflow->delete();
 
         return redirect()->route('workflows.index', ['locale' => $locale])->with('success', 'Workflow berhasil dihapus.');
+    }
+
+    public function updateInstanceStatus(Request $request, string $locale, WorkflowInstance $instance): RedirectResponse
+    {
+        abort_unless($this->scopedItemsQuery($request->user())->whereKey($instance->id)->exists(), 403);
+        $instance->load(['workflow.stages', 'currentStage', 'subject']);
+        abort_unless($instance->workflow?->is_active, 422, 'Workflow sedang nonaktif.');
+        $data = $request->validate(['status' => ['required', Rule::in(WorkflowStatus::all())]]);
+        $subject = $instance->subject;
+        abort_unless($subject instanceof Ticket || $subject instanceof Task, 422);
+        $from = WorkflowStatus::normalize($subject->status);
+        $to = WorkflowStatus::normalize($data['status']);
+        if (! WorkflowStatus::canTransition($from, $to)) {
+            throw ValidationException::withMessages(['status' => 'Transisi status tidak valid.']);
+        }
+        if (! $subject->canUserSetStatus($request->user(), $to)) {
+            abort(403);
+        }
+        if (! $instance->workflow->stages->contains('status_key', $to)) {
+            throw ValidationException::withMessages(['status' => 'Tahap tujuan tidak tersedia pada workflow ini.']);
+        }
+        $subject->update(['status' => $to]);
+
+        return back()->with('success', 'Status workflow berhasil diperbarui.');
+    }
+
+    public function storeStage(Request $request, string $locale, Workflow $workflow): RedirectResponse
+    {
+        $this->authorize('update', $workflow);
+        $data = $this->validatedStage($request, $workflow);
+        DB::transaction(function () use ($workflow, $data, $request) {
+            $stages = $workflow->stages()->get()->values();
+            $workflow->stages()->update(['position' => DB::raw('position + 100')]);
+            $stage = $workflow->stages()->create([...$data, 'position' => $stages->count() + 101]);
+            $stages->splice($data['position'] - 1, 0, [$stage]);
+            foreach ($stages as $index => $item) {
+                $item->update(['position' => $index + 1]);
+            } $this->touchStructure($workflow, $request, 'stage_created', ['stage' => $stage->only(['name', 'status_key', 'position'])]);
+        });
+
+        return back()->with('success', 'Tahap workflow berhasil ditambahkan.');
+    }
+
+    public function updateStage(Request $request, string $locale, Workflow $workflow, WorkflowStage $stage): RedirectResponse
+    {
+        $this->authorize('update', $workflow);
+        abort_unless((int) $stage->workflow_id === (int) $workflow->id, 404);
+        $data = $this->validatedStage($request, $workflow, $stage);
+        if ($stage->instances()->exists() && $stage->status_key !== $data['status_key']) {
+            throw ValidationException::withMessages(['status_key' => 'Status tahap aktif tidak dapat diubah.']);
+        }
+        DB::transaction(function () use ($workflow, $stage, $data, $request) {
+            $before = $stage->only(['name', 'status_key', 'responsible_role', 'responsible_user_id', 'is_required', 'action_label', 'instructions']);
+            $position = (int) $data['position'];
+            unset($data['position']);
+            $stage->update($data);
+            $ordered = $workflow->stages()->whereKeyNot($stage->id)->get()->values();
+            $ordered->splice($position - 1, 0, [$stage]);
+            $workflow->stages()->update(['position' => DB::raw('position + 100')]);
+            foreach ($ordered as $index => $item) {
+                $item->update(['position' => $index + 1]);
+            }
+            $this->touchStructure($workflow, $request, 'stage_updated', ['before' => $before, 'after' => $stage->fresh()->only(array_keys($before))]);
+        });
+
+        return back()->with('success', 'Tahap workflow berhasil diperbarui.');
+    }
+
+    public function destroyStage(Request $request, string $locale, Workflow $workflow, WorkflowStage $stage): RedirectResponse
+    {
+        $this->authorize('update', $workflow);
+        abort_unless((int) $stage->workflow_id === (int) $workflow->id, 404);
+        if ($workflow->stages()->count() <= 2) {
+            return back()->with('error', 'Workflow minimal memiliki dua tahap.');
+        }
+        if ($stage->instances()->exists()) {
+            return back()->with('error', 'Tahap yang sedang digunakan tidak dapat dihapus.');
+        }
+        DB::transaction(function () use ($workflow, $stage, $request) {
+            $snapshot = $stage->only(['name', 'status_key', 'position']);
+            $stage->delete();
+            $workflow->stages()->get()->each(fn ($item, $index) => $item->update(['position' => $index + 1]));
+            $this->touchStructure($workflow, $request, 'stage_deleted', ['stage' => $snapshot]);
+        });
+
+        return back()->with('success', 'Tahap workflow berhasil dihapus.');
+    }
+
+    public function reorderStages(Request $request, string $locale, Workflow $workflow): RedirectResponse
+    {
+        $this->authorize('update', $workflow);
+        $ids = $request->validate(['stage_ids' => ['required', 'array', 'min:2'], 'stage_ids.*' => ['required', 'integer', 'distinct']])['stage_ids'];
+        if ($workflow->stages()->pluck('id')->sort()->values()->all() !== collect($ids)->map('intval')->sort()->values()->all()) {
+            throw ValidationException::withMessages(['stage_ids' => 'Daftar tahap tidak valid.']);
+        }
+        DB::transaction(function () use ($workflow, $ids, $request) {
+            $workflow->stages()->update(['position' => DB::raw('position + 100')]);
+            foreach ($ids as $index => $id) {
+                $workflow->stages()->whereKey($id)->update(['position' => $index + 1]);
+            } $this->touchStructure($workflow, $request, 'stages_reordered', ['stage_ids' => $ids]);
+        });
+
+        return back()->with('success', 'Urutan tahap berhasil diperbarui.');
+    }
+
+    private function touchStructure(Workflow $workflow, Request $request, string $event, array $changes): void
+    {
+        $workflow->increment('version');
+        $workflow->update(['updated_by' => $request->user()->id]);
+        $this->history($workflow, $request, $event, $changes);
+    }
+
+    private function validatedStage(Request $request, Workflow $workflow, ?WorkflowStage $stage = null): array
+    {
+        return $request->validate([
+            'position' => ['required', 'integer', 'min:1', 'max:'.($workflow->stages()->count() + ($stage ? 0 : 1))], 'name' => ['required', 'string', 'max:100'],
+            'status_key' => ['required', Rule::in(WorkflowStatus::all()), Rule::unique('workflow_stages', 'status_key')->where('workflow_id', $workflow->id)->ignore($stage?->id)],
+            'responsible_role' => ['nullable', 'string', 'max:80', 'exists:roles,name'], 'responsible_user_id' => ['nullable', 'integer', 'exists:users,id'],
+            'is_required' => ['required', 'boolean'], 'action_label' => ['nullable', 'string', 'max:100'], 'instructions' => ['nullable', 'string', 'max:1000'],
+        ]);
     }
 
     private function validated(Request $request, ?Workflow $workflow = null): array
@@ -192,10 +320,12 @@ class WorkflowController extends Controller
             'trigger_conditions.*.operator' => ['required', Rule::in(['equals', 'not_equals', 'contains'])],
             'trigger_conditions.*.value' => ['required', 'string', 'max:100'],
             'stages' => ['required', 'array', 'min:2', 'max:20'],
+            'stages.*.id' => ['nullable', 'integer'],
             'stages.*.name' => ['required', 'string', 'max:100'],
             'stages.*.status_key' => ['required', 'distinct', Rule::in(WorkflowStatus::all())],
             'stages.*.responsible_role' => ['nullable', 'string', 'max:80', 'exists:roles,name'],
             'stages.*.responsible_user_id' => ['nullable', 'integer', 'exists:users,id'],
+            'stages.*.is_required' => ['sometimes', 'boolean'],
             'stages.*.action_label' => ['nullable', 'string', 'max:100'],
             'stages.*.instructions' => ['nullable', 'string', 'max:1000'],
         ]);
@@ -208,9 +338,40 @@ class WorkflowController extends Controller
 
     private function replaceStages(Workflow $workflow, array $stages): void
     {
-        $workflow->stages()->delete();
-        foreach (array_values($stages) as $index => $stage) {
-            $workflow->stages()->create([...$stage, 'position' => $index + 1]);
+        $existing = $workflow->stages()->get();
+        $workflow->stages()->update(['position' => DB::raw('position + 100')]);
+        $kept = [];
+
+        foreach (array_values($stages) as $index => $data) {
+            $stage = isset($data['id'])
+                ? $existing->firstWhere('id', (int) $data['id'])
+                : $existing->first(fn (WorkflowStage $item) => $item->status_key === $data['status_key'] && ! in_array($item->id, $kept, true));
+            $attributes = [
+                'position' => $index + 1,
+                'name' => $data['name'],
+                'status_key' => $data['status_key'],
+                'responsible_role' => $data['responsible_role'] ?? null,
+                'responsible_user_id' => $data['responsible_user_id'] ?? null,
+                'is_required' => $data['is_required'] ?? true,
+                'action_label' => $data['action_label'] ?? null,
+                'instructions' => $data['instructions'] ?? null,
+            ];
+            if ($stage) {
+                if ($stage->instances()->exists() && $stage->status_key !== $data['status_key']) {
+                    throw ValidationException::withMessages(['stages' => 'Status tahap yang sedang digunakan tidak dapat diubah.']);
+                }
+                $stage->update($attributes);
+            } else {
+                $stage = $workflow->stages()->create($attributes);
+            }
+            $kept[] = $stage->id;
+        }
+
+        foreach ($existing->whereNotIn('id', $kept) as $removed) {
+            if ($removed->instances()->exists()) {
+                throw ValidationException::withMessages(['stages' => 'Tahap yang sedang digunakan tidak dapat dihapus.']);
+            }
+            $removed->delete();
         }
     }
 
@@ -236,7 +397,8 @@ class WorkflowController extends Controller
             'uuid' => $workflow->uuid, 'name' => $workflow->name, 'code' => $workflow->code, 'entity_type' => $workflow->entity_type,
             'description' => $workflow->description, 'trigger_conditions' => $workflow->trigger_conditions ?? [], 'is_active' => $workflow->is_active,
             'version' => $workflow->version, 'stages_count' => $workflow->stages_count ?? ($workflow->relationLoaded('stages') ? $workflow->stages->count() : 0),
-            'instances_count' => $workflow->instances_count ?? 0, 'creator_name' => $display($workflow->creator), 'updated_at' => $workflow->updated_at?->toIso8601String(),
+            'instances_count' => $workflow->instances_count ?? 0, 'creator_name' => $display($workflow->creator), 'updater_name' => $display($workflow->updater),
+            'created_at' => $workflow->created_at?->toIso8601String(), 'updated_at' => $workflow->updated_at?->toIso8601String(),
             'total_items_count' => $workflow->instances_count ?? 0,
             'running_items_count' => $workflow->running_instances_count ?? 0,
             'completed_items_count' => $workflow->completed_instances_count ?? 0,
@@ -251,12 +413,20 @@ class WorkflowController extends Controller
                 'id' => $stage->id, 'position' => $stage->position, 'name' => $stage->name, 'status_key' => $stage->status_key,
                 'responsible_role' => $stage->responsible_role, 'responsible_user_id' => $stage->responsible_user_id,
                 'responsible_user_name' => $stage->responsible_user_id ? $display($stage->responsibleUser) : null,
+                'is_required' => (bool) $stage->is_required,
                 'action_label' => $stage->action_label, 'instructions' => $stage->instructions,
                 'instances_count' => (int) ($stage->instances_count ?? 0),
+                'created_at' => $stage->created_at?->toIso8601String(), 'updated_at' => $stage->updated_at?->toIso8601String(),
             ])->values();
-            $payload['histories'] = $workflow->relationLoaded('histories') ? $workflow->histories->map(fn ($history) => [
-                'id' => $history->id, 'event' => $history->event, 'actor_name' => $display($history->actor), 'changes' => $history->changes, 'created_at' => $history->created_at?->toIso8601String(),
-            ])->values() : [];
+            $definitionHistory = $workflow->relationLoaded('histories') ? $workflow->histories->map(fn ($history) => [
+                'id' => 'definition-'.$history->id, 'event' => $history->event, 'actor_name' => $display($history->actor), 'changes' => $history->changes, 'created_at' => $history->created_at?->toIso8601String(), 'scope' => 'definition',
+            ]) : collect();
+            $runtimeHistory = $workflow->relationLoaded('instanceHistories') ? $workflow->instanceHistories->map(fn ($history) => [
+                'id' => 'runtime-'.$history->id, 'event' => $history->event, 'actor_name' => $display($history->actor),
+                'changes' => ['from' => $history->from_stage_name, 'to' => $history->to_stage_name, 'from_status' => $history->from_status, 'to_status' => $history->to_status],
+                'created_at' => $history->created_at?->toIso8601String(), 'scope' => 'runtime',
+            ]) : collect();
+            $payload['histories'] = $definitionHistory->concat($runtimeHistory)->sortByDesc('created_at')->take(100)->values();
         }
 
         return $payload;
@@ -359,6 +529,7 @@ class WorkflowController extends Controller
     private function withItemRelations(Builder $query): Builder
     {
         return $query->with([
+            'workflow.stages',
             'currentStage',
             'subject' => function (MorphTo $morphTo): void {
                 $morphTo->morphWith([
@@ -390,7 +561,7 @@ class WorkflowController extends Controller
             ->all();
     }
 
-    private function instancePayload(WorkflowInstance $instance, string $locale, $taskAssignees): array
+    private function instancePayload(WorkflowInstance $instance, string $locale, $taskAssignees, User $viewer): array
     {
         $subject = $instance->subject;
         $isTicket = $subject instanceof Ticket;
@@ -406,28 +577,58 @@ class WorkflowController extends Controller
             }
             $number = $subject->ticket_no ?: 'Ticket #'.$subject->id;
             $detailUrl = route('tickets.show', ['locale' => $locale, 'ticket' => $subject]);
+            $editUrl = route('tickets.edit', ['locale' => $locale, 'ticket' => $subject]);
+            $targetDate = $subject->due_at ?? $subject->due_date;
         } else {
             $ids = $this->taskAssigneeIds(collect([$instance]));
             $pic = collect($ids)->map(fn ($id) => $taskAssignees->get($id)?->display_name)->filter();
             $number = $subject->task_no ?: 'Task #'.$subject->id;
             $detailUrl = route('tasks.view', ['locale' => $locale, 'task' => $subject]);
+            $editUrl = route('tasks.edit', ['locale' => $locale, 'task' => $subject->public_slug]);
+            $targetDate = $subject->due_at ?? $subject->end_date;
         }
 
         $status = WorkflowStatus::normalize($subject->status);
+        $statusOptions = collect(WorkflowStatus::allowedTransitions($status))
+            ->filter(fn (string $candidate) => $instance->workflow?->is_active && $subject->canUserSetStatus($viewer, $candidate))
+            ->filter(fn (string $candidate) => $instance->workflow?->stages->contains('status_key', $candidate))
+            ->map(fn (string $candidate) => ['value' => $candidate, 'label' => WorkflowStatus::label($candidate)])
+            ->values();
 
         return [
             'id' => $instance->id,
+            'workflow_uuid' => $instance->workflow?->uuid,
+            'workflow_name' => $instance->workflow?->name,
+            'workflow_active' => (bool) $instance->workflow?->is_active,
             'number' => $number,
             'title' => $subject->title,
             'type' => $isTicket ? 'ticket' : 'task',
             'requester' => $requester,
+            'creator' => $requester,
             'pic' => $pic->unique()->values()->implode(', ') ?: '—',
+            'priority' => $subject->priority ?: '-',
+            'target_date' => $targetDate?->toIso8601String(),
             'status' => $status,
             'status_label' => WorkflowStatus::label($status),
             'stage_name' => $instance->currentStage?->name ?? WorkflowStatus::label($status),
+            'created_at' => $subject->created_at?->toIso8601String(),
             'updated_at' => $subject->updated_at?->toIso8601String(),
             'date' => $subject->updated_at?->toIso8601String(),
+            'stage_started_at' => $instance->stage_started_at?->toIso8601String(),
             'detail_url' => $detailUrl,
+            'edit_url' => $editUrl,
+            'status_options' => $statusOptions,
+            'status_update_url' => route('workflows.instances.status', ['locale' => $locale, 'instance' => $instance]),
+            'can_view_workflow' => $viewer->can('view', $instance->workflow),
+            'can_edit' => $viewer->can($isTicket ? 'update tickets' : 'update tasks'),
+            'can_update_status' => $statusOptions->isNotEmpty(),
+            'can_update_workflow' => $viewer->can('update', $instance->workflow),
+            'can_toggle_workflow' => $viewer->can('toggle', $instance->workflow),
+            'can_delete_workflow' => $viewer->can('delete', $instance->workflow) && ! $instance->workflow->instances()->exists(),
+            'workflow_toggle_url' => route('workflows.toggle', ['locale' => $locale, 'workflow' => $instance->workflow]),
+            'workflow_delete_url' => route('workflows.destroy', ['locale' => $locale, 'workflow' => $instance->workflow]),
+            'workflow_url' => route('workflows.show', ['locale' => $locale, 'workflow' => $instance->workflow]),
+            'workflow_edit_url' => route('workflows.edit', ['locale' => $locale, 'workflow' => $instance->workflow]),
         ];
     }
 }

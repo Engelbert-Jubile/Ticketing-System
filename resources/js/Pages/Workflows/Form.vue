@@ -33,6 +33,7 @@
               <label class="field">PIC spesifik<select v-model="stage.responsible_user_id" class="input"><option :value="null">Tidak ditentukan</option><option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option></select></label>
               <label class="field">Aksi ke tahap berikutnya<input v-model="stage.action_label" class="input" placeholder="Contoh: Mulai pengerjaan" /></label>
               <label class="field">Instruksi<input v-model="stage.instructions" class="input" placeholder="Catatan untuk penanggung jawab" /></label>
+              <label class="flex items-center gap-3 text-sm font-semibold"><input v-model="stage.is_required" type="checkbox" class="h-5 w-5 rounded text-blue-600" /> Tahap wajib diselesaikan</label>
             </div>
           </article>
         </div>
@@ -48,8 +49,8 @@ import resolveRoute from '../../utils/resolveRoute'
 defineOptions({ layout: AppLayout })
 const props = defineProps({ workflow: { type: Object, default: null }, roles: { type: Array, default: () => [] }, users: { type: Array, default: () => [] }, statusOptions: { type: Array, default: () => [] } })
 const editing = Boolean(props.workflow)
-const blankStage = (name = '', status = 'new') => ({ name, status_key: status, responsible_role: '', responsible_user_id: null, action_label: '', instructions: '' })
-const form = useForm({ name: props.workflow?.name || '', code: props.workflow?.code || '', entity_type: props.workflow?.entity_type || 'ticket', description: props.workflow?.description || '', is_active: props.workflow?.is_active ?? true, trigger_conditions: props.workflow?.trigger_conditions?.map(item => ({ ...item })) || [], stages: props.workflow?.stages?.map(item => ({ name: item.name, status_key: item.status_key, responsible_role: item.responsible_role || '', responsible_user_id: item.responsible_user_id, action_label: item.action_label || '', instructions: item.instructions || '' })) || [blankStage('Baru', 'new'), blankStage('Selesai', 'done')] })
+const blankStage = (name = '', status = 'new') => ({ id: null, name, status_key: status, responsible_role: '', responsible_user_id: null, is_required: true, action_label: '', instructions: '' })
+const form = useForm({ name: props.workflow?.name || '', code: props.workflow?.code || '', entity_type: props.workflow?.entity_type || 'ticket', description: props.workflow?.description || '', is_active: props.workflow?.is_active ?? true, trigger_conditions: props.workflow?.trigger_conditions?.map(item => ({ ...item })) || [], stages: props.workflow?.stages?.map(item => ({ id: item.id, name: item.name, status_key: item.status_key, responsible_role: item.responsible_role || '', responsible_user_id: item.responsible_user_id, is_required: item.is_required ?? true, action_label: item.action_label || '', instructions: item.instructions || '' })) || [blankStage('Baru', 'new'), blankStage('Selesai', 'done')] })
 const addCondition = () => form.trigger_conditions.push({ field: 'priority', operator: 'equals', value: '' })
 const addStage = () => form.stages.push(blankStage())
 const move = (index, direction) => { const target = index + direction; if (target < 0 || target >= form.stages.length) return; [form.stages[index], form.stages[target]] = [form.stages[target], form.stages[index]] }

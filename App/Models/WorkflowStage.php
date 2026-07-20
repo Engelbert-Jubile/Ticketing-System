@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class WorkflowStage extends Model
 {
-    protected $fillable = ['workflow_id', 'position', 'name', 'status_key', 'responsible_role', 'responsible_user_id', 'action_label', 'instructions'];
+    protected $fillable = ['workflow_id', 'position', 'name', 'status_key', 'responsible_role', 'responsible_user_id', 'is_required', 'action_label', 'instructions'];
+
+    protected $casts = ['is_required' => 'boolean'];
 
     public function workflow(): BelongsTo
     {
