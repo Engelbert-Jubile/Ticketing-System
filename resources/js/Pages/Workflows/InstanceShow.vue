@@ -1,5 +1,6 @@
 <template>
   <div class="mx-auto max-w-7xl space-y-6">
+    <Head title="Workflows" />
     <Transition name="fade"><div v-if="notice" :class="notice.type === 'error' ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'" class="fixed right-4 top-20 z-[2147483001] max-w-sm rounded-2xl border px-4 py-3 text-sm font-semibold shadow-2xl">{{ notice.message }}</div></Transition>
 
     <header class="workflow-hero relative overflow-hidden rounded-3xl border p-5 shadow-sm sm:p-7">
@@ -31,7 +32,7 @@
 </template>
 
 <script setup>
-import { Link, router, useForm, usePage } from '@inertiajs/vue3'
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import axios from 'axios'
 import Dropdown from '../../Components/Dropdown.vue'

@@ -1,5 +1,6 @@
 <template>
   <div class="legacy-dashboard space-y-6 px-4 py-6 md:px-6">
+    <Head title="Dashboard" />
     <div class="flex items-end justify-between">
       <div>
         <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">{{ titleText }}</h1>
@@ -153,7 +154,7 @@
 </template>
 
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, watch } from 'vue';
 import GeminiChatWidget from '../../Components/GeminiChatWidget.vue';
 import resolveRoute from '../../utils/resolveRoute';

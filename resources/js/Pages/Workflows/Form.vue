@@ -1,5 +1,6 @@
 <template>
   <div class="mx-auto max-w-5xl space-y-6">
+    <Head title="Workflows" />
     <header><Link :href="resolveRoute('workflows.index')" class="text-sm font-semibold text-blue-600">← Kembali</Link><h1 class="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{{ editing ? 'Edit Workflow' : 'Buat Workflow' }}</h1><p class="text-sm text-slate-500">Workflow hanya berlaku untuk Ticket dan Task.</p></header>
     <form class="space-y-6" @submit.prevent="submit">
       <section class="grid gap-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:grid-cols-2 dark:border-slate-700 dark:bg-slate-900">
@@ -43,7 +44,7 @@
   </div>
 </template>
 <script setup>
-import { Link, useForm } from '@inertiajs/vue3'
+import { Head, Link, useForm } from '@inertiajs/vue3'
 import AppLayout from '../../Layouts/AppLayout.vue'
 import WorkflowSelect from '../../Components/WorkflowSelect.vue'
 import resolveRoute from '../../utils/resolveRoute'

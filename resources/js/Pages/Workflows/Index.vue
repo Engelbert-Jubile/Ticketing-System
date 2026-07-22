@@ -1,5 +1,6 @@
 <template>
   <div class="mx-auto max-w-7xl space-y-6">
+    <Head title="Workflows" />
     <Transition name="fade"><div v-if="notice" :class="notice.type === 'error' ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'" class="fixed right-5 top-20 z-[70] max-w-sm rounded-xl border px-4 py-3 text-sm font-semibold shadow-lg">{{ notice.message }}</div></Transition>
     <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div><p class="text-xs font-bold uppercase tracking-[0.2em] text-cyan-600">Tickora Automation</p><h1 class="mt-1 text-3xl font-bold text-slate-900 dark:text-white">Workflow Command Center</h1><p class="mt-1 text-sm text-slate-500 dark:text-slate-300">Pantau dan tindak lanjuti alur Ticket serta Task sesuai akses Anda.</p></div>
@@ -51,7 +52,7 @@
 </template>
 
 <script setup>
-import { Link, router, useForm, usePage } from '@inertiajs/vue3'
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import axios from 'axios'
 import Dropdown from '../../Components/Dropdown.vue'

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maintenance</title>
+    <title>Maintenance - Tickora</title>
     <style>
         body { font-family: Arial, sans-serif; background: #f8fafc; color: #0f172a; margin: 0; padding: 0; display: flex; min-height: 100vh; align-items: center; justify-content: center; }
     .card { max-width: 560px; background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 28px; box-shadow: 0 20px 50px -25px rgba(15,23,42,0.35); }

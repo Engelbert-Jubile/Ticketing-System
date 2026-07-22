@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>@yield('title') - MyApp</title>
+  <title>@yield('title', 'Auth') - Tickora</title>
   @vite('resources/css/app.css')
 </head>
 <body class="bg-gray-50 flex items-center justify-center min-h-screen">

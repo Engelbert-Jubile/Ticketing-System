@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>{{ config('app.name', 'App') }}</title>
+    <title>{{ config('app.name', 'Tickora') }}</title>
 
     @vite('resources/css/app.css')
     @livewireStyles

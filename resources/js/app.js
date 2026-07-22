@@ -13,8 +13,13 @@ import { createI18n } from './i18n';
 
 const pages = import.meta.glob('./Pages/**/*.vue');
 
+const formatDocumentTitle = (title) => {
+  const pageTitle = String(title || '').trim().replace(/(?:\s*[-–—|]\s*Tickora)+$/i, '').trim();
+  return pageTitle ? `${pageTitle} - Tickora` : 'Tickora';
+};
+
 createInertiaApp({
-  title: (title) => title ? `Tickora - ${title}` : `Tickora`,
+  title: formatDocumentTitle,
   resolve: name => {
     const importPage = pages[`./Pages/${name}.vue`];
     if (!importPage) {

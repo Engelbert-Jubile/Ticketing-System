@@ -1,5 +1,6 @@
 <template>
   <div class="mx-auto max-w-7xl space-y-6">
+    <Head title="Workflows" />
     <Transition name="fade"><div v-if="notice" :class="notice.type === 'error' ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'" class="fixed right-5 top-20 z-[70] max-w-sm rounded-xl border px-4 py-3 text-sm font-semibold shadow-lg">{{ notice.message }}</div></Transition>
     <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div><Link :href="resolveRoute('workflows.index')" class="text-sm font-semibold text-cyan-600">← Workflow Command Center</Link><div class="mt-2 flex flex-wrap items-center gap-3"><h1 class="text-3xl font-bold text-slate-900 dark:text-white">{{ workflow.name }}</h1><span :class="workflow.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'" class="rounded-full px-3 py-1 text-xs font-bold">{{ workflow.is_active ? 'Aktif' : 'Nonaktif' }}</span><span class="rounded-full bg-cyan-50 px-3 py-1 text-xs font-bold text-cyan-700">v{{ workflow.version }}</span></div><p class="mt-1 font-mono text-sm text-slate-400">{{ workflow.code }} · {{ workflow.entity_type }}</p></div>
@@ -31,7 +32,7 @@
 </template>
 
 <script setup>
-import { Link, router, useForm, usePage } from '@inertiajs/vue3'
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import axios from 'axios'
 import Dropdown from '../../Components/Dropdown.vue'; import AppLayout from '../../Layouts/AppLayout.vue'
