@@ -263,12 +263,21 @@ class WorkflowController extends Controller
     {
         $this->authorize('update', $workflow);
         $data = $this->validated($request, $workflow);
-        DB::transaction(function () use ($data, $request, $workflow) {
-            $before = $workflow->only(['name', 'code', 'entity_type', 'description', 'trigger_conditions', 'is_active']);
-            $workflow->update([...$this->attributes($data), 'version' => $workflow->version + 1, 'updated_by' => $request->user()->id]);
-            $this->replaceStages($workflow, $data['stages']);
-            $this->history($workflow, $request, 'updated', ['before' => $before, 'after' => $workflow->fresh()->only(array_keys($before))]);
-        });
+        try {
+            DB::transaction(function () use ($data, $request, $workflow) {
+                $before = $workflow->only(['name', 'code', 'entity_type', 'description', 'trigger_conditions', 'is_active']);
+                $workflow->update([...$this->attributes($data), 'version' => $workflow->version + 1, 'updated_by' => $request->user()->id]);
+                $this->replaceStages($workflow, $data['stages']);
+                $this->assertStagesPersisted($workflow, $data['stages']);
+                $this->history($workflow, $request, 'updated', ['before' => $before, 'after' => $workflow->fresh()->only(array_keys($before))]);
+            });
+        } catch (ValidationException $exception) {
+            throw $exception;
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return back()->withInput()->with('error', 'Workflow gagal diperbarui. Tidak ada perubahan yang disimpan.');
+        }
         app(WorkflowRuntimeService::class)->syncWorkflow($workflow->fresh());
 
         return redirect()->route('workflows.show', ['locale' => $locale, 'workflow' => $workflow])->with('success', 'Workflow berhasil diperbarui.');
@@ -346,14 +355,13 @@ class WorkflowController extends Controller
         $this->authorize('update', $workflow);
         abort_unless((int) $stage->workflow_id === (int) $workflow->id, 404);
         $data = $this->validatedStage($request, $workflow, $stage);
-        if ($stage->instances()->exists() && $stage->status_key !== $data['status_key']) {
-            throw ValidationException::withMessages(['status_key' => 'Status tahap aktif tidak dapat diubah.']);
-        }
         DB::transaction(function () use ($workflow, $stage, $data, $request) {
             $before = $stage->only(['name', 'status_key', 'responsible_role', 'responsible_user_id', 'is_required', 'action_label', 'instructions']);
+            $previousStatus = $stage->status_key;
             $position = (int) $data['position'];
             unset($data['position']);
             $stage->update($data);
+            $this->migrateStageRuntimeStatus($stage, $previousStatus, $stage->status_key);
             $ordered = $workflow->stages()->whereKeyNot($stage->id)->get()->values();
             $ordered->splice($position - 1, 0, [$stage]);
             $workflow->stages()->update(['position' => DB::raw('position + 100')]);
@@ -437,7 +445,7 @@ class WorkflowController extends Controller
             'trigger_conditions.*.operator' => ['required', Rule::in(['equals', 'not_equals', 'contains'])],
             'trigger_conditions.*.value' => ['required', 'string', 'max:100'],
             'stages' => ['required', 'array', 'min:2', 'max:20'],
-            'stages.*.id' => ['nullable', 'integer'],
+            'stages.*.id' => ['nullable', 'integer', Rule::exists('workflow_stages', 'id')->where('workflow_id', $workflow?->id)],
             'stages.*.name' => ['required', 'string', 'max:100'],
             'stages.*.status_key' => ['required', 'distinct', Rule::in(WorkflowStatus::all())],
             'stages.*.responsible_role' => ['nullable', 'string', 'max:80', 'exists:roles,name'],
@@ -458,6 +466,7 @@ class WorkflowController extends Controller
         $existing = $workflow->stages()->get();
         $workflow->stages()->update(['position' => DB::raw('position + 100')]);
         $kept = [];
+        $statusChanges = [];
 
         foreach (array_values($stages) as $index => $data) {
             $stage = isset($data['id'])
@@ -474,10 +483,9 @@ class WorkflowController extends Controller
                 'instructions' => $data['instructions'] ?? null,
             ];
             if ($stage) {
-                if ($stage->instances()->exists() && $stage->status_key !== $data['status_key']) {
-                    throw ValidationException::withMessages(['stages' => 'Status tahap yang sedang digunakan tidak dapat diubah.']);
-                }
+                $previousStatus = $stage->status_key;
                 $stage->update($attributes);
+                $statusChanges[] = [$stage, $previousStatus, $stage->status_key];
             } else {
                 $stage = $workflow->stages()->create($attributes);
             }
@@ -489,6 +497,43 @@ class WorkflowController extends Controller
                 throw ValidationException::withMessages(['stages' => 'Tahap yang sedang digunakan tidak dapat dihapus.']);
             }
             $removed->delete();
+        }
+
+        foreach ($statusChanges as [$stage, $from, $to]) {
+            $this->migrateStageRuntimeStatus($stage, $from, $to);
+        }
+    }
+
+    private function migrateStageRuntimeStatus(WorkflowStage $stage, string $from, string $to): void
+    {
+        $from = WorkflowStatus::normalize($from);
+        $to = WorkflowStatus::normalize($to);
+        if ($from === $to) {
+            return;
+        }
+
+        $stage->instances()->with('subject')->get()->each(function (WorkflowInstance $instance) use ($from, $to): void {
+            $subject = $instance->subject;
+            if (($subject instanceof Ticket || $subject instanceof Task) && WorkflowStatus::normalize($subject->status) === $from) {
+                $subject->status = $to;
+                $subject->saveQuietly();
+            }
+        });
+    }
+
+    private function assertStagesPersisted(Workflow $workflow, array $stages): void
+    {
+        $persisted = $workflow->stages()->get()->keyBy('id');
+        foreach ($stages as $stage) {
+            if (empty($stage['id'])) {
+                continue;
+            }
+            $saved = $persisted->get((int) $stage['id']);
+            if (! $saved || $saved->status_key !== WorkflowStatus::normalize($stage['status_key'])) {
+                throw ValidationException::withMessages([
+                    'stages' => 'Perubahan status tahap gagal tersimpan. Silakan muat ulang dan coba lagi.',
+                ]);
+            }
         }
     }
 

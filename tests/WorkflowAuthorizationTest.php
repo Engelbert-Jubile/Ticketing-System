@@ -525,7 +525,9 @@ test('active workflow edits preserve referenced stages and related records', fun
     $superadmin = workflowUserWithRole('superadmin');
     $workflow = Workflow::create(['name' => 'Versioned Flow', 'code' => 'VERSIONED_FLOW', 'entity_type' => 'ticket', 'is_active' => true]);
     $first = $workflow->stages()->create(['position' => 1, 'name' => 'New', 'status_key' => 'new', 'is_required' => true]);
-    $last = $workflow->stages()->create(['position' => 2, 'name' => 'Done', 'status_key' => 'done', 'is_required' => true]);
+    $second = $workflow->stages()->create(['position' => 2, 'name' => 'Work', 'status_key' => 'in_progress', 'is_required' => true]);
+    $third = $workflow->stages()->create(['position' => 3, 'name' => 'Review', 'status_key' => 'confirmation', 'is_required' => true]);
+    $last = $workflow->stages()->create(['position' => 4, 'name' => 'Done', 'status_key' => 'done', 'is_required' => true]);
     $ticket = Ticket::create(['ticket_no' => 'TCK-SAFE-001', 'title' => 'Must survive', 'status' => 'new', 'requester_id' => $superadmin->id]);
     $instance = WorkflowInstance::query()->where('subject_id', $ticket->id)->first();
     if (! $instance || $instance->workflow_id !== $workflow->id) {
@@ -536,14 +538,45 @@ test('active workflow edits preserve referenced stages and related records', fun
     $this->actingAs($superadmin)->put(route('workflows.update', ['locale' => 'id', 'workflow' => $workflow]), workflowPayload([
         'name' => 'Versioned Flow Updated', 'code' => 'VERSIONED_FLOW',
         'stages' => [
-            ['id' => $first->id, 'name' => 'New Queue', 'status_key' => 'new', 'responsible_role' => null, 'responsible_user_id' => null, 'is_required' => true, 'action_label' => null, 'instructions' => null],
+            ['id' => $first->id, 'name' => 'New Queue', 'status_key' => 'revision', 'responsible_role' => null, 'responsible_user_id' => null, 'is_required' => true, 'action_label' => null, 'instructions' => null],
+            ['id' => $second->id, 'name' => 'Work', 'status_key' => 'on_hold', 'responsible_role' => null, 'responsible_user_id' => null, 'is_required' => true, 'action_label' => null, 'instructions' => null],
+            ['id' => $third->id, 'name' => 'Review', 'status_key' => 'cancelled', 'responsible_role' => null, 'responsible_user_id' => null, 'is_required' => true, 'action_label' => null, 'instructions' => null],
             ['id' => $last->id, 'name' => 'Done', 'status_key' => 'done', 'responsible_role' => null, 'responsible_user_id' => null, 'is_required' => true, 'action_label' => null, 'instructions' => null],
         ],
     ]))->assertRedirect();
 
-    expect($ticket->fresh())->not->toBeNull()
+    $persisted = $workflow->stages()->get()->keyBy('id');
+    expect($ticket->fresh()->status)->toBe('revision')
         ->and($instance->fresh()->current_stage_id)->toBe($first->id)
-        ->and($workflow->fresh()->version)->toBe(2);
+        ->and($workflow->fresh()->version)->toBe(2)
+        ->and($persisted->count())->toBe(4)
+        ->and($persisted[$first->id]->status_key)->toBe('revision')
+        ->and($persisted[$second->id]->status_key)->toBe('on_hold')
+        ->and($persisted[$third->id]->status_key)->toBe('cancelled')
+        ->and($persisted[$last->id]->status_key)->toBe('done');
+
+    $this->actingAs($superadmin)->withHeaders(workflowInertiaHeaders())
+        ->get(route('workflows.edit', ['locale' => 'id', 'workflow' => $workflow]))
+        ->assertOk()->assertJsonPath('props.workflow.stages.0.status_key', 'revision')
+        ->assertJsonPath('props.workflow.stages.1.status_key', 'on_hold')
+        ->assertJsonPath('props.workflow.stages.2.status_key', 'cancelled')
+        ->assertJsonPath('props.workflow.stages.3.status_key', 'done');
+
+    $this->actingAs($superadmin)->put(route('workflows.update', ['locale' => 'id', 'workflow' => $workflow]), workflowPayload([
+        'name' => 'Versioned Flow Updated', 'code' => 'VERSIONED_FLOW',
+        'stages' => [
+            ['id' => $first->id, 'name' => 'New Queue', 'status_key' => 'revision', 'responsible_role' => null, 'responsible_user_id' => null, 'is_required' => true, 'action_label' => null, 'instructions' => null],
+            ['id' => $second->id, 'name' => 'Work', 'status_key' => 'in_progress', 'responsible_role' => null, 'responsible_user_id' => null, 'is_required' => true, 'action_label' => null, 'instructions' => null],
+            ['id' => $third->id, 'name' => 'Review', 'status_key' => 'cancelled', 'responsible_role' => null, 'responsible_user_id' => null, 'is_required' => true, 'action_label' => null, 'instructions' => null],
+            ['id' => $last->id, 'name' => 'Done', 'status_key' => 'done', 'responsible_role' => null, 'responsible_user_id' => null, 'is_required' => true, 'action_label' => null, 'instructions' => null],
+        ],
+    ]))->assertRedirect()->assertSessionHas('success');
+
+    expect($workflow->stages()->pluck('status_key')->all())->toBe([
+        'revision', 'in_progress', 'cancelled', 'done',
+    ])->and($workflow->stages()->pluck('id')->all())->toBe([
+        $first->id, $second->id, $third->id, $last->id,
+    ]);
 });
 
 test('workflow instance detail is accurate responsive data and role scoped', function () {

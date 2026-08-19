@@ -1,6 +1,7 @@
 <template>
   <div class="mx-auto max-w-5xl space-y-6">
     <Head title="Workflows" />
+    <Transition name="fade"><div v-if="notice" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 dark:border-rose-400/30 dark:bg-rose-400/10 dark:text-rose-200">{{ notice }}</div></Transition>
     <header><Link :href="resolveRoute('workflows.index')" class="text-sm font-semibold text-blue-600">← Kembali</Link><h1 class="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{{ editing ? 'Edit Workflow' : 'Buat Workflow' }}</h1><p class="text-sm text-slate-500">Workflow hanya berlaku untuk Ticket dan Task.</p></header>
     <form class="space-y-6" @submit.prevent="submit">
       <section class="grid gap-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:grid-cols-2 dark:border-slate-700 dark:bg-slate-900">
@@ -25,11 +26,11 @@
         <div class="flex items-center justify-between"><div><h2 class="text-lg font-bold dark:text-white">Tahapan workflow</h2><p class="text-sm text-slate-500">Minimal dua tahap, urut dari awal sampai selesai.</p></div><button type="button" class="btn-secondary" @click="addStage">+ Tahap</button></div>
         <small v-if="form.errors.stages" class="error">{{ form.errors.stages }}</small>
         <div class="mt-5 space-y-4">
-          <article v-for="(stage, index) in form.stages" :key="index" class="relative rounded-2xl border border-slate-200 p-5 dark:border-slate-700">
+          <article v-for="(stage, index) in form.stages" :key="stage.id ?? `new-stage-${index}`" class="relative rounded-2xl border border-slate-200 p-5 dark:border-slate-700">
             <div class="mb-4 flex items-center justify-between"><span class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">{{ index + 1 }}</span><div class="flex gap-2"><button type="button" :disabled="index === 0" @click="move(index, -1)">↑</button><button type="button" :disabled="index === form.stages.length - 1" @click="move(index, 1)">↓</button><button v-if="form.stages.length > 2" type="button" class="text-rose-600" @click="form.stages.splice(index, 1)">Hapus</button></div></div>
             <div class="grid gap-4 md:grid-cols-2">
               <label class="field">Nama tahap<input v-model="stage.name" required class="input" /></label>
-              <label class="field">Status<WorkflowSelect v-model="stage.status_key" :options="statusOptions" aria-label="Status tahap" /></label>
+              <label class="field">Status<WorkflowSelect v-model="stage.status_key" :options="statusOptions" aria-label="Status tahap" /><small v-if="stageError(index, 'status_key')" class="error">{{ stageError(index, 'status_key') }}</small></label>
               <label class="field">Role PIC<WorkflowSelect v-model="stage.responsible_role" :options="roleOptions" placeholder="Tidak ditentukan" aria-label="Role PIC" /></label>
               <label class="field">PIC spesifik<WorkflowSelect v-model="stage.responsible_user_id" :options="userOptions" placeholder="Tidak ditentukan" aria-label="PIC spesifik" /></label>
               <label class="field">Aksi ke tahap berikutnya<input v-model="stage.action_label" class="input" placeholder="Contoh: Mulai pengerjaan" /></label>
@@ -44,7 +45,8 @@
   </div>
 </template>
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3'
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3'
+import { ref } from 'vue'
 import AppLayout from '../../Layouts/AppLayout.vue'
 import WorkflowSelect from '../../Components/WorkflowSelect.vue'
 import resolveRoute from '../../utils/resolveRoute'
@@ -58,10 +60,26 @@ const roleOptions = [{ value: '', label: 'Tidak ditentukan' }, ...props.roles.ma
 const userOptions = [{ value: null, label: 'Tidak ditentukan' }, ...props.users.map(user => ({ value: user.id, label: user.name }))]
 const blankStage = (name = '', status = 'new') => ({ id: null, name, status_key: status, responsible_role: '', responsible_user_id: null, is_required: true, action_label: '', instructions: '' })
 const form = useForm({ name: props.workflow?.name || '', code: props.workflow?.code || '', entity_type: props.workflow?.entity_type || 'ticket', description: props.workflow?.description || '', is_active: props.workflow?.is_active ?? true, trigger_conditions: props.workflow?.trigger_conditions?.map(item => ({ ...item })) || [], stages: props.workflow?.stages?.map(item => ({ id: item.id, name: item.name, status_key: item.status_key, responsible_role: item.responsible_role || '', responsible_user_id: item.responsible_user_id, is_required: item.is_required ?? true, action_label: item.action_label || '', instructions: item.instructions || '' })) || [blankStage('Baru', 'new'), blankStage('Selesai', 'done')] })
+const page = usePage()
+const notice = ref(page.props.flash?.error || null)
 const addCondition = () => form.trigger_conditions.push({ field: 'priority', operator: 'equals', value: '' })
 const addStage = () => form.stages.push(blankStage())
 const move = (index, direction) => { const target = index + direction; if (target < 0 || target >= form.stages.length) return; [form.stages[index], form.stages[target]] = [form.stages[target], form.stages[index]] }
-const submit = () => editing ? form.put(resolveRoute('workflows.update', { workflow: props.workflow.slug })) : form.post(resolveRoute('workflows.store'))
+const stageError = (index, field) => form.errors[`stages.${index}.${field}`]
+const submit = () => {
+  notice.value = null
+  const options = {
+    preserveScroll: true,
+    onError: errors => { notice.value = Object.values(errors)[0] || 'Workflow gagal disimpan. Periksa kembali setiap tahap.' },
+  }
+  form.transform(data => ({
+    ...data,
+    stages: data.stages.map(stage => ({ ...stage, id: stage.id ? Number(stage.id) : null, status_key: String(stage.status_key || '').toLowerCase() })),
+  }))
+  editing
+    ? form.put(resolveRoute('workflows.update', { workflow: props.workflow.slug }), options)
+    : form.post(resolveRoute('workflows.store'), options)
+}
 </script>
 <style scoped>
 .field { display: flex; flex-direction: column; gap: .4rem; font-size: .8rem; font-weight: 600; color: #475569; }
