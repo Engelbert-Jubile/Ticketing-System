@@ -92,6 +92,9 @@ resources/js/*
 !resources/js/Components/
 resources/js/Components/*
 !resources/js/Components/WorkflowSelect.vue
+!resources/js/utils/
+resources/js/utils/*
+!resources/js/utils/workflowStatus.js
 !resources/js/Pages/
 resources/js/Pages/*
 !resources/js/Pages/Workflows/
