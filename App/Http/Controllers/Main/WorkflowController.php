@@ -10,6 +10,7 @@ use App\Models\Workflow;
 use App\Models\WorkflowInstance;
 use App\Models\WorkflowStage;
 use App\Services\WorkflowRuntimeService;
+use App\Support\RoleHelpers;
 use App\Support\UnitVisibility;
 use App\Support\WorkflowStatus;
 use Illuminate\Database\Eloquent\Builder;
@@ -251,25 +252,36 @@ class WorkflowController extends Controller
         ]);
     }
 
-    public function edit(string $locale, Workflow $workflow): Response
+    public function edit(Request $request, string $locale, Workflow $workflow): Response
     {
         $this->authorize('update', $workflow);
         $workflow->load(['stages.responsibleUser', 'creator']);
 
-        return Inertia::render('Workflows/Form', [...$this->formOptions(), 'workflow' => $this->payload($workflow, true)]);
+        return Inertia::render('Workflows/Form', [
+            ...$this->formOptions(),
+            'workflow' => $this->payload($workflow, true),
+            'canSwapStatuses' => RoleHelpers::userIsSuperAdmin($request->user()),
+        ]);
     }
 
     public function update(Request $request, string $locale, Workflow $workflow): RedirectResponse
     {
         $this->authorize('update', $workflow);
         $data = $this->validated($request, $workflow);
+        $canSwapStatuses = RoleHelpers::userIsSuperAdmin($request->user());
         try {
-            DB::transaction(function () use ($data, $request, $workflow) {
+            DB::transaction(function () use ($data, $request, $workflow, $canSwapStatuses) {
                 $before = $workflow->only(['name', 'code', 'entity_type', 'description', 'trigger_conditions', 'is_active']);
+                $beforeStages = $this->stageSnapshot($workflow);
                 $workflow->update([...$this->attributes($data), 'version' => $workflow->version + 1, 'updated_by' => $request->user()->id]);
-                $this->replaceStages($workflow, $data['stages']);
+                $statusSwaps = $this->replaceStages($workflow, $data['stages'], $canSwapStatuses);
                 $this->assertStagesPersisted($workflow, $data['stages']);
-                $this->history($workflow, $request, 'updated', ['before' => $before, 'after' => $workflow->fresh()->only(array_keys($before))]);
+                $this->history($workflow, $request, 'updated', [
+                    'before' => $before,
+                    'after' => $workflow->fresh()->only(array_keys($before)),
+                    'stages' => ['before' => $beforeStages, 'after' => $this->stageSnapshot($workflow)],
+                    'status_swaps' => $statusSwaps,
+                ]);
             });
         } catch (ValidationException $exception) {
             throw $exception;
@@ -420,12 +432,20 @@ class WorkflowController extends Controller
 
     private function validatedStage(Request $request, Workflow $workflow, ?WorkflowStage $stage = null): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'position' => ['required', 'integer', 'min:1', 'max:'.($workflow->stages()->count() + ($stage ? 0 : 1))], 'name' => ['required', 'string', 'max:100'],
-            'status_key' => ['required', Rule::in(WorkflowStatus::all()), Rule::unique('workflow_stages', 'status_key')->where('workflow_id', $workflow->id)->ignore($stage?->id)],
+            'status_key' => ['required', Rule::in(WorkflowStatus::all())],
             'responsible_role' => ['nullable', 'string', 'max:80', 'exists:roles,name'], 'responsible_user_id' => ['nullable', 'integer', 'exists:users,id'],
             'is_required' => ['required', 'boolean'], 'action_label' => ['nullable', 'string', 'max:100'], 'instructions' => ['nullable', 'string', 'max:1000'],
         ]);
+        $conflict = $workflow->stages()->where('status_key', $data['status_key'])->when($stage, fn ($query) => $query->whereKeyNot($stage->id))->first();
+        if ($conflict) {
+            throw ValidationException::withMessages([
+                'status_key' => WorkflowStatus::label($data['status_key'])." sedang digunakan oleh Tahap {$conflict->position} ({$conflict->name}). Gunakan Edit Workflow untuk menukar status.",
+            ]);
+        }
+
+        return $data;
     }
 
     private function validated(Request $request, ?Workflow $workflow = null): array
@@ -434,7 +454,7 @@ class WorkflowController extends Controller
             ? [$workflow->entity_type]
             : ['ticket', 'task'];
 
-        return $request->validate([
+        $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'code' => ['required', 'string', 'max:50', 'regex:/^[A-Z0-9_-]+$/', Rule::unique('workflows', 'code')->ignore($workflow?->id)],
             'entity_type' => ['required', Rule::in($entityTypes)],
@@ -447,13 +467,24 @@ class WorkflowController extends Controller
             'stages' => ['required', 'array', 'min:2', 'max:20'],
             'stages.*.id' => ['nullable', 'integer', Rule::exists('workflow_stages', 'id')->where('workflow_id', $workflow?->id)],
             'stages.*.name' => ['required', 'string', 'max:100'],
-            'stages.*.status_key' => ['required', 'distinct', Rule::in(WorkflowStatus::all())],
+            'stages.*.status_key' => ['required', Rule::in(WorkflowStatus::all())],
             'stages.*.responsible_role' => ['nullable', 'string', 'max:80', 'exists:roles,name'],
             'stages.*.responsible_user_id' => ['nullable', 'integer', 'exists:users,id'],
             'stages.*.is_required' => ['sometimes', 'boolean'],
             'stages.*.action_label' => ['nullable', 'string', 'max:100'],
             'stages.*.instructions' => ['nullable', 'string', 'max:1000'],
         ]);
+
+        $conflicts = collect($data['stages'])->groupBy('status_key')->filter(fn ($items) => $items->count() > 1);
+        if ($conflicts->isNotEmpty()) {
+            $status = (string) $conflicts->keys()->first();
+            $positions = $conflicts->first()->keys()->map(fn ($index) => 'Tahap '.((int) $index + 1))->implode(' dan ');
+            throw ValidationException::withMessages([
+                'stages' => WorkflowStatus::label($status)." sedang digunakan oleh {$positions}. Pilih status tersebut lalu konfirmasi pertukaran.",
+            ]);
+        }
+
+        return $data;
     }
 
     private function attributes(array $data): array
@@ -461,9 +492,33 @@ class WorkflowController extends Controller
         return ['name' => $data['name'], 'code' => strtoupper($data['code']), 'entity_type' => $data['entity_type'], 'description' => $data['description'] ?? null, 'trigger_conditions' => $data['trigger_conditions'] ?? [], 'is_active' => $data['is_active']];
     }
 
-    private function replaceStages(Workflow $workflow, array $stages): void
+    private function replaceStages(Workflow $workflow, array $stages, bool $canSwapStatuses = false): array
     {
-        $existing = $workflow->stages()->get();
+        $existing = $workflow->stages()->lockForUpdate()->get();
+        $existingById = $existing->keyBy(fn (WorkflowStage $stage) => (string) $stage->id);
+        $statusOwners = $existing->keyBy('status_key');
+        $statusSwaps = [];
+
+        foreach (array_values($stages) as $index => $data) {
+            $current = ! empty($data['id']) ? $existingById->get((string) $data['id']) : null;
+            $owner = $statusOwners->get($data['status_key']);
+            if (! $owner || ($current && $owner->is($current))) {
+                continue;
+            }
+            if (! $canSwapStatuses) {
+                throw ValidationException::withMessages([
+                    'stages' => WorkflowStatus::label($data['status_key'])." sedang digunakan oleh Tahap {$owner->position} ({$owner->name}). Pertukaran status hanya dapat dilakukan oleh Super Admin.",
+                ]);
+            }
+            $statusSwaps[] = [
+                'source_stage_id' => $current?->id,
+                'target_stage_id' => $owner->id,
+                'source_position' => $index + 1,
+                'from_status' => $current?->status_key,
+                'to_status' => $data['status_key'],
+            ];
+        }
+
         $workflow->stages()->update(['position' => DB::raw('position + 100')]);
         $kept = [];
         $statusChanges = [];
@@ -502,6 +557,8 @@ class WorkflowController extends Controller
         foreach ($statusChanges as [$stage, $from, $to]) {
             $this->migrateStageRuntimeStatus($stage, $from, $to);
         }
+
+        return $statusSwaps;
     }
 
     private function migrateStageRuntimeStatus(WorkflowStage $stage, string $from, string $to): void
@@ -542,6 +599,16 @@ class WorkflowController extends Controller
         $workflow->histories()->create(['user_id' => $request->user()->id, 'event' => $event, 'changes' => $changes]);
     }
 
+
+    private function stageSnapshot(Workflow $workflow): array
+    {
+        return $workflow->stages()->get()->map(fn (WorkflowStage $stage) => [
+            'id' => $stage->id,
+            'position' => $stage->position,
+            'name' => $stage->name,
+            'status_key' => $stage->status_key,
+        ])->values()->all();
+    }
     private function formOptions(): array
     {
         return [

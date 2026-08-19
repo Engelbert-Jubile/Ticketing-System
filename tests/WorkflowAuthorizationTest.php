@@ -579,6 +579,101 @@ test('active workflow edits preserve referenced stages and related records', fun
     ]);
 });
 
+test('superadmin atomically reassigns every stage status while admin gets a friendly conflict', function () {
+    $superadmin = workflowUserWithRole('superadmin');
+    $admin = workflowUserWithRole('admin');
+    $statuses = ['new', 'in_progress', 'confirmation', 'revision', 'done', 'on_hold', 'cancelled'];
+    $workflow = Workflow::create(['name' => 'Status Swap Flow', 'code' => 'STATUS_SWAP_FLOW', 'entity_type' => 'ticket', 'is_active' => true]);
+    $stages = collect($statuses)->map(fn (string $status, int $index) => $workflow->stages()->create([
+        'position' => $index + 1,
+        'name' => 'Stage '.($index + 1),
+        'status_key' => $status,
+        'is_required' => true,
+    ]));
+    $tickets = $stages->map(function ($stage, int $index) use ($superadmin, $workflow) {
+        $ticket = Ticket::create([
+            'ticket_no' => 'TCK-SWAP-'.($index + 1),
+            'title' => 'Status swap '.($index + 1),
+            'status' => 'new',
+            'requester_id' => $superadmin->id,
+        ]);
+        $instance = WorkflowInstance::query()->where('subject_type', Ticket::class)->where('subject_id', $ticket->id)->first();
+        if (! $instance || $instance->workflow_id !== $workflow->id) {
+            $instance?->delete();
+            $instance = WorkflowInstance::create([
+                'workflow_id' => $workflow->id,
+                'workflow_version' => 1,
+                'subject_type' => Ticket::class,
+                'subject_id' => $ticket->id,
+                'current_stage_id' => $stage->id,
+                'status' => 'running',
+            ]);
+        } else {
+            $instance->update(['current_stage_id' => $stage->id]);
+        }
+        $ticket->forceFill(['status' => $stage->status_key])->saveQuietly();
+
+        return [$ticket, $instance];
+    });
+    $rotated = [...array_slice($statuses, 1), $statuses[0]];
+    $stagePayloads = $stages->values()->map(fn ($stage, int $index) => [
+        'id' => $stage->id,
+        'name' => $stage->name,
+        'status_key' => $rotated[$index],
+        'responsible_role' => null,
+        'responsible_user_id' => null,
+        'is_required' => true,
+        'action_label' => null,
+        'instructions' => null,
+    ])->all();
+
+    $adminResponse = $this->actingAs($admin)->put(
+        route('workflows.update', ['locale' => 'id', 'workflow' => $workflow]),
+        workflowPayload(['name' => $workflow->name, 'code' => $workflow->code, 'stages' => $stagePayloads])
+    )->assertSessionHasErrors('stages');
+    expect($adminResponse->getSession()->get('errors')->first('stages'))
+        ->toContain('Pertukaran status hanya dapat dilakukan oleh Super Admin')
+        ->not->toContain('duplicate value');
+    expect($workflow->stages()->pluck('status_key')->all())->toBe($statuses);
+
+    $this->actingAs($superadmin)->put(
+        route('workflows.update', ['locale' => 'id', 'workflow' => $workflow]),
+        workflowPayload(['name' => $workflow->name, 'code' => $workflow->code, 'stages' => $stagePayloads])
+    )->assertRedirect()->assertSessionHas('success');
+
+    expect($workflow->fresh()->stages()->pluck('id')->all())->toBe($stages->pluck('id')->all())
+        ->and($workflow->stages()->pluck('status_key')->all())->toBe($rotated)
+        ->and($workflow->histories()->latest('id')->first()->changes['status_swaps'])->toHaveCount(7);
+    $tickets->each(function (array $pair, int $index) use ($stages, $rotated): void {
+        [$ticket, $instance] = $pair;
+        expect($ticket->fresh()->status)->toBe($rotated[$index])
+            ->and($instance->fresh()->current_stage_id)->toBe($stages[$index]->id);
+    });
+
+    $this->actingAs($superadmin)->withHeaders(workflowInertiaHeaders())
+        ->get(route('workflows.edit', ['locale' => 'id', 'workflow' => $workflow->fresh()]))
+        ->assertOk()
+        ->assertJsonPath('props.canSwapStatuses', true)
+        ->assertJsonPath('props.workflow.stages.0.status_key', 'in_progress')
+        ->assertJsonPath('props.workflow.stages.6.status_key', 'new');
+
+    $duplicatePayloads = $stagePayloads;
+    $duplicatePayloads[0]['status_key'] = 'confirmation';
+    $duplicateResponse = $this->actingAs($superadmin)->put(
+        route('workflows.update', ['locale' => 'id', 'workflow' => $workflow]),
+        workflowPayload(['name' => $workflow->name, 'code' => $workflow->code, 'stages' => $duplicatePayloads])
+    )->assertSessionHasErrors('stages');
+    expect($duplicateResponse->getSession()->get('errors')->first('stages'))
+        ->toContain('sedang digunakan oleh Tahap 1 dan Tahap 2')
+        ->not->toContain('duplicate value');
+    expect($workflow->stages()->pluck('status_key')->all())->toBe($rotated);
+
+    $this->actingAs($admin)->withHeaders(workflowInertiaHeaders())
+        ->get(route('workflows.edit', ['locale' => 'id', 'workflow' => $workflow]))
+        ->assertOk()
+        ->assertJsonPath('props.canSwapStatuses', false);
+});
+
 test('workflow instance detail is accurate responsive data and role scoped', function () {
     Artisan::call('db:seed', ['--class' => WorkflowSeeder::class, '--force' => true]);
     $user = workflowUserWithRole('user');
