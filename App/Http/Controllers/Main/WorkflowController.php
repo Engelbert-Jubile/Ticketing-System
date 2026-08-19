@@ -351,12 +351,10 @@ class WorkflowController extends Controller
         $data = $this->validatedStage($request, $workflow);
         DB::transaction(function () use ($workflow, $data, $request) {
             $stages = $workflow->stages()->get()->values();
-            $workflow->stages()->update(['position' => DB::raw('position + 100')]);
-            $stage = $workflow->stages()->create([...$data, 'position' => $stages->count() + 101]);
+            $stage = $workflow->stages()->create([...$data, 'position' => $this->temporaryStagePosition($workflow)]);
             $stages->splice($data['position'] - 1, 0, [$stage]);
-            foreach ($stages as $index => $item) {
-                $item->update(['position' => $index + 1]);
-            } $this->touchStructure($workflow, $request, 'stage_created', ['stage' => $stage->only(['name', 'status_key', 'position'])]);
+            $this->normalizeStagePositions($workflow, $stages->pluck('id')->all());
+            $this->touchStructure($workflow, $request, 'stage_created', ['stage' => $stage->fresh()->only(['name', 'status_key', 'position'])]);
         });
 
         return back()->with('success', 'Tahap workflow berhasil ditambahkan.');
@@ -374,12 +372,9 @@ class WorkflowController extends Controller
             unset($data['position']);
             $stage->update($data);
             $this->migrateStageRuntimeStatus($stage, $previousStatus, $stage->status_key);
-            $ordered = $workflow->stages()->whereKeyNot($stage->id)->get()->values();
+            $ordered = $workflow->stages()->whereKeyNot($stage->id)->lockForUpdate()->get()->values();
             $ordered->splice($position - 1, 0, [$stage]);
-            $workflow->stages()->update(['position' => DB::raw('position + 100')]);
-            foreach ($ordered as $index => $item) {
-                $item->update(['position' => $index + 1]);
-            }
+            $this->normalizeStagePositions($workflow, $ordered->pluck('id')->all());
             $this->touchStructure($workflow, $request, 'stage_updated', ['before' => $before, 'after' => $stage->fresh()->only(array_keys($before))]);
         });
 
@@ -399,7 +394,7 @@ class WorkflowController extends Controller
         DB::transaction(function () use ($workflow, $stage, $request) {
             $snapshot = $stage->only(['name', 'status_key', 'position']);
             $stage->delete();
-            $workflow->stages()->get()->each(fn ($item, $index) => $item->update(['position' => $index + 1]));
+            $this->normalizeStagePositions($workflow, $workflow->stages()->pluck('id')->all());
             $this->touchStructure($workflow, $request, 'stage_deleted', ['stage' => $snapshot]);
         });
 
@@ -414,10 +409,8 @@ class WorkflowController extends Controller
             throw ValidationException::withMessages(['stage_ids' => 'Daftar tahap tidak valid.']);
         }
         DB::transaction(function () use ($workflow, $ids, $request) {
-            $workflow->stages()->update(['position' => DB::raw('position + 100')]);
-            foreach ($ids as $index => $id) {
-                $workflow->stages()->whereKey($id)->update(['position' => $index + 1]);
-            } $this->touchStructure($workflow, $request, 'stages_reordered', ['stage_ids' => $ids]);
+            $this->normalizeStagePositions($workflow, $ids);
+            $this->touchStructure($workflow, $request, 'stages_reordered', ['stage_ids' => $ids]);
         });
 
         return back()->with('success', 'Urutan tahap berhasil diperbarui.');
@@ -519,7 +512,6 @@ class WorkflowController extends Controller
             ];
         }
 
-        $workflow->stages()->update(['position' => DB::raw('position + 100')]);
         $kept = [];
         $statusChanges = [];
 
@@ -528,7 +520,6 @@ class WorkflowController extends Controller
                 ? $existing->firstWhere('id', (int) $data['id'])
                 : $existing->first(fn (WorkflowStage $item) => $item->status_key === $data['status_key'] && ! in_array($item->id, $kept, true));
             $attributes = [
-                'position' => $index + 1,
                 'name' => $data['name'],
                 'status_key' => $data['status_key'],
                 'responsible_role' => $data['responsible_role'] ?? null,
@@ -542,7 +533,7 @@ class WorkflowController extends Controller
                 $stage->update($attributes);
                 $statusChanges[] = [$stage, $previousStatus, $stage->status_key];
             } else {
-                $stage = $workflow->stages()->create($attributes);
+                $stage = $workflow->stages()->create([...$attributes, 'position' => $this->temporaryStagePosition($workflow)]);
             }
             $kept[] = $stage->id;
         }
@@ -553,6 +544,8 @@ class WorkflowController extends Controller
             }
             $removed->delete();
         }
+
+        $this->normalizeStagePositions($workflow, $kept);
 
         foreach ($statusChanges as [$stage, $from, $to]) {
             $this->migrateStageRuntimeStatus($stage, $from, $to);
@@ -578,9 +571,47 @@ class WorkflowController extends Controller
         });
     }
 
+    private function temporaryStagePosition(Workflow $workflow): int
+    {
+        return ((int) $workflow->stages()->max('position')) + $workflow->stages()->count() + 100;
+    }
+
+    private function normalizeStagePositions(Workflow $workflow, array $orderedIds): void
+    {
+        if (DB::transactionLevel() < 1) {
+            throw new \LogicException('Normalisasi urutan tahap harus dijalankan di dalam transaksi.');
+        }
+
+        $orderedIds = collect($orderedIds)->map(fn ($id) => (int) $id)->values();
+        $locked = $workflow->stages()->lockForUpdate()->get(['workflow_stages.id', 'workflow_stages.position']);
+        if ($locked->pluck('id')->sort()->values()->all() !== $orderedIds->sort()->values()->all()) {
+            throw ValidationException::withMessages(['stages' => 'Urutan tahap tidak lengkap. Muat ulang halaman lalu coba lagi.']);
+        }
+
+        $offset = ((int) $locked->max('position')) + $locked->count() + 100;
+        $workflow->stages()->update(['position' => DB::raw("position + {$offset}")]);
+        foreach ($orderedIds as $index => $id) {
+            DB::table('workflow_stages')
+                ->where('workflow_id', $workflow->id)
+                ->where('id', $id)
+                ->update(['position' => $index + 1]);
+        }
+
+        $persisted = $workflow->stages()->pluck('position', 'id');
+        $expectedPositions = range(1, $orderedIds->count());
+        if ($persisted->values()->all() !== $expectedPositions || $persisted->keys()->map(fn ($id) => (int) $id)->all() !== $orderedIds->all()) {
+            throw ValidationException::withMessages(['stages' => 'Urutan tahap gagal dinormalisasi. Tidak ada perubahan yang disimpan.']);
+        }
+    }
+
     private function assertStagesPersisted(Workflow $workflow, array $stages): void
     {
         $persisted = $workflow->stages()->get()->keyBy('id');
+        if ($workflow->stages()->pluck('position')->all() !== range(1, count($stages))) {
+            throw ValidationException::withMessages([
+                'stages' => 'Urutan tahap gagal tersimpan. Tidak ada perubahan yang disimpan.',
+            ]);
+        }
         foreach ($stages as $stage) {
             if (empty($stage['id'])) {
                 continue;

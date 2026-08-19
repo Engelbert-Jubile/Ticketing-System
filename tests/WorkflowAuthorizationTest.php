@@ -22,6 +22,7 @@ beforeEach(function () {
             'database/migrations/2026_07_13_000002_repair_workflow_management_tables.php',
             'database/migrations/2026_07_20_000000_upgrade_workflow_runtime_audit.php',
             'database/migrations/2026_07_20_120000_add_semantic_workflow_identifiers.php',
+            'database/migrations/2026_08_19_000000_normalize_workflow_stage_positions.php',
         ],
         '--force' => true,
     ]);
@@ -425,6 +426,7 @@ test('admin can browse view create update and toggle but cannot delete', functio
     $this->actingAs($admin)->get(route('workflows.show', ['locale' => 'id', 'workflow' => $workflow]))->assertOk();
     $this->actingAs($admin)->get(route('workflows.create', ['locale' => 'id']))->assertOk();
     $this->actingAs($admin)->post(route('workflows.store', ['locale' => 'id']), workflowPayload(['code' => 'ADMIN_CREATED']))->assertRedirect();
+    expect(Workflow::query()->where('code', 'ADMIN_CREATED')->sole()->stages()->pluck('position')->all())->toBe([1, 2]);
     $this->actingAs($admin)->put(
         route('workflows.update', ['locale' => 'id', 'workflow' => $workflow]),
         workflowPayload(['name' => 'Admin Updated', 'code' => 'ADMIN_FLOW'])
@@ -505,20 +507,38 @@ test('admin manages stages safely while users remain forbidden', function () {
     ];
     $this->actingAs($user)->post(route('workflows.stages.store', ['locale' => 'id', 'workflow' => $workflow]), $stagePayload)->assertForbidden();
     $this->actingAs($admin)->post(route('workflows.stages.store', ['locale' => 'id', 'workflow' => $workflow]), $stagePayload)->assertRedirect();
+    expect($workflow->stages()->pluck('position')->all())->toBe([1, 2, 3]);
     $added = $workflow->stages()->where('status_key', 'confirmation')->sole();
 
     $this->actingAs($admin)->put(route('workflows.stages.update', ['locale' => 'id', 'workflow' => $workflow, 'stage' => $added]), [
-        ...$stagePayload, 'name' => 'Quality Confirmation',
+        ...$stagePayload, 'position' => 1, 'name' => 'Quality Confirmation',
     ])->assertRedirect();
-    expect($added->fresh()->name)->toBe('Quality Confirmation');
+    expect($added->fresh()->name)->toBe('Quality Confirmation')
+        ->and($workflow->stages()->pluck('id')->all())->toBe([$added->id, $first->id, $workflow->stages()->where('status_key', 'done')->value('id')])
+        ->and($workflow->stages()->pluck('position')->all())->toBe([1, 2, 3]);
 
-    $orderedIds = [$added->id, $first->id, $workflow->stages()->where('status_key', 'done')->value('id')];
+    $doneId = $workflow->stages()->where('status_key', 'done')->value('id');
+    $orderedIds = [$first->id, $added->id, $doneId];
     $this->actingAs($admin)->patch(route('workflows.stages.reorder', ['locale' => 'id', 'workflow' => $workflow]), ['stage_ids' => $orderedIds])->assertRedirect();
-    expect($workflow->stages()->pluck('id')->all())->toBe($orderedIds);
+    expect($workflow->stages()->pluck('id')->all())->toBe($orderedIds)
+        ->and($workflow->stages()->pluck('position')->all())->toBe([1, 2, 3]);
+
+    $movedBack = [$added->id, $first->id, $doneId];
+    $this->actingAs($admin)->patch(route('workflows.stages.reorder', ['locale' => 'id', 'workflow' => $workflow]), ['stage_ids' => $movedBack])->assertRedirect();
+    expect($workflow->stages()->pluck('id')->all())->toBe($movedBack)
+        ->and($workflow->stages()->pluck('position')->all())->toBe([1, 2, 3]);
+
+    $this->actingAs($admin)->withHeaders(workflowInertiaHeaders())
+        ->get(route('workflows.show', ['locale' => 'id', 'workflow' => $workflow]))
+        ->assertOk()
+        ->assertJsonPath('props.workflow.stages.0.position', 1)
+        ->assertJsonPath('props.workflow.stages.1.position', 2)
+        ->assertJsonPath('props.workflow.stages.2.position', 3);
 
     $this->actingAs($admin)->delete(route('workflows.stages.destroy', ['locale' => 'id', 'workflow' => $workflow, 'stage' => $added]))->assertRedirect();
     expect($workflow->stages()->count())->toBe(2)
-        ->and($workflow->histories()->whereIn('event', ['stage_created', 'stage_updated', 'stages_reordered', 'stage_deleted'])->count())->toBe(4);
+        ->and($workflow->stages()->pluck('position')->all())->toBe([1, 2])
+        ->and($workflow->histories()->whereIn('event', ['stage_created', 'stage_updated', 'stages_reordered', 'stage_deleted'])->count())->toBe(5);
 });
 
 test('active workflow edits preserve referenced stages and related records', function () {
@@ -553,7 +573,8 @@ test('active workflow edits preserve referenced stages and related records', fun
         ->and($persisted[$first->id]->status_key)->toBe('revision')
         ->and($persisted[$second->id]->status_key)->toBe('on_hold')
         ->and($persisted[$third->id]->status_key)->toBe('cancelled')
-        ->and($persisted[$last->id]->status_key)->toBe('done');
+        ->and($persisted[$last->id]->status_key)->toBe('done')
+        ->and($workflow->stages()->pluck('position')->all())->toBe([1, 2, 3, 4]);
 
     $this->actingAs($superadmin)->withHeaders(workflowInertiaHeaders())
         ->get(route('workflows.edit', ['locale' => 'id', 'workflow' => $workflow]))
@@ -643,6 +664,7 @@ test('superadmin atomically reassigns every stage status while admin gets a frie
 
     expect($workflow->fresh()->stages()->pluck('id')->all())->toBe($stages->pluck('id')->all())
         ->and($workflow->stages()->pluck('status_key')->all())->toBe($rotated)
+        ->and($workflow->stages()->pluck('position')->all())->toBe(range(1, 7))
         ->and($workflow->histories()->latest('id')->first()->changes['status_swaps'])->toHaveCount(7);
     $tickets->each(function (array $pair, int $index) use ($stages, $rotated): void {
         [$ticket, $instance] = $pair;
@@ -672,6 +694,35 @@ test('superadmin atomically reassigns every stage status while admin gets a frie
         ->get(route('workflows.edit', ['locale' => 'id', 'workflow' => $workflow]))
         ->assertOk()
         ->assertJsonPath('props.canSwapStatuses', false);
+});
+
+test('normalization migration repairs temporary positions without changing workflow references', function () {
+    $superadmin = workflowUserWithRole('superadmin');
+    $workflow = Workflow::create(['name' => 'Legacy Offset Flow', 'code' => 'LEGACY_OFFSET_FLOW', 'entity_type' => 'ticket', 'is_active' => true]);
+    $statuses = ['new', 'in_progress', 'confirmation', 'revision', 'done', 'on_hold', 'cancelled'];
+    $stages = collect($statuses)->map(fn (string $status, int $index) => $workflow->stages()->create([
+        'position' => 101 + $index, 'name' => 'Legacy '.($index + 1), 'status_key' => $status, 'is_required' => true,
+    ]));
+    $ticket = Ticket::create(['ticket_no' => 'TCK-LEGACY-OFFSET', 'title' => 'Legacy offset', 'status' => 'new', 'requester_id' => $superadmin->id]);
+    $instance = WorkflowInstance::query()->where('subject_type', Ticket::class)->where('subject_id', $ticket->id)->first();
+    $instance?->delete();
+    $instance = WorkflowInstance::create([
+        'workflow_id' => $workflow->id, 'workflow_version' => 1, 'subject_type' => Ticket::class,
+        'subject_id' => $ticket->id, 'current_stage_id' => $stages[0]->id, 'status' => 'running',
+    ]);
+    $history = $workflow->histories()->create(['user_id' => $superadmin->id, 'event' => 'legacy', 'changes' => ['preserve' => true]]);
+
+    $migration = require database_path('migrations/2026_08_19_000000_normalize_workflow_stage_positions.php');
+    $migration->up();
+
+    expect($workflow->stages()->pluck('position')->all())->toBe(range(1, 7))
+        ->and($workflow->stages()->pluck('id')->all())->toBe($stages->pluck('id')->all())
+        ->and($workflow->stages()->pluck('status_key')->all())->toBe($statuses)
+        ->and($instance->fresh()->current_stage_id)->toBe($stages[0]->id)
+        ->and($history->fresh()->changes)->toBe(['preserve' => true]);
+
+    $migration->up();
+    expect($workflow->stages()->pluck('position')->all())->toBe(range(1, 7));
 });
 
 test('workflow instance detail is accurate responsive data and role scoped', function () {
