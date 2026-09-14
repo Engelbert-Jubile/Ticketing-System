@@ -15,7 +15,7 @@ class SetSuperAdminSeeder extends Seeder
         DB::transaction(function () {
             $guard = 'web';
 
-            // Konfigurasi default (bisa override via .env)
+            // Configuration
             $email = env('SUPERADMIN_EMAIL', 'superadmin@gmail.com');
             $username = env('SUPERADMIN_USERNAME', 'superadmin');
             $passwordEnv = env('SUPERADMIN_PASSWORD');
@@ -26,67 +26,113 @@ class SetSuperAdminSeeder extends Seeder
             if ($password === 'password12345') {
                 $password = 'superadmin12345';
             }
+
             $first = env('SUPERADMIN_FIRST', 'Super');
             $last = env('SUPERADMIN_LAST', 'Admin');
 
-            // Pastikan roles ada
-            foreach (['user', 'admin', 'superadmin'] as $r) {
-                Role::firstOrCreate(['name' => $r, 'guard_name' => $guard]);
+            // Ensure required roles exist.
+            foreach (['user', 'admin', 'superadmin'] as $roleName) {
+                Role::firstOrCreate([
+                    'name' => $roleName,
+                    'guard_name' => $guard,
+                ]);
             }
 
-            // Normalisasi role lama "super-admin" -> "superadmin"
-            $legacy = Role::where('name', 'super-admin')->where('guard_name', $guard)->first();
-            if ($legacy) {
-                /** @var \Illuminate\Support\Collection<int, User> $usersLegacy */
-                $usersLegacy = User::role('super-admin')->get();
-                foreach ($usersLegacy as $u) {
-                    if (! $u instanceof User) {
-                        continue;
-                    }
-                    $u->syncRoles(
-                        $u->getRoleNames()
-                            ->map(fn ($n) => $n === 'super-admin' ? 'superadmin' : $n)
+            // Normalize legacy role: super-admin -> superadmin.
+            $legacyRole = Role::where('name', 'super-admin')
+                ->where('guard_name', $guard)
+                ->first();
+
+            if ($legacyRole) {
+                $legacyUsers = User::role('super-admin')->get();
+
+                foreach ($legacyUsers as $legacyUser) {
+                    $legacyUser->syncRoles(
+                        $legacyUser->getRoleNames()
+                            ->map(fn ($role) => $role === 'super-admin' ? 'superadmin' : $role)
                             ->unique()
                             ->values()
                             ->all()
                     );
                 }
-                $legacy->delete();
+
+                $legacyRole->delete();
             }
 
-            // Buat / ambil superadmin (password di-hash oleh cast 'hashed' di model)
-            $user = User::firstOrCreate(
-                ['email' => $email],
-                [
+            /*
+             * Find the existing superadmin safely.
+             *
+             * Priority:
+             * 1. Existing username
+             * 2. Existing email
+             * 3. Create new user
+             */
+            $user = User::where('username', $username)->first();
+
+            if (! $user) {
+                $user = User::where('email', $email)->first();
+            }
+
+            if (! $user) {
+                $user = User::create([
+                    'email' => $email,
                     'username' => $username,
                     'first_name' => $first,
                     'last_name' => $last,
-                    'password' => $password, // plain; cast akan meng-hash
-                ]
-            );
+                    'password' => $password,
+                ]);
+            } else {
+                $updates = [];
 
-            $updates = [];
-            if ($user->username !== $username) {
-                $updates['username'] = $username;
-            }
-            if (($user->first_name !== $first) || ($user->last_name !== $last)) {
-                $updates['first_name'] = $first;
-                $updates['last_name'] = $last;
-            }
-            if (! Hash::check($password, $user->password)) {
-                $updates['password'] = $password;
+                if ($user->email !== $email) {
+                    $existingEmailUser = User::where('email', $email)
+                        ->where('id', '!=', $user->id)
+                        ->exists();
+
+                    if (! $existingEmailUser) {
+                        $updates['email'] = $email;
+                    }
+                }
+
+                if ($user->username !== $username) {
+                    $existingUsernameUser = User::where('username', $username)
+                        ->where('id', '!=', $user->id)
+                        ->exists();
+
+                    if (! $existingUsernameUser) {
+                        $updates['username'] = $username;
+                    }
+                }
+
+                if ($user->first_name !== $first) {
+                    $updates['first_name'] = $first;
+                }
+
+                if ($user->last_name !== $last) {
+                    $updates['last_name'] = $last;
+                }
+
+                if (! Hash::check($password, $user->password)) {
+                    $updates['password'] = $password;
+                }
+
+                if (! empty($updates)) {
+                    $user->update($updates);
+                    $user->refresh();
+                }
             }
 
-            if (! empty($updates)) {
-                $user->update($updates);
-                $user->refresh();
-            }
-
-            // Pastikan hanya satu superadmin
+            /*
+             * Ensure there is only one superadmin.
+             * Any other superadmin becomes admin.
+             */
             User::role('superadmin')
                 ->where('id', '!=', $user->id)
-                ->each(fn ($u) => $u->syncRoles(['admin']));
+                ->each(function (User $otherUser) {
+                    $otherUser->syncRoles(['admin']);
+                });
 
+            // Make this user the only superadmin.
             $user->syncRoles(['superadmin']);
         });
     }
