@@ -17,6 +17,9 @@
     <section v-if="flash.error" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-900/30 dark:text-rose-200">
       {{ flash.error }}
     </section>
+    <section v-if="submitMessage" role="alert" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-900/30 dark:text-rose-200">
+      {{ submitMessage }}
+    </section>
 
     <form class="space-y-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900" @submit.prevent="submit">
       <div class="grid gap-4 md:grid-cols-2">
@@ -135,7 +138,7 @@
         </Link>
         <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60" :disabled="form.processing">
           <span class="material-icons text-base">save</span>
-          Simpan
+          {{ form.processing ? 'Menyimpan...' : 'Simpan' }}
         </button>
       </div>
     </form>
@@ -143,7 +146,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
 import { useRoute } from 'ziggy-js';
 import { Ziggy } from '@/ziggy';
@@ -166,18 +169,23 @@ const form = useForm({
 });
 
 const route = useRoute(Ziggy);
+const submitMessage = ref('');
 
 if (props.roles.length === 1) {
   form.role = props.roles[0].value;
 }
 
 function submit() {
+  submitMessage.value = '';
   // Route users berada di dalam prefix {locale}. Kirim locale aktif secara
   // eksplisit agar Ziggy selalu dapat membentuk URL POST saat form disimpan.
   form.post(route('users.store', { locale: route().params.locale }), {
     preserveScroll: true,
     onSuccess: () => {
       form.reset('password', 'password_confirmation');
+    },
+    onError: () => {
+      submitMessage.value = 'User belum tersimpan. Periksa pesan validasi pada form, lalu coba lagi.';
     },
   });
 }
