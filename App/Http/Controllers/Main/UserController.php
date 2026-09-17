@@ -106,6 +106,7 @@ class UserController extends Controller
             'meta' => [
                 'canAssignSuperadmin' => in_array('superadmin', $allowed, true),
                 'unitRequired' => ! $viewerIsSuper,
+                'storeUrl' => routeLocale('users.store'),
             ],
         ]);
     }
