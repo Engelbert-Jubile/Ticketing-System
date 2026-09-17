@@ -17,16 +17,14 @@
     <section v-if="flash.error" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-900/30 dark:text-rose-200">
       {{ flash.error }}
     </section>
-    <section v-if="submitMessage" role="alert" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-900/30 dark:text-rose-200">
-      {{ submitMessage }}
-    </section>
-
-    <form class="space-y-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900" @submit.prevent="submit">
+    <form :action="meta.storeUrl" method="post" class="space-y-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900" @submit="isSubmitting = true">
+      <input type="hidden" name="_token" :value="meta.csrfToken" />
       <div class="grid gap-4 md:grid-cols-2">
         <div>
           <label for="username" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Username</label>
           <input
             id="username"
+            name="username"
             v-model="form.username"
             type="text"
             autocomplete="username"
@@ -40,6 +38,7 @@
           <label for="email" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Email</label>
           <input
             id="email"
+            name="email"
             v-model="form.email"
             type="email"
             autocomplete="email"
@@ -55,6 +54,7 @@
           <label for="first_name" class="block text-sm font-medium text-slate-700 dark:text-slate-200">First Name</label>
           <input
             id="first_name"
+            name="first_name"
             v-model="form.first_name"
             type="text"
             autocomplete="given-name"
@@ -67,6 +67,7 @@
           <label for="last_name" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Last Name (opsional)</label>
           <input
             id="last_name"
+            name="last_name"
             v-model="form.last_name"
             type="text"
             autocomplete="family-name"
@@ -81,6 +82,7 @@
           <label for="password" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Password</label>
           <input
             id="password"
+            name="password"
             v-model="form.password"
             type="password"
             autocomplete="new-password"
@@ -94,6 +96,7 @@
           <label for="password_confirmation" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Konfirmasi Password</label>
           <input
             id="password_confirmation"
+            name="password_confirmation"
             v-model="form.password_confirmation"
             type="password"
             autocomplete="new-password"
@@ -107,6 +110,7 @@
         <label for="role" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Role</label>
         <select
           id="role"
+          name="role"
           v-model="form.role"
           class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
           required
@@ -121,6 +125,7 @@
         <label for="unit" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Unit</label>
         <select
           id="unit"
+          name="unit"
           v-model="form.unit"
           class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
           :required="unitRequired"
@@ -136,9 +141,9 @@
         <Link :href="route('users.report')" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800">
           Batal
         </Link>
-        <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60" :disabled="form.processing">
+        <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60" :disabled="isSubmitting">
           <span class="material-icons text-base">save</span>
-          {{ form.processing ? 'Menyimpan...' : 'Simpan' }}
+          {{ isSubmitting ? 'Menyimpan...' : 'Simpan' }}
         </button>
       </div>
     </form>
@@ -169,23 +174,10 @@ const form = useForm({
 });
 
 const route = useRoute(Ziggy);
-const submitMessage = ref('');
+const isSubmitting = ref(false);
 
 if (props.roles.length === 1) {
   form.role = props.roles[0].value;
-}
-
-function submit() {
-  submitMessage.value = '';
-  form.post(props.meta.storeUrl, {
-    preserveScroll: true,
-    onSuccess: () => {
-      form.reset('password', 'password_confirmation');
-    },
-    onError: () => {
-      submitMessage.value = 'User belum tersimpan. Periksa pesan validasi pada form, lalu coba lagi.';
-    },
-  });
 }
 
 const page = usePage();
