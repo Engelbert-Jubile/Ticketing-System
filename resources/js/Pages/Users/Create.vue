@@ -172,7 +172,9 @@ if (props.roles.length === 1) {
 }
 
 function submit() {
-  form.post(route('users.store'), {
+  // Route users berada di dalam prefix {locale}. Kirim locale aktif secara
+  // eksplisit agar Ziggy selalu dapat membentuk URL POST saat form disimpan.
+  form.post(route('users.store', { locale: route().params.locale }), {
     preserveScroll: true,
     onSuccess: () => {
       form.reset('password', 'password_confirmation');

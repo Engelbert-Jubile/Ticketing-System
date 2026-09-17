@@ -16,7 +16,7 @@ class SetSuperAdminSeeder extends Seeder
             $guard = 'web';
 
             // Configuration
-            $email = env('SUPERADMIN_EMAIL', 'superadmin@gmail.com');
+            $email = env('SUPERADMIN_EMAIL', 'superadmin@kftd.co.id');
             $username = env('SUPERADMIN_USERNAME', 'superadmin');
             $passwordEnv = env('SUPERADMIN_PASSWORD');
             $password = is_string($passwordEnv) && trim($passwordEnv) !== ''
