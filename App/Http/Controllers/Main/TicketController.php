@@ -743,7 +743,7 @@ class TicketController extends Controller
         if (! empty($assignedIds)) {
             $notifier->notifyTicketAssigned($ticket, $assignedIds, $actor);
         }
-        return redirect()->route('tickets.create', ['locale' => app()->getLocale()])
+        return redirect()->route('tickets.report.detail.view', ['locale' => app()->getLocale(), 'ticket' => $ticket->ticket_no])
             ->with('success', 'Ticket created successfully.');
     }
 
