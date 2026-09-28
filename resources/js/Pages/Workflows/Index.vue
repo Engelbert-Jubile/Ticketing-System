@@ -21,7 +21,7 @@
       </div>
       <div v-if="loading" class="flex min-h-64 items-center justify-center"><span class="spinner"></span></div>
       <div v-else-if="!items.data.length" class="flex min-h-72 flex-col items-center justify-center p-8 text-center"><span class="material-icons mb-3 text-6xl text-slate-300">account_tree</span><h2 class="text-lg font-semibold text-slate-700 dark:text-slate-200">Tidak ada item workflow</h2><p class="mt-1 max-w-md text-sm text-slate-500">Tidak ada Ticket atau Task yang sesuai dengan filter dan akses akun Anda.</p></div>
-      <div v-else class="overflow-x-auto">
+      <div v-else class="min-h-[22rem] overflow-x-auto">
         <table class="min-w-[1180px] w-full divide-y divide-slate-200 dark:divide-slate-700">
           <thead class="bg-slate-50 dark:bg-slate-800/70"><tr class="text-left text-xs font-bold uppercase tracking-wider text-slate-500"><th class="px-5 py-3">Nomor / Judul</th><th class="px-5 py-3">Workflow</th><th class="px-5 py-3">Requester</th><th class="px-5 py-3">PIC</th><th class="px-5 py-3">Status / Tahap</th><th class="px-5 py-3">Target</th><th class="px-5 py-3">Diperbarui</th><th class="px-5 py-3 text-right">Aksi</th></tr></thead>
           <tbody class="divide-y divide-slate-100 dark:divide-slate-800"><tr v-for="item in items.data" :key="item.id" class="hover:bg-cyan-50/40 dark:hover:bg-slate-800/50">
