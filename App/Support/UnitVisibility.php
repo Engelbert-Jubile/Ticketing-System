@@ -59,30 +59,10 @@ class UnitVisibility
                   });
             });
 
-        $builder->orWhere(function (Builder $rel) use ($unit, $userId) {
-
-	
-            // Filter unit (boleh null)
-            $rel->where(function (Builder $u) use ($unit) {
-                $u->whereHas('requester', fn (Builder $sub) => $sub->where('unit', $unit))
-                  ->orWhereDoesntHave('requester')
-                  ->orWhereHas('requester', fn (Builder $sub) => $sub->whereNull('unit'));
-            });
-
-            // Relasi user (REQUESTER TERMASUK)
-            $rel->where(function (Builder $r) use ($userId) {
-                $r->where('requester_id', $userId)
-                  ->orWhere('agent_id', $userId)
-                  ->orWhere('assigned_id', $userId)
-                  ->orWhereHas('assignedUsers', fn (Builder $sub) => $sub->where('users.id', $userId))
-                  ->orWhereHas('tasks', function (Builder $taskQuery) use ($userId) {
-                      $taskQuery->where('assignee_id', $userId)
-                          ->orWhere(function (Builder $subQuery) use ($userId) {
-                              self::orWhereJsonAssignmentContains($subQuery, 'assigned_to', $userId);
-                          });
-                  });
-            });
-        });
+        // The report must show every ticket from the viewer's unit. The
+        // previous query also required a direct assignment, which hid valid
+        // same-unit tickets from the report.
+        $builder->orWhereHas('requester', fn (Builder $sub) => $sub->where('unit', $unit));
     });
 }
 
