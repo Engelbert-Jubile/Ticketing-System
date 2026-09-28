@@ -974,8 +974,13 @@ function submit() {
     forceFormData: true,
     preserveScroll: false,
     preserveState: false,
-    onError: () => {
-      submitError.value = 'Gagal membuat ticket. Periksa kembali input yang berwarna merah.';
+    onError: errors => {
+      const messages = Object.values(errors ?? {})
+        .flatMap(value => Array.isArray(value) ? value : [value])
+        .filter(Boolean);
+      submitError.value = messages.length
+        ? `Gagal membuat ticket: ${messages.join(' ')}`
+        : 'Gagal membuat ticket. Periksa kembali input yang berwarna merah.';
       try {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (error) {

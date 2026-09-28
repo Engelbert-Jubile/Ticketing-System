@@ -534,6 +534,15 @@ class TicketController extends Controller
             'status' => $currentStatus,
             'type' => 'task',
             'agent_id' => null,
+            'priority' => in_array($request->input('priority'), $this->priorities(), true)
+                ? $request->input('priority')
+                : 'medium',
+            'sla' => in_array($request->input('sla'), $this->slas(), true)
+                ? $request->input('sla')
+                : null,
+            'description' => mb_substr((string) $request->input('description', ''), 0, 255),
+            'reason' => mb_substr((string) $request->input('reason', ''), 0, 255),
+            'letter_no' => mb_substr((string) $request->input('letter_no', ''), 0, 255),
         ]);
 
         $missingValue = '__input_missing__';
@@ -565,7 +574,12 @@ class TicketController extends Controller
         // The create form and assigned_user_ids both submit the database user ID.
         // Validating assigned_id against users.code made every selected PIC fail
         // validation on installations that also have a code column.
-        $assignedRule = ['nullable', 'integer', 'min:1', Rule::exists('users', 'id')];
+        $submittedAssignedId = filter_var($request->input('assigned_id'), FILTER_VALIDATE_INT);
+        $request->merge([
+            'assigned_id' => $submittedAssignedId && User::whereKey($submittedAssignedId)->exists()
+                ? (int) $submittedAssignedId
+                : null,
+        ]);
 
         $data = $request->validate([
             'title' => ['required', 'string', 'max:100'],
@@ -577,7 +591,7 @@ class TicketController extends Controller
             'status' => ['nullable', Rule::in($this->statuses())],
             'requester_id' => ['nullable', 'integer', 'min:1', Rule::exists('users', 'id')],
             'agent_id' => ['nullable'],
-            'assigned_id' => $assignedRule,
+            'assigned_id' => ['nullable', 'integer', 'min:1'],
             'assigned_user_ids' => ['nullable', 'array'],
             'assigned_user_ids.*' => ['integer', 'min:1', 'exists:users,id'],
             'due_date' => ['nullable', 'date', 'after_or_equal:'.$today],
