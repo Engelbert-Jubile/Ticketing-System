@@ -435,7 +435,7 @@ class TicketController extends Controller
     public function index(Request $request): RedirectResponse
     {
         $query = $request->getQueryString();
-        $target = route('tickets.report');
+        $target = route('tickets.report', ['locale' => $request->route('locale') ?? app()->getLocale()]);
 
         if ($query) {
             $target .= '?'.$query;
