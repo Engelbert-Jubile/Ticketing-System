@@ -709,18 +709,6 @@ class TicketController extends Controller
         } catch (\Throwable) {
         }
 
-        $notifier = app(WorkItemNotifier::class);
-        $actor = Auth::user();
-
-        $taskCreated = $taskCreated?->fresh();
-
-        if ($taskCreated) {
-            $notifier->notifyTicketWorkItemRouted($ticket, $taskCreated, null, $actor);
-        } else {
-            $notifier->notifyTicketCreated($ticket, $actor);
-        }
-
-        // notify assigned recipients on create
         $ticket->loadMissing("assignedUsers:id");
         $assignedIds = $this->collectTicketAssignedIds($ticket);
         if ($ticket->agent_id) {
@@ -729,9 +717,33 @@ class TicketController extends Controller
         $assignedIds = array_values(array_unique(array_filter($assignedIds, function ($v) {
             return (int) $v > 0;
         })));
-        if (! empty($assignedIds)) {
-            $notifier->notifyTicketAssigned($ticket, $assignedIds, $actor);
-        }
+
+        // Email/database notifications may wait on the mail provider. Defer
+        // them until the HTTP response is sent so saving a ticket stays fast.
+        $ticketId = $ticket->id;
+        $taskCreatedId = $taskCreated?->id;
+        $actorId = Auth::id();
+        defer(function () use ($ticketId, $taskCreatedId, $assignedIds, $actorId): void {
+            $ticket = Ticket::find($ticketId);
+            if (! $ticket) {
+                return;
+            }
+
+            $notifier = app(WorkItemNotifier::class);
+            $actor = $actorId ? User::find($actorId) : null;
+            $task = $taskCreatedId ? Task::find($taskCreatedId) : null;
+
+            if ($task) {
+                $notifier->notifyTicketWorkItemRouted($ticket, $task, null, $actor);
+            } else {
+                $notifier->notifyTicketCreated($ticket, $actor);
+            }
+
+            if (! empty($assignedIds)) {
+                $notifier->notifyTicketAssigned($ticket, $assignedIds, $actor);
+            }
+        });
+
         return redirect()->route('tickets.report.detail.view', ['locale' => app()->getLocale(), 'ticket' => $ticket->ticket_no])
             ->with('success', 'Ticket created successfully.');
     }

@@ -728,6 +728,10 @@ class WorkflowController extends Controller
                     $taskInstances
                         ->where('subject_type', Task::class)
                         ->whereHasMorph('subject', [Task::class], function (Builder $taskQuery) use ($user) {
+                            // Tasks automatically derived from a ticket are
+                            // shown inside that ticket's workflow entry.
+                            // Keep only standalone tasks in this list.
+                            $taskQuery->whereNull('ticket_id');
                             UnitVisibility::scopeWorkflowTasks($taskQuery, $user);
                         });
                 });

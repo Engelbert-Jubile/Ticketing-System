@@ -4,7 +4,7 @@
       <div class="space-y-1.5">
         <div>
           <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100">Ticket Report</h1>
-          <p class="text-sm text-slate-500 dark:text-slate-300">Pantau tiket berdasarkan tipe task maupun project dengan tampilan yang rapi dan seragam.</p>
+          <p class="text-sm text-slate-500 dark:text-slate-300">Pantau ticket task dengan tampilan yang rapi dan seragam.</p>
         </div>
       </div>
       <div class="flex flex-wrap items-center gap-2">
@@ -290,7 +290,7 @@
         </transition>
       </div>
 
-      <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+      <div v-if="showProjectTickets" class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <button
           type="button"
           class="flex w-full items-center justify-between gap-3 bg-purple-100 px-6 py-4 text-left text-purple-900 transition dark:bg-purple-900/30 dark:text-purple-100"
@@ -556,6 +556,8 @@ const props = defineProps({
 
 const page = usePage();
 const flashSuccess = computed(() => page.props.flash?.success ?? null);
+// Retain the Project report implementation for a future release.
+const showProjectTickets = false;
 
 const deleting = reactive({ scope: null, id: null });
 
