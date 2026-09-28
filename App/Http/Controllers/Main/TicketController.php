@@ -634,52 +634,32 @@ class TicketController extends Controller
         $data['assigned_id'] = $validIds[0]
             ?? ((isset($data['assigned_id']) && (int) $data['assigned_id'] > 0) ? (int) $data['assigned_id'] : null);
 
-        $projectCreated = null;
-        $taskCreated = null;
-
-        $ticket = DB::transaction(function () use ($data, $validIds, &$projectCreated, &$taskCreated) {
+        $ticket = DB::transaction(function () use ($data, $validIds) {
             $ticket = Ticket::create($data);
             $ticket->assignedUsers()->sync($validIds);
 
-            // === AUTO CREATE PROJECT
-            if (($ticket->type ?? null) === 'project') {
-                $projectStatus = WorkflowStatus::normalize($ticket->status ?? WorkflowStatus::NEW);
-
-                $project = Project::firstOrCreate(
-                    ['ticket_id' => $ticket->id],
-                    [
-                        'title' => $ticket->title,
-                        'description' => $ticket->description,
-                        'status' => $projectStatus,
-                        'status_id' => WorkflowStatus::code($projectStatus),
-                        'start_date' => $ticket->created_at?->toDateString() ?? now()->toDateString(),
-                        'end_date' => $ticket->finish_date ?? $ticket->due_date,
-                        'created_by' => Auth::id(),
-                        'requester_id' => $ticket->requester_id ?: Auth::id(),
-                    ]
-                );
-
-                if ($project->wasRecentlyCreated) {
-                    $projectCreated = $project;
-                }
-
-                $this->syncProjectFromTicket($project, $ticket);
-            }
-
-            // === AUTO CREATE TASK
-            if (($ticket->type ?? null) === 'task') {
-                $task = Task::firstOrCreate(
-                    ['ticket_id' => $ticket->id],
-                    $this->taskPayloadFromTicket($ticket, true)
-                );
-
-                if ($task->wasRecentlyCreated) {
-                    $taskCreated = $task;
-                }
-            }
-
             return $ticket;
         });
+
+        $taskCreated = null;
+        try {
+            // Ticket creation is temporarily task-only. Task is derived after
+            // the ticket commit so a stale Task/Workflow schema cannot roll
+            // back the primary ticket record.
+            $task = Task::firstOrCreate(
+                ['ticket_id' => $ticket->id],
+                $this->taskPayloadFromTicket($ticket, true)
+            );
+
+            if ($task->wasRecentlyCreated) {
+                $taskCreated = $task;
+            }
+        } catch (\Throwable $exception) {
+            Log::error('tickets.store.task_create_failed', [
+                'ticket_id' => $ticket->id,
+                'message' => $exception->getMessage(),
+            ]);
+        }
 
         // (opsional) apply requested status setelah create jika diizinkan
         // ...
@@ -718,19 +698,10 @@ class TicketController extends Controller
         $notifier = app(WorkItemNotifier::class);
         $actor = Auth::user();
 
-        $projectCreated = $projectCreated?->fresh();
         $taskCreated = $taskCreated?->fresh();
 
-        if ($projectCreated || $taskCreated) {
-            if ($projectCreated && ($ticket->type ?? null) !== 'project') {
-                $notifier->notifyProjectCreated($projectCreated, $actor, true);
-            }
-
-            if ($taskCreated && ($ticket->type ?? null) !== 'task') {
-                $notifier->notifyTaskCreated($taskCreated, [], $actor, true);
-            }
-
-            $notifier->notifyTicketWorkItemRouted($ticket, $taskCreated, $projectCreated, $actor);
+        if ($taskCreated) {
+            $notifier->notifyTicketWorkItemRouted($ticket, $taskCreated, null, $actor);
         } else {
             $notifier->notifyTicketCreated($ticket, $actor);
         }

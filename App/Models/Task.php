@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 /**
@@ -122,7 +123,8 @@ class Task extends Model
                 $t->completed_at = null;
             }
 
-            if ($t->isDirty('title') || empty($t->public_slug)) {
+            if (Schema::hasColumn($t->getTable(), 'public_slug')
+                && ($t->isDirty('title') || empty($t->public_slug))) {
                 $t->public_slug = static::generateUniquePublicSlug($t->title, $t->id);
             }
         });
