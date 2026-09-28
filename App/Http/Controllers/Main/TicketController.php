@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -601,9 +602,12 @@ class TicketController extends Controller
             'sla' => ['nullable', Rule::in($this->slas())],
             'attachments' => ['nullable', 'array'],
             'attachments.*' => ['string'],
+            'submission_token' => ['required', 'uuid'],
         ]);
 
         $actingUser = $request->user();
+        $submissionToken = $data['submission_token'];
+        unset($data['submission_token']);
         $canPickRequester = $this->userCanSelectRequester($actingUser);
 
         if ($canPickRequester) {
@@ -648,12 +652,30 @@ class TicketController extends Controller
         $data['assigned_id'] = $validIds[0]
             ?? ((isset($data['assigned_id']) && (int) $data['assigned_id'] > 0) ? (int) $data['assigned_id'] : null);
 
-        $ticket = DB::transaction(function () use ($data, $validIds) {
-            $ticket = Ticket::create($data);
-            $ticket->assignedUsers()->sync($validIds);
+        $idempotencyKey = sprintf('tickets:store:%d:%s', (int) ($actingUser?->id ?? 0), $submissionToken);
+        $lock = Cache::lock($idempotencyKey.':lock', 30);
+        if (! $lock->get()) {
+            return back()->with('error', 'Penyimpanan ticket sedang diproses.');
+        }
 
-            return $ticket;
-        });
+        try {
+            $existingTicketId = Cache::get($idempotencyKey);
+            if ($existingTicketId && ($existingTicket = Ticket::find($existingTicketId))) {
+                return redirect()->route('tickets.report.detail.view', ['locale' => app()->getLocale(), 'ticket' => $existingTicket->ticket_no])
+                    ->with('success', 'Ticket sudah tersimpan.');
+            }
+
+            $ticket = DB::transaction(function () use ($data, $validIds) {
+                $ticket = Ticket::create($data);
+                $ticket->assignedUsers()->sync($validIds);
+
+                return $ticket;
+            });
+
+            Cache::put($idempotencyKey, $ticket->id, now()->addMinutes(10));
+        } finally {
+            $lock->release();
+        }
 
         $taskCreated = null;
         try {
@@ -709,40 +731,17 @@ class TicketController extends Controller
         } catch (\Throwable) {
         }
 
-        $ticket->loadMissing("assignedUsers:id");
-        $assignedIds = $this->collectTicketAssignedIds($ticket);
-        if ($ticket->agent_id) {
-            $assignedIds[] = (int) $ticket->agent_id;
+        $notifier = app(WorkItemNotifier::class);
+        $actor = Auth::user();
+        $taskCreated = $taskCreated?->fresh();
+
+        // A routed notification already includes the requester and all PIC.
+        // Send it once, avoiding duplicate mail/database notifications.
+        if ($taskCreated) {
+            $notifier->notifyTicketWorkItemRouted($ticket, $taskCreated, null, $actor);
+        } else {
+            $notifier->notifyTicketCreated($ticket, $actor);
         }
-        $assignedIds = array_values(array_unique(array_filter($assignedIds, function ($v) {
-            return (int) $v > 0;
-        })));
-
-        // Email/database notifications may wait on the mail provider. Defer
-        // them until the HTTP response is sent so saving a ticket stays fast.
-        $ticketId = $ticket->id;
-        $taskCreatedId = $taskCreated?->id;
-        $actorId = Auth::id();
-        defer(function () use ($ticketId, $taskCreatedId, $assignedIds, $actorId): void {
-            $ticket = Ticket::find($ticketId);
-            if (! $ticket) {
-                return;
-            }
-
-            $notifier = app(WorkItemNotifier::class);
-            $actor = $actorId ? User::find($actorId) : null;
-            $task = $taskCreatedId ? Task::find($taskCreatedId) : null;
-
-            if ($task) {
-                $notifier->notifyTicketWorkItemRouted($ticket, $task, null, $actor);
-            } else {
-                $notifier->notifyTicketCreated($ticket, $actor);
-            }
-
-            if (! empty($assignedIds)) {
-                $notifier->notifyTicketAssigned($ticket, $assignedIds, $actor);
-            }
-        });
 
         return redirect()->route('tickets.report.detail.view', ['locale' => app()->getLocale(), 'ticket' => $ticket->ticket_no])
             ->with('success', 'Ticket created successfully.');

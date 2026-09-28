@@ -424,6 +424,14 @@ const props = defineProps({
 const page = usePage();
 const flash = computed(() => page.props.flash || {});
 const submitError = ref('');
+const createSubmissionToken = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+
+  const hex = length => Math.random().toString(16).slice(2).padEnd(length, '0').slice(0, length);
+  return `${hex(8)}-${hex(4)}-4${hex(3)}-8${hex(3)}-${hex(12)}`;
+};
 
 const form = useForm({
   title: '',
@@ -444,6 +452,7 @@ const form = useForm({
   assigned_id: null,
   assigned_user_ids: [],
   attachments: [],
+  submission_token: createSubmissionToken(),
 });
 
 const toDateOnly = value => {
@@ -872,6 +881,7 @@ function resetForm() {
   form.agent_id = null;
   form.assigned_id = null;
   form.assigned_user_ids = [];
+  form.submission_token = createSubmissionToken();
   attachmentIds.value = [];
   uploadError.value = '';
   submitError.value = '';
