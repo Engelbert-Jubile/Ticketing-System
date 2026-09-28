@@ -516,7 +516,7 @@ class TicketController extends Controller
             try {
                 $due = Carbon::parse($request->input('due_at'));
                 $request->merge([
-                    'due_date' => $due->format('d/m/Y'),
+                    'due_date' => $due->format('Y-m-d'),
                     'due_time' => $due->format('H:i'),
                 ]);
             } catch (\Throwable $e) {
