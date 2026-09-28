@@ -476,7 +476,10 @@ class TicketController extends Controller
         $lockStatus = empty($allowedStatuses);
 
         $defaults = [
-            'priority' => null,
+            // Priority is mandatory when storing a ticket.  Supply the normal
+            // priority by default so a new form can be submitted without an
+            // otherwise invisible client-side validation stop.
+            'priority' => 'medium',
             'type' => 'task',
             'status' => WorkflowStatus::normalize(WorkflowStatus::default()),
             'start_at' => null,

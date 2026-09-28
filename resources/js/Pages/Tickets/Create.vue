@@ -23,7 +23,7 @@
     <form class="mt-4 space-y-6 rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/70" @submit.prevent="submit">
       <section class="grid gap-4 md:grid-cols-2">
         <div>
-          <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Judul</label>
+          <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Judul <span class="text-red-500">*</span></label>
           <input
             v-model="form.title"
             type="text"
@@ -56,7 +56,7 @@
         </div>
 
         <div>
-          <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Prioritas</label>
+          <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Prioritas <span class="text-red-500">*</span></label>
           <div class="mt-1 w-full">
             <FancySelect v-model="form.priority" :options="priorityOptions" accent="subtle" />
           </div>
@@ -430,7 +430,7 @@ const form = useForm({
   description: '',
   reason: '',
   letter_no: '',
-  priority: props.defaults.priority ?? null,
+  priority: props.defaults.priority ?? 'medium',
   type: props.defaults.type ?? 'task',
   status: props.defaults.status ?? 'new',
   sla: props.defaults.sla ?? null,
@@ -861,7 +861,7 @@ watch(selectedAttachmentFilter, () => {
 
 function resetForm() {
   form.reset();
-  form.priority = props.defaults.priority ?? null;
+  form.priority = props.defaults.priority ?? 'medium';
   form.type = 'task';
   form.status = props.defaults.status ?? 'new';
   form.start_at = props.defaults.start_at ?? props.defaults.due_date ?? null;
@@ -897,13 +897,16 @@ const normalizeNumber = value => {
 
 function validateForm() {
   if (typeof form.clearErrors === 'function') {
-    form.clearErrors('priority', 'due_date', 'finish_date', 'start_at', 'finish_at');
+    form.clearErrors('title', 'priority', 'due_date', 'finish_date', 'start_at', 'finish_at');
   }
 
   const errors = {};
   const startDate = normalizeDateValue(form.start_at);
   const finishDate = normalizeDateValue(form.finish_at);
 
+  if (!String(form.title ?? '').trim()) {
+    errors.title = 'Judul ticket wajib diisi.';
+  }
   if (!form.priority) {
     errors.priority = 'Pilih prioritas ticket.';
   }
