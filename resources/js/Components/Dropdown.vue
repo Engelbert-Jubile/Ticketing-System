@@ -17,7 +17,7 @@
       <div
         v-if="open"
         class="dropdown-menu"
-        :class="[widthClass, alignClass]"
+        :class="[widthClass, alignClass, placement === 'top' ? 'bottom-full mb-2' : 'mt-2']"
         @click="handleItemClick"
         role="menu"
       >
@@ -33,6 +33,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   align: { type: String, default: 'right' },
+  placement: { type: String, default: 'bottom' },
   widthClass: { type: String, default: 'w-40' },
   triggerClass: { type: String, default: 'inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-slate-600 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300' },
 });
@@ -100,13 +101,15 @@ function handleKeyUp(event) {
 }
 
 const alignClass = computed(() => {
+  const origin = props.placement === 'top' ? 'origin-bottom' : 'origin-top';
+
   switch (props.align) {
     case 'left':
-      return 'left-0 origin-top-left';
+      return `left-0 ${origin}-left`;
     case 'center':
-      return 'left-1/2 -translate-x-1/2 origin-top';
+      return `left-1/2 -translate-x-1/2 ${origin}`;
     default:
-      return 'right-0 origin-top-right';
+      return `right-0 ${origin}-right`;
   }
 });
 </script>
