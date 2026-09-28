@@ -562,9 +562,10 @@ class TicketController extends Controller
         $dueDateProvided = $dueDateInputRaw !== $missingValue;
         $finishDateProvided = $finishDateInputRaw !== $missingValue;
 
-        $assignedRule = $this->hasUserCode()
-            ? ['nullable', 'string', 'max:64', Rule::exists('users', 'code')]
-            : ['nullable', 'integer', 'min:1', Rule::exists('users', 'id')];
+        // The create form and assigned_user_ids both submit the database user ID.
+        // Validating assigned_id against users.code made every selected PIC fail
+        // validation on installations that also have a code column.
+        $assignedRule = ['nullable', 'integer', 'min:1', Rule::exists('users', 'id')];
 
         $data = $request->validate([
             'title' => ['required', 'string', 'max:100'],
