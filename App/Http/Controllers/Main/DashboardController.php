@@ -7,6 +7,7 @@ use App\Domains\Task\Models\Task;
 use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Support\RoleHelpers;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -47,6 +48,7 @@ class DashboardController extends Controller
     {
      
         $viewerId = (int) ($request->user()?->id ?? 0);
+        $isSuperAdmin = RoleHelpers::userIsSuperAdmin($request->user());
         $usersCount = User::count();
 
         /* ===== Tickets ===== */
@@ -54,7 +56,7 @@ class DashboardController extends Controller
         $lcT = $this->lcCast($tCol);
         $eq = fn (string $s) => "('".implode("','", \App\Support\WorkflowStatus::equivalents($s))."')";
         $ticketsBase = Ticket::query();
-        if ($viewerId > 0) {
+        if (! $isSuperAdmin && $viewerId > 0) {
             $ticketsBase->where(function (Builder $builder) use ($viewerId) {
                 $builder->where('requester_id', $viewerId)
                     ->orWhere('agent_id', $viewerId)
@@ -90,7 +92,7 @@ class DashboardController extends Controller
         $lcTask = $this->lcCast($taskCol);
 
         $tasksBase = Task::query();
-        if ($viewerId > 0) {
+        if (! $isSuperAdmin && $viewerId > 0) {
             $tasksBase->where(function (Builder $builder) use ($viewerId) {
                 $builder->where('assignee_id', $viewerId)
                     ->orWhere('created_by', $viewerId)
@@ -135,7 +137,7 @@ class DashboardController extends Controller
         $lcProj = $this->lcCast($projCol);
 
         $projectsBase = Project::query();
-        if ($viewerId > 0) {
+        if (! $isSuperAdmin && $viewerId > 0) {
             $projectsBase->where(function (Builder $builder) use ($viewerId) {
                 $builder->where('requester_id', $viewerId)
                     ->orWhere('agent_id', $viewerId)
