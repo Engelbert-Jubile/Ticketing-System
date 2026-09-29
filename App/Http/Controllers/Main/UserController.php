@@ -356,6 +356,7 @@ class UserController extends Controller
             'links' => [
                 'show' => routeLocale('users.show', ['user' => $user->id]),
                 'edit' => $viewer->can('update', $user) ? routeLocale('users.edit', ['user' => $user->id]) : null,
+                'destroy' => $viewer->can('delete', $user) ? routeLocale('users.destroy', ['user' => $user->id]) : null,
             ],
             'can' => [
                 'update' => $viewer->can('update', $user),

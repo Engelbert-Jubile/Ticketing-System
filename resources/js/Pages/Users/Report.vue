@@ -188,6 +188,7 @@
                 Hapus
               </button>
             </div>
+            <p v-if="deleteDialog.error" class="mt-3 text-sm text-rose-600">{{ deleteDialog.error }}</p>
           </div>
         </div>
       </Transition>
@@ -390,10 +391,10 @@ function goTo(url) {
 
 const rows = computed(() => props.users?.data ?? []);
 
-const deleteDialog = ref({ open: false, user: null, processing: false });
+const deleteDialog = ref({ open: false, user: null, processing: false, error: '' });
 
 function confirmDelete(user) {
-  deleteDialog.value = { open: true, user, processing: false };
+  deleteDialog.value = { open: true, user, processing: false, error: '' };
 }
 
 function closeDelete() {
@@ -401,12 +402,22 @@ function closeDelete() {
 }
 
 function performDelete() {
-  if (!deleteDialog.value.user) return;
+  const deleteUrl = deleteDialog.value.user?.links?.destroy;
+  if (!deleteUrl) {
+    deleteDialog.value.error = 'Aksi hapus tidak tersedia untuk akun ini.';
+    return;
+  }
+
   deleteDialog.value.processing = true;
-  router.delete(route('users.destroy', { locale: route().params.locale, user: deleteDialog.value.user.id }), {
+  router.delete(deleteUrl, {
     preserveScroll: true,
+    onError: (errors) => {
+      deleteDialog.value.error = errors.delete || 'User tidak dapat dihapus.';
+    },
     onFinish: () => {
       deleteDialog.value.processing = false;
+    },
+    onSuccess: () => {
       deleteDialog.value.open = false;
     },
   });
