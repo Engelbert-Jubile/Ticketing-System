@@ -63,7 +63,7 @@ class DashboardController extends Controller
                     ->orWhere('assigned_id', $viewerId)
                     ->orWhereHas('assignedUsers', fn (Builder $sub) => $sub->where('users.id', $viewerId));
             });
-        } else {
+        } elseif (! $isSuperAdmin) {
             $ticketsBase->whereRaw('1=0');
         }
 
@@ -95,7 +95,7 @@ class DashboardController extends Controller
                     });
                 $this->orWhereJsonAssignmentContains($builder, 'assigned_to', $viewerId);
             });
-        } else {
+        } elseif (! $isSuperAdmin) {
             $tasksBase->whereRaw('1=0');
         }
 
@@ -130,7 +130,7 @@ class DashboardController extends Controller
                             ->orWhereHas('assignedUsers', fn (Builder $sub) => $sub->where('users.id', $viewerId));
                     });
             });
-        } else {
+        } elseif (! $isSuperAdmin) {
             $projectsBase->whereRaw('1=0');
         }
 
