@@ -67,22 +67,13 @@ class DashboardController extends Controller
             $ticketsBase->whereRaw('1=0');
         }
 
-        $ticketAgg = (clone $ticketsBase)->selectRaw("
-            CASE
-              WHEN $lcT IN ".$eq(\App\Support\WorkflowStatus::NEW)." THEN 'New'
-              WHEN $lcT IN ".$eq(\App\Support\WorkflowStatus::IN_PROGRESS)." THEN 'In Progress'
-              WHEN $lcT IN ".$eq(\App\Support\WorkflowStatus::CONFIRMATION)." THEN 'Confirmation'
-              WHEN $lcT IN ".$eq(\App\Support\WorkflowStatus::REVISION)." THEN 'Revision'
-              WHEN $lcT IN ".$eq(\App\Support\WorkflowStatus::DONE)." THEN 'Done'
-              ELSE 'New'
-            END AS s, COUNT(*) AS c
-        ")->groupBy('s')->pluck('c', 's');
+        $ticketAgg = $this->statusCounts($ticketsBase, $tCol);
 
-        $ticketsNew = (int) ($ticketAgg['New'] ?? 0);
-        $ticketsInProgress = (int) ($ticketAgg['In Progress'] ?? 0);
-        $ticketsConfirm = (int) ($ticketAgg['Confirmation'] ?? 0);
-        $ticketsRevision = (int) ($ticketAgg['Revision'] ?? 0);
-        $ticketsDone = (int) ($ticketAgg['Done'] ?? 0);
+        $ticketsNew = $ticketAgg[\App\Support\WorkflowStatus::NEW];
+        $ticketsInProgress = $ticketAgg[\App\Support\WorkflowStatus::IN_PROGRESS];
+        $ticketsConfirm = $ticketAgg[\App\Support\WorkflowStatus::CONFIRMATION];
+        $ticketsRevision = $ticketAgg[\App\Support\WorkflowStatus::REVISION];
+        $ticketsDone = $ticketAgg[\App\Support\WorkflowStatus::DONE];
 
         $ticketsLabels = ['New', 'In Progress', 'Confirmation', 'Revision', 'Done'];
         $ticketsValues = [$ticketsNew, $ticketsInProgress, $ticketsConfirm, $ticketsRevision, $ticketsDone];
@@ -108,28 +99,16 @@ class DashboardController extends Controller
             $tasksBase->whereRaw('1=0');
         }
 
-        $tasksDone = (int) (clone $tasksBase)
-            ->whereIn($taskCol, \App\Support\WorkflowStatus::equivalents(\App\Support\WorkflowStatus::DONE))
-            ->count();
-
-        $taskAgg = (clone $tasksBase)->selectRaw("
-            CASE
-              WHEN $lcTask IN ".$eq(\App\Support\WorkflowStatus::NEW)." THEN 'New'
-              WHEN $lcTask IN ".$eq(\App\Support\WorkflowStatus::IN_PROGRESS)." THEN 'In Progress'
-              WHEN $lcTask IN ".$eq(\App\Support\WorkflowStatus::CONFIRMATION)." THEN 'Confirmation'
-              WHEN $lcTask IN ".$eq(\App\Support\WorkflowStatus::REVISION)." THEN 'Revision'
-              WHEN $lcTask IN ".$eq(\App\Support\WorkflowStatus::DONE)." THEN 'Done'
-              ELSE 'New'
-            END AS s, COUNT(*) AS cnt
-        ")->groupBy('s')->pluck('cnt', 's');
+        $taskAgg = $this->statusCounts($tasksBase, $taskCol);
+        $tasksDone = $taskAgg[\App\Support\WorkflowStatus::DONE];
 
         $taskStatusLabels = ['New', 'In Progress', 'Confirmation', 'Revision', 'Done'];
         $taskStatusCounts = [
-            (int) ($taskAgg['New'] ?? 0),
-            (int) ($taskAgg['In Progress'] ?? 0),
-            (int) ($taskAgg['Confirmation'] ?? 0),
-            (int) ($taskAgg['Revision'] ?? 0),
-            (int) ($taskAgg['Done'] ?? 0),
+            $taskAgg[\App\Support\WorkflowStatus::NEW],
+            $taskAgg[\App\Support\WorkflowStatus::IN_PROGRESS],
+            $taskAgg[\App\Support\WorkflowStatus::CONFIRMATION],
+            $taskAgg[\App\Support\WorkflowStatus::REVISION],
+            $taskAgg[\App\Support\WorkflowStatus::DONE],
         ];
 
         /* ===== Projects ===== */
@@ -155,28 +134,16 @@ class DashboardController extends Controller
             $projectsBase->whereRaw('1=0');
         }
 
-        $projectsCompleted = (int) (clone $projectsBase)
-            ->whereIn($projCol, \App\Support\WorkflowStatus::equivalents(\App\Support\WorkflowStatus::DONE))
-            ->count();
-
-        $projectAgg = (clone $projectsBase)->selectRaw("
-            CASE
-              WHEN $lcProj IN ".$eq(\App\Support\WorkflowStatus::NEW)." THEN 'New'
-              WHEN $lcProj IN ".$eq(\App\Support\WorkflowStatus::IN_PROGRESS)." THEN 'In Progress'
-              WHEN $lcProj IN ".$eq(\App\Support\WorkflowStatus::CONFIRMATION)." THEN 'Confirmation'
-              WHEN $lcProj IN ".$eq(\App\Support\WorkflowStatus::REVISION)." THEN 'Revision'
-              WHEN $lcProj IN ".$eq(\App\Support\WorkflowStatus::DONE)." THEN 'Done'
-              ELSE 'New'
-            END AS s, COUNT(*) AS cnt
-        ")->groupBy('s')->pluck('cnt', 's');
+        $projectAgg = $this->statusCounts($projectsBase, $projCol);
+        $projectsCompleted = $projectAgg[\App\Support\WorkflowStatus::DONE];
 
         $projectStatusLabels = ['New', 'In Progress', 'Confirmation', 'Revision', 'Done'];
         $projectStatusCounts = [
-            (int) ($projectAgg['New'] ?? 0),
-            (int) ($projectAgg['In Progress'] ?? 0),
-            (int) ($projectAgg['Confirmation'] ?? 0),
-            (int) ($projectAgg['Revision'] ?? 0),
-            (int) ($projectAgg['Done'] ?? 0),
+            $projectAgg[\App\Support\WorkflowStatus::NEW],
+            $projectAgg[\App\Support\WorkflowStatus::IN_PROGRESS],
+            $projectAgg[\App\Support\WorkflowStatus::CONFIRMATION],
+            $projectAgg[\App\Support\WorkflowStatus::REVISION],
+            $projectAgg[\App\Support\WorkflowStatus::DONE],
         ];
 
         /* ===== Tasks monthly (selaras dengan Project Report) ===== */
@@ -318,5 +285,24 @@ class DashboardController extends Controller
         }
 
         $builder->orWhere($column, 'like', '%\"'.$userId.'\"%');
+    }
+
+    /** @return array<string,int> */
+    private function statusCounts(Builder $query, string $column): array
+    {
+        $counts = array_fill_keys([
+            \App\Support\WorkflowStatus::NEW,
+            \App\Support\WorkflowStatus::IN_PROGRESS,
+            \App\Support\WorkflowStatus::CONFIRMATION,
+            \App\Support\WorkflowStatus::REVISION,
+            \App\Support\WorkflowStatus::DONE,
+        ], 0);
+
+        foreach ((clone $query)->pluck($column) as $status) {
+            $normalized = \App\Support\WorkflowStatus::normalize(is_scalar($status) ? (string) $status : null);
+            $counts[$normalized] = ($counts[$normalized] ?? 0) + 1;
+        }
+
+        return $counts;
     }
 }
