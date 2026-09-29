@@ -880,7 +880,11 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
         requestAnimationFrame(function() {
           requestAnimationFrame(function() {
             setTimeout(function() {
-              form.submit();
+              // reCAPTCHA memiliki handler submit sendiri dan akan mengirim form
+              // setelah token tersedia. Jangan kirim kedua kali dari overlay.
+              if (!{{ $recaptcha->isEnabled() ? 'true' : 'false' }}) {
+                form.submit();
+              }
             }, MIN_OVERLAY_TIME);
           });
         });
@@ -893,6 +897,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
 
 </html>
 
+@if ($recaptcha->isEnabled())
 <script nonce="{{ $nonce }}">
 document.addEventListener("DOMContentLoaded", function () {
   const form = document.querySelector("form");
@@ -911,4 +916,5 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 </script>
+@endif
 
