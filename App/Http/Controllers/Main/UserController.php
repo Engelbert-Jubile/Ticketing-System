@@ -74,7 +74,7 @@ class UserController extends Controller
     }
 
     /** Detail user. */
-    public function show(Request $request, User $user): Response
+    public function show(Request $request, string $locale, User $user): Response
     {
         $this->authorize('view', $user);
         $user->load('roles');
