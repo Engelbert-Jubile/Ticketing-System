@@ -43,7 +43,7 @@
         <div class="flex flex-col gap-2">
           <Link
             v-if="can.update"
-            :href="route('users.edit', { user: user.id, from: backUrl })"
+            :href="route('users.edit', { locale, user: user.id, from: backUrl })"
             class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
           >
             <span class="material-icons text-base">edit</span>
@@ -115,7 +115,7 @@ function closeDelete() {
 
 function performDelete() {
   deleteDialog.value.processing = true;
-  router.delete(route('users.destroy', { locale: route().params.locale, user: props.user.id }), {
+  router.delete(route('users.destroy', { locale: locale.value, user: props.user.id }), {
     preserveScroll: true,
     onFinish: () => {
       deleteDialog.value.processing = false;
@@ -135,7 +135,8 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleEscape));
 
 const user = computed(() => props.user);
 const can = computed(() => props.can ?? {});
-const backUrl = computed(() => props.meta?.backUrl || route('users.report', { locale: route().params.locale }));
+const locale = computed(() => route().params.locale);
+const backUrl = computed(() => props.meta?.backUrl || route('users.report', { locale: locale.value }));
 </script>
 
 <style scoped>
