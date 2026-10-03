@@ -43,7 +43,7 @@
         <div class="flex flex-col gap-2">
           <Link
             v-if="can.update"
-            :href="route('users.edit', { locale, user: user.id, from: backUrl })"
+            :href="user.links.edit"
             class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
           >
             <span class="material-icons text-base">edit</span>
@@ -92,16 +92,12 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
-import { useRoute } from 'ziggy-js';
-import { Ziggy } from '@/ziggy';
 
 const props = defineProps({
   user: { type: Object, required: true },
   can: { type: Object, default: () => ({}) },
   meta: { type: Object, default: () => ({}) },
 });
-
-const route = useRoute(Ziggy);
 
 const deleteDialog = ref({ open: false, processing: false });
 
@@ -115,7 +111,7 @@ function closeDelete() {
 
 function performDelete() {
   deleteDialog.value.processing = true;
-  router.delete(route('users.destroy', { locale: locale.value, user: props.user.id }), {
+  router.delete(props.user.links.destroy, {
     preserveScroll: true,
     onFinish: () => {
       deleteDialog.value.processing = false;
@@ -135,8 +131,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleEscape));
 
 const user = computed(() => props.user);
 const can = computed(() => props.can ?? {});
-const locale = computed(() => route().params.locale);
-const backUrl = computed(() => props.meta?.backUrl || route('users.report', { locale: locale.value }));
+const backUrl = computed(() => props.meta?.backUrl || '/');
 </script>
 
 <style scoped>

@@ -86,7 +86,7 @@ class UserController extends Controller
                 'delete' => $request->user()->can('delete', $user),
             ],
             'meta' => [
-                'backUrl' => $request->query('from'),
+                'backUrl' => $request->query('from') ?: routeLocale('users.report'),
             ],
         ]);
     }
@@ -386,6 +386,10 @@ class UserController extends Controller
             'role' => $primaryRole,
             'unit' => $user->unit,
             'name' => trim($user->first_name.' '.($user->last_name ?? '')),
+            'links' => [
+                'edit' => routeLocale('users.edit', ['user' => $user->id]),
+                'destroy' => routeLocale('users.destroy', ['user' => $user->id]),
+            ],
         ];
     }
 
