@@ -560,7 +560,10 @@
             </div>
           </section>
 
-            <section class="rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
+        </div>
+
+        <div v-show="activeTab === 'security'" class="space-y-6">
+          <section class="rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
               <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Impersonation</h2>
