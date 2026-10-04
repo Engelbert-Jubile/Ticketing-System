@@ -812,6 +812,7 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue';
+import axios from 'axios';
 import { router, useForm, usePage } from '@inertiajs/vue3';
 import FancySelect from '@/Components/FancySelect.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
@@ -1283,7 +1284,7 @@ const resetRoles = () => {
 };
 
 const impersonateUserId = ref('');
-const startImpersonate = () => {
+const startImpersonate = async () => {
   if (!impersonateUserId.value) {
     pushToast('error', 'Provide a user id to impersonate.');
     return;
@@ -1292,10 +1293,16 @@ const startImpersonate = () => {
     pushToast('error', 'Impersonation is disabled by policy.');
     return;
   }
-  router.post(resolveRoute('settings.impersonate.user', { user: impersonateUserId.value }), {}, {
-    onSuccess: () => pushToast('success', 'Impersonation started.'),
-    onError: () => pushToast('error', 'Failed to start impersonation.'),
-  });
+  try {
+    const { data } = await axios.post(
+      resolveRoute('settings.impersonate.user', { user: impersonateUserId.value }),
+      {},
+      { headers: { Accept: 'application/json' } },
+    );
+    window.location.assign(data.redirect);
+  } catch (error) {
+    pushToast('error', error.response?.data?.message || 'Failed to start impersonation.');
+  }
 };
 
 const stopImpersonate = () => {

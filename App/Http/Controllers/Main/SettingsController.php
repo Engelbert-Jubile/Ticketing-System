@@ -592,7 +592,13 @@ class SettingsController extends Controller
 
         $request->session()->flash('success', 'Impersonation started.');
 
-        return Inertia::location(route('dashboard', ['locale' => $locale]));
+        $dashboardUrl = route('dashboard', ['locale' => $locale]);
+
+        if ($request->expectsJson()) {
+            return response()->json(['redirect' => $dashboardUrl]);
+        }
+
+        return Inertia::location($dashboardUrl);
     }
 
     public function stopImpersonate(Request $request): RedirectResponse
