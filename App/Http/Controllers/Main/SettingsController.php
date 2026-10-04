@@ -560,8 +560,18 @@ class SettingsController extends Controller
 
     public function impersonate(Request $request, string $locale, SettingsService $settings, ?User $user = null): SymfonyResponse
     {
-        if (! config('features.impersonation', false) || ! $settings->get('security', 'allow_impersonation', false)) {
+        if (! config('features.impersonation', false)) {
             abort(403);
+        }
+
+        if (! $settings->get('security', 'allow_impersonation', false)) {
+            if (! $request->boolean('allow_impersonation')) {
+                abort(403);
+            }
+
+            $settings->updateGroup('security', [
+                'allow_impersonation' => true,
+            ], $request->user(), $request);
         }
 
         $target = $user;

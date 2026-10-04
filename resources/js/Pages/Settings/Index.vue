@@ -1296,7 +1296,10 @@ const startImpersonate = async () => {
   try {
     const { data } = await axios.post(
       resolveRoute('settings.impersonate'),
-      { user_id: Number(impersonateUserId.value) },
+      {
+        user_id: Number(impersonateUserId.value),
+        allow_impersonation: Boolean(securityForm.allow_impersonation),
+      },
       { headers: { Accept: 'application/json' } },
     );
     window.location.assign(data.redirect);
