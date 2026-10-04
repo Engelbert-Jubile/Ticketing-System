@@ -15,6 +15,10 @@
       <div class="flex items-start justify-between gap-4">
         <div class="space-y-4">
           <div>
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">User ID</p>
+            <p class="text-lg font-semibold text-slate-900 dark:text-slate-100">{{ user.id }}</p>
+          </div>
+          <div>
             <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Username</p>
             <p class="text-lg font-semibold text-slate-900 dark:text-slate-100">{{ user.username }}</p>
           </div>
