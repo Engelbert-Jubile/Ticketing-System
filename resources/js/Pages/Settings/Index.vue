@@ -593,7 +593,7 @@
                   <button type="button" class="btn-secondary" @click="startImpersonate">
                     Impersonate user
                   </button>
-                  <button type="button" class="btn-ghost" @click="stopImpersonate">
+                  <button v-if="impersonationActive" type="button" class="btn-ghost" @click="stopImpersonate">
                     Stop impersonation
                   </button>
                 </div>
@@ -828,6 +828,7 @@ const props = defineProps({
 });
 
 const page = usePage();
+const impersonationActive = computed(() => Boolean(page.props.impersonation?.active));
 const { t, setLocale } = useI18n();
 const options = computed(() => ({
   timezones: [],
