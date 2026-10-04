@@ -569,9 +569,10 @@ class SettingsController extends Controller
                 abort(403);
             }
 
-            $settings->updateGroup('security', [
-                'allow_impersonation' => true,
-            ], $request->user(), $request);
+            $settings->updateGroup('security', array_merge(
+                $settings->getGroup('security'),
+                ['allow_impersonation' => true]
+            ), $request->user(), $request);
         }
 
         $target = $user;

@@ -3,6 +3,7 @@
 use App\Models\AppSetting;
 use App\Models\SettingsAuditLog;
 use App\Models\User;
+use App\Services\SettingsService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -173,6 +174,26 @@ test('impersonation creates audit log entry', function () {
         ->first();
 
     expect($audit)->not->toBeNull();
+});
+
+test('impersonation can enable the policy without failing required security validation', function () {
+    config(['features.impersonation' => true]);
+
+    $superadmin = User::factory()->create();
+    Role::firstOrCreate(['name' => 'superadmin', 'guard_name' => 'web']);
+    $superadmin->assignRole('superadmin');
+    $target = User::factory()->create();
+
+    $response = $this->actingAs($superadmin)
+        ->postJson('/en/dashboard/settings/impersonate', [
+            'user_id' => $target->id,
+            'allow_impersonation' => true,
+        ]);
+
+    $response->assertOk()
+        ->assertJsonPath('redirect', route('dashboard', ['locale' => 'en']));
+    $this->assertAuthenticatedAs($target);
+    expect(app(SettingsService::class)->get('security', 'allow_impersonation'))->toBeTrue();
 });
 
 test('login still works when app_settings is empty', function () {
