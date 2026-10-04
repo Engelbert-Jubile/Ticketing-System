@@ -1301,7 +1301,9 @@ const startImpersonate = async () => {
     );
     window.location.assign(data.redirect);
   } catch (error) {
-    pushToast('error', error.response?.data?.message || 'Failed to start impersonation.');
+    const status = error.response?.status;
+    const message = error.response?.data?.message;
+    pushToast('error', message || `Failed to start impersonation${status ? ` (HTTP ${status})` : ''}.`);
   }
 };
 
