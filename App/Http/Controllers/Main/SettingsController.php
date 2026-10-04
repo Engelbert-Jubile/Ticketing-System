@@ -612,7 +612,7 @@ class SettingsController extends Controller
         return Inertia::location($dashboardUrl);
     }
 
-    public function stopImpersonate(Request $request): RedirectResponse
+    public function stopImpersonate(Request $request): SymfonyResponse
     {
         $impersonatorId = $request->session()->pull('impersonator_id');
         if (! $impersonatorId) {
@@ -634,7 +634,9 @@ class SettingsController extends Controller
 
         $locale = app()->getLocale() ?? config('app.locale', 'en');
 
-        return redirect()->route('settings', ['locale' => $locale])->with('success', 'Impersonation stopped.');
+        $request->session()->flash('success', 'Impersonation stopped.');
+
+        return Inertia::location(route('settings', ['locale' => $locale]));
     }
 
     private function applyMaintenanceMode(SettingsService $settings): void
