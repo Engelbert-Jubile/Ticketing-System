@@ -557,7 +557,7 @@ class SettingsController extends Controller
         }, $outputName);
     }
 
-    public function impersonate(Request $request, SettingsService $settings, ?User $user = null): RedirectResponse
+    public function impersonate(Request $request, string $locale, SettingsService $settings, ?User $user = null): RedirectResponse
     {
         if (! config('features.impersonation', false) || ! $settings->get('security', 'allow_impersonation', false)) {
             abort(403);
