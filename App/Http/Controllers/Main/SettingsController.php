@@ -26,6 +26,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class SettingsController extends Controller
 {
@@ -557,7 +558,7 @@ class SettingsController extends Controller
         }, $outputName);
     }
 
-    public function impersonate(Request $request, string $locale, SettingsService $settings, ?User $user = null): RedirectResponse
+    public function impersonate(Request $request, string $locale, SettingsService $settings, ?User $user = null): SymfonyResponse
     {
         if (! config('features.impersonation', false) || ! $settings->get('security', 'allow_impersonation', false)) {
             abort(403);
@@ -589,9 +590,9 @@ class SettingsController extends Controller
             'user_agent' => $request->userAgent(),
         ]);
 
-        $locale = app()->getLocale() ?? config('app.locale', 'en');
+        $request->session()->flash('success', 'Impersonation started.');
 
-        return redirect()->route('dashboard', ['locale' => $locale])->with('success', 'Impersonation started.');
+        return Inertia::location(route('dashboard', ['locale' => $locale]));
     }
 
     public function stopImpersonate(Request $request): RedirectResponse
