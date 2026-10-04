@@ -336,6 +336,9 @@ Route::middleware($emailVerificationEnabled
     });
 
     /* Ã¢Å¡â„¢Ã¯Â¸Â Settings */
+    Route::post('/dashboard/settings/impersonate/stop', [SettingsController::class, 'stopImpersonate'])
+        ->name('settings.impersonate.stop');
+
     Route::prefix('dashboard/settings')
         ->middleware('superadmin')
         ->group(function () {
@@ -358,9 +361,6 @@ Route::middleware($emailVerificationEnabled
             Route::post('/impersonate', [SettingsController::class, 'impersonate'])->name('settings.impersonate');
             Route::post('/impersonate/{user}', [SettingsController::class, 'impersonate'])->name('settings.impersonate.user');
         });
-    Route::post('/dashboard/settings/impersonate/stop', [SettingsController::class, 'stopImpersonate'])
-        ->name('settings.impersonate.stop');
-
     /* Ã°Å¸â€˜Â¥ Users (ADMIN) */
     Route::prefix('dashboard/users')
         ->name('users.')
