@@ -438,7 +438,7 @@ const form = useForm({
   description: '',
   reason: '',
   letter_no: '',
-  priority: props.defaults.priority ?? 'medium',
+  priority: props.defaults.priority ?? null,
   type: props.defaults.type ?? 'task',
   status: props.defaults.status ?? 'new',
   sla: props.defaults.sla ?? null,
@@ -870,7 +870,7 @@ watch(selectedAttachmentFilter, () => {
 
 function resetForm() {
   form.reset();
-  form.priority = props.defaults.priority ?? 'medium';
+  form.priority = props.defaults.priority ?? null;
   form.type = 'task';
   form.status = props.defaults.status ?? 'new';
   form.start_at = props.defaults.start_at ?? props.defaults.due_date ?? null;
