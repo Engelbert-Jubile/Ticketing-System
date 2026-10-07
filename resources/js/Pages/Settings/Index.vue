@@ -27,7 +27,7 @@
         </div>
       </aside>
 
-      <section class="space-y-6">
+      <section class="min-w-0 space-y-6">
         <div v-show="activeTab === 'general'" class="space-y-6">
           <section class="rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
             <div class="flex flex-wrap items-center justify-between gap-3">
@@ -509,15 +509,15 @@
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Roles and Permissions</h2>
-                <p class="text-sm text-slate-500 dark:text-slate-300">Manage access matrix. Built-in roles are read-only.</p>
+                <p class="text-sm text-slate-500 dark:text-slate-300">Manage access matrix. Scroll horizontally to view all permissions.</p>
               </div>
               <span v-if="rolesDirty" class="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-700">
                 Unsaved changes
               </span>
             </div>
 
-            <div class="mt-6 overflow-auto rounded-xl border border-slate-200 dark:border-slate-700">
-              <table class="min-w-full text-left text-sm">
+            <div class="mt-6 overflow-x-auto overscroll-x-contain rounded-xl border border-slate-200 dark:border-slate-700">
+              <table class="min-w-[1800px] text-left text-sm">
                 <thead class="bg-slate-100 text-xs uppercase text-slate-500 dark:bg-slate-800">
                   <tr>
                     <th class="px-4 py-3">Role</th>
