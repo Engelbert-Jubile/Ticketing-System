@@ -789,6 +789,27 @@ defineExpose({
   outline: none;
 }
 
+.dark .topbar-search__input,
+.dark .topbar-search__input:focus {
+  appearance: none;
+  background: transparent !important;
+  border: 0 !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.dark .topbar-search__input::placeholder {
+  color: rgba(255, 255, 255, 0.72) !important;
+}
+
+.dark .topbar-search__input:-webkit-autofill,
+.dark .topbar-search__input:-webkit-autofill:hover,
+.dark .topbar-search__input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #ffffff;
+  -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
+  transition: background-color 9999s ease-out;
+}
+
 .topbar-icon-btn {
   position: relative;
   display: inline-flex;

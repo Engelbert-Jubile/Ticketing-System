@@ -165,6 +165,7 @@ watch(
   right: 1.5rem;
   z-index: 70;
   font-family: inherit;
+  --gem-accent: var(--user-accent-color, #4338ca);
   --gem-panel-bg: radial-gradient(circle at 25% 15%, rgba(94, 234, 212, 0.12), transparent 28%), radial-gradient(circle at 75% 8%, rgba(99, 102, 241, 0.16), transparent 35%), rgba(255, 255, 255, 0.98);
   --gem-panel-text: #0a1021;
   --gem-panel-shadow: 0 32px 95px -46px rgba(12, 18, 43, 0.55);
@@ -178,9 +179,9 @@ watch(
   --gem-input-border: rgba(15, 23, 42, 0.1);
   --gem-input-bg: rgba(246, 248, 252, 0.95);
   --gem-error: #dc2626;
-  --gem-fab-bg: linear-gradient(150deg, #2563eb, #8b5cf6 45%, #22d3ee);
-  --gem-fab-shadow: 0 18px 32px -18px rgba(37, 99, 235, 0.45);
-  --gem-fab-shadow-hover: 0 20px 36px -18px rgba(37, 99, 235, 0.55);
+  --gem-fab-bg: linear-gradient(145deg, color-mix(in srgb, var(--gem-accent) 82%, white), var(--gem-accent) 52%, color-mix(in srgb, var(--gem-accent) 78%, black));
+  --gem-fab-shadow: 0 18px 32px -18px color-mix(in srgb, var(--gem-accent) 58%, transparent);
+  --gem-fab-shadow-hover: 0 20px 36px -18px color-mix(in srgb, var(--gem-accent) 72%, transparent);
   --gem-subtle-gradient: radial-gradient(circle at 30% 10%, rgba(79, 70, 229, 0.16), transparent 38%), radial-gradient(circle at 70% 0%, rgba(14, 165, 233, 0.18), transparent 30%), linear-gradient(145deg, rgba(255, 255, 255, 0.6), rgba(244, 247, 255, 0.7));
   --gem-divider: rgba(15, 23, 42, 0.05);
   --gem-input-placeholder: rgba(15, 23, 42, 0.5);
@@ -242,7 +243,7 @@ watch(
   transform: translateY(-1px);
   box-shadow: var(--gem-fab-shadow-hover);
   filter: saturate(1.04);
-  background: linear-gradient(145deg, #4f46e5, #7c3aed, #22d3ee);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--gem-accent) 76%, white), var(--gem-accent), color-mix(in srgb, var(--gem-accent) 72%, black));
 }
 
 .fab-label {
@@ -492,19 +493,19 @@ watch(
   height: 48px;
   border-radius: 14px;
   border: none;
-  background: linear-gradient(145deg, #2563eb, #7c3aed);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--gem-accent) 82%, white), var(--gem-accent), color-mix(in srgb, var(--gem-accent) 76%, black));
   color: #fff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 15px 25px -16px rgba(79, 70, 229, 0.65);
+  box-shadow: 0 15px 25px -16px color-mix(in srgb, var(--gem-accent) 70%, transparent);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .send-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 18px 28px -16px rgba(79, 70, 229, 0.75);
+  box-shadow: 0 18px 28px -16px color-mix(in srgb, var(--gem-accent) 80%, transparent);
 }
 
 .chat-error {

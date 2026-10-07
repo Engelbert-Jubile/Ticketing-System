@@ -1,6 +1,6 @@
 <template>
   <Head :title="documentTitle" />
-  <div class="app-shell" :class="{ 'app-shell--dark': theme === 'dark' }">
+  <div class="app-shell" :class="{ 'app-shell--dark': theme === 'dark' }" :style="shellStyle">
     <LegacyTopbar
       :user="authUser"
       :notifications="notifications"
@@ -232,6 +232,9 @@ const theme = ref('light')
 const headerColor = ref(authUser.value?.header_color ?? null)
 const isDesktop = ref(false)
 let headerColorSaveTimer = null
+const shellStyle = computed(() => ({
+  '--user-accent-color': headerColor.value || '#4338ca',
+}))
 
 const SIDEBAR_LOGOUT_REASON_KEY = 'sidebar:logoutReason'
 const mediaQuery = typeof window !== 'undefined' && window.matchMedia
