@@ -212,17 +212,12 @@ class SettingsController extends Controller
             'roles.*.permissions.*' => ['string', 'exists:permissions,name'],
         ]);
 
-        $builtInRoles = ['superadmin', 'admin', 'user'];
         $incoming = collect($data['roles']);
         $roles = Role::query()->with('permissions')->whereIn('id', $incoming->pluck('id'))->get();
 
         foreach ($incoming as $roleData) {
             $role = $roles->firstWhere('id', $roleData['id']);
             if (! $role) {
-                continue;
-            }
-
-            if (in_array(RoleHelpers::canonical($role->name), $builtInRoles, true)) {
                 continue;
             }
 
@@ -278,11 +273,6 @@ class SettingsController extends Controller
             'permissions' => ['nullable', 'array'],
             'permissions.*' => ['string', 'exists:permissions,name'],
         ]);
-
-        $builtInRoles = ['superadmin', 'admin', 'user'];
-        if (in_array(RoleHelpers::canonical($role->name), $builtInRoles, true)) {
-            return response()->json(['message' => 'Built-in roles are read-only.'], 422);
-        }
 
         $previous = $role->permissions->pluck('name')->sort()->values()->all();
         $next = collect($data['permissions'] ?? [])->sort()->values()->all();

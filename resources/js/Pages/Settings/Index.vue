@@ -540,7 +540,7 @@
                     <td v-for="permission in roleMatrix.permissions" :key="permission.id" class="px-4 py-3 text-center">
                       <input
                         type="checkbox"
-                        :disabled="role.is_builtin"
+                    :disabled="rolesSaving"
                         :checked="role.permissions.includes(permission.name)"
                         @change="togglePermission(role, permission.name)"
                       />
@@ -1250,7 +1250,6 @@ const rolesSaving = ref(false);
 const rolesDirty = computed(() => JSON.stringify(roleRows.value.map(role => ({ id: role.id, permissions: role.permissions }))) !== roleInitial.value);
 
 const togglePermission = (role, permission) => {
-  if (role.is_builtin) return;
   if (role.permissions.includes(permission)) {
     role.permissions = role.permissions.filter(item => item !== permission);
   } else {
