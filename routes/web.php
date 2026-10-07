@@ -380,6 +380,7 @@ Route::middleware($emailVerificationEnabled
     Route::prefix('dashboard/account')->name('account.')->group(function () {
         Route::get('/profile', [AccountController::class, 'profile'])->name('profile');
         Route::put('/profile', [AccountController::class, 'updateProfile'])->name('update-profile');
+        Route::patch('/header-color', [AccountController::class, 'updateHeaderColor'])->name('header-color.update');
         Route::get('/change-password', [AccountController::class, 'changePassword'])->name('change-password');
         Route::put('/change-password', [AccountController::class, 'updatePassword'])->name('password.update');
     });

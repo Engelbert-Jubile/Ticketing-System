@@ -11,8 +11,10 @@
       :account-password-url="resolveRouteName('account.change-password')"
       :is-desktop="isDesktop"
       :theme="theme"
+      :header-color="headerColor"
       @toggle-sidebar="toggleSidebar"
       @toggle-theme="toggleTheme"
+      @update-header-color="updateHeaderColor"
       @search="performSearch"
       @mark-all-notifications="markAllNotifications"
       @mark-notification="markNotification"
@@ -227,7 +229,9 @@ const searchQuery = computed(() => {
 const sidebarOpen = ref(false)
 const sidebarLocked = ref(false)
 const theme = ref('light')
+const headerColor = ref(authUser.value?.header_color ?? null)
 const isDesktop = ref(false)
+let headerColorSaveTimer = null
 
 const SIDEBAR_LOGOUT_REASON_KEY = 'sidebar:logoutReason'
 const mediaQuery = typeof window !== 'undefined' && window.matchMedia
@@ -587,6 +591,26 @@ watch(theme, value => {
   applyTheme(value)
 })
 
+const updateHeaderColor = value => {
+  const normalized = typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value)
+    ? value.toLowerCase()
+    : null
+
+  headerColor.value = normalized
+
+  if (headerColorSaveTimer !== null) {
+    window.clearTimeout(headerColorSaveTimer)
+  }
+
+  headerColorSaveTimer = window.setTimeout(async () => {
+    try {
+      await axios.patch(resolveRouteName('account.header-color.update'), {
+        header_color: headerColor.value,
+      })
+    } catch (error) {}
+  }, 400)
+}
+
 const handleBreakpoint = event => {
   isDesktop.value = event.matches
   if (isDesktop.value) {
@@ -754,6 +778,9 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   cleanupBreakpoint()
+  if (headerColorSaveTimer !== null) {
+    window.clearTimeout(headerColorSaveTimer)
+  }
 })
 
 watch([announcementKey, announcement], () => {

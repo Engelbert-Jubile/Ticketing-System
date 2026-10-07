@@ -92,6 +92,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'unit',
         'locale',
+        'header_color',
     ];
 
     /** Hidden */

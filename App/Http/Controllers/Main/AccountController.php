@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Main;
 use App\Http\Controllers\Controller;
 use App\Services\WorkItemNotifier;
 use App\Support\SecurityPolicy;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -43,6 +44,21 @@ class AccountController extends Controller
         $user->update($validated);
 
         return back()->with('success', 'Profil berhasil diperbarui.');
+    }
+
+    public function updateHeaderColor(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'header_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+        ]);
+
+        $color = isset($validated['header_color'])
+            ? strtolower($validated['header_color'])
+            : null;
+
+        $request->user()->update(['header_color' => $color]);
+
+        return response()->json(['header_color' => $color]);
     }
 
     /**

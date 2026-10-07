@@ -1,5 +1,11 @@
 <template>
-  <nav ref="topbarRef" class="topbar" role="banner">
+  <nav
+    ref="topbarRef"
+    class="topbar"
+    :class="{ 'topbar--custom': Boolean(headerColor) }"
+    :style="topbarStyle"
+    role="banner"
+  >
     <div
       class="topbar__inner mx-auto flex h-auto min-h-16 w-full flex-wrap items-center gap-3 px-4 md:grid md:grid-cols-[auto,minmax(0,1fr),auto] md:items-center md:gap-4 md:px-6 lg:gap-5 lg:px-8">
       <div class="topbar__left order-1 flex items-center gap-3 min-w-0">
@@ -162,6 +168,37 @@
             </transition>
           </div>
 
+          <div class="relative" ref="colorPickerRef">
+            <button
+              type="button"
+              class="topbar-icon-btn"
+              :class="{ 'is-active': colorPickerOpen }"
+              title="Change header colour"
+              aria-label="Change header colour"
+              :aria-expanded="String(colorPickerOpen)"
+              @click="toggleColorPicker"
+            >
+              <i class="material-icons">palette</i>
+            </button>
+
+            <transition name="fade">
+              <div v-if="colorPickerOpen" class="header-color-picker">
+                <label class="header-color-picker__label" for="header-color-input">Header colour</label>
+                <input
+                  id="header-color-input"
+                  :value="pickerColor"
+                  type="color"
+                  class="header-color-picker__input"
+                  @input="changeHeaderColor"
+                />
+                <div class="header-color-picker__value">{{ pickerColor }}</div>
+                <button type="button" class="header-color-picker__reset" @click="resetHeaderColor">
+                  Use default colour
+                </button>
+              </div>
+            </transition>
+          </div>
+
           <button
             type="button"
             class="topbar-icon-btn"
@@ -207,6 +244,10 @@ const props = defineProps({
     type: String,
     default: 'light',
   },
+  headerColor: {
+    type: String,
+    default: null,
+  },
   notifications: {
     type: Object,
     default: () => ({ unread_count: 0, items: [] }),
@@ -240,6 +281,7 @@ const props = defineProps({
 const emit = defineEmits([
   'toggle-sidebar',
   'toggle-theme',
+  'update-header-color',
   'search',
   'mark-all-notifications',
   'mark-notification',
@@ -253,14 +295,18 @@ const search = ref(props.initialSearch)
 const topbarRef = ref(null)
 const notificationsOpen = ref(false)
 const accountOpen = ref(false)
+const colorPickerOpen = ref(false)
 
 const notificationsRef = ref(null)
 const accountRef = ref(null)
+const colorPickerRef = ref(null)
 
 const notificationItems = computed(() => (Array.isArray(props.notifications?.items) ? props.notifications.items : []))
 const unreadCount = computed(() => notificationItems.value.filter(item => item.read_at == null).length)
 const themeIcon = computed(() => (props.theme === 'dark' ? 'light_mode' : 'dark_mode'))
 const themeToggleTitle = computed(() => (props.theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'))
+const pickerColor = computed(() => props.headerColor || '#4338ca')
+const topbarStyle = computed(() => props.headerColor ? { '--topbar-color': props.headerColor } : {})
 
 const displayName = computed(() => {
   if (!props.user) {
@@ -308,6 +354,26 @@ const closeAccount = () => {
   accountOpen.value = false
 }
 
+const closeColorPicker = () => {
+  colorPickerOpen.value = false
+}
+
+const toggleColorPicker = () => {
+  colorPickerOpen.value = !colorPickerOpen.value
+  if (colorPickerOpen.value) {
+    notificationsOpen.value = false
+    accountOpen.value = false
+  }
+}
+
+const changeHeaderColor = event => {
+  emit('update-header-color', event.target.value)
+}
+
+const resetHeaderColor = () => {
+  emit('update-header-color', null)
+}
+
 const submitSearch = () => {
   emit('search', search.value)
 }
@@ -341,6 +407,7 @@ const toggleNotifications = () => {
   notificationsOpen.value = !notificationsOpen.value
   if (notificationsOpen.value) {
     accountOpen.value = false
+    colorPickerOpen.value = false
   }
 }
 
@@ -348,6 +415,7 @@ const toggleAccount = () => {
   accountOpen.value = !accountOpen.value
   if (accountOpen.value) {
     notificationsOpen.value = false
+    colorPickerOpen.value = false
   }
 }
 
@@ -363,12 +431,17 @@ const handleClickOutside = event => {
   if (accountOpen.value && accountRef.value && !accountRef.value.contains(event.target)) {
     closeAccount()
   }
+
+  if (colorPickerOpen.value && colorPickerRef.value && !colorPickerRef.value.contains(event.target)) {
+    closeColorPicker()
+  }
 }
 
 const handleEsc = event => {
   if (event.key === 'Escape') {
     closeNotifications()
     closeAccount()
+    closeColorPicker()
   }
 }
 
@@ -413,7 +486,7 @@ watch(
   }
 )
 
-watch([notificationsOpen, accountOpen], () => {
+watch([notificationsOpen, accountOpen, colorPickerOpen], () => {
   nextTick(scheduleTopbarHeightUpdate)
 })
 
@@ -441,6 +514,80 @@ defineExpose({
   background: linear-gradient(120deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.92) 60%, rgba(30, 64, 175, 0.85) 100%);
   border-bottom-color: rgba(148, 163, 184, 0.18);
   box-shadow: 0 20px 45px -32px rgba(15, 23, 42, 0.9);
+}
+
+.topbar.topbar--custom,
+.dark .topbar.topbar--custom {
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--topbar-color) 88%, white) 0%,
+    var(--topbar-color) 48%,
+    color-mix(in srgb, var(--topbar-color) 82%, black) 100%
+  );
+  box-shadow: 0 20px 45px -28px color-mix(in srgb, var(--topbar-color) 70%, transparent);
+}
+
+.header-color-picker {
+  position: absolute;
+  top: calc(100% + 0.65rem);
+  right: 0;
+  z-index: 100001;
+  width: 13rem;
+  padding: 0.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 1rem;
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 24px 55px -24px rgba(15, 23, 42, 0.55);
+}
+
+.dark .header-color-picker {
+  border-color: rgba(71, 85, 105, 0.65);
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.header-color-picker__label {
+  display: block;
+  margin-bottom: 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.header-color-picker__input {
+  width: 100%;
+  height: 3.5rem;
+  padding: 0.2rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: transparent;
+  cursor: pointer;
+}
+
+.header-color-picker__value {
+  margin-top: 0.35rem;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.header-color-picker__reset {
+  width: 100%;
+  margin-top: 0.7rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 0.7rem;
+  background: #eef2ff;
+  color: #4338ca;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dark .header-color-picker__reset {
+  background: rgba(99, 102, 241, 0.2);
+  color: #c7d2fe;
 }
 
 .topbar__inner,

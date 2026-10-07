@@ -80,6 +80,7 @@ class HandleInertiaRequests extends Middleware
                     'first_name' => $user->first_name ?? null,
                     'last_name' => $user->last_name ?? null,
                     'unit' => $user->unit ?? null,
+                    'header_color' => $user->header_color ?? null,
                     'roles' => $this->resolveRoles($user),
                 ] : null,
             ],
