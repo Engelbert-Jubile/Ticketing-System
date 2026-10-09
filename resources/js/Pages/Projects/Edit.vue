@@ -14,6 +14,7 @@
           <StatusPill :status="project.status_id || 'status-id'" :label="`Status ID: ${project.status_id || '-'}`" size="sm" />
         </aside>
       </header>
+    <DraftNotice v-if="isCreate" :draft="draft" />
 
       <form class="edit-form" @submit.prevent="handleSubmit">
         <nav class="wizard">
@@ -843,6 +844,8 @@
 </template>
 
 <script setup>
+import { useFormDraft } from '@/composables/useFormDraft';
+import DraftNotice from '@/Components/DraftNotice.vue';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { Link, router, useForm } from '@inertiajs/vue3';
 import DatePickerFlatpickr from '@/Components/DatePickerFlatpickr.vue';
@@ -1219,6 +1222,8 @@ const form = useForm({
   attachments: [],
   from: props.meta.backUrl ?? null,
 });
+const draft = useFormDraft(form, 'project', ["title","description","start_date","end_date","project_actions","project_costs","project_risks","project_deliverables"], isCreate.value);
+
 
 const allowedStatusValues = computed(() => (Array.isArray(props.meta?.allowedStatuses) ? props.meta.allowedStatuses : []));
 const filteredWorkflowStatuses = computed(() => {
@@ -1895,6 +1900,7 @@ function handleSubmit() {
 }
 
 function resetFormState() {
+  draft.clear();
   form.reset();
   currentStep.value = 0;
   mountedSteps.value = { [steps[0].key]: true };

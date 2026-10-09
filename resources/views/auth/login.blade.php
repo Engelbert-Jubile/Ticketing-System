@@ -188,14 +188,7 @@ class="space-y-6" >
             </div>
  
 <div class="mt-2 mb-3 text-right">
-  <a id="forgot-wa"
-     href="#" data-wa="https://wa.me/62895393358741?text={{ urlencode('Halo admin, saya ingin reset password Tickora. Email saya: ' . (old('email') 
-?: (old('email_local') ? (old('email_local') . ($lockedDomain ?? '@kftd.co.id')) : ''))) }}"
-    
-    
-    class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400">
-    Lupa Password?
-  </a>
+  <a href="{{ route('password.request', ['locale' => request()->route('locale') ?? app()->getLocale()]) }}" class="text-sm font-semibold text-blue-600 hover:underline">Lupa password?</a>
 </div>
 
             @if ($recaptcha->isEnabled())

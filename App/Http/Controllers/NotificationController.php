@@ -10,6 +10,11 @@ use Illuminate\Support\Facades\DB;
 
 class NotificationController extends Controller
 {
+    public function index(Request $request): JsonResponse
+    {
+        return response()->json(['notifications' => $this->mapNotifications($request->user())]);
+    }
+
     protected function mapNotifications($user): array
     {
         if (! $user) {
@@ -54,15 +59,12 @@ class NotificationController extends Controller
     {
         $user = $request->user();
 
-        return DB::table('notifications')
-            ->where('id', $id)
-            ->where('notifiable_type', $user?->getMorphClass())
-            ->where('notifiable_id', $user?->getKey());
+        return $user->notifications()->where('id', $id);
     }
 
-    public function read(Request $request, string $id): RedirectResponse
+    public function read(Request $request, string $locale, string $id): RedirectResponse
     {
-        $notif = $this->userNotificationQuery($request, $id)->first();
+        $notif = $this->userNotificationQuery($request, $id)->firstOrFail();
 
         if ($notif) {
             $this->userNotificationQuery($request, $id)->update([
@@ -73,19 +75,16 @@ class NotificationController extends Controller
         }
 
         $url = $notif?->data['url'] ?? null;
-        if ($url && is_string($url)) {
+        if (is_string($url) && str_starts_with($url, url('/').'/')) {
             return redirect()->to($url);
         }
 
         return back();
     }
 
-    public function mark(Request $request, string $id): RedirectResponse|JsonResponse
+    public function mark(Request $request, string $locale, string $id): RedirectResponse|JsonResponse
     {
-        $this->userNotificationQuery($request, $id)->update([
-            'read_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $this->userNotificationQuery($request, $id)->firstOrFail()->markAsRead();
 
         return $this->notificationResponse($request);
     }
@@ -108,9 +107,9 @@ class NotificationController extends Controller
         return $this->notificationResponse($request);
     }
 
-    public function destroy(Request $request, string $id): RedirectResponse|JsonResponse
+    public function destroy(Request $request, string $locale, string $id): RedirectResponse|JsonResponse
     {
-        $this->userNotificationQuery($request, $id)->delete();
+        $this->userNotificationQuery($request, $id)->firstOrFail()->delete();
 
         return $this->notificationResponse($request);
     }

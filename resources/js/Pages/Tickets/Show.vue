@@ -103,7 +103,7 @@
 
     <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
       <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Deskripsi</h2>
-      <div class="prose prose-sm max-w-none text-slate-700 dark:prose-invert" v-html="ticket.description || '<p>—</p>'"></div>
+      <div class="prose prose-sm max-w-none text-slate-700 dark:text-slate-200 dark:prose-invert" v-html="ticket.description || '<p>—</p>'"></div>
     </article>
 
     <article v-if="ticket.projects?.length" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
@@ -150,11 +150,13 @@
         </li>
       </ul>
     </article>
+    <TicketCollaboration :ticket-id="ticket.id" />
   </div>
 </template>
 
 <script setup>
 import StatusPill from '@/Components/StatusPill.vue';
+import TicketCollaboration from '@/Components/TicketCollaboration.vue';
 
 
 const props = defineProps({

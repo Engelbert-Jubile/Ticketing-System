@@ -302,7 +302,7 @@ const accountRef = ref(null)
 const colorPickerRef = ref(null)
 
 const notificationItems = computed(() => (Array.isArray(props.notifications?.items) ? props.notifications.items : []))
-const unreadCount = computed(() => notificationItems.value.filter(item => item.read_at == null).length)
+const unreadCount = computed(() => Math.max(0, Number(props.notifications?.unread_count ?? notificationItems.value.filter(item => item.read_at == null).length) || 0))
 const themeIcon = computed(() => (props.theme === 'dark' ? 'light_mode' : 'dark_mode'))
 const themeToggleTitle = computed(() => (props.theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'))
 const pickerColor = computed(() => props.headerColor || '#4338ca')

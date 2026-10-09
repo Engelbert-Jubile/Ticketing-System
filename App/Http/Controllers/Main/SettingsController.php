@@ -412,6 +412,7 @@ class SettingsController extends Controller
             'framework_version' => app()->version(),
             'php_version' => PHP_VERSION,
             'queue_connection' => config('queue.default'),
+            'deadline_notifier_last_success' => \Illuminate\Support\Facades\Cache::get('health:deadline-notifier:last-success'),
             'cache_driver' => config('cache.default'),
             'storage_driver' => config('filesystems.default'),
             'timestamp' => now()->toIsoString(),

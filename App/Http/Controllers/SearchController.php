@@ -2,133 +2,38 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Project;
-use App\Models\Task;
-use App\Models\Ticket;
-use App\Support\UnitVisibility;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\RedirectResponse;
+use App\Services\WorkListService;
+use App\Support\WorkflowStatus;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class SearchController extends Controller
 {
-    public function index(Request $request): Response|RedirectResponse
+    public function index(Request $request, WorkListService $service): Response
     {
-        $query = $request->input('query');
-        $locale = app()->getLocale() ?? config('app.locale', 'en');
+        return $this->render($request, $service, false);
+    }
 
-        if (! $query) {
-            return redirect()->back()->with('error', 'Silakan masukkan kata kunci pencarian.');
-        }
+    public function work(Request $request, WorkListService $service): Response
+    {
+        return $this->render($request, $service, true);
+    }
 
-        /** @var Builder $ticketsQuery */
-        $ticketsQuery = Ticket::with(['requester', 'statusRelation', 'priorityRelation']);
-        /** @var Builder $ticketsQuery */
-        $ticketsQuery = UnitVisibility::scopeTickets($ticketsQuery, $request->user());
-
-        $tickets = $ticketsQuery
-            ->where(function ($builder) use ($query) {
-                $builder->where('title', 'LIKE', "%{$query}%")
-                    ->orWhere('description', 'LIKE', "%{$query}%");
-            })
-            ->latest()
-            ->limit(10)
-            ->get();
-
-        /** @var Builder $tasksQuery */
-        $tasksQuery = Task::with(['requester']);
-        /** @var Builder $tasksQuery */
-        $tasksQuery = UnitVisibility::scopeTasks($tasksQuery, $request->user());
-
-        $tasks = $tasksQuery
-            ->where(function ($builder) use ($query) {
-                $builder->where('title', 'LIKE', "%{$query}%")
-                    ->orWhere('description', 'LIKE', "%{$query}%");
-            })
-            ->latest()
-            ->limit(10)
-            ->get();
-
-        /** @var Builder $projectsQuery */
-        $projectsQuery = Project::with(['user']);
-        /** @var Builder $projectsQuery */
-        $projectsQuery = UnitVisibility::scopeProjects($projectsQuery, $request->user());
-
-        $projects = $projectsQuery
-            ->where(function ($builder) use ($query) {
-                $builder->where('title', 'LIKE', "%{$query}%")
-                    ->orWhere('description', 'LIKE', "%{$query}%");
-            })
-            ->latest()
-            ->limit(10)
-            ->get();
-
-        $backUrl = route('dashboard', ['locale' => $locale]);
-        $previousUrl = url()->previous();
-        if ($previousUrl) {
-            $currentPath = parse_url(url()->current(), PHP_URL_PATH);
-            $previousPath = parse_url($previousUrl, PHP_URL_PATH);
-
-            $isSamePath = $previousPath && $currentPath && $previousPath === $currentPath;
-            $isSearchPath = $previousPath && str_starts_with($previousPath, '/search');
-
-            if (! $isSamePath && ! $isSearchPath) {
-                $backUrl = $previousUrl;
-            }
-        }
-
-        $fullUrl = $request->fullUrl();
-
+    private function render(Request $request, WorkListService $service, bool $personal): Response
+    {
+        $filters = $request->validate([
+            'query' => ['nullable', 'string', 'max:150'],
+            'type' => ['nullable', Rule::in(['ticket', 'task', 'project'])],
+            'status' => ['nullable', Rule::in(WorkflowStatus::all())],
+            'view' => ['nullable', Rule::in(['mine', 'waiting', 'due', 'overdue'])],
+            'page' => ['nullable', 'integer', 'min:1'],
+        ]);
         return Inertia::render('Search/Results', [
-            'query' => $query,
-            'backUrl' => $backUrl,
-            'tickets' => $tickets->map(fn (Ticket $ticket) => [
-                'id' => $ticket->id,
-                'title' => $ticket->title,
-                'description' => Str::of((string) $ticket->description)->stripTags()->toString(),
-                'status' => $ticket->statusRelation ? [
-                    'name' => $ticket->statusRelation->name,
-                    'bg_color' => $ticket->statusRelation->bg_color,
-                    'text_color' => $ticket->statusRelation->text_color,
-                ] : null,
-                'priority' => $ticket->priorityRelation ? [
-                    'name' => $ticket->priorityRelation->name,
-                    'bg_color' => $ticket->priorityRelation->bg_color,
-                    'text_color' => $ticket->priorityRelation->text_color,
-                ] : null,
-                'created_at' => optional($ticket->created_at)?->format('d M Y'),
-                'created_diff' => optional($ticket->created_at)?->diffForHumans(),
-                'url' => route('tickets.show', ['locale' => request()->route('locale'), 'ticket' => $ticket]),
-            ])->values()->all(),
-            'tasks' => $tasks->map(fn (Task $task) => [
-                'id' => $task->id,
-                'title' => $task->title,
-                'description' => Str::of((string) $task->description)->stripTags()->toString(),
-                'status' => [
-                    'value' => $task->status instanceof \BackedEnum ? $task->status->value : (string) $task->status,
-                    'label' => $task->status_label ?? Str::headline((string) $task->status),
-                ],
-                'requester' => $task->requester ? [
-                    'id' => $task->requester->id,
-                    'name' => $task->requester->display_name ?? $task->requester->name ?? $task->requester->email,
-                ] : null,
-                'created_diff' => optional($task->created_at)?->diffForHumans(),
-                'url' => route('tasks.show', ['locale' => request()->route('locale'), 'taskSlug' => $task->public_slug]),
-            ])->values()->all(),
-            'projects' => $projects->map(fn (Project $project) => [
-                'id' => $project->id,
-                'title' => $project->title,
-                'description' => Str::of((string) $project->description)->stripTags()->toString(),
-                'created_at' => optional($project->created_at)?->format('d M Y'),
-                'owner' => $project->user ? [
-                    'id' => $project->user->id,
-                    'name' => $project->user->display_name ?? $project->user->name ?? $project->user->email,
-                ] : null,
-                'url' => route('projects.show', ['locale' => request()->route('locale'), 'project' => $project->public_slug]),
-            ])->values()->all(),
+            'personal' => $personal, 'filters' => $filters,
+            'statuses' => WorkflowStatus::labels(),
+            'results' => $service->fetch($request->user(), $filters, $personal),
         ]);
     }
 }

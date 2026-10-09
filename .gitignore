@@ -92,6 +92,10 @@ resources/js/*
 !resources/js/Components/
 resources/js/Components/*
 !resources/js/Components/WorkflowSelect.vue
+!resources/js/Components/DraftNotice.vue
+!resources/js/Components/TicketCollaboration.vue
+!resources/js/composables/
+!resources/js/composables/useFormDraft.js
 !resources/js/utils/
 resources/js/utils/*
 !resources/js/utils/workflowStatus.js
@@ -99,8 +103,15 @@ resources/js/utils/*
 resources/js/Pages/*
 !resources/js/Pages/Workflows/
 !resources/js/Pages/Workflows/*.vue
+!resources/js/Pages/Knowledge/
+!resources/js/Pages/Knowledge/*.vue
+!resources/js/Pages/Auth/
+resources/js/Pages/Auth/*
+!resources/js/Pages/Auth/PasswordRecovery.vue
 libs/
 scss/
 scripts/
 tasks/
 index.html
+docs/AUDIT_FITUR_UI_DAN_ROADMAP*.md
+docs/IMPLEMENTASI_AUDIT_2026_10_10*.md

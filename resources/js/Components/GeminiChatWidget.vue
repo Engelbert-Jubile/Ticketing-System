@@ -11,8 +11,8 @@
             <div class="chat-status">
               <span class="status-dot" aria-hidden="true"></span>
               <div class="status-text">
-                <span class="status-state">Online</span>
-                <span class="status-caption">Ready to serve</span>
+                <span class="status-state">{{ sending ? 'Memproses' : 'Asisten AI' }}</span>
+                <span class="status-caption">Periksa sumber sebelum mengambil keputusan</span>
               </div>
             </div>
           </div>
@@ -24,6 +24,7 @@
         <div ref="messagesRef" class="chat-body">
           <div v-for="message in messages" :key="message.id" class="chat-bubble" :class="`chat-bubble--${message.role}`">
             <p>{{ message.text }}</p>
+            <ul v-if="message.sources?.length" class="mt-3 space-y-2 text-xs"><li v-for="source in message.sources" :key="source.ref"><a :href="source.url" class="underline">[{{ source.ref }}] {{ source.title }}</a></li></ul>
           </div>
           <div v-if="sending" class="chat-bubble chat-bubble--assistant">
             <div class="typing">
@@ -38,11 +39,13 @@
               ref="inputRef"
               v-model="draft"
               type="text"
+              maxlength="600"
+              aria-label="Pertanyaan untuk asisten AI"
               class="chat-input"
               :placeholder="sending ? 'Menunggu balasan...' : 'Tanyakan apa saja tentang tiket, task, project kamu'"
               :disabled="sending"
             />
-            <button type="submit" class="send-btn" :disabled="sending || !draft.trim()">
+            <button type="submit" aria-label="Kirim pertanyaan" class="send-btn" :disabled="sending || !draft.trim()">
               <span class="material-icons">send</span>
             </button>
           </form>
@@ -125,16 +128,18 @@ const sendMessage = async () => {
   try {
     const { data } = await axios.post(props.endpoint, {
       message: content,
-      history: historyPayload.value.slice(-6),
+      history: historyPayload.value.slice(-6).map(entry => ({ ...entry, text: entry.text.slice(0, 1000) })),
     });
 
     messages.value.push({
       id: nextId(),
       role: 'assistant',
       text: data?.reply || 'Maaf, saya tidak bisa menjawab itu sekarang.',
+      sources: data?.sources || [],
     });
   } catch (err) {
-    error.value = 'Tidak dapat terhubung ke TMS AI. Coba lagi nanti.';
+    draft.value = content;
+    error.value = err.response?.status === 429 ? 'Batas permintaan tercapai. Tunggu satu menit lalu coba kembali.' : 'Tidak dapat terhubung ke TMS AI. Pesan Anda dipulihkan untuk dicoba kembali.';
   } finally {
     sending.value = false;
     scrollToBottom();

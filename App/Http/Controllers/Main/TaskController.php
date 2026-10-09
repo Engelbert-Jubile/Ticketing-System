@@ -52,30 +52,20 @@ final class TaskController extends Controller
 
     public function onProgress(Request $request): Response
     {
-        $statusScope = array_unique(array_merge(
-            WorkflowStatus::equivalents(WorkflowStatus::IN_PROGRESS),
-            WorkflowStatus::equivalents(WorkflowStatus::CONFIRMATION)
-        ));
-
-        $origin = $this->pageOrigin($request, 'tasks.on-progress');
-        $actor = $request->user();
-
-        /** @var Builder $taskQuery */
-        $taskQuery = Task::query()
-            ->select(['id', 'title', 'description', 'status', 'updated_at'])
-            ->whereIn('status', $statusScope);
-
-        $taskQuery = UnitVisibility::scopeTasks($taskQuery, $actor);
-
-        $tasks = $taskQuery
-            ->latest('updated_at')
-            ->limit(200)
-            ->get()
-            ->map(fn (Task $task) => $this->transformTaskInProgress($task, $origin))
-            ->values();
-
-        return Inertia::render('Tasks/OnProgress', [
-            'tasks' => $tasks,
+        $filters = $request->validate([
+            'query' => ['nullable', 'string', 'max:150'],
+            'status' => ['nullable', Rule::in(WorkflowStatus::all())],
+            'page' => ['nullable', 'integer', 'min:1'],
+        ]);
+        $filters['type'] = 'task';
+        $filters['status'] = $filters['status'] ?? '';
+        $filters['active_work'] = true;
+        return Inertia::render('Search/Results', [
+            'heading' => 'Task sedang dikerjakan',
+            'endpoint' => 'tasks.on-progress',
+            'personal' => false, 'filters' => $filters,
+            'statuses' => WorkflowStatus::labels(),
+            'results' => app(\App\Services\WorkListService::class)->fetch($request->user(), $filters),
         ]);
     }
 

@@ -157,6 +157,10 @@ Route::get('/inertia-health', function () {
 
 /* Ã°Å¸â€Â Auth (Login & Register) Ã¢â‚¬â€ hanya untuk guest */
 Route::middleware('guest')->group(function () {
+    Route::get('/forgot-password', [\App\Http\Controllers\Auth\PasswordRecoveryController::class, 'request'])->name('password.request');
+    Route::post('/forgot-password', [\App\Http\Controllers\Auth\PasswordRecoveryController::class, 'email'])->middleware('throttle:5,1')->name('password.email');
+    Route::get('/reset-password/{token}', [\App\Http\Controllers\Auth\PasswordRecoveryController::class, 'reset'])->name('password.reset');
+    Route::post('/reset-password', [\App\Http\Controllers\Auth\PasswordRecoveryController::class, 'update'])->middleware('throttle:10,1')->name('password.update');
     Route::view('/login', 'auth.login')->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.store');
     Route::get('/register', function () {
@@ -217,10 +221,13 @@ Route::middleware($emailVerificationEnabled
     Route::get('/dashboard/unit-reports', [UnitReportsController::class, 'index'])->name('dashboard.unit-reports');
 
     /* Ã°Å¸Â¤â€“ Gemini AI Assistant */
-    Route::post('/dashboard/ai/gemini', [GeminiAIController::class, 'respond'])->name('ai.gemini.chat');
+    Route::post('/dashboard/ai/gemini', [GeminiAIController::class, 'respond'])->middleware('throttle:20,1')->name('ai.gemini.chat');
 
     /* Ã°Å¸â€Â Global Search */
     Route::get('/search', [SearchController::class, 'index'])->name('search');
+    Route::get('/dashboard/my-work', [SearchController::class, 'work'])->name('work.index');
+    Route::get('/dashboard/knowledge', [\App\Http\Controllers\KnowledgeController::class, 'index'])->name('knowledge.index');
+    Route::post('/dashboard/knowledge', [\App\Http\Controllers\KnowledgeController::class, 'save'])->name('knowledge.save');
 
     /* Ã°Å¸â€˜Â¤ Profil user */
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -229,6 +236,10 @@ Route::middleware($emailVerificationEnabled
 
     /* Ã°Å¸Å½Â« Tickets */
     Route::prefix('dashboard/tickets')->name('tickets.')->group(function () {
+        Route::get('/{ticket}/collaboration', [\App\Http\Controllers\TicketCollaborationController::class, 'index'])->name('collaboration');
+        Route::post('/{ticket}/messages', [\App\Http\Controllers\TicketCollaborationController::class, 'message'])->middleware('throttle:30,1')->name('messages.store');
+        Route::post('/{ticket}/checklist', [\App\Http\Controllers\TicketCollaborationController::class, 'checklist'])->name('checklist.store');
+        Route::post('/{ticket}/feedback', [\App\Http\Controllers\TicketCollaborationController::class, 'feedback'])->name('feedback.store');
         Route::get('/', [TicketController::class, 'index'])->name('index');
         Route::get('/create', [TicketController::class, 'create'])->name('create');
         Route::post('/', [TicketController::class, 'store'])->name('store');
@@ -242,7 +253,7 @@ Route::middleware($emailVerificationEnabled
         Route::get('/{ticket}/edit', [TicketController::class, 'edit'])->name('edit');
         Route::put('/{ticket}', [TicketController::class, 'update'])->name('update');
         Route::delete('/{ticket}', [TicketController::class, 'destroy'])->name('destroy');
-        Route::get('/{ticket}/status/{status}', [TicketController::class, 'changeStatus'])->name('status.change');
+        Route::patch('/{ticket}/status/{status}', [TicketController::class, 'changeStatus'])->name('status.change');
 
         // Manage attachments standalone (reattach)
         Route::get('/{ticket}/attachments', [TicketController::class, 'manageAttachments'])->name('attachments.manage');
@@ -251,6 +262,7 @@ Route::middleware($emailVerificationEnabled
 
     // Ã°Å¸â€â€ Notifications
     Route::prefix('dashboard/notifications')->name('notifications.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\NotificationController::class, 'index'])->name('index');
         Route::post('/read-all', [\App\Http\Controllers\NotificationController::class, 'readAll'])->name('read-all');
         Route::post('/{id}/read', [\App\Http\Controllers\NotificationController::class, 'read'])->name('read');
         Route::post('/{id}/mark', [\App\Http\Controllers\NotificationController::class, 'mark'])->name('mark');
@@ -390,7 +402,7 @@ Route::middleware($emailVerificationEnabled
         ->withoutMiddleware(['verified'])
         ->name('logout');
 
-    Route::get('/logout', [AuthController::class, 'logout'])
+    Route::get('/logout', fn () => redirect()->route('dashboard', ['locale' => request()->route('locale')]))
         ->withoutMiddleware(['verified'])
         ->name('logout.get');
 });

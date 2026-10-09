@@ -41,6 +41,7 @@
     >
       <div v-if="!isDesktop && sidebarOpen" class="overlay" @click="setSidebarOpen(false)"></div>
       <main class="app-main">
+        <p v-if="notificationError" role="alert" class="mb-4 rounded-xl bg-rose-50 p-3 text-sm text-rose-800 dark:bg-rose-950 dark:text-rose-200">{{ notificationError }}</p>
         <div
           v-if="impersonationActive"
           class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/40 dark:bg-amber-900/30 dark:text-amber-100"
@@ -119,50 +120,14 @@ const isLimitedUser = computed(() => {
   if (hasAdmin) return false
   return roles.includes('user')
 })
-const notificationReadStorageKey = computed(() => `tickora:notifications:read:${authUser.value?.id ?? 'guest'}`)
-
-const loadStoredReadNotificationIds = () => {
-  if (typeof window === 'undefined') return new Set()
-
-  try {
-    const raw = localStorage.getItem(notificationReadStorageKey.value)
-    const parsed = JSON.parse(raw ?? '[]')
-
-    if (!Array.isArray(parsed)) return new Set()
-
-    return new Set(parsed.map(value => String(value)))
-  } catch (error) {
-    return new Set()
-  }
-}
-
-const readNotificationIds = ref(loadStoredReadNotificationIds())
-
-const persistReadNotificationIds = () => {
-  if (typeof window === 'undefined') return
-
-  try {
-    localStorage.setItem(notificationReadStorageKey.value, JSON.stringify(Array.from(readNotificationIds.value)))
-  } catch (error) {}
-}
-
-const cloneNotifications = source => {
-  const items = Array.isArray(source?.items)
-    ? source.items.map(item => {
-        const isLocallyRead = readNotificationIds.value.has(String(item.id))
-
-        return {
-          ...item,
-          read_at: isLocallyRead ? (item.read_at || new Date().toISOString()) : (item.read_at ?? null),
-        }
-      })
-    : []
-
-  return {
-    unread_count: items.filter(item => item.read_at == null).length,
-    items,
-  }
-}
+const cloneNotifications = source => ({
+  unread_count: Number(source?.unread_count ?? 0),
+  items: Array.isArray(source?.items) ? source.items.map(item => ({ ...item })) : [],
+})
+const notificationError = ref('')
+const notificationBusy = ref(false)
+let notificationTimer = null
+let notificationRevision = 0
 
 const notificationsState = ref(cloneNotifications(page.props.notifications))
 const notifications = computed(() => notificationsState.value)
@@ -260,6 +225,14 @@ const navItems = computed(() => {
       icon: 'dashboard',
       href: resolveRouteName('dashboard'),
       match: path => path === '/dashboard',
+    },
+    {
+      type: 'link', key: 'work', label: 'Pekerjaan Saya', icon: 'assignment_ind',
+      href: resolveRouteName('work.index'), match: path => path === '/dashboard/my-work',
+    },
+    {
+      type: 'link', key: 'knowledge', label: 'Panduan & Template', icon: 'menu_book',
+      href: resolveRouteName('knowledge.index'), match: path => path === '/dashboard/knowledge',
     },
     {
       type: 'group',
@@ -642,10 +615,15 @@ const performSearch = query => {
 }
 
 const syncNotifications = page => {
+  notificationRevision++
   const source = page?.props?.notifications ?? page.props.notifications
   notificationsState.value = cloneNotifications(source)
 }
 const notificationVisit = async (method, url, applyLocalChange) => {
+  if (notificationBusy.value) return false
+  notificationBusy.value = true
+  notificationRevision++
+  notificationError.value = ''
   const previous = cloneNotifications(notificationsState.value)
 
   if (typeof applyLocalChange === 'function') {
@@ -654,6 +632,7 @@ const notificationVisit = async (method, url, applyLocalChange) => {
 
   if (!url || url === '#') {
     notificationsState.value = previous
+    notificationBusy.value = false
     return false
   }
 
@@ -664,34 +643,39 @@ const notificationVisit = async (method, url, applyLocalChange) => {
 
     if (response?.data?.notifications) {
       notificationsState.value = cloneNotifications(response.data.notifications)
+      notificationBusy.value = false
       return true
     }
   } catch (error) {
   }
 
   notificationsState.value = previous
+  notificationBusy.value = false
+  notificationError.value = 'Notifikasi belum tersimpan. Silakan coba lagi.'
   return false
 }
-const markAllNotifications = () => {
-  const next = new Set(readNotificationIds.value)
+const markAllNotifications = () => notificationVisit('post', resolveRouteName('notifications.read-all'), () => {
+  notificationsState.value = {
+    unread_count: 0,
+    items: notificationsState.value.items.map(item => ({ ...item, read_at: item.read_at || new Date().toISOString() })),
+  }
+})
 
-  notificationsState.value.items.forEach(item => {
-    if (item.read_at == null) {
-      next.add(String(item.id))
-    }
-  })
+const markNotification = id => notificationVisit('post', resolveRouteName('notifications.mark', { id }), () => {
+  const item = notificationsState.value.items.find(item => String(item.id) === String(id))
+  if (item && !item.read_at) {
+    item.read_at = new Date().toISOString()
+    notificationsState.value.unread_count = Math.max(0, notificationsState.value.unread_count - 1)
+  }
+})
 
-  readNotificationIds.value = next
-  persistReadNotificationIds()
-  notificationsState.value = cloneNotifications(notificationsState.value)
-}
-
-const markNotification = id => {
-  const next = new Set(readNotificationIds.value)
-  next.add(String(id))
-  readNotificationIds.value = next
-  persistReadNotificationIds()
-  notificationsState.value = cloneNotifications(notificationsState.value)
+const refreshNotifications = async () => {
+  if (document.hidden || notificationBusy.value) return
+  const revision = ++notificationRevision
+  try {
+    const { data } = await axios.get(resolveRouteName('notifications.index'))
+    if (!notificationBusy.value && revision === notificationRevision) notificationsState.value = cloneNotifications(data.notifications)
+  } catch (_) { /* Keep current notifications during a temporary connection failure. */ }
 }
 
 const deleteNotification = id => {
@@ -717,7 +701,7 @@ const logout = () => {
     localStorage.setItem(SIDEBAR_LOGOUT_REASON_KEY, 'manual')
   } catch (error) {}
   resetSidebarPersistence()
-  window.location.href = resolveRouteName('logout.get')
+  router.post(resolveRouteName('logout'))
 }
 
 const navigate = href => {
@@ -770,6 +754,8 @@ const contentStyle = computed(() => {
 })
 
 onMounted(() => {
+  notificationTimer = window.setInterval(refreshNotifications, 30000)
+  window.addEventListener('focus', refreshNotifications)
   loadSidebarState()
   loadTheme()
   initBreakpoint()
@@ -780,6 +766,8 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  window.clearInterval(notificationTimer)
+  window.removeEventListener('focus', refreshNotifications)
   cleanupBreakpoint()
   if (headerColorSaveTimer !== null) {
     window.clearTimeout(headerColorSaveTimer)
@@ -790,13 +778,6 @@ watch([announcementKey, announcement], () => {
   syncAnnouncement()
 })
 
-watch(
-  notificationReadStorageKey,
-  () => {
-    readNotificationIds.value = loadStoredReadNotificationIds()
-    notificationsState.value = cloneNotifications(page.props.notifications)
-  }
-)
 
 watch(
   () => page.props.notifications,

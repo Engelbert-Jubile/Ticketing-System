@@ -15,7 +15,7 @@ class GeminiAIController extends Controller
     {
         $validated = $request->validate([
             'message' => ['required', 'string', 'max:600'],
-            'history' => ['sometimes', 'array'],
+            'history' => ['sometimes', 'array', 'max:6'],
             'history.*.role' => ['required_with:history', 'in:user,assistant'],
             'history.*.text' => ['required_with:history', 'string', 'max:1000'],
         ]);
@@ -29,10 +29,12 @@ class GeminiAIController extends Controller
         }
 
         try {
+            $sources = app(\App\Services\AiSourceService::class)->find($request->user(), $message);
             $reply = $this->service->respond(
                 $request->user(),
                 $message,
-                $validated['history'] ?? []
+                $validated['history'] ?? [],
+                $sources
             );
         } catch (\Throwable $e) {
             report($e);
@@ -44,6 +46,7 @@ class GeminiAIController extends Controller
 
         return response()->json([
             'reply' => $reply,
+            'sources' => array_map(fn ($source) => array_intersect_key($source, array_flip(['ref', 'title', 'url'])), $sources),
         ]);
     }
 

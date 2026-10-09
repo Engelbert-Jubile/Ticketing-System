@@ -16,7 +16,7 @@ pest()->extend(Tests\TestCase::class)
     ->in('Feature');
 
 pest()->extend(Tests\TestCase::class)
-    ->in('WorkflowAuthorizationTest.php');
+    ->in('WorkflowAuthorizationTest.php', 'AuditImprovementsTest.php');
 
 /*
 |--------------------------------------------------------------------------

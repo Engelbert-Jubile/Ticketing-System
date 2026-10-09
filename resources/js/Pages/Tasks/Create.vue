@@ -4,6 +4,7 @@
       <h1 class="text-3xl font-semibold text-slate-900 dark:text-slate-100">Buat Task Baru</h1>
       <p class="text-sm text-slate-500 dark:text-slate-300">Lengkapi informasi task, tentukan penanggung jawab, dan tambahkan lampiran jika diperlukan.</p>
     </header>
+    <DraftNotice :draft="draft" />
 
     <form class="space-y-6" @submit.prevent="handleSubmit">
       <nav class="wizard">
@@ -546,6 +547,8 @@
 </template>
 
 <script setup>
+import { useFormDraft } from '@/composables/useFormDraft';
+import DraftNotice from '@/Components/DraftNotice.vue';
 import { computed, onBeforeUnmount, onMounted, ref, watch, watchEffect } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import resolveRoute from '@/utils/resolveRoute';
@@ -620,6 +623,8 @@ const form = useForm({
   project_end: null,
   attachments: [],
 });
+const draft = useFormDraft(form, 'task', ["title","description","priority","start_at","end_at","project_title","project_start","project_end"], true);
+
 
 const statusGuide = computed(() => props.meta?.statusGuide ?? null);
 const statusDefaultLabel = computed(() => props.meta?.statusDefault ?? 'New');
@@ -1271,6 +1276,7 @@ onBeforeUnmount(() => {
 });
 
 function resetForm() {
+  draft.clear();
   form.reset();
   form.status = props.defaults.status ?? 'new';
   form.priority = props.defaults.priority ?? 'normal';

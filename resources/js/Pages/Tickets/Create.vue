@@ -6,6 +6,8 @@
         <p class="text-sm text-slate-500 dark:text-slate-300">Lengkapi detail ticket dan pilih PIC utama untuk tugas ini.</p>
       </div>
     </header>
+    <DraftNotice :draft="draft" />
+    <p v-if="defaults.assignment_reason" class="rounded-xl bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-950 dark:text-blue-200">{{ defaults.assignment_reason }}</p>
 
     <section
       v-if="flash.success"
@@ -23,42 +25,51 @@
     <form class="mt-4 space-y-6 rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/70" @submit.prevent="submit">
       <section class="grid gap-4 md:grid-cols-2">
         <div>
-          <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Judul <span class="text-red-500">*</span></label>
+          <label for="ticket-title" class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Judul <span class="text-red-500">*</span></label>
           <input
+            id="ticket-title"
+            :aria-invalid="Boolean(form.errors.title)"
+            aria-describedby="ticket-title-error"
             v-model="form.title"
             type="text"
             placeholder="Masukkan judul ticket"
             class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-500/40"
           />
-          <p v-if="form.errors.title" class="mt-1 text-xs text-red-500">{{ form.errors.title }}</p>
+          <p id="ticket-title-error" role="alert" v-if="form.errors.title" class="mt-1 text-xs text-red-500">{{ form.errors.title }}</p>
         </div>
 
         <div>
-          <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Nomor Surat</label>
+          <label for="ticket-letter_no" class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Nomor Surat</label>
           <input
+            id="ticket-letter_no"
+            :aria-invalid="Boolean(form.errors.letter_no)"
+            aria-describedby="ticket-letter_no-error"
             v-model="form.letter_no"
             type="text"
             placeholder="Opsional"
             class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-500/40"
           />
-          <p v-if="form.errors.letter_no" class="mt-1 text-xs text-red-500">{{ form.errors.letter_no }}</p>
+          <p id="ticket-letter_no-error" role="alert" v-if="form.errors.letter_no" class="mt-1 text-xs text-red-500">{{ form.errors.letter_no }}</p>
         </div>
 
         <div class="md:col-span-2">
-          <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Reason</label>
+          <label for="ticket-reason" class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Reason</label>
           <input
+            id="ticket-reason"
+            :aria-invalid="Boolean(form.errors.reason)"
+            aria-describedby="ticket-reason-error"
             v-model="form.reason"
             type="text"
             placeholder="Ringkas alasan dibuatnya ticket"
             class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-500/40"
           />
-          <p v-if="form.errors.reason" class="mt-1 text-xs text-red-500">{{ form.errors.reason }}</p>
+          <p id="ticket-reason-error" role="alert" v-if="form.errors.reason" class="mt-1 text-xs text-red-500">{{ form.errors.reason }}</p>
         </div>
 
         <div>
           <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Prioritas <span class="text-red-500">*</span></label>
           <div class="mt-1 w-full">
-            <FancySelect v-model="form.priority" :options="priorityOptions" accent="subtle" />
+            <FancySelect aria-label="Prioritas ticket" v-model="form.priority" :options="priorityOptions" accent="subtle" />
           </div>
           <p v-if="form.errors.priority" class="mt-1 text-xs text-red-500">{{ form.errors.priority }}</p>
         </div>
@@ -66,7 +77,7 @@
         <div>
           <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Jenis Ticket</label>
           <div class="mt-1 w-full">
-            <FancySelect v-model="form.type" :options="typeOptions" :disabled="true" accent="blue" />
+            <FancySelect aria-label="Jenis ticket" v-model="form.type" :options="typeOptions" :disabled="true" accent="blue" />
           </div>
           <p v-if="form.errors.type" class="mt-1 text-xs text-red-500">{{ form.errors.type }}</p>
         </div>
@@ -75,7 +86,7 @@
           <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Status</label>
           <div class="relative mt-1 w-full">
             <FancySelect
-              v-model="form.status"
+              aria-label="Status ticket" v-model="form.status"
               :options="statusOptions"
               :disabled="statusLocked"
               accent="blue"
@@ -92,7 +103,7 @@
         <div>
           <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">SLA</label>
           <div class="mt-1 w-full">
-            <FancySelect v-model="form.sla" :options="slaSelectOptions" accent="subtle" />
+            <FancySelect aria-label="SLA ticket" v-model="form.sla" :options="slaSelectOptions" accent="subtle" />
           </div>
           <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Pilih SLA yang berlaku atau biarkan kosong bila belum ditentukan.</p>
           <p v-if="form.errors.sla" class="mt-1 text-xs text-red-500">{{ form.errors.sla }}</p>
@@ -101,7 +112,7 @@
         <div>
           <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Mulai</label>
           <DatePickerFlatpickr
-            class="mt-1"
+            aria-label="Tanggal mulai ticket" class="mt-1"
             v-model="form.start_at"
             :config="startDateConfig"
             placeholder="Pilih tanggal"
@@ -112,7 +123,7 @@
         <div>
           <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Selesai</label>
           <DatePickerFlatpickr
-            class="mt-1"
+            aria-label="Tanggal selesai ticket" class="mt-1"
             v-model="form.finish_at"
             :config="finishDateConfig"
             placeholder="Pilih tanggal"
@@ -329,7 +340,7 @@
       <section>
         <div class="flex items-center justify-between">
           <label class="text-sm font-semibold text-slate-600 dark:text-slate-300">Deskripsi</label>
-          <span class="text-xs text-slate-400">Maksimal 255 karakter.</span>
+          <span class="text-xs text-slate-400">Maksimal 20.000 karakter.</span>
         </div>
         <div class="mt-2 overflow-hidden rounded-2xl border border-slate-200/80 dark:border-slate-700/60">
           <RichTextQuill v-model="form.description" />
@@ -402,6 +413,8 @@
 </template>
 
 <script setup>
+import { useFormDraft } from '@/composables/useFormDraft';
+import DraftNotice from '@/Components/DraftNotice.vue';
 import { useForm, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, watchEffect } from 'vue';
 import resolveRoute from '@/utils/resolveRoute';
@@ -434,8 +447,9 @@ const createSubmissionToken = () => {
 };
 
 const form = useForm({
-  title: '',
-  description: '',
+  title: props.defaults.title ?? '',
+  description: props.defaults.description ?? '',
+  template_id: props.defaults.template_id ?? null,
   reason: '',
   letter_no: '',
   priority: props.defaults.priority ?? null,
@@ -454,6 +468,8 @@ const form = useForm({
   attachments: [],
   submission_token: createSubmissionToken(),
 });
+const draft = useFormDraft(form, 'ticket', ["title","description","reason","letter_no","priority","sla","start_at","due_at","due_date","finish_date","finish_at"], true);
+
 
 const toDateOnly = value => {
   if (!value) return null;
@@ -562,8 +578,8 @@ const requesterDropdownOpen = ref(false);
 const picDropdownOpen = ref(false);
 const activeRequesterUnit = ref(null);
 const activePicUnit = ref('');
-const picSelections = ref([]);
-const picPrimary = ref(null);
+const picSelections = ref(props.defaults.assigned_user_ids ?? []);
+const picPrimary = ref(props.defaults.assigned_user_ids?.[0] ?? null);
 const picSearchQuery = ref('');
 const picDropdownPlacement = ref('bottom');
 const picDropdownStyle = ref({});
@@ -869,6 +885,7 @@ watch(selectedAttachmentFilter, () => {
 });
 
 function resetForm() {
+  draft.clear();
   form.reset();
   form.priority = props.defaults.priority ?? null;
   form.type = 'task';
@@ -983,7 +1000,7 @@ function submit() {
   form.post(resolveRoute('tickets.store'), {
     forceFormData: true,
     preserveScroll: false,
-    preserveState: false,
+    preserveState: true,
     onError: errors => {
       const messages = Object.values(errors ?? {})
         .flatMap(value => Array.isArray(value) ? value : [value])

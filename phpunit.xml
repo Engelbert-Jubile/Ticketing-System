@@ -11,6 +11,7 @@
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
             <file>tests/WorkflowAuthorizationTest.php</file>
+            <file>tests/AuditImprovementsTest.php</file>
         </testsuite>
     </testsuites>
     <source>

@@ -488,6 +488,18 @@ class TicketController extends Controller
             'requester_id' => $viewer?->id,
         ];
 
+        if ($request->filled('template')) {
+            $request->validate(['template' => ['integer']]);
+            $template = \App\Models\KnowledgeEntry::visibleTo($viewer)->where('kind', 'template')->where('published', true)->findOrFail($request->integer('template'));
+            $defaults['template_id'] = $template->id;
+            $defaults['title'] = $template->title;
+            $defaults['description'] = '<p>'.nl2br(e($template->body)).'</p>';
+            if ($template->default_assignee_id && $users->contains('id', $template->default_assignee_id)) {
+                $defaults['assigned_user_ids'] = [(int) $template->default_assignee_id];
+                $defaults['assignment_reason'] = 'PIC disarankan oleh template '.$template->title.'. Anda dapat mengubahnya.';
+            }
+        }
+
         return Inertia::render('Tickets/Create', [
             'statusOptions' => $statusOptions,
             'priorityOptions' => $priorityOptions,
@@ -536,7 +548,7 @@ class TicketController extends Controller
             'sla' => in_array($request->input('sla'), $this->slas(), true)
                 ? $request->input('sla')
                 : null,
-            'description' => mb_substr((string) $request->input('description', ''), 0, 255),
+            'description' => (string) $request->input('description', ''),
             'reason' => mb_substr((string) $request->input('reason', ''), 0, 255),
             'letter_no' => mb_substr((string) $request->input('letter_no', ''), 0, 255),
         ]);
@@ -579,7 +591,7 @@ class TicketController extends Controller
 
         $data = $request->validate([
             'title' => ['required', 'string', 'max:100'],
-            'description' => ['nullable', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:20000'],
             'reason' => ['nullable', 'string', 'max:255'],
             'letter_no' => ['nullable', 'string', 'max:255'],
             'priority' => ['required', Rule::in($this->priorities())],
@@ -600,6 +612,11 @@ class TicketController extends Controller
             'submission_token' => ['required', 'uuid'],
         ]);
 
+        $template = null;
+        if ($request->filled('template_id')) {
+            $request->validate(['template_id' => ['integer']]);
+            $template = \App\Models\KnowledgeEntry::visibleTo($request->user())->where('kind', 'template')->where('published', true)->findOrFail($request->integer('template_id'));
+        }
         $actingUser = $request->user();
         $submissionToken = $data['submission_token'];
         unset($data['submission_token']);
@@ -616,7 +633,6 @@ class TicketController extends Controller
         $data['agent_id'] = null;
         if (! empty($data['description'])) {
             $data['description'] = $this->sanitizeDescription($data['description']);
-            $data['description'] = mb_substr($data['description'], 0, 255);
         }
 
         $data['due_date'] = $this->parseDateOrNull($data['due_date'] ?? null);
@@ -660,9 +676,12 @@ class TicketController extends Controller
                     ->with('success', 'Ticket sudah tersimpan.');
             }
 
-            $ticket = DB::transaction(function () use ($data, $validIds) {
+            $ticket = DB::transaction(function () use ($data, $validIds, $template) {
                 $ticket = Ticket::create($data);
                 $ticket->assignedUsers()->sync($validIds);
+                foreach ($template?->checklist ?? [] as $title) {
+                    DB::table('ticket_checklist_items')->insert(['ticket_id' => $ticket->id, 'title' => $title, 'done' => false, 'created_at' => now(), 'updated_at' => now()]);
+                }
 
                 return $ticket;
             });
@@ -1013,7 +1032,7 @@ class TicketController extends Controller
       
         $data = $request->validate([
             'title' => ['required', 'string', 'max:100'],
-            'description' => ['nullable', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:20000'],
             'reason' => ['nullable', 'string', 'max:255'],
             'letter_no' => ['nullable', 'string', 'max:255'],
             'priority' => ['required', Rule::in($this->priorities())],
@@ -1052,7 +1071,6 @@ class TicketController extends Controller
         }
         if (! empty($data['description'])) {
             $data['description'] = $this->sanitizeDescription($data['description']);
-            $data['description'] = mb_substr($data['description'], 0, 255);
         }
 
         if (! $dueDateProvided && ! array_key_exists('due_date', $data)) {
@@ -1237,6 +1255,7 @@ class TicketController extends Controller
     {
         UnitVisibility::ensureTicketAccess($request->user(), $ticket);
         $previousStatus = WorkflowStatus::normalize($ticket->status ?? WorkflowStatus::NEW);
+        abort_unless(in_array($status, WorkflowStatus::all(), true), 422, 'Status tidak valid.');
         $statusNormalized = WorkflowStatus::normalize($status);
         if (! in_array($statusNormalized, $this->statuses(), true)) {
             return back()->with('error', 'Invalid status.');
@@ -1255,7 +1274,7 @@ class TicketController extends Controller
             app(WorkItemNotifier::class)->notifyTicketCancelled($ticket, $request->user());
         }
 
-        $backTo = $request->query('from', url()->previous() ?: route('tickets.index', ['locale' => app()->getLocale()]));
+        $backTo = $this->resolveBackUrl($request, route('tickets.index', ['locale' => app()->getLocale()]));
         $label = WorkflowStatus::label($statusNormalized);
 
         return redirect()->to($backTo)->with('success', 'Ticket status updated to '.$label.'.');
@@ -2028,8 +2047,12 @@ class TicketController extends Controller
         try {
             $app = rtrim((string) config('app.url'), '/');
 
-            return str_starts_with($url, '/')
-                || ($app !== '' && str_starts_with($url, $app));
+            if (preg_match('/[\\\\\x00-\x20]/', $url)) {
+                return false;
+            }
+
+            return (str_starts_with($url, '/') && !str_starts_with($url, '//'))
+                || ($app !== '' && ($url === $app || str_starts_with($url, $app.'/')));
         } catch (\Throwable) {
             return false;
         }

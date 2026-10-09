@@ -26,7 +26,7 @@
       </div>
     </header>
 
-    <section class="overflow-hidden rounded-3xl border border-slate-200 bg-white/80 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
+    <section class="overflow-x-auto rounded-3xl border border-slate-200 bg-white/80 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
       <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-700">
         <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-400">
           <tr>
@@ -103,7 +103,7 @@ function changeStatus(event, ticket) {
   const url = event?.target?.value;
   event.target.selectedIndex = 0;
   if (!url) return;
-  router.visit(url, {
+  router.patch(url, {}, {
     preserveScroll: true,
     onSuccess: () => refresh(),
   });

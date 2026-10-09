@@ -126,7 +126,7 @@ class SLAReportController extends Controller
             $type = 'ticket';
         }
 
-        $detail = $this->service->findDetail($type, $id);
+        $detail = $this->service->findDetail($type, $id, $request->user());
         if (! $detail) {
             abort(404);
         }
