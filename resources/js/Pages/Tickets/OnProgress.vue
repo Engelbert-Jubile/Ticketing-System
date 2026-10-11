@@ -54,15 +54,13 @@
             <td class="px-4 py-3">
               <div class="flex flex-wrap items-center gap-2">
                 <Link :href="ticket.links.show" class="text-blue-600 hover:underline dark:text-blue-400">Detail</Link>
-                <div v-if="ticket.status_actions?.length" class="relative">
-                  <select
-                    class="w-44 appearance-none rounded-full border border-slate-300 bg-white px-3 py-1 text-xs text-slate-700 pr-7 transition focus:border-blue-400 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
-                    @change="event => changeStatus(event, ticket)"
-                  >
-                    <option selected disabled>{{ $t("Pilih status…") }}</option>
-                    <option v-for="action in ticket.status_actions" :key="action.value" :value="action.url">{{ action.label }}</option>
-                  </select>
-                  <span class="material-icons pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400">expand_more</span>
+                <div v-if="ticket.status_actions?.length" class="w-44">
+                  <WorkflowSelect
+                    :options="ticket.status_actions.map(action => ({ value: action.url, label: action.label }))"
+                    :aria-label="`${$t('Update Status')}: ${ticket.title}`"
+                    :placeholder="$t('Pilih status…')" :disabled="updatingStatus !== null || refreshing"
+                    @update:model-value="url => changeStatus(url, ticket)"
+                  />
                 </div>
               </div>
             </td>
@@ -80,12 +78,14 @@
 import { Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import StatusPill from '@/Components/StatusPill.vue';
+import WorkflowSelect from '@/Components/WorkflowSelect.vue';
 
 const props = defineProps({
   tickets: { type: Array, default: () => [] },
 });
 
 const refreshing = ref(false);
+const updatingStatus = ref(null);
 
 function refresh() {
   refreshing.value = true;
@@ -99,13 +99,13 @@ function refresh() {
   });
 }
 
-function changeStatus(event, ticket) {
-  const url = event?.target?.value;
-  event.target.selectedIndex = 0;
-  if (!url) return;
+function changeStatus(url, ticket) {
+  if (updatingStatus.value !== null || !ticket.status_actions?.some(action => action.url === url)) return;
+  updatingStatus.value = ticket.id;
   router.patch(url, {}, {
     preserveScroll: true,
     onSuccess: () => refresh(),
+    onFinish: () => { updatingStatus.value = null; },
   });
 }
 </script>

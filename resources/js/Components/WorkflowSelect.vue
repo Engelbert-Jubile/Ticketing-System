@@ -1,20 +1,21 @@
 <template>
   <div ref="anchor" class="relative w-full">
-    <button ref="trigger" type="button" role="combobox" aria-haspopup="listbox"
+    <button :id="id" ref="trigger" type="button" role="combobox" aria-haspopup="listbox"
       :aria-expanded="open" :aria-controls="listId" :aria-activedescendant="open && active >= 0 ? optionId(active) : undefined"
-      :aria-label="ariaLabel" :disabled="disabled || loading" class="workflow-select-trigger" @click="toggle" @keydown="onKeydown">
+      :aria-label="ariaLabel" :aria-required="required || undefined" :aria-owns="open ? listId : undefined"
+      :disabled="disabled || loading" class="workflow-select-trigger" @click="toggle" @keydown="onKeydown" @blur="close">
       <span class="truncate" :class="selected ? '' : 'text-slate-400'">{{ displayLabel }}</span>
       <span v-if="loading" class="workflow-select-spinner" aria-hidden="true"></span>
       <span v-else class="material-icons text-lg text-slate-400 transition-transform" :class="open && 'rotate-180'">expand_more</span>
     </button>
     <Teleport to="body">
       <Transition name="workflow-select-fade">
-        <div v-if="open" ref="panel" :id="listId" role="listbox" class="workflow-select-panel" :style="panelStyle">
+        <div v-if="open" ref="panel" :id="listId" role="listbox" :aria-label="ariaLabel" class="workflow-select-panel" :style="panelStyle" @pointerdown.prevent>
           <div v-if="loading" class="workflow-select-message"><span class="workflow-select-spinner"></span>{{ loadingText }}</div>
           <div v-else-if="!options.length" class="workflow-select-message">{{ emptyText }}</div>
-          <button v-for="(option, index) in options" v-else :id="optionId(index)" :key="option.value" type="button" role="option"
+          <button v-for="(option, index) in options" v-else :id="optionId(index)" :key="option.value" type="button" role="option" tabindex="-1"
             :aria-selected="String(option.value) === String(modelValue)" :aria-disabled="option.disabled || undefined" :disabled="option.disabled"
-            class="workflow-select-option" :class="optionClass(option, index)" @mouseenter="active = index" @click="choose(option)">
+            class="workflow-select-option" :class="optionClass(option, index)" @mouseenter="!option.disabled && (active = index)" @click="choose(option)">
             <span class="truncate">{{ option.label }}</span><span v-if="String(option.value) === String(modelValue)" class="material-icons text-base">check</span>
           </button>
         </div>
@@ -27,7 +28,7 @@
 import { translateUi as uiText } from '../i18n'
 
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-const props = defineProps({ modelValue: { type: [String, Number, null], default: null }, options: { type: Array, default: () => [] }, placeholder: { type: String, default: () => uiText("Pilih opsi") }, ariaLabel: { type: String, default: () => uiText("Pilih opsi") }, disabled: Boolean, loading: Boolean, loadingText: { type: String, default: () => uiText("Memuat opsi...") }, emptyText: { type: String, default: () => uiText("Tidak ada opsi tersedia") } })
+const props = defineProps({ id: String, required: Boolean, modelValue: { type: [String, Number, null], default: null }, options: { type: Array, default: () => [] }, placeholder: { type: String, default: () => uiText("Pilih opsi") }, ariaLabel: { type: String, default: () => uiText("Pilih opsi") }, disabled: Boolean, loading: Boolean, loadingText: { type: String, default: () => uiText("Memuat opsi...") }, emptyText: { type: String, default: () => uiText("Tidak ada opsi tersedia") } })
 const emit = defineEmits(['update:modelValue'])
 const anchor = ref(null), trigger = ref(null), panel = ref(null), open = ref(false), active = ref(-1), panelStyle = ref({})
 const listId = `workflow-select-${Math.random().toString(36).slice(2)}`
@@ -36,17 +37,56 @@ const displayLabel = computed(() => props.loading ? props.loadingText : selected
 const optionId = index => `${listId}-option-${index}`
 const optionClass = (option, index) => ({ 'is-selected': String(option.value) === String(props.modelValue), 'is-active': index === active.value })
 const enabled = () => props.options.map((option, index) => option.disabled ? -1 : index).filter(index => index >= 0)
-const reposition = () => { if (!open.value || !trigger.value) return; const rect = trigger.value.getBoundingClientRect(); const max = Math.min(280, Math.max(64, window.innerHeight - 24)); const below = window.innerHeight - rect.bottom; const height = Math.min(max, props.options.length * 44 + 16); const upwards = below < height + 8 && rect.top > below; panelStyle.value = { position: 'fixed', left: `${rect.left}px`, width: `${rect.width}px`, maxHeight: `${Math.min(height, (upwards ? rect.top : below) - 8)}px`, top: upwards ? 'auto' : `${rect.bottom + 6}px`, bottom: upwards ? `${window.innerHeight - rect.top + 6}px` : 'auto' } }
+const reposition = () => {
+  if (!open.value || !trigger.value) return
+  const rect = trigger.value.getBoundingClientRect()
+  const margin = 8, gap = 6
+  const width = Math.min(rect.width, Math.max(0, window.innerWidth - margin * 2))
+  const below = Math.max(0, window.innerHeight - rect.bottom - gap - margin)
+  const above = Math.max(0, rect.top - gap - margin)
+  const height = Math.min(280, Math.max(1, props.options.length) * 44 + 16)
+  const upwards = below < height && above > below
+  panelStyle.value = {
+    position: 'fixed', left: `${Math.max(margin, Math.min(rect.left, window.innerWidth - width - margin))}px`,
+    width: `${width}px`, maxHeight: `${Math.min(height, upwards ? above : below)}px`,
+    top: upwards ? 'auto' : `${rect.bottom + gap}px`,
+    bottom: upwards ? `${window.innerHeight - rect.top + gap}px` : 'auto',
+  }
+}
 const openMenu = () => { if (props.disabled || props.loading) return; open.value = true; active.value = props.options.findIndex(option => !option.disabled && String(option.value) === String(props.modelValue)); if (active.value < 0) active.value = enabled()[0] ?? -1; nextTick(reposition) }
 const close = () => { open.value = false; active.value = -1 }
 const toggle = () => open.value ? close() : openMenu()
-const choose = option => { if (option.disabled) return; emit('update:modelValue', option.value); close(); nextTick(() => trigger.value?.focus()) }
+const choose = option => { if (!option || option.disabled || props.disabled || props.loading) return; emit('update:modelValue', option.value); close(); nextTick(() => trigger.value?.focus()) }
 const move = step => { const indexes = enabled(); if (!indexes.length) return; const current = indexes.indexOf(active.value); active.value = indexes[(Math.max(0, current) + step + indexes.length) % indexes.length]; nextTick(() => document.getElementById(optionId(active.value))?.scrollIntoView({ block: 'nearest' })) }
-const onKeydown = event => { if (event.key === 'Escape' || event.key === 'Tab') return close(); if (['ArrowDown', 'ArrowUp', 'Home', 'End', 'Enter', ' '].includes(event.key)) event.preventDefault(); if (!open.value && ['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(event.key)) return openMenu(); if (event.key === 'ArrowDown') move(1); else if (event.key === 'ArrowUp') move(-1); else if (event.key === 'Home') active.value = enabled()[0] ?? -1; else if (event.key === 'End') active.value = enabled().at(-1) ?? -1; else if ((event.key === 'Enter' || event.key === ' ') && active.value >= 0) choose(props.options[active.value]) }
+const onKeydown = event => {
+  if (event.key === 'Tab') return close()
+  if (event.key === 'Escape') {
+    if (open.value) { event.preventDefault(); event.stopPropagation(); close() }
+    return
+  }
+  if (props.disabled || props.loading) return
+  if (!['ArrowDown', 'ArrowUp', 'Home', 'End', 'Enter', ' '].includes(event.key)) return
+  event.preventDefault()
+  event.stopPropagation()
+  if (!open.value) {
+    openMenu()
+    if (event.key === 'ArrowUp' || event.key === 'End') active.value = enabled().at(-1) ?? -1
+  } else if (event.key === 'ArrowDown') move(1)
+  else if (event.key === 'ArrowUp') move(-1)
+  else if (event.key === 'Home') active.value = enabled()[0] ?? -1
+  else if (event.key === 'End') active.value = enabled().at(-1) ?? -1
+  else if (active.value >= 0) choose(props.options[active.value])
+  nextTick(() => document.getElementById(optionId(active.value))?.scrollIntoView({ block: 'nearest' }))
+}
 const outside = event => { if (!anchor.value?.contains(event.target) && !panel.value?.contains(event.target)) close() }
 onMounted(() => { document.addEventListener('pointerdown', outside); window.addEventListener('resize', reposition); window.addEventListener('scroll', reposition, true) })
 onBeforeUnmount(() => { document.removeEventListener('pointerdown', outside); window.removeEventListener('resize', reposition); window.removeEventListener('scroll', reposition, true) })
-watch(() => props.options, () => { if (open.value) nextTick(reposition) })
+watch(() => props.options, () => {
+  if (!open.value) return
+  if (!enabled().includes(active.value)) active.value = enabled()[0] ?? -1
+  nextTick(reposition)
+})
+watch(() => props.disabled || props.loading, value => { if (value) close() })
 </script>
 
 <style scoped>
