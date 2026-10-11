@@ -32,8 +32,8 @@ class NotificationController extends Controller
                 return [
                     'id' => $notification->id,
                     'icon' => $notification->data['icon'] ?? 'notifications',
-                    'title' => $notification->data['title'] ?? 'Activity',
-                    'message' => $notification->data['message'] ?? null,
+                    'title' => \App\Support\NotificationText::display($notification->data['title'] ?? 'Activity'),
+                    'message' => \App\Support\NotificationText::display($notification->data['message'] ?? null),
                     'url' => $notification->data['url'] ?? null,
                     'is_unread' => is_null($notification->read_at),
                     'read_at' => $notification->read_at ? $notification->read_at->toDateTimeString() : null,

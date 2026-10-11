@@ -3,7 +3,7 @@
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Task In Progress</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-300">Daftar task yang sedang dikerjakan.</p>
+        <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Daftar task yang sedang dikerjakan.") }}</p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <Link
@@ -11,7 +11,7 @@
           class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
         >
           <span class="material-icons text-sm">add</span>
-          Task Baru
+          {{ $t("Task Baru") }}
         </Link>
         <button
           type="button"
@@ -21,7 +21,7 @@
         >
           <span class="material-icons text-sm" v-if="refreshing">hourglass_top</span>
           <span class="material-icons text-sm" v-else>refresh</span>
-          Segarkan
+          {{ $t("Segarkan") }}
         </button>
       </div>
     </div>
@@ -32,11 +32,11 @@
         <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-400">
           <tr>
             <th class="px-4 py-2 text-left">#</th>
-            <th class="px-4 py-2 text-left">Judul</th>
-            <th class="px-4 py-2 text-left">Deskripsi</th>
+            <th class="px-4 py-2 text-left">{{ $t("Judul") }}</th>
+            <th class="px-4 py-2 text-left">{{ $t("Deskripsi") }}</th>
             <th class="px-4 py-2 text-left">Status</th>
-            <th class="px-4 py-2 text-left">Diupdate</th>
-            <th class="px-4 py-2 text-left">Aksi</th>
+            <th class="px-4 py-2 text-left">{{ $t("Diupdate") }}</th>
+            <th class="px-4 py-2 text-left">{{ $t("Aksi") }}</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-200 bg-white dark:divide-slate-700 dark:bg-slate-900/60">
@@ -54,12 +54,12 @@
               <div class="flex flex-wrap items-center gap-2">
                 <Link :href="task.links.show" class="action-btn action-btn--view">Detail</Link>
                 <Link v-if="task.links.edit" :href="task.links.edit" class="action-btn action-btn--edit">Edit</Link>
-                <button v-if="task.links.delete" type="button" class="action-btn action-btn--delete" @click="destroyTask(task)">Delete</button>
+                <button v-if="task.links.delete" type="button" class="action-btn action-btn--delete" @click="destroyTask(task)">{{ $t("Delete") }}</button>
               </div>
             </td>
           </tr>
           <tr v-if="!tasks.length">
-            <td colspan="6" class="px-4 py-8 text-center text-slate-500 dark:text-slate-300">Tidak ada task in progress.</td>
+            <td colspan="6" class="px-4 py-8 text-center text-slate-500 dark:text-slate-300">{{ $t("Tidak ada task in progress.") }}</td>
           </tr>
         </tbody>
       </table>
@@ -69,6 +69,8 @@
 </template>
 
 <script setup>
+import { translateUi as uiText } from '../../i18n'
+
 import { ref } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import StatusBadge from '@/Components/StatusBadge.vue';
@@ -93,7 +95,7 @@ function refresh() {
 
 function destroyTask(task) {
   if (!task?.links?.delete) return;
-  if (!confirm('Hapus task ini?')) {
+  if (!confirm(uiText("Hapus task ini?"))) {
     return;
   }
   router.delete(task.links.delete, {

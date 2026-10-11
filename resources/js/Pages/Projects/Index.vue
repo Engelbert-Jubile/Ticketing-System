@@ -10,12 +10,12 @@
         </Link>
         <div>
           <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100">Project Overview</h1>
-          <p class="text-sm text-slate-500 dark:text-slate-300">Ringkasan status project terkini.</p>
+          <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Ringkasan status project terkini.") }}</p>
         </div>
       </div>
       <div class="flex flex-wrap items-center gap-3">
         <label class="text-sm text-slate-600 dark:text-slate-300">
-          Tampilkan
+          {{ $t("Tampilkan") }}
           <select class="ml-2 rounded-lg border border-slate-300 px-3 py-1 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200" :value="filters.per_page" @change="changePerPage">
             <option value="6">6</option>
             <option value="12">12</option>
@@ -37,8 +37,8 @@
             <th class="px-4 py-3 text-left">Status</th>
             <th class="px-4 py-3 text-left">Ticket</th>
             <th class="px-4 py-3 text-left">Target</th>
-            <th class="px-4 py-3 text-left">Updated</th>
-            <th class="px-4 py-3 text-right">Actions</th>
+            <th class="px-4 py-3 text-left">{{ $t("Updated") }}</th>
+            <th class="px-4 py-3 text-right">{{ $t("Actions") }}</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-200 bg-white dark:divide-slate-700 dark:bg-slate-900/60">
@@ -61,7 +61,7 @@
             </td>
           </tr>
           <tr v-if="!projects.data.length">
-            <td colspan="7" class="px-4 py-8 text-center text-slate-500 dark:text-slate-300">Belum ada project.</td>
+            <td colspan="7" class="px-4 py-8 text-center text-slate-500 dark:text-slate-300">{{ $t("Belum ada project.") }}</td>
           </tr>
         </tbody>
       </table>

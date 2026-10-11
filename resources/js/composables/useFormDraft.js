@@ -1,5 +1,6 @@
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
+import { translateUi as t } from '../i18n'
 
 export function useFormDraft(form, namespace, fields, enabled = true) {
   const page = usePage()
@@ -12,14 +13,16 @@ export function useFormDraft(form, namespace, fields, enabled = true) {
   let timer = null
   let removeBefore = null
   let suspended = false
+  let saveFailed = false
   const save = () => {
     if (!enabled || suspended || available.value) return
     const data = snapshot()
     if (JSON.stringify(data) === baseline) return
     try {
       localStorage.setItem(key, JSON.stringify({ version: 1, savedAt: Date.now(), data }))
-      message.value = 'Draft tersimpan di perangkat ini (24 jam).'
-    } catch (_) { message.value = 'Draft tidak dapat disimpan. Jangan tutup halaman sebelum menyimpan formulir.' }
+      saveFailed = false
+      message.value = t('Draft tersimpan di perangkat ini (24 jam).')
+    } catch (_) { saveFailed = true; message.value = t('Draft tidak dapat disimpan. Jangan tutup halaman sebelum menyimpan formulir.') }
   }
   const clear = () => {
     clearTimeout(timer)
@@ -28,6 +31,7 @@ export function useFormDraft(form, namespace, fields, enabled = true) {
     available.value = false
     try { localStorage.removeItem(key) } catch (_) {}
     message.value = ''
+    saveFailed = false
     nextTick(() => { baseline = JSON.stringify(snapshot()); suspended = false })
   }
   const restore = () => {
@@ -37,11 +41,11 @@ export function useFormDraft(form, namespace, fields, enabled = true) {
     }
     available.value = false
     candidate = null
-    message.value = 'Draft dipulihkan. Periksa kembali tanggal, pilih penugasan dan unggah lampiran.'
+    message.value = t('Draft dipulihkan. Periksa kembali tanggal, pilih penugasan dan unggah lampiran.')
   }
   const beforeUnload = event => {
     save()
-    if (message.value.startsWith('Draft tidak dapat') && JSON.stringify(snapshot()) !== baseline) {
+    if (saveFailed && JSON.stringify(snapshot()) !== baseline) {
       event.preventDefault()
       event.returnValue = ''
     }
@@ -55,7 +59,7 @@ export function useFormDraft(form, namespace, fields, enabled = true) {
         candidate = stored
         available.value = true
       } else localStorage.removeItem(key)
-    } catch (_) { message.value = 'Penyimpanan draft tidak tersedia.' }
+    } catch (_) { message.value = t('Penyimpanan draft tidak tersedia.') }
     window.addEventListener('beforeunload', beforeUnload)
     removeBefore = router.on('before', save)
   })

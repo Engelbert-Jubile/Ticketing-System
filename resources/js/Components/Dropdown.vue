@@ -51,7 +51,7 @@ const trigger = ref(null);
 const menu = ref(null);
 const open = ref(props.modelValue);
 const resolvedPlacement = ref(props.placement === 'top' ? 'top' : 'bottom');
-const menuStyle = ref({});
+const menuStyle = ref({ position: 'fixed', visibility: 'hidden', margin: '0', zIndex: 9999, maxWidth: 'calc(100vw - 16px)', maxHeight: 'calc(100dvh - 16px)', overflowY: 'auto' });
 
 watch(
   () => props.modelValue,
@@ -72,6 +72,7 @@ watch(open, value => {
   }
 
   if (props.teleport) {
+    menuStyle.value.visibility = 'hidden';
     nextTick(updateMenuPosition);
   }
 });
@@ -116,7 +117,7 @@ function updateMenuPosition() {
     : triggerRect.bottom + gap;
   top = Math.max(gap, Math.min(top, viewportHeight - menuRect.height - gap));
 
-  menuStyle.value = { left: `${left}px`, top: `${top}px` };
+  menuStyle.value = { ...menuStyle.value, visibility: 'visible', left: `${left}px`, top: `${top}px` };
 }
 
 function handleItemClick(event) {

@@ -130,18 +130,18 @@ final class TaskController extends Controller
 
         $columns = [
             ['label' => 'Task No'],
-            ['label' => 'Judul'],
+            ['label' => __('Judul')],
             ['label' => 'Status'],
-            ['label' => 'Prioritas'],
-            ['label' => 'Batas Waktu'],
-            ['label' => 'Diperbarui'],
+            ['label' => __('Prioritas')],
+            ['label' => __('Batas Waktu')],
+            ['label' => __('Diperbarui')],
         ];
 
         $rangeLabel = $this->formatRange($filters['from_date'], $filters['to_date']);
         $meta = [
             'filters' => [
-                'Pencarian' => $filters['q'] !== '' ? $filters['q'] : 'Semua',
-                'Status' => $filters['normalized_status'] ? WorkflowStatus::label($filters['normalized_status']) : 'Semua',
+                'Pencarian' => $filters['q'] !== '' ? $filters['q'] : __('Semua'),
+                'Status' => $filters['normalized_status'] ? WorkflowStatus::label($filters['normalized_status']) : __('Semua'),
                 'Rentang' => $rangeLabel,
                 'Total Data' => number_format($tasks->count()),
             ],
@@ -149,7 +149,7 @@ final class TaskController extends Controller
 
         $filename = sprintf('tasks-report-%s.pdf', now()->format('Ymd-His'));
 
-        return $this->reportExport->downloadPdf('Laporan Task', $columns, $rows, $meta, $filename);
+        return $this->reportExport->downloadPdf(__('Laporan Task'), $columns, $rows, $meta, $filename);
     }
 
     public function reportTicketDetail(Request $request, string $locale, Ticket|string $ticket): Response
@@ -622,7 +622,7 @@ final class TaskController extends Controller
                 ? ['name' => $this->formatUserName($task->assignee)]
                 : null,
             'links' => $this->buildTaskLinks($task, $origin),
-            'type_label' => $withTicket ? 'Dari Ticket' : 'Mandiri',
+            'type_label' => $withTicket ? __('Dari Ticket') : 'Mandiri',
         ];
     }
 
@@ -675,7 +675,7 @@ final class TaskController extends Controller
 
         $description = strip_tags((string) ($payload['description'] ?? ''), '<p><br><strong><em><ul><ol><li><b><i><u>');
         if (trim(strip_tags($description)) === '') {
-            $description = '<p>Tidak ada deskripsi.</p>';
+            $description = __('<p>Tidak ada deskripsi.</p>');
         }
 
         $timeline = [
@@ -1156,7 +1156,7 @@ final class TaskController extends Controller
 
         if ($requestedStatus !== $currentStatus) {
             if (! $task->canUserSetStatus($request->user(), $requestedStatus)) {
-                return back()->with('error', 'Anda tidak memiliki izin untuk mengubah status task ini.');
+                return back()->with('error', __('Anda tidak memiliki izin untuk mengubah status task ini.'));
             }
         }
         $data->status = $requestedStatus;
@@ -1232,7 +1232,7 @@ final class TaskController extends Controller
     {
         UnitVisibility::ensureTaskAccess($request->user(), $task);
         if ($task->project_id) {
-            return back()->with('error', 'Task sudah terhubung ke Project.');
+            return back()->with('error', __('Task sudah terhubung ke Project.'));
         }
 
         DB::transaction(function () use ($task) {
@@ -1265,7 +1265,7 @@ final class TaskController extends Controller
                     : route('projects.report');
 
                 $creator->notify(new ActivityNotification([
-                    'title' => 'Project Baru',
+                    'title' => __('Project Baru'),
                     'message' => 'Task dipromosikan menjadi project: '.$task->title,
                     'url' => $projectLink,
                     'icon' => 'work',
@@ -1277,7 +1277,7 @@ final class TaskController extends Controller
         } catch (\Throwable $e) {
         }
 
-        return back()->with('success', 'Berhasil mempromosikan Task menjadi Project.');
+        return back()->with('success', __('Berhasil mempromosikan Task menjadi Project.'));
     }
 
     /** Helper: generate nomor project unik */
@@ -1586,7 +1586,7 @@ final class TaskController extends Controller
             $ticketAttachments = $ticket->attachments
                 ->map(fn ($attachment) => [
                     'id' => $attachment->id,
-                    'name' => $attachment->original_name ?? 'Lampiran ticket',
+                    'name' => $attachment->original_name ?? __('Lampiran ticket'),
                     'size' => $attachment->size,
                     'view_url' => $this->attachmentRoute('attachments.view', $attachment),
                     'download_url' => $this->attachmentRoute('attachments.download', $attachment),
@@ -1959,7 +1959,7 @@ if ($viewer && \App\Support\UnitVisibility::requiresRestriction($viewer)) {
     private function formatRange(?Carbon $from, ?Carbon $to): string
     {
         if (! $from && ! $to) {
-            return 'Semua';
+            return __('Semua');
         }
 
         $format = 'd M Y';
@@ -2413,9 +2413,9 @@ if ($viewer && \App\Support\UnitVisibility::requiresRestriction($viewer)) {
     {
         return [
             'default' => 'Status awal task selalu New.',
-            'agent' => 'Status In Progress dan Confirmation hanya dapat diubah oleh assignee atau assigned user terkait.',
-            'requester' => 'Status Revision, Done, Cancelled, dan On Hold hanya dapat diubah oleh Requester.',
-            'admin' => 'Hanya Super Admin yang dapat mengubah seluruh status.',
+            'agent' => __('Status In Progress dan Confirmation hanya dapat diubah oleh assignee atau assigned user terkait.'),
+            'requester' => __('Status Revision, Done, Cancelled, dan On Hold hanya dapat diubah oleh Requester.'),
+            'admin' => __('Hanya Super Admin yang dapat mengubah seluruh status.'),
         ];
     }
 
@@ -2612,7 +2612,7 @@ if ($viewer && \App\Support\UnitVisibility::requiresRestriction($viewer)) {
                 ->map(function ($attachment) {
                     return [
                         'id' => $attachment->id,
-                        'name' => $attachment->original_name ?? 'Lampiran ticket',
+                        'name' => $attachment->original_name ?? __('Lampiran ticket'),
                         'size' => $attachment->size,
                         'view_url' => $this->attachmentRoute('attachments.view', $attachment),
                         'download_url' => $this->attachmentRoute('attachments.download', $attachment),

@@ -88,7 +88,7 @@ class WorkflowController extends Controller
             return $workflow;
         });
 
-        return redirect()->route('workflows.show', ['locale' => $request->route('locale'), 'workflow' => $workflow])->with('success', 'Workflow berhasil dibuat.');
+        return redirect()->route('workflows.show', ['locale' => $request->route('locale'), 'workflow' => $workflow])->with('success', __('Workflow berhasil dibuat.'));
     }
 
     public function showInstance(Request $request, string $locale, string $instance): Response|RedirectResponse
@@ -129,7 +129,7 @@ class WorkflowController extends Controller
 
         $item['description'] = $subject->description;
         $item['sla'] = [
-            'label' => $sla ?: 'Tidak ditentukan',
+            'label' => $sla ?: __('Tidak ditentukan'),
             'started_at' => $instance->started_at?->toIso8601String(),
             'target_at' => $targetDate?->toIso8601String(),
             'finished_at' => $finishedAt?->toIso8601String(),
@@ -161,14 +161,14 @@ class WorkflowController extends Controller
             return [
                 'id' => $stage->id,
                 'position' => $stage->position,
-                'name' => $stage->name,
+                'name' => \App\Support\WorkflowDisplay::text($instance->workflow, $stage->name),
                 'status_key' => $stage->status_key,
                 'status_label' => WorkflowStatus::label($stage->status_key),
                 'responsible_role' => $stage->responsible_role,
                 'responsible_user' => $stage->responsibleUser?->display_name,
                 'is_required' => (bool) $stage->is_required,
                 'notes' => $stage->instructions,
-                'action_label' => $stage->action_label,
+                'action_label' => \App\Support\WorkflowDisplay::text($instance->workflow, $stage->action_label),
                 'state' => $active ? 'active' : ($reached ? 'completed' : 'pending'),
                 'entered_at' => ($active ? ($instance->stage_started_at ?? $entries->first()?->created_at ?? $instance->started_at) : $entries->first()?->created_at)?->toIso8601String(),
                 'completed_at' => $leftAt?->toIso8601String(),
@@ -177,11 +177,11 @@ class WorkflowController extends Controller
         $item['history'] = $instance->histories->map(fn ($history) => [
             'id' => $history->id,
             'event' => $history->event,
-            'actor_name' => $history->actor?->display_name ?? 'Sistem',
+            'actor_name' => $history->actor?->display_name ?? __('Sistem'),
             'from_status' => $history->from_status,
             'to_status' => $history->to_status,
-            'from_stage' => $history->from_stage_name,
-            'to_stage' => $history->to_stage_name,
+            'from_stage' => \App\Support\WorkflowDisplay::text($instance->workflow, $history->from_stage_name),
+            'to_stage' => \App\Support\WorkflowDisplay::text($instance->workflow, $history->to_stage_name),
             'metadata' => $history->metadata,
             'created_at' => $history->created_at?->toIso8601String(),
         ])->values();
@@ -288,11 +288,11 @@ class WorkflowController extends Controller
         } catch (\Throwable $exception) {
             report($exception);
 
-            return back()->withInput()->with('error', 'Workflow gagal diperbarui. Tidak ada perubahan yang disimpan.');
+            return back()->withInput()->with('error', __('Workflow gagal diperbarui. Tidak ada perubahan yang disimpan.'));
         }
         app(WorkflowRuntimeService::class)->syncWorkflow($workflow->fresh());
 
-        return redirect()->route('workflows.show', ['locale' => $locale, 'workflow' => $workflow])->with('success', 'Workflow berhasil diperbarui.');
+        return redirect()->route('workflows.show', ['locale' => $locale, 'workflow' => $workflow])->with('success', __('Workflow berhasil diperbarui.'));
     }
 
     public function toggle(Request $request, string $locale, Workflow $workflow): RedirectResponse
@@ -308,12 +308,12 @@ class WorkflowController extends Controller
     {
         $this->authorize('delete', $workflow);
         if ($workflow->instances()->exists()) {
-            return back()->with('error', 'Workflow yang sudah digunakan tidak dapat dihapus. Nonaktifkan workflow sebagai gantinya.');
+            return back()->with('error', __('Workflow yang sudah digunakan tidak dapat dihapus. Nonaktifkan workflow sebagai gantinya.'));
         }
         $this->history($workflow, $request, 'deleted', ['workflow' => $workflow->only(['name', 'code', 'entity_type', 'version'])]);
         $workflow->delete();
 
-        return redirect()->route('workflows.index', ['locale' => $locale])->with('success', 'Workflow berhasil dihapus.');
+        return redirect()->route('workflows.index', ['locale' => $locale])->with('success', __('Workflow berhasil dihapus.'));
     }
 
     public function updateInstanceStatus(Request $request, string $locale, string $instance): JsonResponse|RedirectResponse
@@ -321,28 +321,28 @@ class WorkflowController extends Controller
         $instance = $this->resolveInstance($instance);
         abort_unless($this->scopedItemsQuery($request->user())->whereKey($instance->id)->exists(), 403);
         $instance->load(['workflow.stages', 'currentStage', 'subject']);
-        abort_unless($instance->workflow?->is_active, 422, 'Workflow sedang nonaktif.');
+        abort_unless($instance->workflow?->is_active, 422, __('Workflow sedang nonaktif.'));
         $data = $request->validate(['status' => ['required', Rule::in(WorkflowStatus::all())]]);
         $subject = $instance->subject;
         abort_unless($subject instanceof Ticket || $subject instanceof Task, 422);
         $from = WorkflowStatus::normalize($subject->status);
         $to = WorkflowStatus::normalize($data['status']);
         if (! WorkflowStatus::canTransition($from, $to)) {
-            throw ValidationException::withMessages(['status' => 'Transisi status tidak valid.']);
+            throw ValidationException::withMessages(['status' => __('Transisi status tidak valid.')]);
         }
         if (! $subject->canUserSetStatus($request->user(), $to)) {
             abort(403);
         }
         if (! $instance->workflow->stages->contains('status_key', $to)) {
-            throw ValidationException::withMessages(['status' => 'Tahap tujuan tidak tersedia pada workflow ini.']);
+            throw ValidationException::withMessages(['status' => __('Tahap tujuan tidak tersedia pada workflow ini.')]);
         }
         $subject->update(['status' => $to]);
 
         if ($request->expectsJson()) {
-            return response()->json(['message' => 'Status workflow berhasil diperbarui.']);
+            return response()->json(['message' => __('Status workflow berhasil diperbarui.')]);
         }
 
-        return back()->with('success', 'Status workflow berhasil diperbarui.');
+        return back()->with('success', __('Status workflow berhasil diperbarui.'));
     }
 
     public function storeStage(Request $request, string $locale, Workflow $workflow): RedirectResponse
@@ -357,7 +357,7 @@ class WorkflowController extends Controller
             $this->touchStructure($workflow, $request, 'stage_created', ['stage' => $stage->fresh()->only(['name', 'status_key', 'position'])]);
         });
 
-        return back()->with('success', 'Tahap workflow berhasil ditambahkan.');
+        return back()->with('success', __('Tahap workflow berhasil ditambahkan.'));
     }
 
     public function updateStage(Request $request, string $locale, Workflow $workflow, WorkflowStage $stage): RedirectResponse
@@ -378,7 +378,7 @@ class WorkflowController extends Controller
             $this->touchStructure($workflow, $request, 'stage_updated', ['before' => $before, 'after' => $stage->fresh()->only(array_keys($before))]);
         });
 
-        return back()->with('success', 'Tahap workflow berhasil diperbarui.');
+        return back()->with('success', __('Tahap workflow berhasil diperbarui.'));
     }
 
     public function destroyStage(Request $request, string $locale, Workflow $workflow, WorkflowStage $stage): RedirectResponse
@@ -389,7 +389,7 @@ class WorkflowController extends Controller
             return back()->with('error', 'Workflow minimal memiliki dua tahap.');
         }
         if ($stage->instances()->exists()) {
-            return back()->with('error', 'Tahap yang sedang digunakan tidak dapat dihapus.');
+            return back()->with('error', __('Tahap yang sedang digunakan tidak dapat dihapus.'));
         }
         DB::transaction(function () use ($workflow, $stage, $request) {
             $snapshot = $stage->only(['name', 'status_key', 'position']);
@@ -398,7 +398,7 @@ class WorkflowController extends Controller
             $this->touchStructure($workflow, $request, 'stage_deleted', ['stage' => $snapshot]);
         });
 
-        return back()->with('success', 'Tahap workflow berhasil dihapus.');
+        return back()->with('success', __('Tahap workflow berhasil dihapus.'));
     }
 
     public function reorderStages(Request $request, string $locale, Workflow $workflow): RedirectResponse
@@ -406,14 +406,14 @@ class WorkflowController extends Controller
         $this->authorize('update', $workflow);
         $ids = $request->validate(['stage_ids' => ['required', 'array', 'min:2'], 'stage_ids.*' => ['required', 'integer', 'distinct']])['stage_ids'];
         if ($workflow->stages()->pluck('id')->sort()->values()->all() !== collect($ids)->map('intval')->sort()->values()->all()) {
-            throw ValidationException::withMessages(['stage_ids' => 'Daftar tahap tidak valid.']);
+            throw ValidationException::withMessages(['stage_ids' => __('Daftar tahap tidak valid.')]);
         }
         DB::transaction(function () use ($workflow, $ids, $request) {
             $this->normalizeStagePositions($workflow, $ids);
             $this->touchStructure($workflow, $request, 'stages_reordered', ['stage_ids' => $ids]);
         });
 
-        return back()->with('success', 'Urutan tahap berhasil diperbarui.');
+        return back()->with('success', __('Urutan tahap berhasil diperbarui.'));
     }
 
     private function touchStructure(Workflow $workflow, Request $request, string $event, array $changes): void
@@ -434,7 +434,7 @@ class WorkflowController extends Controller
         $conflict = $workflow->stages()->where('status_key', $data['status_key'])->when($stage, fn ($query) => $query->whereKeyNot($stage->id))->first();
         if ($conflict) {
             throw ValidationException::withMessages([
-                'status_key' => WorkflowStatus::label($data['status_key'])." sedang digunakan oleh Tahap {$conflict->position} ({$conflict->name}). Gunakan Edit Workflow untuk menukar status.",
+                'status_key' => __(':status is already used by stage :position (:name). Use Edit Workflow to swap statuses.', ['status' => WorkflowStatus::label($data['status_key']), 'position' => $conflict->position, 'name' => $conflict->name]),
             ]);
         }
 
@@ -471,9 +471,9 @@ class WorkflowController extends Controller
         $conflicts = collect($data['stages'])->groupBy('status_key')->filter(fn ($items) => $items->count() > 1);
         if ($conflicts->isNotEmpty()) {
             $status = (string) $conflicts->keys()->first();
-            $positions = $conflicts->first()->keys()->map(fn ($index) => 'Tahap '.((int) $index + 1))->implode(' dan ');
+            $positions = $conflicts->first()->keys()->map(fn ($index) => __('Stage :number', ['number' => (int) $index + 1]))->implode(__(' dan '));
             throw ValidationException::withMessages([
-                'stages' => WorkflowStatus::label($status)." sedang digunakan oleh {$positions}. Pilih status tersebut lalu konfirmasi pertukaran.",
+                'stages' => __(':status is already used by :stages. Select that status and confirm the swap.', ['status' => WorkflowStatus::label($status), 'stages' => $positions]),
             ]);
         }
 
@@ -500,7 +500,7 @@ class WorkflowController extends Controller
             }
             if (! $canSwapStatuses) {
                 throw ValidationException::withMessages([
-                    'stages' => WorkflowStatus::label($data['status_key'])." sedang digunakan oleh Tahap {$owner->position} ({$owner->name}). Pertukaran status hanya dapat dilakukan oleh Super Admin.",
+                    'stages' => __(':status is already used by stage :position (:name). Only a Super Admin can swap statuses.', ['status' => WorkflowStatus::label($data['status_key']), 'position' => $owner->position, 'name' => $owner->name]),
                 ]);
             }
             $statusSwaps[] = [
@@ -540,7 +540,7 @@ class WorkflowController extends Controller
 
         foreach ($existing->whereNotIn('id', $kept) as $removed) {
             if ($removed->instances()->exists()) {
-                throw ValidationException::withMessages(['stages' => 'Tahap yang sedang digunakan tidak dapat dihapus.']);
+                throw ValidationException::withMessages(['stages' => __('Tahap yang sedang digunakan tidak dapat dihapus.')]);
             }
             $removed->delete();
         }
@@ -585,7 +585,7 @@ class WorkflowController extends Controller
         $orderedIds = collect($orderedIds)->map(fn ($id) => (int) $id)->values();
         $locked = $workflow->stages()->lockForUpdate()->get(['workflow_stages.id', 'workflow_stages.position']);
         if ($locked->pluck('id')->sort()->values()->all() !== $orderedIds->sort()->values()->all()) {
-            throw ValidationException::withMessages(['stages' => 'Urutan tahap tidak lengkap. Muat ulang halaman lalu coba lagi.']);
+            throw ValidationException::withMessages(['stages' => __('Urutan tahap tidak lengkap. Muat ulang halaman lalu coba lagi.')]);
         }
 
         $offset = ((int) $locked->max('position')) + $locked->count() + 100;
@@ -600,7 +600,7 @@ class WorkflowController extends Controller
         $persisted = $workflow->stages()->pluck('position', 'id');
         $expectedPositions = range(1, $orderedIds->count());
         if ($persisted->values()->all() !== $expectedPositions || $persisted->keys()->map(fn ($id) => (int) $id)->all() !== $orderedIds->all()) {
-            throw ValidationException::withMessages(['stages' => 'Urutan tahap gagal dinormalisasi. Tidak ada perubahan yang disimpan.']);
+            throw ValidationException::withMessages(['stages' => __('Urutan tahap gagal dinormalisasi. Tidak ada perubahan yang disimpan.')]);
         }
     }
 
@@ -609,7 +609,7 @@ class WorkflowController extends Controller
         $persisted = $workflow->stages()->get()->keyBy('id');
         if ($workflow->stages()->pluck('position')->all() !== range(1, count($stages))) {
             throw ValidationException::withMessages([
-                'stages' => 'Urutan tahap gagal tersimpan. Tidak ada perubahan yang disimpan.',
+                'stages' => __('Urutan tahap gagal tersimpan. Tidak ada perubahan yang disimpan.'),
             ]);
         }
         foreach ($stages as $stage) {
@@ -619,7 +619,7 @@ class WorkflowController extends Controller
             $saved = $persisted->get((int) $stage['id']);
             if (! $saved || $saved->status_key !== WorkflowStatus::normalize($stage['status_key'])) {
                 throw ValidationException::withMessages([
-                    'stages' => 'Perubahan status tahap gagal tersimpan. Silakan muat ulang dan coba lagi.',
+                    'stages' => __('Perubahan status tahap gagal tersimpan. Silakan muat ulang dan coba lagi.'),
                 ]);
             }
         }
@@ -652,10 +652,10 @@ class WorkflowController extends Controller
 
     private function payload(Workflow $workflow, bool $detailed = false): array
     {
-        $display = fn ($user) => $user?->display_name ?? 'Sistem';
+        $display = fn ($user) => $user?->display_name ?? __('Sistem');
         $payload = [
             'uuid' => $workflow->uuid, 'slug' => $workflow->slug, 'name' => $workflow->name, 'code' => $workflow->code, 'entity_type' => $workflow->entity_type,
-            'description' => $workflow->description, 'trigger_conditions' => $workflow->trigger_conditions ?? [], 'is_active' => $workflow->is_active,
+            'description' => $workflow->description, 'description_label' => \App\Support\WorkflowDisplay::text($workflow, $workflow->description), 'trigger_conditions' => $workflow->trigger_conditions ?? [], 'is_active' => $workflow->is_active,
             'version' => $workflow->version, 'stages_count' => $workflow->stages_count ?? ($workflow->relationLoaded('stages') ? $workflow->stages->count() : 0),
             'instances_count' => $workflow->instances_count ?? 0, 'creator_name' => $display($workflow->creator), 'updater_name' => $display($workflow->updater),
             'created_at' => $workflow->created_at?->toIso8601String(), 'updated_at' => $workflow->updated_at?->toIso8601String(),
@@ -670,11 +670,11 @@ class WorkflowController extends Controller
         ];
         if ($detailed) {
             $payload['stages'] = $workflow->stages->map(fn ($stage) => [
-                'id' => $stage->id, 'position' => $stage->position, 'name' => $stage->name, 'status_key' => $stage->status_key,
+                'id' => $stage->id, 'position' => $stage->position, 'name' => $stage->name, 'name_label' => \App\Support\WorkflowDisplay::text($workflow, $stage->name), 'status_key' => $stage->status_key,
                 'responsible_role' => $stage->responsible_role, 'responsible_user_id' => $stage->responsible_user_id,
                 'responsible_user_name' => $stage->responsible_user_id ? $display($stage->responsibleUser) : null,
                 'is_required' => (bool) $stage->is_required,
-                'action_label' => $stage->action_label, 'instructions' => $stage->instructions,
+                'action_label' => $stage->action_label, 'action_label_display' => \App\Support\WorkflowDisplay::text($workflow, $stage->action_label), 'instructions' => $stage->instructions,
                 'instances_count' => (int) ($stage->instances_count ?? 0),
                 'created_at' => $stage->created_at?->toIso8601String(), 'updated_at' => $stage->updated_at?->toIso8601String(),
             ])->values();
@@ -896,10 +896,10 @@ class WorkflowController extends Controller
             'target_date' => $targetDate?->toIso8601String(),
             'status' => $status,
             'status_label' => WorkflowStatus::label($status),
-            'stage_name' => $instance->currentStage?->name ?? WorkflowStatus::label($status),
+            'stage_name' => \App\Support\WorkflowDisplay::text($instance->workflow, $instance->currentStage?->name) ?? WorkflowStatus::label($status),
             'process_stages' => $instance->workflow->stages->map(fn (WorkflowStage $stage) => [
                 'id' => $stage->id,
-                'name' => $stage->name,
+                'name' => \App\Support\WorkflowDisplay::text($instance->workflow, $stage->name),
                 'is_current' => (int) $stage->id === (int) $instance->current_stage_id,
             ])->values(),
             'created_at' => $subject->created_at?->toIso8601String(),

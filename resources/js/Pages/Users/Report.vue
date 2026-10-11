@@ -3,7 +3,7 @@
     <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
         <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100">User Report</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-300">Kelola akun pengguna dan hak akses di sistem.</p>
+        <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Kelola akun pengguna dan hak akses di sistem.") }}</p>
       </div>
 
       <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -18,7 +18,7 @@
             autocomplete="off"
             v-model="searchInput"
             type="search"
-            placeholder="Cari username, nama, email…"
+            :placeholder="$t(&quot;Cari username, nama, email…&quot;)"
             class="w-full rounded-xl border border-slate-300 bg-white py-2 pl-10 pr-3 text-sm text-slate-700 shadow-sm transition focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
             @keyup.enter.prevent="applySearch"
           />
@@ -60,7 +60,7 @@
           class="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
         >
           <span class="material-icons text-base mr-1">person_add</span>
-          Create User
+          {{ $t("Create User") }}
         </Link>
       </div>
     </header>
@@ -77,12 +77,12 @@
         <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-700">
           <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-300">
             <tr>
-              <th class="px-4 py-3 text-left">User</th>
-              <th class="px-4 py-3 text-left hidden md:table-cell">Nama Lengkap</th>
+              <th class="px-4 py-3 text-left">{{ $t("User") }}</th>
+              <th class="px-4 py-3 text-left hidden md:table-cell">{{ $t("Nama Lengkap") }}</th>
               <th class="px-4 py-3 text-left">Email</th>
               <th class="px-4 py-3 text-left">Unit</th>
               <th class="px-4 py-3 text-left">Role</th>
-              <th class="px-4 py-3 text-right">Actions</th>
+              <th class="px-4 py-3 text-right">{{ $t("Actions") }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 bg-white dark:divide-slate-700 dark:bg-slate-900/60">
@@ -136,14 +136,14 @@
                       @click="confirmDelete(user)"
                     >
                       <span class="material-icons text-base">delete</span>
-                      Delete
+                      {{ $t("Delete") }}
                     </button>
                   </template>
                 </Dropdown>
               </td>
             </tr>
             <tr v-if="!rows.length">
-              <td colspan="6" class="px-4 py-10 text-center text-slate-400">Tidak ada data.</td>
+              <td colspan="6" class="px-4 py-10 text-center text-slate-400">{{ $t("Tidak ada data.") }}</td>
             </tr>
           </tbody>
         </table>
@@ -173,19 +173,19 @@
           <div class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-900">
             <div class="flex items-center gap-2">
               <span class="material-icons text-rose-500">delete</span>
-              <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Hapus User</h3>
+              <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">{{ $t("Hapus User") }}</h3>
             </div>
             <p class="mt-3 text-sm text-slate-600 dark:text-slate-300">
-              Anda yakin ingin menghapus akun <strong>{{ deleteDialog.user?.username }}</strong>?
-              <span class="block text-xs text-slate-400">Tindakan ini tidak dapat dibatalkan.</span>
+              {{ $t("Anda yakin ingin menghapus akun") }} <strong>{{ deleteDialog.user?.username }}</strong>?
+              <span class="block text-xs text-slate-400">{{ $t("Tindakan ini tidak dapat dibatalkan.") }}</span>
             </p>
             <div class="mt-6 flex justify-end gap-2">
               <button type="button" class="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800" @click="closeDelete">
-                Batal
+                {{ $t("Batal") }}
               </button>
               <button type="button" class="inline-flex items-center gap-2 rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700" @click="performDelete" :disabled="deleteDialog.processing">
                 <span class="material-icons text-base">delete</span>
-                Hapus
+                {{ $t("Hapus") }}
               </button>
             </div>
             <p v-if="deleteDialog.error" class="mt-3 text-sm text-rose-600">{{ deleteDialog.error }}</p>
@@ -197,6 +197,8 @@
 </template>
 
 <script setup>
+import { translateUi as uiText } from '../../i18n'
+
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { route as ziggyRoute } from 'ziggy-js';
@@ -404,7 +406,7 @@ function closeDelete() {
 function performDelete() {
   const deleteUrl = deleteDialog.value.user?.links?.destroy;
   if (!deleteUrl) {
-    deleteDialog.value.error = 'Aksi hapus tidak tersedia untuk akun ini.';
+    deleteDialog.value.error = uiText("Aksi hapus tidak tersedia untuk akun ini.");
     return;
   }
 
@@ -412,7 +414,7 @@ function performDelete() {
   router.delete(deleteUrl, {
     preserveScroll: true,
     onError: (errors) => {
-      deleteDialog.value.error = errors.delete || 'User tidak dapat dihapus.';
+      deleteDialog.value.error = errors.delete || uiText("User tidak dapat dihapus.");
     },
     onFinish: () => {
       deleteDialog.value.processing = false;

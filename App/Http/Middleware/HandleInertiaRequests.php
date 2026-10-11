@@ -47,7 +47,7 @@ class HandleInertiaRequests extends Middleware
         $user = $request->user();
         $announcement = $this->resolveAnnouncement();
         $maintenance = $this->resolveMaintenance();
-        $resolvedLocale = $this->resolveLocaleFromSettings();
+        $resolvedLocale = \App\Support\UserLocale::resolve($user);
 
         if ($resolvedLocale && $resolvedLocale !== app()->getLocale()) {
             app()->setLocale($resolvedLocale);
@@ -67,6 +67,7 @@ class HandleInertiaRequests extends Middleware
         return array_merge(parent::share($request), [
             'status' => fn () => $request->session()->get('status'),
             'locale' => $resolvedLocale ?? app()->getLocale(),
+            'globalLocale' => \App\Support\UserLocale::globalDefault(),
             'announcement' => $announcement,
             'maintenance' => $maintenance,
             'auth' => [
@@ -81,6 +82,7 @@ class HandleInertiaRequests extends Middleware
                     'last_name' => $user->last_name ?? null,
                     'unit' => $user->unit ?? null,
                     'header_color' => $user->header_color ?? null,
+                    'preferred_locale' => $user->preferred_locale ?? null,
                     'roles' => $this->resolveRoles($user),
                 ] : null,
             ],
@@ -99,27 +101,6 @@ class HandleInertiaRequests extends Middleware
                 'impersonator_id' => $request->session()->get('impersonator_id'),
             ],
         ]);
-    }
-
-    private function resolveLocaleFromSettings(): ?string
-    {
-        $supported = config('app.supported_locales', ['en', 'id']);
-        $settings = app(SettingsService::class);
-        $dbLocale = $settings->get('general', 'locale', config('app.locale', 'en'));
-        $normalized = $this->normalizeLocale($dbLocale, $supported);
-
-        return $normalized ?: ($supported[0] ?? 'en');
-    }
-
-    private function normalizeLocale($locale, array $supported): ?string
-    {
-        if (! is_string($locale)) {
-            return null;
-        }
-
-        $clean = strtolower(trim($locale));
-
-        return in_array($clean, $supported, true) ? $clean : null;
     }
 
     private function resolveSidebarMetrics(Request $request, $user): array
@@ -220,8 +201,8 @@ class HandleInertiaRequests extends Middleware
                     return [
                         'id' => $notification->id,
                         'icon' => $notification->data['icon'] ?? 'notifications',
-                        'title' => $notification->data['title'] ?? 'Activity',
-                        'message' => $notification->data['message'] ?? null,
+                        'title' => \App\Support\NotificationText::display($notification->data['title'] ?? 'Activity'),
+                        'message' => \App\Support\NotificationText::display($notification->data['message'] ?? null),
                         'url' => $notification->data['url'] ?? null,
                         'is_unread' => is_null($notification->read_at),
                         'read_at' => $notification->read_at ? $notification->read_at->toDateTimeString() : null,

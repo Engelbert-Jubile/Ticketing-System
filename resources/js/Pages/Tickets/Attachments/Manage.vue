@@ -2,15 +2,15 @@
   <div class="mx-auto max-w-4xl space-y-6 px-4 py-8 lg:px-8">
     <header class="flex flex-col gap-3">
       <div>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Kelola Lampiran</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-300">Unggah lampiran baru atau hapus lampiran yang tidak relevan.</p>
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">{{ $t("Kelola Lampiran") }}</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Unggah lampiran baru atau hapus lampiran yang tidak relevan.") }}</p>
       </div>
     </header>
 
     <section class="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/70 md:p-7">
       <header class="flex items-center justify-between">
         <div>
-          <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200">Lampiran Saat Ini</h2>
+          <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200">{{ $t("Lampiran Saat Ini") }}</h2>
           <p class="text-xs text-slate-400">Ticket: {{ ticket.title }}</p>
         </div>
         <button
@@ -19,7 +19,7 @@
           @click="refresh"
         >
           <span class="material-icons text-sm">refresh</span>
-          Segarkan
+          {{ $t("Segarkan") }}
         </button>
       </header>
 
@@ -32,9 +32,9 @@
               <span v-if="item.size" class="text-xs font-normal text-slate-400">({{ formatSize(item.size) }})</span>
             </div>
             <div class="text-xs text-slate-500 dark:text-slate-400">
-              <a :href="item.view_url" target="_blank" class="font-semibold text-blue-600 hover:underline dark:text-blue-400">Lihat</a>
+              <a :href="item.view_url" target="_blank" class="font-semibold text-blue-600 hover:underline dark:text-blue-400">{{ $t("Lihat") }}</a>
               <span class="mx-1 text-slate-400">•</span>
-              <a :href="item.download_url" class="font-semibold text-blue-600 hover:underline dark:text-blue-400">Unduh</a>
+              <a :href="item.download_url" class="font-semibold text-blue-600 hover:underline dark:text-blue-400">{{ $t("Unduh") }}</a>
             </div>
           </div>
           <button
@@ -45,20 +45,20 @@
           >
             <span class="material-icons text-sm" v-if="deletingId === item.id">hourglass_top</span>
             <span v-else class="material-icons text-sm">delete</span>
-            Hapus
+            {{ $t("Hapus") }}
           </button>
         </article>
       </div>
-      <p v-else class="mt-4 rounded-lg bg-slate-100 px-4 py-3 text-sm text-slate-500 dark:bg-slate-800/60 dark:text-slate-300">Belum ada lampiran.</p>
+      <p v-else class="mt-4 rounded-lg bg-slate-100 px-4 py-3 text-sm text-slate-500 dark:bg-slate-800/60 dark:text-slate-300">{{ $t("Belum ada lampiran.") }}</p>
     </section>
 
     <form class="space-y-5 rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/70 md:p-7" @submit.prevent="submit">
       <div class="flex items-center justify-between">
         <div>
-          <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200">Unggah Lampiran Baru</h2>
-          <p class="text-xs text-slate-400">Pilih satu atau beberapa file untuk ditambahkan.</p>
+          <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200">{{ $t("Unggah Lampiran Baru") }}</h2>
+          <p class="text-xs text-slate-400">{{ $t("Pilih satu atau beberapa file untuk ditambahkan.") }}</p>
         </div>
-        <span v-if="attachmentIds.length" class="text-xs text-blue-500">{{ attachmentIds.length }} file siap diunggah</span>
+        <span v-if="attachmentIds.length" class="text-xs text-blue-500">{{ attachmentIds.length }} {{ $t("file siap diunggah") }}</span>
       </div>
       <FileUploaderPond multiple @uploaded="handleUploaded" @removed="handleRemoved" @error="handleUploadError" />
       <p v-if="form.errors.attachments" class="text-xs text-red-500">{{ form.errors.attachments }}</p>
@@ -79,7 +79,7 @@
         >
           <span class="material-icons text-base" v-if="form.processing">hourglass_top</span>
           <span v-else class="material-icons text-base">upload_file</span>
-          Simpan Lampiran
+          {{ $t("Simpan Lampiran") }}
         </button>
       </div>
     </form>
@@ -87,6 +87,8 @@
 </template>
 
 <script setup>
+import { translateUi as uiText } from '../../../i18n'
+
 import { router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import FileUploaderPond from '@/Components/FileUploaderPond.vue';
@@ -121,7 +123,7 @@ function handleUploadError(error) {
   } else if (error?.response?.data?.message) {
     uploadError.value = error.response.data.message;
   } else {
-    uploadError.value = 'Gagal mengunggah file.';
+    uploadError.value = uiText("Gagal mengunggah file.");
   }
 }
 

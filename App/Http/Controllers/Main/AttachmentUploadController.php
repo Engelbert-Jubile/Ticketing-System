@@ -35,7 +35,7 @@ class AttachmentUploadController extends BaseController
                 Log::warning('Upload validation failed', ['errors' => $ve->errors()]);
 
                 return response()->json([
-                    'message' => 'Validasi gagal: tipe file tidak diizinkan atau ukuran terlalu besar',
+                    'message' => __('Validasi gagal: tipe file tidak diizinkan atau ukuran terlalu besar'),
                     'errors' => $ve->errors(),
                 ], 422);
             }

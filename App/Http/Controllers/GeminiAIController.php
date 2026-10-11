@@ -24,7 +24,7 @@ class GeminiAIController extends Controller
 
         if ($this->containsSensitiveRequest($message)) {
             return response()->json([
-                'reply' => 'Maaf, saya tidak dapat membantu permintaan tersebut. Silakan hubungi admin bila membutuhkan bantuan resmi.',
+                'reply' => __('Maaf, saya tidak dapat membantu permintaan tersebut. Silakan hubungi admin bila membutuhkan bantuan resmi.'),
             ]);
         }
 
@@ -40,7 +40,7 @@ class GeminiAIController extends Controller
             report($e);
 
             return response()->json([
-                'reply' => 'Maaf, Gemini sedang tidak dapat merespons. Coba beberapa saat lagi.',
+                'reply' => __('Maaf, Gemini sedang tidak dapat merespons. Coba beberapa saat lagi.'),
             ], 503);
         }
 

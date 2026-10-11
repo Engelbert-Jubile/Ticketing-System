@@ -3,11 +3,11 @@
     <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Project In Progress</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-300">Daftar project yang sedang berjalan.</p>
+        <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Daftar project yang sedang berjalan.") }}</p>
       </div>
       <div class="flex flex-wrap items-center gap-3">
         <label class="text-sm text-slate-600 dark:text-slate-300">
-          Tampilkan
+          {{ $t("Tampilkan") }}
           <select class="ml-2 rounded-lg border border-slate-300 px-3 py-1 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200" :value="filters.per_page" @change="changePerPage">
             <option value="6">6</option>
             <option value="12">12</option>
@@ -28,8 +28,8 @@
             <th class="px-4 py-2 text-left">Project No</th>
             <th class="px-4 py-2 text-left">Status</th>
             <th class="px-4 py-2 text-left">Target</th>
-            <th class="px-4 py-2 text-left">Diupdate</th>
-            <th class="px-4 py-2 text-left">Aksi</th>
+            <th class="px-4 py-2 text-left">{{ $t("Diupdate") }}</th>
+            <th class="px-4 py-2 text-left">{{ $t("Aksi") }}</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-200 bg-white dark:divide-slate-700 dark:bg-slate-900/60">
@@ -49,7 +49,7 @@
             </td>
           </tr>
           <tr v-if="!projects.data.length">
-            <td colspan="7" class="px-4 py-8 text-center text-slate-500 dark:text-slate-300">Tidak ada project yang sedang berjalan.</td>
+            <td colspan="7" class="px-4 py-8 text-center text-slate-500 dark:text-slate-300">{{ $t("Tidak ada project yang sedang berjalan.") }}</td>
           </tr>
         </tbody>
       </table>

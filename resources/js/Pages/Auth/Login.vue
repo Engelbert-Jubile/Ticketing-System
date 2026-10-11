@@ -1,10 +1,10 @@
 <template>
   <div class="space-y-8">
-    <Head title="Masuk" />
+    <Head :title="$t(&quot;Masuk&quot;)" />
 
     <div class="space-y-2 text-center">
-      <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100">Masuk</h1>
-      <p class="text-sm text-gray-500 dark:text-slate-400">Akses dashboard ticketing Anda dari desktop maupun mobile.</p>
+      <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100">{{ $t("Masuk") }}</h1>
+      <p class="text-sm text-gray-500 dark:text-slate-400">{{ $t("Akses dashboard ticketing Anda dari desktop maupun mobile.") }}</p>
     </div>
 
     <form @submit.prevent="submit" class="card space-y-5 rounded-2xl bg-white/95 p-6 shadow-lg shadow-indigo-200/35 ring-1 ring-indigo-100 dark:bg-slate-900/90 dark:ring-slate-700 sm:p-8" novalidate>
@@ -40,13 +40,13 @@
         class="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-500 to-blue-500 text-sm font-semibold text-white shadow-lg shadow-indigo-400/35 transition hover:from-indigo-600 hover:to-blue-600 disabled:cursor-not-allowed disabled:opacity-75"
       >
         <span class="material-icons text-base">{{ form.processing ? 'hourglass_top' : 'login' }}</span>
-        <span>{{ form.processing ? 'Memproses...' : 'Masuk' }}</span>
+        <span>{{ form.processing ? $t("Memproses...") : $t("Masuk") }}</span>
       </button>
     </form>
 
     <p class="text-center text-sm text-gray-500 dark:text-slate-400">
-      Belum punya akun?
-      <Link :href="registerUrl" class="font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-300 dark:hover:text-indigo-200">Daftar di sini</Link>
+      {{ $t("Belum punya akun?") }}
+      <Link :href="registerUrl" class="font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-300 dark:hover:text-indigo-200">{{ $t("Daftar di sini") }}</Link>
     </p>
   </div>
 </template>

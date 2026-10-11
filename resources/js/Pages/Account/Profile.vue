@@ -1,15 +1,15 @@
 <template>
   <div class="mx-auto max-w-2xl space-y-6 px-4 py-6">
     <header class="space-y-1">
-      <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Profil</h1>
-      <p class="text-sm text-slate-500 dark:text-slate-300">Perbarui informasi dasar akun Anda.</p>
+      <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">{{ $t("Profil") }}</h1>
+      <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Perbarui informasi dasar akun Anda.") }}</p>
     </header>
 
     <section v-if="flash.success" class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-900/30 dark:text-emerald-200">
       {{ flash.success }}
     </section>
     <section v-else-if="Object.keys(form.errors).length" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-900/30 dark:text-rose-200">
-      Periksa kembali input Anda.
+      {{ $t("Periksa kembali input Anda.") }}
     </section>
 
     <form class="space-y-5 rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-xl shadow-blue-100/40 ring-1 ring-slate-200/80 backdrop-blur dark:border-slate-700 dark:bg-slate-900/80 dark:shadow-none dark:ring-slate-700" @submit.prevent="submit" novalidate>
@@ -36,7 +36,7 @@
 
       <div class="grid gap-4 md:grid-cols-2">
         <div class="space-y-1">
-          <label for="first_name" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Nama Depan</label>
+          <label for="first_name" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t("Nama Depan") }}</label>
           <div class="relative">
             <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
               <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -57,7 +57,7 @@
         </div>
 
         <div class="space-y-1">
-          <label for="last_name" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Nama Belakang</label>
+          <label for="last_name" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t("Nama Belakang") }}</label>
           <div class="relative">
             <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
               <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -101,11 +101,11 @@
 
       <div class="flex justify-end gap-3 pt-2">
         <Link :href="route('dashboard')" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800">
-          Batal
+          {{ $t("Batal") }}
         </Link>
         <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60" :disabled="form.processing">
           <span class="material-icons text-base">save</span>
-          Simpan
+          {{ $t("Simpan") }}
         </button>
       </div>
     </form>

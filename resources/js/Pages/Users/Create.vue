@@ -2,12 +2,12 @@
   <div class="mx-auto max-w-3xl space-y-6 px-4 py-6">
     <header class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Create User</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-300">Tambahkan akun baru dan tetapkan peran yang sesuai.</p>
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">{{ $t("Create User") }}</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Tambahkan akun baru dan tetapkan peran yang sesuai.") }}</p>
       </div>
       <Link :href="route('users.report')" class="inline-flex items-center gap-2 text-sm text-blue-600 hover:underline dark:text-blue-300">
         <span class="material-icons text-base">arrow_back</span>
-        Kembali
+        {{ $t("Kembali") }}
       </Link>
     </header>
 
@@ -64,7 +64,7 @@
           <p v-if="form.errors.first_name" class="mt-1 text-xs text-rose-500">{{ form.errors.first_name }}</p>
         </div>
         <div>
-          <label for="last_name" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Last Name (opsional)</label>
+          <label for="last_name" class="block text-sm font-medium text-slate-700 dark:text-slate-200">{{ $t("Last Name (opsional)") }}</label>
           <input
             id="last_name"
             name="last_name"
@@ -93,7 +93,7 @@
           <p v-if="form.errors.password" class="mt-1 text-xs text-rose-500">{{ form.errors.password }}</p>
         </div>
         <div>
-          <label for="password_confirmation" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Konfirmasi Password</label>
+          <label for="password_confirmation" class="block text-sm font-medium text-slate-700 dark:text-slate-200">{{ $t("Konfirmasi Password") }}</label>
           <input
             id="password_confirmation"
             name="password_confirmation"
@@ -115,7 +115,7 @@
           class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
           required
         >
-          <option value="" disabled>Pilih Role</option>
+          <option value="" disabled>{{ $t("Pilih Role") }}</option>
           <option v-for="option in roles" :key="option.value" :value="option.value">{{ option.label }}</option>
         </select>
         <p v-if="form.errors.role" class="mt-1 text-xs text-rose-500">{{ form.errors.role }}</p>
@@ -130,20 +130,20 @@
           class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
           :required="unitRequired"
         >
-          <option value="" disabled>Pilih Unit</option>
+          <option value="" disabled>{{ $t("Pilih Unit") }}</option>
           <option v-for="unit in unitOptions" :key="unit.value" :value="unit.value">{{ unit.label }}</option>
         </select>
         <p v-if="form.errors.unit" class="mt-1 text-xs text-rose-500">{{ form.errors.unit }}</p>
-        <p v-else-if="unitRequired" class="mt-1 text-xs text-slate-500">Unit wajib diisi bila akun dibuat oleh Admin/User.</p>
+        <p v-else-if="unitRequired" class="mt-1 text-xs text-slate-500">{{ $t("Unit wajib diisi bila akun dibuat oleh Admin/User.") }}</p>
       </div>
 
       <div class="flex justify-end gap-2">
         <Link :href="route('users.report')" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800">
-          Batal
+          {{ $t("Batal") }}
         </Link>
         <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60" :disabled="isSubmitting">
           <span class="material-icons text-base">save</span>
-          {{ isSubmitting ? 'Menyimpan...' : 'Simpan' }}
+          {{ isSubmitting ? $t('Menyimpan...') : $t("Simpan") }}
         </button>
       </div>
     </form>

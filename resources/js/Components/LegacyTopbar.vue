@@ -24,7 +24,7 @@
           <span class="topbar__logo" aria-hidden="true">
             <img
               src="https://img.icons8.com/?size=256&id=5LdqaP8dgiOs&format=png"
-              alt="Ikon Ticket Management System"
+              :alt="$t(&quot;Ikon Ticket Management System&quot;)"
               class="topbar__logo-img"
               loading="lazy"
               decoding="async"
@@ -113,7 +113,7 @@
                         type="button"
                         class="notif-btn"
                         @click.stop.prevent="markNotification(item.id)"
-                        aria-label="Tandai sudah dibaca"
+                        :aria-label="$t(&quot;Tandai sudah dibaca&quot;)"
                       >
                         <span class="material-icons">check</span>
                       </button>
@@ -121,7 +121,7 @@
                         type="button"
                         class="notif-btn notif-btn--danger"
                         @click.stop.prevent="deleteNotification(item.id)"
-                        aria-label="Hapus notifikasi"
+                        :aria-label="$t(&quot;Hapus notifikasi&quot;)"
                       >
                         <span class="material-icons">close</span>
                       </button>
@@ -173,8 +173,8 @@
               type="button"
               class="topbar-icon-btn"
               :class="{ 'is-active': colorPickerOpen }"
-              title="Change header colour"
-              aria-label="Change header colour"
+              :title="$t(&quot;Change header colour&quot;)"
+              :aria-label="$t(&quot;Change header colour&quot;)"
               :aria-expanded="String(colorPickerOpen)"
               @click="toggleColorPicker"
             >
@@ -183,7 +183,7 @@
 
             <transition name="fade">
               <div v-if="colorPickerOpen" class="header-color-picker">
-                <label class="header-color-picker__label" for="header-color-input">Header colour</label>
+                <label class="header-color-picker__label" for="header-color-input">{{ $t("Header colour") }}</label>
                 <input
                   id="header-color-input"
                   :value="pickerColor"
@@ -193,7 +193,7 @@
                 />
                 <div class="header-color-picker__value">{{ pickerColor }}</div>
                 <button type="button" class="header-color-picker__reset" @click="resetHeaderColor">
-                  Use default colour
+                  {{ $t("Use default colour") }}
                 </button>
               </div>
             </transition>
@@ -208,6 +208,9 @@
           >
             <i class="material-icons">{{ themeIcon }}</i>
           </button>
+          <div v-if="user" class="language-switch" role="group" :aria-label="t('Account language')" :title="t('Language for your account only')">
+            <button v-for="code in ['en', 'id']" :key="code" type="button" :disabled="localeBusy" :aria-pressed="locale === code" :class="{ selected: locale === code }" :aria-label="code === 'en' ? 'English' : 'Bahasa Indonesia'" @click="emit('update-locale', code)">{{ code.toUpperCase() }}</button>
+          </div>
         </div>
       </div>
 
@@ -231,11 +234,14 @@
 </template>
 
 <script setup>
+import { translateUi as uiText } from '../i18n'
+
 import { Link } from '@inertiajs/vue3'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from '../i18n'
 
 const props = defineProps({
+  localeBusy: { type: Boolean, default: false },
   user: {
     type: Object,
     default: null,
@@ -281,6 +287,7 @@ const props = defineProps({
 const emit = defineEmits([
   'toggle-sidebar',
   'toggle-theme',
+  'update-locale',
   'update-header-color',
   'search',
   'mark-all-notifications',
@@ -289,7 +296,7 @@ const emit = defineEmits([
   'logout',
 ])
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const search = ref(props.initialSearch)
 const topbarRef = ref(null)
@@ -304,13 +311,13 @@ const colorPickerRef = ref(null)
 const notificationItems = computed(() => (Array.isArray(props.notifications?.items) ? props.notifications.items : []))
 const unreadCount = computed(() => Math.max(0, Number(props.notifications?.unread_count ?? notificationItems.value.filter(item => item.read_at == null).length) || 0))
 const themeIcon = computed(() => (props.theme === 'dark' ? 'light_mode' : 'dark_mode'))
-const themeToggleTitle = computed(() => (props.theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'))
+const themeToggleTitle = computed(() => (props.theme === 'dark' ? uiText("Switch to light mode") : uiText("Switch to dark mode")))
 const pickerColor = computed(() => props.headerColor || '#4338ca')
 const topbarStyle = computed(() => props.headerColor ? { '--topbar-color': props.headerColor } : {})
 
 const displayName = computed(() => {
   if (!props.user) {
-    return 'Pengguna'
+    return uiText("Pengguna")
   }
 
   const fullFromParts = [props.user.first_name, props.user.last_name]
@@ -333,7 +340,7 @@ const displayName = computed(() => {
     .map(value => (typeof value === 'string' ? value.trim() : ''))
     .find(Boolean)
 
-  return resolved || 'Pengguna'
+  return resolved || uiText("Pengguna")
 })
 
 const unreadBadge = computed(() => {
@@ -498,6 +505,12 @@ defineExpose({
 </script>
 
 <style scoped>
+.language-switch { display: flex; flex-shrink: 0; border: 1px solid rgb(255 255 255 / .55); border-radius: 999px; padding: 2px; }
+.language-switch button { padding: 6px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; color: inherit; }
+.language-switch button.selected { background: white; color: #1e293b; }
+.language-switch button:focus-visible { outline: 2px solid white; outline-offset: 3px; }
+.language-switch button:disabled { opacity: .6; cursor: wait; }
+
 .topbar {
   position: fixed;
   top: 0;

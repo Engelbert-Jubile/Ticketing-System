@@ -3,6 +3,8 @@
 </template>
 
 <script setup>
+import { uiLocale } from '../../i18n'
+
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 const props = defineProps({
@@ -90,7 +92,7 @@ const buildChart = async () => {
           ticks: {
             precision: 0,
             color: palette.text,
-            callback: value => value.toLocaleString('id-ID'),
+            callback: value => value.toLocaleString(uiLocale.value),
           },
           grid: {
             color: palette.grid,
@@ -127,7 +129,7 @@ const buildChart = async () => {
             label: context => {
               const label = context.dataset?.label ?? ''
               const value = context.parsed?.y ?? 0
-              return `${label}: ${value.toLocaleString('id-ID')}`
+              return `${label}: ${value.toLocaleString(uiLocale.value)}`
             },
           },
         },

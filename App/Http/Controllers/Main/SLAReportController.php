@@ -92,12 +92,12 @@ class SLAReportController extends Controller
                     'Tipe' => $this->types()[$filters['type']] ?? ucfirst($filters['type']),
                     'Rentang' => $this->formatRangeFilter($filters['from'] ?? null, $filters['to'] ?? null),
                     'Status SLA' => $this->resolveSlaStatusLabel($filters['sla_status'] ?? null),
-                    'Pencarian' => ($filters['q'] ?? '') !== '' ? $filters['q'] : 'Semua',
+                    'Pencarian' => ($filters['q'] ?? '') !== '' ? $filters['q'] : __('Semua'),
                     'Total Data' => number_format(count($rows)),
                 ],
             ];
 
-            return $this->reportExport->downloadPdf('Laporan SLA', $columns, $rows, $meta, $filename);
+            return $this->reportExport->downloadPdf(__('Laporan SLA'), $columns, $rows, $meta, $filename);
         }
 
         return response()->streamDownload(function () use ($filters, $records) {
@@ -262,11 +262,11 @@ class SLAReportController extends Controller
     private function statusOptions(): array
     {
         return [
-            ['value' => '', 'label' => 'Semua status'],
+            ['value' => '', 'label' => __('Semua status')],
             ['value' => 'met', 'label' => 'Tercapai'],
-            ['value' => 'pending', 'label' => 'Dalam Proses'],
-            ['value' => 'breached', 'label' => 'Lewat SLA'],
-            ['value' => 'missing', 'label' => 'SLA tidak diset'],
+            ['value' => 'pending', 'label' => __('Dalam Proses')],
+            ['value' => 'breached', 'label' => __('Lewat SLA')],
+            ['value' => 'missing', 'label' => __('SLA tidak diset')],
         ];
     }
 
@@ -310,7 +310,7 @@ class SLAReportController extends Controller
         $toDate = $parse($to, true);
 
         if (! $fromDate && ! $toDate) {
-            return 'Semua';
+            return __('Semua');
         }
 
         $format = 'd M Y';
@@ -332,7 +332,7 @@ class SLAReportController extends Controller
         $options = array_column($this->statusOptions(), 'label', 'value');
 
         if ($value === null || $value === '' || ! array_key_exists($value, $options)) {
-            return 'Semua';
+            return __('Semua');
         }
 
         return $options[$value];

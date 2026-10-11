@@ -39,6 +39,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\SetLocaleFromUrl::class,
             \App\Http\Middleware\HandleInertiaRequests::class,
             \App\Http\Middleware\InjectLoginLoadingOverlay::class,
         ]);
@@ -78,13 +79,13 @@ $app = Application::configure(basePath: dirname(__DIR__))
             $locale = $request->route('locale') ?? app()->getLocale() ?? 'id';
             $message = trim($exception->getMessage());
             if ($message === '' || str_contains(strtolower($message), 'unauthorized')) {
-                $message = 'Anda tidak memiliki izin untuk melakukan aksi ini.';
+                $message = __('Anda tidak memiliki izin untuk melakukan aksi ini.');
             }
 
             $forbidden = Inertia::render('Errors/Forbidden', [
-                'title' => '403 - Akses Ditolak',
+                'title' => __('403 - Akses Ditolak'),
                 'message' => $message,
-                'buttonLabel' => 'Kembali ke Dashboard',
+                'buttonLabel' => __('Kembali ke Dashboard'),
                 'buttonUrl' => url("/{$locale}/dashboard"),
             ])->toResponse($request)->setStatusCode(403);
 

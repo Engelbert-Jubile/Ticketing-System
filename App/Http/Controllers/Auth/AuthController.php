@@ -79,10 +79,10 @@ class AuthController extends Controller
         } catch (\Throwable $e) {
             return redirect()
                 ->route('login', ['locale' => $locale])
-                ->with('error', 'Gagal mengirim email verifikasi. Silakan coba lagi nanti atau hubungi admin.');
+                ->with('error', __('Gagal mengirim email verifikasi. Silakan coba lagi nanti atau hubungi admin.'));
         }
 
-        return redirect()->route('login', ['locale' => $locale])->with('success', 'Akun berhasil dibuat. Silakan login.');
+        return redirect()->route('login', ['locale' => $locale])->with('success', __('Akun berhasil dibuat. Silakan login.'));
     }
 
     public function login(Request $request): \Illuminate\Http\RedirectResponse
@@ -163,7 +163,7 @@ class AuthController extends Controller
     }
 
     return back()->withErrors([
-        'email' => 'Email atau password salah.',
+        'email' => __('Email atau password salah.'),
     ])->onlyInput('email');
 }
 
@@ -187,7 +187,7 @@ class AuthController extends Controller
 
             return redirect()
                 ->intended(route('dashboard', ['locale' => $locale]))
-                ->with('warning', 'Akun ini belum terverifikasi. Link verifikasi dikirim satu kali di sesi login ini. Silakan cek email Anda.');
+                ->with('warning', __('Akun ini belum terverifikasi. Link verifikasi dikirim satu kali di sesi login ini. Silakan cek email Anda.'));
         }
 
         return redirect()->intended(route('dashboard', ['locale' => $locale]));
@@ -222,7 +222,7 @@ class AuthController extends Controller
 
         if (! $this->recaptcha->verify($request->input('g-recaptcha-response'), $request->ip(), $expectedAction)) {
             throw ValidationException::withMessages([
-                'g-recaptcha-response' => 'Verifikasi keamanan gagal, silakan coba lagi.',
+                'g-recaptcha-response' => __('Verifikasi keamanan gagal, silakan coba lagi.'),
             ]);
         }
     }

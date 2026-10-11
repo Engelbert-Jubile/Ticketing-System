@@ -143,11 +143,11 @@ class UserController extends Controller
             $allowed = ['user'];
         }
         if (! in_array($roleValue, $allowed, true)) {
-            return back()->withErrors(['role' => 'Anda tidak berwenang memilih role tersebut.'])->withInput();
+            return back()->withErrors(['role' => __('Anda tidak berwenang memilih role tersebut.')])->withInput();
         }
 
         if (! $actorIsSuper && empty($validated['unit'])) {
-            return back()->withErrors(['unit' => 'Unit wajib diisi untuk akun yang dibuat oleh Admin/User.'])->withInput();
+            return back()->withErrors(['unit' => __('Unit wajib diisi untuk akun yang dibuat oleh Admin/User.')])->withInput();
         }
 
         // (Opsional) Pastikan hanya satu superadmin
@@ -228,11 +228,11 @@ class UserController extends Controller
             $allowed = $user->id === $actor->id ? ['admin'] : ['user'];
         }
         if (! in_array($roleValue, $allowed, true)) {
-            return back()->withErrors(['role' => 'Anda tidak berwenang memilih role tersebut.'])->withInput();
+            return back()->withErrors(['role' => __('Anda tidak berwenang memilih role tersebut.')])->withInput();
         }
 
         if (! $actorIsSuper && empty($validated['unit'])) {
-            return back()->withErrors(['unit' => 'Unit wajib diisi untuk akun yang dikelola Admin/User.'])->withInput();
+            return back()->withErrors(['unit' => __('Unit wajib diisi untuk akun yang dikelola Admin/User.')])->withInput();
         }
 
         if ($roleValue === 'superadmin') {
@@ -240,7 +240,7 @@ class UserController extends Controller
                 ->where('id', '!=', $user->id)
                 ->exists();
             if ($existsOther) {
-                return back()->withErrors(['role' => 'Sudah ada superadmin lain.'])->withInput();
+                return back()->withErrors(['role' => __('Sudah ada superadmin lain.')])->withInput();
             }
         }
 
@@ -270,7 +270,7 @@ class UserController extends Controller
         $this->authorize('delete', $user);
 
         if (RoleHelpers::userIsSuperAdmin($user)) {
-            return back()->withErrors(['delete' => 'Akun superadmin tidak dapat dihapus.']);
+            return back()->withErrors(['delete' => __('Akun superadmin tidak dapat dihapus.')]);
         }
 
         $user->delete();

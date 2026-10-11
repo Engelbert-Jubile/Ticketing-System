@@ -27,10 +27,10 @@ class PasswordRecoveryController extends Controller
         } catch (\Throwable $exception) {
             report($exception);
 
-            return back()->withErrors(['email' => 'Layanan email belum tersedia. Coba kembali atau hubungi admin.']);
+            return back()->withErrors(['email' => __('Layanan email belum tersedia. Coba kembali atau hubungi admin.')]);
         }
 
-        return back()->with('success', 'Jika email terdaftar, tautan pemulihan akan dikirim. Periksa kotak masuk dan spam.');
+        return back()->with('success', __('Jika email terdaftar, tautan pemulihan akan dikirim. Periksa kotak masuk dan spam.'));
     }
 
     public function reset(Request $request, string $locale, string $token)
@@ -51,9 +51,9 @@ class PasswordRecoveryController extends Controller
             event(new PasswordReset($user));
         });
         if ($status !== Password::PASSWORD_RESET) {
-            return back()->withErrors(['email' => 'Tautan tidak valid atau kedaluwarsa. Minta tautan baru.']);
+            return back()->withErrors(['email' => __('Tautan tidak valid atau kedaluwarsa. Minta tautan baru.')]);
         }
 
-        return redirect()->route('login', ['locale' => $locale])->with('success', 'Password diperbarui. Silakan masuk.');
+        return redirect()->route('login', ['locale' => $locale])->with('success', __('Password diperbarui. Silakan masuk.'));
     }
 }

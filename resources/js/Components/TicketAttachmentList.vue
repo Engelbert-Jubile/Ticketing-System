@@ -7,7 +7,7 @@
     >
       <div>
         <div class="text-sm font-semibold text-slate-800 dark:text-slate-100">
-          {{ attachment.name || 'Lampiran ticket' }}
+          {{ attachment.name || $t("Lampiran ticket") }}
         </div>
         <div v-if="attachment.sizeLabel" class="text-xs text-slate-400">{{ attachment.sizeLabel }}</div>
       </div>
@@ -18,14 +18,14 @@
           target="_blank"
           class="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-3 py-1 text-xs font-semibold text-blue-600 transition hover:bg-blue-50 dark:border-blue-400/40 dark:text-blue-200 dark:hover:bg-blue-500/10"
         >
-          Lihat
+          {{ $t("Lihat") }}
         </a>
         <a
           v-if="attachment.download_url"
           :href="attachment.download_url"
           class="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
         >
-          Unduh
+          {{ $t("Unduh") }}
         </a>
       </div>
     </div>
@@ -36,16 +36,18 @@
 </template>
 
 <script setup>
+import { translateUi as uiText } from '../i18n'
+
 import { computed } from 'vue';
 
 const props = defineProps({
   attachments: { type: Array, default: () => [] },
-  emptyText: { type: String, default: 'Lampiran ticket belum dikirim ke halaman ini.' },
+  emptyText: { type: String, default: () => uiText("Lampiran ticket belum dikirim ke halaman ini.") },
 });
 
 const normalizedAttachments = computed(() => (props.attachments || []).map((item, index) => ({
   key: item.id ?? `${item.name}-${index}`,
-  name: item.name ?? item.original_name ?? 'Lampiran ticket',
+  name: item.name ?? item.original_name ?? uiText("Lampiran ticket"),
   sizeLabel: formatSize(item.size),
   view_url: item.view_url ?? item.viewUrl ?? null,
   download_url: item.download_url ?? item.downloadUrl ?? null,

@@ -18,7 +18,7 @@
           class="hb-btn"
           :class="{ 'hb-btn--locked': sidebarLocked }"
           :aria-pressed="String(sidebarLocked)"
-          :title="sidebarLocked ? 'Buka kunci sidebar' : 'Kunci sidebar'"
+          :title="sidebarLocked ? $t(&quot;Buka kunci sidebar&quot;) : $t(&quot;Kunci sidebar&quot;)"
           @click="toggleLock"
         >
         <span class="material-icons hb-icon" aria-hidden="true">

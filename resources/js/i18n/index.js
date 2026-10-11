@@ -1,5 +1,14 @@
 import { computed, inject, reactive } from 'vue';
 import { messages } from './messages';
+import englishUi from '../../../lang/en.json';
+import indonesianUi from '../../../lang/id.json';
+
+const activeLocale = reactive({ value: 'en' });
+export const uiLocale = computed(() => activeLocale.value === 'id' ? 'id-ID' : 'en-US');
+export const translateUi = (text, params = {}) => {
+  const catalogue = activeLocale.value === 'id' ? indonesianUi : englishUi;
+  return interpolate(catalogue[text] ?? text, params);
+};
 
 const I18N_SYMBOL = Symbol('i18n');
 
@@ -19,12 +28,14 @@ const createTranslator = localeRef => {
     const current = localeRef.value || 'en';
     const fallback = 'en';
     const currentMessages = messages[current] || messages[fallback] || {};
-    const value = resolveFromPath(currentMessages, key) ?? resolveFromPath(messages[fallback] || {}, key) ?? key;
+    const catalogue = current === 'id' ? indonesianUi : englishUi;
+    const value = resolveFromPath(currentMessages, key) ?? resolveFromPath(messages[fallback] || {}, key) ?? catalogue[key] ?? key;
     return interpolate(value, params);
   };
 };
 
 export const createI18n = (initialLocale = 'en') => {
+  activeLocale.value = initialLocale === 'id' ? 'id' : 'en';
   const state = reactive({
     locale: initialLocale || 'en',
   });
@@ -32,6 +43,7 @@ export const createI18n = (initialLocale = 'en') => {
   const setLocale = value => {
     if (typeof value === 'string' && value.trim() !== '') {
       state.locale = value;
+      activeLocale.value = value;
       if (typeof document !== 'undefined') {
         document.documentElement.setAttribute('lang', value);
       }

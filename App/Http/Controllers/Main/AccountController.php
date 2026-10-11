@@ -43,7 +43,7 @@ class AccountController extends Controller
 
         $user->update($validated);
 
-        return back()->with('success', 'Profil berhasil diperbarui.');
+        return back()->with('success', __('Profil berhasil diperbarui.'));
     }
 
     public function updateHeaderColor(Request $request): JsonResponse
@@ -59,6 +59,20 @@ class AccountController extends Controller
         $request->user()->update(['header_color' => $color]);
 
         return response()->json(['header_color' => $color]);
+    }
+
+    public function updateLocale(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'locale' => ['present', 'nullable', \Illuminate\Validation\Rule::in(['en', 'id'])],
+        ]);
+
+        $request->user()->forceFill(['preferred_locale' => $validated['locale']])->save();
+
+        return response()->json([
+            'locale' => \App\Support\UserLocale::resolve($request->user()),
+            'preferred_locale' => $request->user()->preferred_locale,
+        ]);
     }
 
     /**
@@ -86,12 +100,12 @@ class AccountController extends Controller
         $user = $request->user();
 
         if (! Hash::check((string) $request->input('current_password'), (string) $user->password)) {
-            return back()->withErrors(['current_password' => 'Password lama salah.']);
+            return back()->withErrors(['current_password' => __('Password lama salah.')]);
         }
 
         $new = (string) ($request->input('new_password') ?? $request->input('password'));
         if ($new === '') {
-            return back()->withErrors(['password' => 'Password baru wajib diisi.']);
+            return back()->withErrors(['password' => __('Password baru wajib diisi.')]);
         }
 
         // Model User sudah punya cast 'password' => 'hashed', jadi boleh set plain
@@ -102,7 +116,7 @@ class AccountController extends Controller
 
         app(WorkItemNotifier::class)->notifyPasswordChanged($user, $request->user());
 
-        return back()->with('success', 'Password berhasil diperbarui.');
+        return back()->with('success', __('Password berhasil diperbarui.'));
     }
 
     private function transformAccountUser($user): array

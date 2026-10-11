@@ -34,12 +34,12 @@ class RegisterController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email', 'ends_with:@kftd.co.id'],
             'password' => ['required', 'confirmed', 'min:8'],
         ], [
-            'username.required' => 'Username wajib diisi.',
-            'username.unique' => 'Username sudah digunakan.',
-            'email.required' => 'Email wajib diisi.',
-            'email.unique' => 'Email sudah digunakan.',
+            'username.required' => __('Username wajib diisi.'),
+            'username.unique' => __('Username sudah digunakan.'),
+            'email.required' => __('Email wajib diisi.'),
+            'email.unique' => __('Email sudah digunakan.'),
             'email.ends_with' => 'Gunakan email perusahaan @kftd.co.id.',
-            'password.confirmed' => 'Konfirmasi password tidak cocok.',
+            'password.confirmed' => __('Konfirmasi password tidak cocok.'),
         ]);
 
         $user = User::create([

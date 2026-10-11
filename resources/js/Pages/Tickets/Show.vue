@@ -16,12 +16,12 @@
             class="inline-flex items-center gap-2 self-stretch rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-blue-700 md:self-auto"
           >
             <span class="material-icons text-base" aria-hidden="true">picture_as_pdf</span>
-            Unduh PDF
+            {{ $t("Unduh PDF") }}
           </a>
           <div class="flex flex-wrap gap-2">
             <StatusPill :status="ticket.status" :label="ticket.status_label" size="sm" />
-            <StatusPill :status="ticket.priority" :label="ticket.priority ?? 'Priority'" variant="priority" size="sm" />
-            <StatusPill :status="ticket.type" :label="ticket.type ?? 'Type'" size="sm" />
+            <StatusPill :status="ticket.priority" :label="ticket.priority ?? $t(&quot;Priority&quot;)" variant="priority" size="sm" />
+            <StatusPill :status="ticket.type" :label="ticket.type ?? $t(&quot;Type&quot;)" size="sm" />
           </div>
         </div>
       </div>
@@ -35,7 +35,7 @@
           </dd>
         </div>
         <div>
-          <dt class="font-semibold text-slate-500 dark:text-slate-400">Target Selesai</dt>
+          <dt class="font-semibold text-slate-500 dark:text-slate-400">{{ $t("Target Selesai") }}</dt>
           <dd>{{ formatDate(ticket.timeline?.due_at) }}</dd>
         </div>
         <div>
@@ -43,15 +43,15 @@
           <dd>{{ formatSla(ticket.sla) }}</dd>
         </div>
         <div>
-          <dt class="font-semibold text-slate-500 dark:text-slate-400">Dibuat</dt>
+          <dt class="font-semibold text-slate-500 dark:text-slate-400">{{ $t("Dibuat") }}</dt>
           <dd>{{ formatDate(ticket.timeline?.created_at, true) }}</dd>
         </div>
         <div>
-          <dt class="font-semibold text-slate-500 dark:text-slate-400">Diperbarui</dt>
+          <dt class="font-semibold text-slate-500 dark:text-slate-400">{{ $t("Diperbarui") }}</dt>
           <dd>{{ formatDate(ticket.timeline?.updated_at, true) }}</dd>
         </div>
         <div>
-          <dt class="font-semibold text-slate-500 dark:text-slate-400">Selesai</dt>
+          <dt class="font-semibold text-slate-500 dark:text-slate-400">{{ $t("Selesai") }}</dt>
           <dd>{{ formatDate(ticket.timeline?.finish_at, true) }}</dd>
         </div>
       </dl>
@@ -59,7 +59,7 @@
 
     <section class="grid gap-6 md:grid-cols-2">
       <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
-        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Pemilik Ticket</h2>
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t("Pemilik Ticket") }}</h2>
         <dl class="mt-3 space-y-2 text-sm text-slate-600 dark:text-slate-300">
           <div>
             <dt class="font-medium text-slate-500 dark:text-slate-400">Requester</dt>
@@ -87,7 +87,7 @@
       </article>
 
       <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
-        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Detail Tambahan</h2>
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t("Detail Tambahan") }}</h2>
         <dl class="mt-3 space-y-2 text-sm text-slate-600 dark:text-slate-300">
           <div>
             <dt class="font-medium text-slate-500 dark:text-slate-400">Reason</dt>
@@ -102,15 +102,15 @@
     </section>
 
     <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
-      <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Deskripsi</h2>
+      <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t("Deskripsi") }}</h2>
       <div class="prose prose-sm max-w-none text-slate-700 dark:text-slate-200 dark:prose-invert" v-html="ticket.description || '<p>—</p>'"></div>
     </article>
 
     <article v-if="ticket.projects?.length" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
       <div class="flex items-center justify-between gap-2">
         <div>
-          <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Project Terkait</h2>
-          <p class="text-xs text-slate-500 dark:text-slate-300">Semua project yang ditautkan ke ticket ini.</p>
+          <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t("Project Terkait") }}</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-300">{{ $t("Semua project yang ditautkan ke ticket ini.") }}</p>
         </div>
       </div>
       <div class="mt-4 grid gap-3">
@@ -127,7 +127,7 @@
             <StatusPill :status="project.status" :label="project.status_label" size="sm" />
           </div>
           <div class="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-300">
-            <span>Due: {{ project.due_display || '—' }}</span>
+            <span>{{ $t("Due:") }} {{ project.due_display || '—' }}</span>
             <span>Update: {{ project.updated_display || '—' }}</span>
           </div>
           <div class="mt-3 flex flex-wrap items-center gap-3 text-sm">
@@ -139,12 +139,12 @@
     </article>
 
     <article v-if="ticket.attachments?.length" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
-      <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Lampiran</h2>
+      <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t("Lampiran") }}</h2>
       <ul class="space-y-2 text-sm text-slate-600 dark:text-slate-300">
         <li v-for="attachment in ticket.attachments" :key="attachment.id" class="flex flex-wrap items-center gap-2">
-          <a :href="attachment.view_url" target="_blank" rel="noopener" class="text-blue-600 hover:underline dark:text-blue-400">Lihat</a>
+          <a :href="attachment.view_url" target="_blank" rel="noopener" class="text-blue-600 hover:underline dark:text-blue-400">{{ $t("Lihat") }}</a>
           <span class="text-slate-400">·</span>
-          <a :href="attachment.download_url" class="text-blue-600 hover:underline dark:text-blue-400">Unduh</a>
+          <a :href="attachment.download_url" class="text-blue-600 hover:underline dark:text-blue-400">{{ $t("Unduh") }}</a>
           <span class="text-slate-600 dark:text-slate-400">{{ attachment.name }}</span>
           <span v-if="attachment.size" class="text-xs text-slate-400">({{ formatSize(attachment.size) }})</span>
         </li>
@@ -155,6 +155,8 @@
 </template>
 
 <script setup>
+import { uiLocale } from '../../i18n'
+
 import StatusPill from '@/Components/StatusPill.vue';
 import TicketCollaboration from '@/Components/TicketCollaboration.vue';
 
@@ -171,7 +173,7 @@ function formatDate(value, withTime = false) {
   const options = withTime
     ? { dateStyle: 'medium', timeStyle: 'short' }
     : { dateStyle: 'medium' };
-  return new Intl.DateTimeFormat('id-ID', options).format(date);
+  return new Intl.DateTimeFormat(uiLocale.value, options).format(date);
 }
 
 function formatSla(value) {

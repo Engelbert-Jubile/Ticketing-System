@@ -1,8 +1,8 @@
 <template>
   <div class="mx-auto max-w-6xl space-y-6 px-4 py-8 pb-28 lg:px-6">
     <header class="space-y-1">
-      <h1 class="text-3xl font-semibold text-slate-900 dark:text-slate-100">Buat Task Baru</h1>
-      <p class="text-sm text-slate-500 dark:text-slate-300">Lengkapi informasi task, tentukan penanggung jawab, dan tambahkan lampiran jika diperlukan.</p>
+      <h1 class="text-3xl font-semibold text-slate-900 dark:text-slate-100">{{ $t("Buat Task Baru") }}</h1>
+      <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Lengkapi informasi task, tentukan penanggung jawab, dan tambahkan lampiran jika diperlukan.") }}</p>
     </header>
     <DraftNotice :draft="draft" />
 
@@ -25,16 +25,16 @@
       </nav>
 
       <section v-show="showStep('info')" class="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/80">
-        <h2 class="section-title">Informasi Utama</h2>
+        <h2 class="section-title">{{ $t("Informasi Utama") }}</h2>
         <div class="grid gap-4 md:grid-cols-2">
           <div>
-            <label class="field-label" for="title">Judul Task</label>
+            <label class="field-label" for="title">{{ $t("Judul Task") }}</label>
             <input
               id="title"
               v-model="form.title"
               type="text"
               class="field-input"
-              placeholder="Contoh: Implementasi modul autentikasi"
+              :placeholder="$t(&quot;Contoh: Implementasi modul autentikasi&quot;)"
             />
             <p v-if="form.errors.title" class="field-error">{{ form.errors.title }}</p>
           </div>
@@ -43,7 +43,7 @@
             <FancySelect v-model="form.status" :options="displayStatusOptions" :disabled="statusLocked" />
             <p v-if="form.errors.status" class="field-error">{{ form.errors.status }}</p>
             <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              Status awal diset ke {{ statusDefaultLabel }}.
+              {{ $t("Status awal diset ke") }} {{ statusDefaultLabel }}.
             </p>
             <ul v-if="statusGuide" class="mt-1 list-disc space-y-0.5 pl-5 text-xs text-slate-500 dark:text-slate-400">
               <li>{{ statusGuide.agent }}</li>
@@ -52,27 +52,27 @@
             </ul>
           </div>
           <div>
-            <label class="field-label">Prioritas</label>
+            <label class="field-label">{{ $t("Prioritas") }}</label>
             <FancySelect v-model="form.priority" :options="priorityOptions" />
             <p v-if="form.errors.priority" class="field-error">{{ form.errors.priority }}</p>
           </div>
           <div class="md:col-span-2 overflow-visible" ref="ticketCardRef">
-            <label class="field-label">Ticket Terkait</label>
+            <label class="field-label">{{ $t("Ticket Terkait") }}</label>
             <div class="relative overflow-visible rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
               <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">Hubungkan ke Ticket Aktif</p>
-                  <p class="text-xs text-slate-400">Pilih ticket sesuai unit requester.</p>
+                  <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">{{ $t("Hubungkan ke Ticket Aktif") }}</p>
+                  <p class="text-xs text-slate-400">{{ $t("Pilih ticket sesuai unit requester.") }}</p>
                 </div>
                 <div class="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                  <span>{{ selectedTicketOption ? '1 ticket terpilih' : 'Belum ada pilihan' }}</span>
+                  <span>{{ selectedTicketOption ? '1 ticket terpilih' : $t("Belum ada pilihan") }}</span>
                   <button
                     v-if="selectedTicketOption"
                     type="button"
                     class="rounded-full border border-rose-200 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-rose-600 transition hover:bg-rose-50 dark:border-rose-500/40 dark:text-rose-200 dark:hover:bg-rose-500/10"
                     @click="clearTicketSelection"
                   >
-                    Hapus
+                    {{ $t("Hapus") }}
                   </button>
                 </div>
               </div>
@@ -89,10 +89,10 @@
                       class="inline-flex items-center gap-2 rounded-lg border border-indigo-200/70 bg-white px-3 py-1 text-xs font-medium text-indigo-700 dark:border-indigo-500/40 dark:bg-slate-900/70 dark:text-indigo-200"
                     >
                       <span class="font-semibold">{{ selectedTicketOption.ticket_no }}</span>
-                      <span class="max-w-[160px] truncate text-[11px] text-slate-400">{{ selectedTicketOption.title || 'Tanpa judul' }}</span>
+                      <span class="max-w-[160px] truncate text-[11px] text-slate-400">{{ selectedTicketOption.title || $t('Tanpa judul') }}</span>
                       <span class="rounded-full border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-[10px] uppercase tracking-wide text-indigo-600 dark:border-indigo-400/40 dark:bg-transparent">{{ selectedTicketOption.unit || unitPlaceholderLabel }}</span>
                     </span>
-                    <span v-else class="text-xs font-normal text-slate-400">Pilih ticket aktif sesuai unit Anda</span>
+                    <span v-else class="text-xs font-normal text-slate-400">{{ $t("Pilih ticket aktif sesuai unit Anda") }}</span>
                   </div>
                   <span class="material-icons text-base text-slate-400 transition duration-200" :class="ticketDropdownOpen ? 'rotate-180 text-indigo-500' : ''">expand_more</span>
                 </button>
@@ -132,29 +132,29 @@
                           />
                           <div class="min-w-0">
                             <p class="font-semibold text-slate-700 dark:text-slate-100">{{ ticket.ticket_no }}</p>
-                            <p class="truncate text-[11px] text-slate-400">{{ ticket.title || 'Tanpa judul' }}</p>
+                            <p class="truncate text-[11px] text-slate-400">{{ ticket.title || $t('Tanpa judul') }}</p>
                             <p class="text-[10px] text-slate-400">{{ ticket.unit || unitPlaceholderLabel }}</p>
                           </div>
                         </div>
                         <StatusPill :status="ticket.status" :label="ticket.status_label" size="sm" />
                       </label>
-                      <p v-if="!activeTicketList.length" class="px-1 text-sm text-slate-400">Tidak ada ticket pada unit ini.</p>
+                      <p v-if="!activeTicketList.length" class="px-1 text-sm text-slate-400">{{ $t("Tidak ada ticket pada unit ini.") }}</p>
                     </div>
                     <div class="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400">
-                      <span>Hanya menampilkan ticket yang belum berstatus Done / Cancelled.</span>
-                      <button type="button" class="text-indigo-500 hover:underline" @click="clearTicketSelection">Tanpa ticket</button>
+                      <span>{{ $t("Hanya menampilkan ticket yang belum berstatus Done / Cancelled.") }}</span>
+                      <button type="button" class="text-indigo-500 hover:underline" @click="clearTicketSelection">{{ $t("Tanpa ticket") }}</button>
                     </div>
                   </div>
                 </transition>
               </div>
-              <p class="mt-2 text-xs text-slate-400">Jika tidak ada ticket yang relevan, biarkan kosong sebagai task mandiri.</p>
+              <p class="mt-2 text-xs text-slate-400">{{ $t("Jika tidak ada ticket yang relevan, biarkan kosong sebagai task mandiri.") }}</p>
               <p v-if="form.errors.ticket_id" class="field-error">{{ form.errors.ticket_id }}</p>
             </div>
           </div>
         </div>
 
         <div class="mt-4 relative z-0">
-          <label class="field-label">Deskripsi</label>
+          <label class="field-label">{{ $t("Deskripsi") }}</label>
           <div class="rounded-2xl border border-slate-200/80 dark:border-slate-700/60">
             <RichTextQuill v-model="form.description" />
           </div>
@@ -163,7 +163,7 @@
       </section>
 
       <section v-show="showStep('assignment')" class="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/80">
-        <h2 class="section-title">Penugasan &amp; Timeline</h2>
+        <h2 class="section-title">{{ $t("Penugasan & Timeline") }}</h2>
         <div class="grid gap-4 md:grid-cols-2">
           <div class="md:col-span-2">
             <div class="grid gap-6 lg:grid-cols-2">
@@ -171,10 +171,10 @@
                 <div class="flex items-start justify-between gap-3">
                   <div>
                     <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">Agent</p>
-                    <p class="text-xs text-slate-400">Pilih assignee lintas unit, lalu tandai yang utama.</p>
+                    <p class="text-xs text-slate-400">{{ $t("Pilih assignee lintas unit, lalu tandai yang utama.") }}</p>
                   </div>
                   <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                    {{ assigneeSelections.length ? assigneeSelections.length + ' agent dipilih' : 'Belum ada pilihan' }}
+                    {{ assigneeSelections.length ? assigneeSelections.length + ' agent dipilih' : $t("Belum ada pilihan") }}
                   </span>
                 </div>
                 <div class="relative mt-3 w-full">
@@ -195,7 +195,7 @@
                           <span class="material-icons text-[13px]">close</span>
                         </button>
                       </span>
-                      <span v-if="!selectedAssigneeDetails.length" class="text-xs font-normal text-slate-400">Belum ada agent dipilih</span>
+                      <span v-if="!selectedAssigneeDetails.length" class="text-xs font-normal text-slate-400">{{ $t("Belum ada agent dipilih") }}</span>
                     </div>
                     <span class="material-icons text-base text-slate-400 transition duration-200" :class="assigneeDropdownOpen ? 'rotate-180 text-blue-500' : ''">expand_more</span>
                   </button>
@@ -241,16 +241,16 @@
                             :class="assigneePrimary === normalizeSelectionId(option.id) ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/20 dark:text-blue-100' : 'text-slate-400 hover:text-blue-500'"
                             @click.stop="setAssigneePrimary(option.id)"
                           >
-                            {{ assigneePrimary === normalizeSelectionId(option.id) ? 'Utama' : 'Jadikan Utama' }}
+                            {{ assigneePrimary === normalizeSelectionId(option.id) ? $t("Utama") : $t("Jadikan Utama") }}
                           </button>
                         </label>
-                        <p v-if="!activeAssigneeList.length" class="text-sm text-slate-400">Belum ada agent pada unit ini.</p>
+                        <p v-if="!activeAssigneeList.length" class="text-sm text-slate-400">{{ $t("Belum ada agent pada unit ini.") }}</p>
                       </div>
                     </div>
                   </transition>
                 </div>
                 <p class="mt-2 text-xs text-slate-400">
-                  {{ assigneeSelections.length ? assigneeSelections.length + ' agent terhubung' : 'Belum ada agent terpilih' }}
+                  {{ assigneeSelections.length ? assigneeSelections.length + ' agent terhubung' : $t("Belum ada agent terpilih") }}
                 </p>
                 <p v-if="form.errors.assignee_id" class="mt-2 text-xs text-red-500">{{ form.errors.assignee_id }}</p>
               </div>
@@ -259,10 +259,10 @@
                 <div class="flex items-start justify-between gap-3">
                   <div>
                     <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">PIC</p>
-                    <p class="text-xs text-slate-400">Tambahkan pendukung tugas dari unit manapun.</p>
+                    <p class="text-xs text-slate-400">{{ $t("Tambahkan pendukung tugas dari unit manapun.") }}</p>
                   </div>
                   <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                    {{ additionalSelections.length ? additionalSelections.length + ' PIC dipilih' : 'Belum ada pilihan' }}
+                    {{ additionalSelections.length ? additionalSelections.length + ' PIC dipilih' : $t("Belum ada pilihan") }}
                   </span>
                 </div>
                 <div class="relative mt-3 w-full">
@@ -283,7 +283,7 @@
                           <span class="material-icons text-[13px]">close</span>
                         </button>
                       </span>
-                      <span v-if="!selectedAdditionalDetails.length" class="text-xs font-normal text-slate-400">Belum ada PIC</span>
+                      <span v-if="!selectedAdditionalDetails.length" class="text-xs font-normal text-slate-400">{{ $t("Belum ada PIC") }}</span>
                     </div>
                     <span class="material-icons text-base text-slate-400 transition duration-200" :class="additionalDropdownOpen ? 'rotate-180 text-emerald-500' : ''">expand_more</span>
                   </button>
@@ -328,16 +328,16 @@
                             class="rounded-full px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400 transition hover:text-emerald-500"
                             @click.stop="setAdditionalPrimary(option.id)"
                           >
-                            Jadikan Utama
+                            {{ $t("Jadikan Utama") }}
                           </button>
                         </label>
-                        <p v-if="!activeAdditionalList.length" class="text-sm text-slate-400">Belum ada PIC pada unit ini.</p>
+                        <p v-if="!activeAdditionalList.length" class="text-sm text-slate-400">{{ $t("Belum ada PIC pada unit ini.") }}</p>
                       </div>
                     </div>
                   </transition>
                 </div>
                 <p class="mt-2 text-xs text-slate-400">
-                  {{ additionalSelections.length ? additionalSelections.length + ' PIC terhubung' : 'Belum ada PIC' }}
+                  {{ additionalSelections.length ? additionalSelections.length + ' PIC terhubung' : $t("Belum ada PIC") }}
                 </p>
               </div>
             </div>
@@ -394,9 +394,9 @@
                             check
                           </span>
                         </button>
-                        <p v-if="!activeRequesterList.length" class="text-sm text-slate-400">Belum ada requester pada unit ini.</p>
+                        <p v-if="!activeRequesterList.length" class="text-sm text-slate-400">{{ $t("Belum ada requester pada unit ini.") }}</p>
                       </template>
-                      <p v-else class="text-sm text-slate-400">Pilih unit untuk melihat requester.</p>
+                      <p v-else class="text-sm text-slate-400">{{ $t("Pilih unit untuk melihat requester.") }}</p>
                     </div>
                   </div>
                 </transition>
@@ -404,7 +404,7 @@
             </template>
             <template v-else>
               <div class="field-input bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300">
-                {{ requesterLabel || 'Requester mengikuti pengguna yang sedang login.' }}
+                {{ requesterLabel || $t("Requester mengikuti pengguna yang sedang login.") }}
               </div>
             </template>
             <p v-if="form.errors.requester_id" class="field-error">{{ form.errors.requester_id }}</p>
@@ -412,7 +412,7 @@
         </div>
 
         <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-700 dark:bg-slate-900/60">
-          <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-100">Ringkasan Penugasan</h3>
+          <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-100">{{ $t("Ringkasan Penugasan") }}</h3>
           <div class="mt-3 grid gap-3 sm:grid-cols-2">
             <div class="rounded-xl border border-blue-200/60 bg-white p-3 dark:border-blue-500/30 dark:bg-slate-900">
               <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-blue-700 dark:text-blue-200">
@@ -426,9 +426,9 @@
                   class="text-xs rounded-md border border-blue-200 bg-white px-2 py-0.5 text-blue-600 dark:border-blue-400/40 dark:bg-slate-900 dark:text-blue-100"
                 >
                   {{ person.label }}
-                  <span v-if="assigneePrimary === normalizeSelectionId(person.id)" class="font-semibold text-blue-500"> · Utama</span>
+                  <span v-if="assigneePrimary === normalizeSelectionId(person.id)" class="font-semibold text-blue-500"> {{ $t("· Utama") }}</span>
                 </span>
-                <span v-if="!selectedAssigneeDetails.length" class="text-xs text-slate-400">Belum ada data</span>
+                <span v-if="!selectedAssigneeDetails.length" class="text-xs text-slate-400">{{ $t("Belum ada data") }}</span>
               </div>
             </div>
             <div class="rounded-xl border border-emerald-200/60 bg-white p-3 dark:border-emerald-500/30 dark:bg-slate-900">
@@ -444,7 +444,7 @@
                 >
                   {{ person.label }}
                 </span>
-                <span v-if="!selectedAdditionalDetails.length" class="text-xs text-slate-400">Belum ada data</span>
+                <span v-if="!selectedAdditionalDetails.length" class="text-xs text-slate-400">{{ $t("Belum ada data") }}</span>
               </div>
             </div>
           </div>
@@ -453,13 +453,13 @@
 
         <div class="mt-4 grid gap-4 md:grid-cols-2">
           <div>
-            <label class="field-label">Mulai</label>
-            <DatePickerFlatpickr v-model="form.start_at" :config="dateConfig" placeholder="Pilih tanggal & waktu" />
+            <label class="field-label">{{ $t("Mulai") }}</label>
+            <DatePickerFlatpickr v-model="form.start_at" :config="dateConfig" :placeholder="$t(&quot;Pilih tanggal & waktu&quot;)" />
             <p v-if="form.errors.start_at || form.errors.start_date" class="field-error">{{ form.errors.start_at || form.errors.start_date }}</p>
           </div>
           <div>
-            <label class="field-label"> Selesai</label>
-            <DatePickerFlatpickr v-model="form.end_at" :config="dateConfig" placeholder="Pilih tanggal & waktu" />
+            <label class="field-label"> {{ $t("Selesai") }}</label>
+            <DatePickerFlatpickr v-model="form.end_at" :config="dateConfig" :placeholder="$t(&quot;Pilih tanggal & waktu&quot;)" />
             <p v-if="form.errors.end_at || form.errors.end_date || form.errors.due_at" class="field-error">{{ form.errors.end_at || form.errors.end_date || form.errors.due_at }}</p>
           </div>
         </div>
@@ -473,25 +473,25 @@
 
         <div v-if="form.output_type === 'task_project'" class="mt-4 grid gap-4 md:grid-cols-3">
           <div>
-            <label class="field-label">Judul Project</label>
-            <input v-model="form.project_title" type="text" class="field-input" placeholder="Judul project" />
+            <label class="field-label">{{ $t("Judul Project") }}</label>
+            <input v-model="form.project_title" type="text" class="field-input" :placeholder="$t(&quot;Judul project&quot;)" />
           </div>
           <div>
-            <label class="field-label">Mulai</label>
+            <label class="field-label">{{ $t("Mulai") }}</label>
             <input v-model="form.project_start" type="date" class="field-input" />
           </div>
           <div>
-            <label class="field-label">Selesai</label>
+            <label class="field-label">{{ $t("Selesai") }}</label>
             <input v-model="form.project_end" type="date" class="field-input" />
           </div>
         </div>
       </section>
 
       <section v-show="showStep('attachments')" class="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/80">
-        <h2 class="section-title">Lampiran</h2>
+        <h2 class="section-title">{{ $t("Lampiran") }}</h2>
         <div class="mt-3 space-y-2">
           <div>
-            <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Jenis File</label>
+            <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t("Jenis File") }}</label>
             <FancySelect v-model="selectedAttachmentFilter" :options="attachmentFilterChoices" />
             <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ attachmentFilterHint }}</p>
           </div>
@@ -507,19 +507,19 @@
               @error="handleUploadError"
             />
             <div class="mt-2 flex flex-wrap items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-              <span>{{ attachmentIds.length ? attachmentIds.length + ' file siap diunggah' : 'Belum ada file siap diunggah' }}</span>
+              <span>{{ attachmentIds.length ? attachmentIds.length + ' file siap diunggah' : $t("Belum ada file siap diunggah") }}</span>
               <button
                 v-if="attachmentIds.length"
                 type="button"
                 class="text-blue-600 hover:underline dark:text-blue-400"
                 @click="clearAttachments"
               >
-                Bersihkan Lampiran
+                {{ $t("Bersihkan Lampiran") }}
               </button>
             </div>
           </div>
         </div>
-        <p v-if="uploaderDisabled" class="field-error text-amber-600">Pilih jenis file terlebih dahulu sebelum mengunggah.</p>
+        <p v-if="uploaderDisabled" class="field-error text-amber-600">{{ $t("Pilih jenis file terlebih dahulu sebelum mengunggah.") }}</p>
         <p v-if="form.errors.attachments" class="field-error">{{ form.errors.attachments }}</p>
         <p v-if="uploadError" class="field-error">{{ uploadError }}</p>
       </section>
@@ -547,6 +547,8 @@
 </template>
 
 <script setup>
+import { translateUi as uiText } from '../../i18n'
+
 import { useFormDraft } from '@/composables/useFormDraft';
 import DraftNotice from '@/Components/DraftNotice.vue';
 import { computed, onBeforeUnmount, onMounted, ref, watch, watchEffect } from 'vue';
@@ -569,9 +571,9 @@ const props = defineProps({
 });
 
 const steps = [
-  { key: 'info', label: 'Informasi Utama' },
-  { key: 'assignment', label: 'Penugasan & Timeline' },
-  { key: 'attachments', label: 'Lampiran' },
+  { key: 'info', label: uiText("Informasi Utama") },
+  { key: 'assignment', label: uiText("Penugasan & Timeline") },
+  { key: 'attachments', label: uiText("Lampiran") },
 ];
 
 const stepFieldGroups = {
@@ -627,7 +629,7 @@ const draft = useFormDraft(form, 'task', ["title","description","priority","star
 
 
 const statusGuide = computed(() => props.meta?.statusGuide ?? null);
-const statusDefaultLabel = computed(() => props.meta?.statusDefault ?? 'New');
+const statusDefaultLabel = computed(() => props.meta?.statusDefault ?? uiText("New"));
 const allowedStatusValues = computed(() => (Array.isArray(props.meta?.allowedStatuses) ? props.meta.allowedStatuses : []));
 const statusLocked = computed(() => Boolean(props.meta?.lockStatus) || allowedStatusValues.value.length <= 1);
 watchEffect(() => {
@@ -651,8 +653,8 @@ const displayStatusOptions = computed(() => {
   return filtered.length ? filtered : baseOptions;
 });
 const outputOptions = [
-  { value: 'task', label: 'Tetap sebagai Task' },
-  { value: 'task_project', label: 'Otomatis buat Project' },
+  { value: 'task', label: uiText('Tetap sebagai Task') },
+  { value: 'task_project', label: uiText("Otomatis buat Project") },
 ];
 const userOptions = computed(() => props.userOptions ?? []);
 const ticketOptions = computed(() => props.ticketOptions ?? []);
@@ -729,7 +731,7 @@ const selectedTicketOption = computed(() => {
 
   return ticketLookup.value.get(String(normalized)) ?? null;
 });
-const unitPlaceholderLabel = 'Unit Tidak Tercatat';
+const unitPlaceholderLabel = uiText("Unit Tidak Tercatat");
 const metaUnitOptions = computed(() => {
   const raw = props.meta?.unitOptions;
   if (Array.isArray(raw)) {
@@ -786,7 +788,7 @@ const requesterOptions = computed(() => (userOptions.value ?? []).map(option => 
 const selectedRequester = computed(() => requesterOptions.value.find(
   option => normalizeSelectionId(option.id) === normalizeSelectionId(form.requester_id)
 ) ?? null);
-const selectedRequesterLabel = computed(() => selectedRequester.value?.label ?? 'Pilih requester');
+const selectedRequesterLabel = computed(() => selectedRequester.value?.label ?? uiText("Pilih requester"));
 const activeRequesterList = computed(() => {
   if (!activeRequesterUnit.value) return [];
   return requesterOptions.value.filter(option => {
@@ -853,13 +855,13 @@ const attachmentMimeTypes = computed(() => activeAttachmentFilter.value?.mimeTyp
 const attachmentAllowedExtensions = computed(() => activeAttachmentFilter.value?.extensions ?? []);
 const uploaderDisabled = computed(() => !activeAttachmentFilter.value);
 const attachmentFilterHint = computed(() => (
-  activeAttachmentFilter.value ? `Hanya ${activeAttachmentFilter.value.label}` : 'Pilih jenis file untuk mengaktifkan unggahan.'
+  activeAttachmentFilter.value ? (uiText("Hanya ") + (activeAttachmentFilter.value.label)) : uiText("Pilih jenis file untuk mengaktifkan unggahan.")
 ));
 const uploaderRef = ref(null);
 const currentStep = ref(0);
 const currentStepKey = computed(() => steps[currentStep.value].key);
 const isLastStep = computed(() => currentStep.value === steps.length - 1);
-const primaryButtonLabel = computed(() => (isLastStep.value ? 'Simpan Task' : 'Lanjut'));
+const primaryButtonLabel = computed(() => (isLastStep.value ? uiText("Simpan Task") : uiText('Lanjut')));
 const primaryButtonIcon = computed(() => (isLastStep.value ? 'check_circle' : 'arrow_forward'));
 
 const dateConfig = computed(() => ({
@@ -1243,7 +1245,7 @@ function handleUploadError(error) {
   } else if (error?.response?.data?.message) {
     uploadError.value = error.response.data.message;
   } else {
-    uploadError.value = 'Gagal mengunggah file.';
+    uploadError.value = uiText("Gagal mengunggah file.");
   }
 }
 
@@ -1356,7 +1358,7 @@ function formatRequesterTitle(option) {
 }
 
 function formatRequesterMeta(option) {
-  return option?.email || 'Email tidak tersedia';
+  return option?.email || uiText("Email tidak tersedia");
 }
 
 function formatRequesterLabel(option) {

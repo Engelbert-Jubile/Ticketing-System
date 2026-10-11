@@ -84,8 +84,8 @@ class SettingsController extends Controller
             'label' => WorkflowStatus::label($status),
         ])->values()->all();
 
-        // Ensure dropdown reflects the applied locale (single source of truth)
-        $general['values']['locale'] = app()->getLocale();
+        // This control edits the global default, independent of personal preferences.
+        $general['values']['locale'] = \App\Support\UserLocale::globalDefault();
 
         return Inertia::render('Settings/Index', [
             'settings' => [
@@ -105,7 +105,7 @@ class SettingsController extends Controller
                 'timezones' => \DateTimeZone::listIdentifiers(),
                 'dateFormats' => $dateFormats,
                 'locales' => [
-                    ['value' => 'id', 'label' => 'Bahasa Indonesia'],
+                    ['value' => 'id', 'label' => __('Bahasa Indonesia')],
                     ['value' => 'en', 'label' => 'English'],
                 ],
                 'statusOptions' => $statusOptions,
@@ -172,7 +172,7 @@ class SettingsController extends Controller
         }
 
         if (is_string($selectedLocale) && in_array($selectedLocale, $supportedLocales, true)) {
-            $targetLocale = $selectedLocale;
+            $targetLocale = \App\Support\UserLocale::resolve($request->user());
         } elseif (is_string($request->route('locale')) && in_array($request->route('locale'), $supportedLocales, true)) {
             $targetLocale = $request->route('locale');
         } else {
@@ -575,7 +575,7 @@ class SettingsController extends Controller
         }
 
         if (RoleHelpers::userIsSuperAdmin($target)) {
-            return back()->withErrors(['user_id' => 'Tidak dapat impersonate superadmin lain.']);
+            return back()->withErrors(['user_id' => __('Tidak dapat impersonate superadmin lain.')]);
         }
 
         $request->session()->put('impersonator_id', $request->user()?->id);
@@ -607,7 +607,7 @@ class SettingsController extends Controller
     {
         $impersonatorId = $request->session()->pull('impersonator_id');
         if (! $impersonatorId) {
-            return back()->withErrors(['impersonation' => 'Tidak ada sesi impersonasi aktif.']);
+            return back()->withErrors(['impersonation' => __('Tidak ada sesi impersonasi aktif.')]);
         }
 
         Auth::guard('web')->loginUsingId($impersonatorId);

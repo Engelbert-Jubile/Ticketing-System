@@ -34,11 +34,7 @@ $emailVerificationEnabled = (bool) config('features.email_verification', false);
 Route::pattern('locale', 'en|id');
 
 $resolveLocale = function (Request $request): string {
-    $supported = config('app.supported_locales', ['en', 'id']);
-    $settings = app(SettingsService::class);
-    $default = $settings->get('general', 'locale', config('app.locale', 'en')) ?? 'en';
-
-    return in_array($default, $supported, true) ? $default : ($supported[0] ?? 'en');
+    return \App\Support\UserLocale::resolve($request->user());
 };
 
 $resolveAnnouncement = function (): array {
@@ -144,9 +140,9 @@ Route::get('/welcome', function () use ($publicWelcomeProps) {
 
 Route::get('/403', function (Request $request) {
     return Inertia::render('Errors/Forbidden', [
-        'title' => '403 - Akses Ditolak',
-        'message' => 'Anda tidak memiliki izin untuk mengakses halaman ini.',
-        'buttonLabel' => 'Kembali ke Dashboard',
+        'title' => __('403 - Akses Ditolak'),
+        'message' => __('Anda tidak memiliki izin untuk mengakses halaman ini.'),
+        'buttonLabel' => __('Kembali ke Dashboard'),
         'buttonUrl' => url('/'.$request->route('locale').'/dashboard'),
     ])->toResponse($request)->setStatusCode(403);
 })->name('errors.forbidden');
@@ -192,7 +188,7 @@ Route::middleware('auth')->group(function () {
 
             return back()->with('status', 'verification-link-sent');
         } catch (\Throwable $e) {
-            return back()->with('error', 'Gagal mengirim email verifikasi. Silakan coba lagi atau hubungi admin.');
+            return back()->with('error', __('Gagal mengirim email verifikasi. Silakan coba lagi atau hubungi admin.'));
         }
     })->middleware('throttle:6,1')->name('verification.send');
 });
@@ -393,6 +389,7 @@ Route::middleware($emailVerificationEnabled
         Route::get('/profile', [AccountController::class, 'profile'])->name('profile');
         Route::put('/profile', [AccountController::class, 'updateProfile'])->name('update-profile');
         Route::patch('/header-color', [AccountController::class, 'updateHeaderColor'])->name('header-color.update');
+            Route::patch('/locale', [AccountController::class, 'updateLocale'])->name('locale.update');
         Route::get('/change-password', [AccountController::class, 'changePassword'])->name('change-password');
         Route::put('/change-password', [AccountController::class, 'updatePassword'])->name('password.update');
     });

@@ -656,7 +656,7 @@ test('superadmin atomically reassigns every stage status while admin gets a frie
         workflowPayload(['name' => $workflow->name, 'code' => $workflow->code, 'stages' => $stagePayloads])
     )->assertSessionHasErrors('stages');
     expect($adminResponse->getSession()->get('errors')->first('stages'))
-        ->toContain('Pertukaran status hanya dapat dilakukan oleh Super Admin')
+        ->toContain('Only a Super Admin can swap statuses')
         ->not->toContain('duplicate value');
     expect($workflow->stages()->pluck('status_key')->all())->toBe($statuses);
 
@@ -689,7 +689,7 @@ test('superadmin atomically reassigns every stage status while admin gets a frie
         workflowPayload(['name' => $workflow->name, 'code' => $workflow->code, 'stages' => $duplicatePayloads])
     )->assertSessionHasErrors('stages');
     expect($duplicateResponse->getSession()->get('errors')->first('stages'))
-        ->toContain('sedang digunakan oleh Tahap 1 dan Tahap 2')
+        ->toContain('is already used by Stage 1 and Stage 2')
         ->not->toContain('duplicate value');
     expect($workflow->stages()->pluck('status_key')->all())->toBe($rotated);
 

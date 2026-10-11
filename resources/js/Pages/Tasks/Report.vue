@@ -3,16 +3,16 @@
     <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div class="space-y-1">
         <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100">Task Report</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-300">Analisis task berdasarkan sumber tiket maupun mandiri dengan tampilan yang ringkas dan konsisten.</p>
+        <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Analisis task berdasarkan sumber tiket maupun mandiri dengan tampilan yang ringkas dan konsisten.") }}</p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <a :href="downloadUrl" class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50 dark:border-slate-600 dark:bg-slate-900 dark:text-blue-300 dark:hover:bg-slate-800">
           <span class="material-icons text-base">picture_as_pdf</span>
-          Download PDF
+          {{ $t("Download PDF") }}
         </a>
         <Link :href="route('tasks.create')" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-blue-700">
           <span class="material-icons text-base">add_task</span>
-          Task Baru
+          {{ $t("Task Baru") }}
         </Link>
       </div>
     </header>
@@ -26,13 +26,13 @@
     <form class="grid gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900" @submit.prevent="applyFilters">
       <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <div>
-          <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Kata Kunci</label>
+          <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">{{ $t("Kata Kunci") }}</label>
           <div class="relative mt-1">
             <span class="material-icons pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
             <input
               v-model="form.q"
               type="search"
-              placeholder="Judul, deskripsi, atau nomor task"
+              :placeholder="$t(&quot;Judul, deskripsi, atau nomor task&quot;)"
               class="w-full rounded-lg border border-slate-300 bg-white py-2 pl-10 pr-3 text-sm text-slate-700 focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
             />
           </div>
@@ -44,13 +44,13 @@
           </div>
         </div>
         <div>
-          <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Dari</label>
+          <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">{{ $t("Dari") }}</label>
           <div class="mt-1">
             <DatePickerFlatpickr v-model="form.from" :config="calendarConfig" placeholder="dd/mm/yyyy" />
           </div>
         </div>
         <div>
-          <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Sampai</label>
+          <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">{{ $t("Sampai") }}</label>
           <div class="mt-1">
             <DatePickerFlatpickr v-model="form.to" :config="calendarConfig" placeholder="dd/mm/yyyy" />
           </div>
@@ -71,7 +71,7 @@
           :disabled="submitting"
         >
           <span class="material-icons text-base">{{ submitting ? 'hourglass_top' : 'filter_alt' }}</span>
-          Terapkan
+          {{ $t("Terapkan") }}
         </button>
       </div>
     </form>
@@ -85,8 +85,8 @@
           @click="toggleSection('ticket')"
         >
           <div>
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Task dari Ticket</h2>
-            <p class="text-sm text-slate-500 dark:text-slate-300">{{ ticketSummary.total }} task · {{ ticketSummary.in_progress }} in progress · {{ ticketSummary.done }} selesai</p>
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">{{ $t("Task dari Ticket") }}</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-300">{{ ticketSummary.total }} task · {{ ticketSummary.in_progress }} in progress · {{ ticketSummary.done }} {{ $t("selesai") }}</p>
           </div>
           <span class="material-icons text-blue-700 transition-transform duration-200 dark:text-blue-300" :class="{ 'rotate-180': accordion.ticket }" aria-hidden="true">expand_more</span>
         </button>
@@ -99,11 +99,11 @@
                   <p class="mt-1 text-2xl font-semibold text-blue-800 dark:text-blue-100">{{ ticketSummary.total }}</p>
                 </div>
                 <div class="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 dark:border-amber-500/40 dark:bg-amber-500/10">
-                  <p class="text-xs font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-200">In Progress</p>
+                  <p class="text-xs font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-200">{{ $t("In Progress") }}</p>
                   <p class="mt-1 text-2xl font-semibold text-amber-700 dark:text-amber-100">{{ ticketSummary.in_progress }}</p>
                 </div>
                 <div class="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 dark:border-emerald-500/40 dark:bg-emerald-500/10">
-                  <p class="text-xs font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-200">Completed</p>
+                  <p class="text-xs font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-200">{{ $t("Completed") }}</p>
                   <p class="mt-1 text-2xl font-semibold text-emerald-700 dark:text-emerald-100">{{ ticketSummary.done }}</p>
                 </div>
               </div>
@@ -116,20 +116,20 @@
                         <th class="px-4 py-3 text-left">#</th>
                         <th class="px-4 py-3 text-left">Ticket</th>
                         <th class="px-4 py-3 text-left">Status</th>
-                        <th class="px-4 py-3 text-left">Ringkasan Task</th>
+                        <th class="px-4 py-3 text-left">{{ $t("Ringkasan Task") }}</th>
                         <th class="px-4 py-3 text-left">Timeline</th>
-                        <th class="px-4 py-3 text-right">Aksi</th>
+                        <th class="px-4 py-3 text-right">{{ $t("Aksi") }}</th>
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200 bg-white dark:divide-slate-700 dark:bg-slate-900">
                       <tr v-if="loadingTicket">
-                        <td colspan="6" class="px-4 py-6 text-center text-slate-500 dark:text-slate-300">Memuat task dari ticket...</td>
+                        <td colspan="6" class="px-4 py-6 text-center text-slate-500 dark:text-slate-300">{{ $t("Memuat task dari ticket...") }}</td>
                       </tr>
                       <tr v-else-if="!ticketData">
-                        <td colspan="6" class="px-4 py-6 text-center text-slate-500 dark:text-slate-300">Klik bagian ini untuk memuat data.</td>
+                        <td colspan="6" class="px-4 py-6 text-center text-slate-500 dark:text-slate-300">{{ $t("Klik bagian ini untuk memuat data.") }}</td>
                       </tr>
                       <tr v-else-if="!ticketData.data.length">
-                        <td colspan="6" class="px-4 py-6 text-center text-slate-500 dark:text-slate-300">Tidak ada task dari ticket.</td>
+                        <td colspan="6" class="px-4 py-6 text-center text-slate-500 dark:text-slate-300">{{ $t("Tidak ada task dari ticket.") }}</td>
                       </tr>
                       <template v-else>
                         <template v-for="(group, index) in ticketData.data" :key="group.ticket?.id ?? `ticket-${index}`">
@@ -137,9 +137,9 @@
                             <td class="px-4 py-3 align-top">{{ ticketRowNumber(index) }}</td>
                             <td class="px-4 py-3 align-top">
                               <div class="font-semibold text-slate-900 dark:text-slate-100">{{ group.ticket?.ticket_no || '—' }}</div>
-                              <p class="text-sm text-slate-600 dark:text-slate-300">{{ group.ticket?.title || 'Ticket Tanpa Judul' }}</p>
+                              <p class="text-sm text-slate-600 dark:text-slate-300">{{ group.ticket?.title || $t('Ticket Tanpa Judul') }}</p>
                               <p v-if="group.summary?.total" class="mt-1 text-[11px] font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-200">
-                                {{ group.summary.total }} task di tiket ini
+                                {{ group.summary.total }} {{ $t("task di tiket ini") }}
                               </p>
                             </td>
                             <td class="px-4 py-3 align-top">
@@ -151,18 +151,18 @@
                                   Total {{ group.summary?.total ?? 0 }}
                                 </span>
                                 <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-200">
-                                  In Progress {{ group.summary?.in_progress ?? 0 }}
+                                  {{ $t("In Progress") }} {{ group.summary?.in_progress ?? 0 }}
                                 </span>
                                 <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200">
-                                  Selesai {{ group.summary?.done ?? 0 }}
+                                  {{ $t("Selesai") }} {{ group.summary?.done ?? 0 }}
                                 </span>
                               </div>
                             </td>
                             <td class="px-4 py-3">
                               <div class="space-y-1 text-xs text-slate-500 dark:text-slate-300">
-                                <p>Mulai: <span class="font-semibold text-slate-800 dark:text-slate-100">{{ group.ticket?.timeline?.start || '—' }}</span></p>
-                                <p>Jatuh Tempo: <span class="font-semibold text-slate-800 dark:text-slate-100">{{ group.ticket?.timeline?.due || '—' }}</span></p>
-                                <p>Terakhir: <span class="font-semibold text-slate-800 dark:text-slate-100">{{ group.ticket?.timeline?.end || '—' }}</span></p>
+                                <p>{{ $t("Mulai:") }} <span class="font-semibold text-slate-800 dark:text-slate-100">{{ group.ticket?.timeline?.start || '—' }}</span></p>
+                                <p>{{ $t("Jatuh Tempo:") }} <span class="font-semibold text-slate-800 dark:text-slate-100">{{ group.ticket?.timeline?.due || '—' }}</span></p>
+                                <p>{{ $t("Terakhir:") }} <span class="font-semibold text-slate-800 dark:text-slate-100">{{ group.ticket?.timeline?.end || '—' }}</span></p>
                               </div>
                             </td>
                             <td class="px-4 py-3">
@@ -173,7 +173,7 @@
                                   class="inline-flex items-center gap-1 rounded-full border border-blue-200 px-3 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-50 dark:border-blue-500/40 dark:text-blue-200"
                                 >
                                   <span class="material-icons text-xs" aria-hidden="true">open_in_new</span>
-                                  Lihat Ticket
+                                  {{ $t("Lihat Ticket") }}
                                 </Link>
                                 <Link
                                   v-if="group.links?.detail"
@@ -227,8 +227,8 @@
           @click="toggleSection('standalone')"
         >
           <div>
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Task Mandiri</h2>
-            <p class="text-sm text-slate-500 dark:text-slate-300">{{ standaloneSummary.total }} task · {{ standaloneSummary.in_progress }} in progress · {{ standaloneSummary.done }} selesai</p>
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">{{ $t("Task Mandiri") }}</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-300">{{ standaloneSummary.total }} task · {{ standaloneSummary.in_progress }} in progress · {{ standaloneSummary.done }} {{ $t("selesai") }}</p>
           </div>
           <span class="material-icons text-purple-700 transition-transform duration-200 dark:text-purple-300" :class="{ 'rotate-180': accordion.standalone }" aria-hidden="true">expand_more</span>
         </button>
@@ -241,11 +241,11 @@
                   <p class="mt-1 text-2xl font-semibold text-purple-700 dark:text-purple-100">{{ standaloneSummary.total }}</p>
                 </div>
                 <div class="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 dark:border-amber-500/40 dark:bg-amber-500/10">
-                  <p class="text-xs font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-200">In Progress</p>
+                  <p class="text-xs font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-200">{{ $t("In Progress") }}</p>
                   <p class="mt-1 text-2xl font-semibold text-amber-700 dark:text-amber-100">{{ standaloneSummary.in_progress }}</p>
                 </div>
                 <div class="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 dark:border-emerald-500/40 dark:bg-emerald-500/10">
-                  <p class="text-xs font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-200">Completed</p>
+                  <p class="text-xs font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-200">{{ $t("Completed") }}</p>
                   <p class="mt-1 text-2xl font-semibold text-emerald-700 dark:text-emerald-100">{{ standaloneSummary.done }}</p>
                 </div>
               </div>
@@ -257,22 +257,22 @@
                       <tr>
                         <th class="px-4 py-3 text-left">#</th>
                         <th class="px-4 py-3 text-left">Task</th>
-                        <th class="px-4 py-3 text-left">Judul</th>
+                        <th class="px-4 py-3 text-left">{{ $t("Judul") }}</th>
                         <th class="px-4 py-3 text-left">Status</th>
-                        <th class="px-4 py-3 text-left">Prioritas</th>
+                        <th class="px-4 py-3 text-left">{{ $t("Prioritas") }}</th>
                         <th class="px-4 py-3 text-left">Due</th>
-                        <th class="px-4 py-3 text-right">Aksi</th>
+                        <th class="px-4 py-3 text-right">{{ $t("Aksi") }}</th>
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200 bg-white dark:divide-slate-700 dark:bg-slate-900">
                       <tr v-if="loadingStandalone">
-                        <td colspan="7" class="px-4 py-6 text-center text-slate-500 dark:text-slate-300">Memuat task mandiri...</td>
+                        <td colspan="7" class="px-4 py-6 text-center text-slate-500 dark:text-slate-300">{{ $t("Memuat task mandiri...") }}</td>
                       </tr>
                       <tr v-else-if="!standaloneData">
-                        <td colspan="7" class="px-4 py-6 text-center text-slate-500 dark:text-slate-300">Klik bagian ini untuk memuat data.</td>
+                        <td colspan="7" class="px-4 py-6 text-center text-slate-500 dark:text-slate-300">{{ $t("Klik bagian ini untuk memuat data.") }}</td>
                       </tr>
                       <tr v-else-if="!standaloneData.data.length">
-                        <td colspan="7" class="px-4 py-6 text-center text-slate-500 dark:text-slate-300">Tidak ada task mandiri.</td>
+                        <td colspan="7" class="px-4 py-6 text-center text-slate-500 dark:text-slate-300">{{ $t("Tidak ada task mandiri.") }}</td>
                       </tr>
                       <template v-else>
                         <template v-for="(row, index) in standaloneData.data" :key="`standalone-task-${row.id}`">
@@ -280,7 +280,7 @@
                             <td class="px-4 py-3">{{ standaloneRowNumber(index) }}</td>
                             <td class="px-4 py-3">
                               <div class="font-semibold text-slate-900 dark:text-slate-100">{{ row.task_no || '—' }}</div>
-                              <div class="text-xs text-slate-500 dark:text-slate-300">Task Mandiri</div>
+                              <div class="text-xs text-slate-500 dark:text-slate-300">{{ $t("Task Mandiri") }}</div>
                           </td>
                           <td class="px-4 py-3 font-semibold text-slate-900 dark:text-slate-100">{{ row.title }}</td>
                           <td class="px-4 py-3">
@@ -304,7 +304,7 @@
                                   @click.stop="destroyTask(row)"
                                 >
                                   <span class="material-icons text-base" aria-hidden="true">{{ isDeleting(row.id) ? 'hourglass_top' : 'delete' }}</span>
-                                  Hapus
+                                  {{ $t("Hapus") }}
                                 </button>
                               </div>
                             </td>
@@ -391,6 +391,8 @@
 </style>
 
 <script setup>
+import { translateUi as uiText } from '../../i18n'
+
 import { computed, reactive, ref, watch } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import DatePickerFlatpickr from '@/Components/DatePickerFlatpickr.vue';
@@ -419,7 +421,7 @@ const form = reactive({
 const statusSelectOptions = computed(() => {
   const base = Array.isArray(props.statusOptions) ? props.statusOptions : [];
   return [
-    { value: '', label: 'Semua Status' },
+    { value: '', label: uiText("Semua Status") },
     ...base,
   ];
 });
@@ -646,7 +648,7 @@ function loadStandaloneTasks() {
 
 function destroyTask(row) {
   if (!row.links?.delete) return;
-  if (!window.confirm(`Yakin ingin menghapus task "${row.title}"?`)) return;
+  if (!window.confirm((uiText("Yakin ingin menghapus task \"") + (row.title) + "\"?"))) return;
 
   deleting.id = row.id;
 

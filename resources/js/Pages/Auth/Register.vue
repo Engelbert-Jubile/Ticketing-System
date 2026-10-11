@@ -1,10 +1,10 @@
 <template>
   <div class="space-y-8">
-    <Head title="Daftar" />
+    <Head :title="$t(&quot;Daftar&quot;)" />
 
     <div class="space-y-2 text-center">
-      <h1 class="text-3xl font-bold text-slate-900">Buat Akun</h1>
-      <p class="text-sm text-gray-500">Lengkapi data berikut untuk mulai menggunakan Ticketing System.</p>
+      <h1 class="text-3xl font-bold text-slate-900">{{ $t("Buat Akun") }}</h1>
+      <p class="text-sm text-gray-500">{{ $t("Lengkapi data berikut untuk mulai menggunakan Ticketing System.") }}</p>
     </div>
 
     <form @submit.prevent="submit" class="card grid gap-6 rounded-2xl bg-white/95 p-6 shadow-lg shadow-emerald-200/40 ring-1 ring-emerald-100 sm:grid-cols-2 sm:p-8">
@@ -34,7 +34,7 @@
       </div>
 
       <div class="space-y-2">
-        <label for="first_name" class="text-sm font-semibold text-slate-600">Nama Depan</label>
+        <label for="first_name" class="text-sm font-semibold text-slate-600">{{ $t("Nama Depan") }}</label>
         <input
           id="first_name"
           v-model="form.first_name"
@@ -46,7 +46,7 @@
       </div>
 
       <div class="space-y-2">
-        <label for="last_name" class="text-sm font-semibold text-slate-600">Nama Belakang (opsional)</label>
+        <label for="last_name" class="text-sm font-semibold text-slate-600">{{ $t("Nama Belakang (opsional)") }}</label>
         <input
           id="last_name"
           v-model="form.last_name"
@@ -71,7 +71,7 @@
       </div>
 
       <div class="space-y-2">
-        <label for="password_confirmation" class="text-sm font-semibold text-slate-600">Konfirmasi Password</label>
+        <label for="password_confirmation" class="text-sm font-semibold text-slate-600">{{ $t("Konfirmasi Password") }}</label>
         <input
           id="password_confirmation"
           v-model="form.password_confirmation"
@@ -90,14 +90,14 @@
           class="btn-primary inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-400 text-sm font-semibold text-white shadow-lg shadow-emerald-400/40 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200 focus-visible:ring-offset-2 focus-visible:ring-offset-white hover:from-emerald-600 hover:to-teal-500 active:from-emerald-700 active:to-teal-600 disabled:cursor-not-allowed disabled:opacity-75"
         >
           <span class="material-icons text-base">person_add</span>
-          <span>Buat Akun</span>
+          <span>{{ $t("Buat Akun") }}</span>
         </button>
       </div>
     </form>
 
     <p class="text-center text-sm text-gray-500">
-      Sudah punya akun?
-      <Link :href="loginUrl" class="font-semibold text-indigo-600 hover:text-indigo-700">Masuk di sini</Link>
+      {{ $t("Sudah punya akun?") }}
+      <Link :href="loginUrl" class="font-semibold text-indigo-600 hover:text-indigo-700">{{ $t("Masuk di sini") }}</Link>
     </p>
   </div>
 </template>

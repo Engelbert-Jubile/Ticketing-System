@@ -3,7 +3,7 @@
     <header class="space-y-4">
       <div>
         <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100">Service Level Agreement Reports</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-300">Pantau performa SLA ticket dan task secara menyeluruh.</p>
+        <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Pantau performa SLA ticket dan task secara menyeluruh.") }}</p>
       </div>
     </header>
 
@@ -36,7 +36,7 @@
           class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-900 dark:text-blue-300 dark:hover:bg-slate-800"
         >
           <span class="material-icons text-base">picture_as_pdf</span>
-          Download PDF
+          {{ $t("Download PDF") }}
         </a>
       </div>
     </section>
@@ -44,11 +44,11 @@
     <form class="grid gap-3 rounded-3xl border border-slate-200 bg-white p-6 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900/80" @submit.prevent="applyFilters">
       <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <div>
-          <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Dari</label>
+          <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">{{ $t("Dari") }}</label>
           <DatePickerFlatpickr v-model="form.from" class="mt-1" :config="calendarConfig" />
         </div>
         <div>
-          <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Sampai</label>
+          <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">{{ $t("Sampai") }}</label>
           <DatePickerFlatpickr v-model="form.to" class="mt-1" :config="calendarConfig" />
         </div>
         <div>
@@ -58,16 +58,16 @@
           </div>
         </div>
         <div>
-          <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Pencarian</label>
+          <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">{{ $t("Pencarian") }}</label>
           <input
             v-model="form.q"
             type="text"
-            placeholder="Cari judul / nomor"
+            :placeholder="$t(&quot;Cari judul / nomor&quot;)"
             class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
           />
         </div>
         <div>
-          <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Per halaman</label>
+          <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">{{ $t("Per halaman") }}</label>
           <div class="mt-1">
             <FancySelect v-model="form.per_page" :options="perPageChoices" accent="subtle" />
           </div>
@@ -80,7 +80,7 @@
         </button>
         <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900">
           <span class="material-icons text-base">filter_alt</span>
-          Terapkan
+          {{ $t("Terapkan") }}
         </button>
       </div>
     </form>
@@ -91,31 +91,31 @@
         <p class="mt-1 text-3xl font-bold text-slate-900 dark:text-slate-100">{{ stats.total ?? 0 }}</p>
       </div>
       <div class="rounded-3xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm dark:border-emerald-400/50 dark:bg-emerald-500/15">
-        <p class="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-100">SLA Tercapai</p>
+        <p class="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-100">{{ $t("SLA Tercapai") }}</p>
         <p class="mt-1 text-3xl font-bold text-emerald-900 dark:text-emerald-50">{{ stats.met ?? 0 }}</p>
       </div>
       <div class="rounded-3xl border border-amber-200 bg-amber-50 p-5 shadow-sm dark:border-amber-700 dark:bg-amber-900/40">
-        <p class="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-200">Dalam Proses</p>
+        <p class="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-200">{{ $t("Dalam Proses") }}</p>
         <p class="mt-1 text-3xl font-bold text-amber-900 dark:text-amber-100">{{ stats.pending ?? 0 }}</p>
       </div>
       <div class="rounded-3xl border border-rose-200 bg-rose-50 p-5 shadow-sm dark:border-rose-400/50 dark:bg-rose-500/15">
-        <p class="text-xs font-semibold uppercase tracking-wide text-rose-700 dark:text-rose-100">Lewat SLA</p>
+        <p class="text-xs font-semibold uppercase tracking-wide text-rose-700 dark:text-rose-100">{{ $t("Lewat SLA") }}</p>
         <p class="mt-1 text-3xl font-bold text-rose-900 dark:text-rose-50">{{ stats.breached ?? 0 }}</p>
       </div>
     </section>
 
     <section class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
       <header class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-5 py-3 dark:border-slate-700 dark:bg-slate-800">
-        <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-200">Daftar SLA</h2>
+        <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t("Daftar SLA") }}</h2>
         <span v-if="loadingRecords" class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-300">
           <span class="material-icons animate-spin text-sm">progress_activity</span>
-          Memuat data...
+          {{ $t("Memuat data...") }}
         </span>
       </header>
 
       <template v-if="form.type === 'ticket_work'">
         <div v-if="!loadingRecords && !workEntries.length" class="px-5 py-10 text-center text-sm text-slate-500 dark:text-slate-300">
-          Tidak ada data SLA untuk filter saat ini.
+          {{ $t("Tidak ada data SLA untuk filter saat ini.") }}
         </div>
         <div v-else class="space-y-5 px-5 py-5">
           <article
@@ -147,7 +147,7 @@
                     rel="noopener"
                     class="action-btn action-btn--pdf"
                   >PDF</a>
-                  <Link v-if="entry.ticket.links?.view" :href="entry.ticket.links.view" class="action-btn action-btn--view">View</Link>
+                  <Link v-if="entry.ticket.links?.view" :href="entry.ticket.links.view" class="action-btn action-btn--view">{{ $t("View") }}</Link>
                   <Link v-if="entry.ticket.links?.edit" :href="entry.ticket.links.edit" class="action-btn action-btn--edit">Edit</Link>
                 </div>
               </div>
@@ -155,7 +155,7 @@
 
             <details v-if="entry.tasks.length" class="mt-4 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900/60">
               <summary class="cursor-pointer text-sm font-semibold text-slate-700 dark:text-slate-100">
-                Task terkait ({{ entry.tasks.length }})
+                {{ $t("Task terkait (") }}{{ entry.tasks.length }})
               </summary>
               <div class="mt-3 overflow-x-auto">
                 <table class="min-w-full text-sm">
@@ -164,7 +164,7 @@
                       <th class="px-2 py-1">Task</th>
                       <th class="px-2 py-1">Assignee</th>
                       <th class="px-2 py-1">Status</th>
-                      <th class="px-2 py-1">Deadline</th>
+                      <th class="px-2 py-1">{{ $t("Deadline") }}</th>
                       <th class="px-2 py-1">SLA</th>
                     </tr>
                   </thead>
@@ -193,7 +193,7 @@
 
       <template v-else>
         <div v-if="!loadingRecords && !rows.length" class="px-5 py-10 text-center text-sm text-slate-500 dark:text-slate-300">
-          Tidak ada data SLA untuk filter saat ini.
+          {{ $t("Tidak ada data SLA untuk filter saat ini.") }}
         </div>
 
         <div v-else class="overflow-x-auto">
@@ -201,7 +201,7 @@
             <thead class="bg-slate-200/90 text-xs font-semibold uppercase tracking-wide text-slate-700 dark:bg-slate-800/95 dark:text-slate-100 border-b border-slate-300 dark:border-slate-700">
               <tr>
                 <th v-for="column in columns" :key="column.key" class="px-4 py-3 text-left">{{ column.label }}</th>
-                <th class="px-4 py-3 text-center">Aksi</th>
+                <th class="px-4 py-3 text-center">{{ $t("Aksi") }}</th>
               </tr>
             </thead>
             <tbody class="bg-white dark:bg-slate-900">
@@ -218,7 +218,7 @@
                       rel="noopener"
                       class="action-btn action-btn--pdf"
                     >PDF</a>
-                    <Link v-if="row.links.view" :href="row.links.view" class="action-btn action-btn--view">View</Link>
+                    <Link v-if="row.links.view" :href="row.links.view" class="action-btn action-btn--view">{{ $t("View") }}</Link>
                     <Link v-if="row.links.edit" :href="row.links.edit" class="action-btn action-btn--edit">Edit</Link>
                   </div>
                 </td>
@@ -249,6 +249,8 @@
 </template>
 
 <script setup>
+import { translateUi as uiText } from '../../i18n'
+
 import { computed, onMounted, ref, watch } from 'vue';
 import { Link, router, useForm } from '@inertiajs/vue3';
 import { route } from 'ziggy-js';
@@ -355,24 +357,24 @@ const columns = computed(() => {
     case 'task':
       return [
         { key: 'number', label: 'Task' },
-        { key: 'title', label: 'Judul' },
+        { key: 'title', label: uiText("Judul") },
         { key: 'status', label: 'Status' },
         { key: 'assignee', label: 'Assignee' },
         { key: 'ticket_no', label: 'Ticket' },
-        { key: 'deadline', label: 'Deadline' },
-        { key: 'completed_at', label: 'Selesai' },
+        { key: 'deadline', label: uiText("Deadline") },
+        { key: 'completed_at', label: uiText("Selesai") },
         { key: 'sla_label', label: 'SLA' },
         { key: 'sla_delta', label: 'Delta' },
       ];
     case 'project':
       return [
         { key: 'number', label: 'Project' },
-        { key: 'title', label: 'Judul' },
+        { key: 'title', label: uiText("Judul") },
         { key: 'status', label: 'Status' },
-        { key: 'owner', label: 'Owner' },
+        { key: 'owner', label: uiText("Owner") },
         { key: 'ticket_no', label: 'Ticket' },
-        { key: 'deadline', label: 'Deadline' },
-        { key: 'completed_at', label: 'Selesai' },
+        { key: 'deadline', label: uiText("Deadline") },
+        { key: 'completed_at', label: uiText("Selesai") },
         { key: 'sla_label', label: 'SLA' },
         { key: 'sla_delta', label: 'Delta' },
       ];
@@ -381,19 +383,19 @@ const columns = computed(() => {
         { key: 'ticket', label: 'Ticket' },
         { key: 'status', label: 'Status' },
         { key: 'assignee', label: 'Assignee' },
-        { key: 'deadline', label: 'Deadline' },
+        { key: 'deadline', label: uiText("Deadline") },
         { key: 'sla_label', label: 'SLA Ticket' },
-        { key: 'tasks_summary', label: 'Ringkasan Task' },
+        { key: 'tasks_summary', label: uiText("Ringkasan Task") },
       ];
     default:
       return [
         { key: 'number', label: 'Ticket' },
-        { key: 'title', label: 'Judul' },
+        { key: 'title', label: uiText("Judul") },
         { key: 'status', label: 'Status' },
-        { key: 'priority', label: 'Prioritas' },
+        { key: 'priority', label: uiText("Prioritas") },
         { key: 'assignee', label: 'Assignee' },
-        { key: 'deadline', label: 'Deadline' },
-        { key: 'completed_at', label: 'Selesai' },
+        { key: 'deadline', label: uiText("Deadline") },
+        { key: 'completed_at', label: uiText("Selesai") },
         { key: 'sla_label', label: 'SLA' },
         { key: 'sla_delta', label: 'Delta' },
       ];

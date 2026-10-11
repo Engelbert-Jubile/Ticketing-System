@@ -239,6 +239,6 @@ class AttachmentController extends BaseController
 
         $attachment->delete();
 
-        return back()->with('status', 'Lampiran dihapus.');
+        return back()->with('status', __('Lampiran dihapus.'));
     }
 }

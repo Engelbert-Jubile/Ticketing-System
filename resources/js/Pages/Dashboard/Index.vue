@@ -1,8 +1,8 @@
 <template>
   <div class="legacy-dashboard space-y-6 px-4 py-6 md:px-6">
-    <Head title="Dashboard" />
+    <Head :title="$t(&quot;Dashboard&quot;)" />
     <Link :href="resolveRoute('work.index')" class="flex items-center justify-between gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-5 text-blue-900 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-100">
-      <span><strong>Pekerjaan Saya</strong><span class="mt-1 block text-sm">Lihat pekerjaan aktif, konfirmasi yang menunggu Anda, dan deadline terdekat.</span></span>
+      <span><strong>{{ $t("Pekerjaan Saya") }}</strong><span class="mt-1 block text-sm">{{ $t("Lihat pekerjaan aktif, konfirmasi yang menunggu Anda, dan deadline terdekat.") }}</span></span>
       <span class="material-icons" aria-hidden="true">arrow_forward</span>
     </Link>
     <div class="flex items-end justify-between">
@@ -158,6 +158,8 @@
 </template>
 
 <script setup>
+import { translateUi as uiText } from '../../i18n'
+
 import { Head, Link } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, watch } from 'vue';
 import GeminiChatWidget from '../../Components/GeminiChatWidget.vue';

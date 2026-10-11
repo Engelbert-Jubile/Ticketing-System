@@ -3,11 +3,13 @@
 </template>
 
 <script setup>
+import { translateUi as uiText } from '../i18n'
+
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 const props = defineProps({
   modelValue: { type: String, default: '' },
-  placeholder: { type: String, default: 'Tulis deskripsi di sini…' },
+  placeholder: { type: String, default: () => uiText("Tulis deskripsi di sini…") },
   toolbar: {
     type: Array,
     default: () => [

@@ -307,10 +307,10 @@
 
             <div class="mt-6 flex flex-wrap items-center gap-3">
               <button type="button" class="btn-primary" :disabled="securityForm.processing" @click="saveSecurity">
-                Save changes
+                {{ $t("Save changes") }}
               </button>
               <button type="button" class="btn-ghost" :disabled="securityForm.processing" @click="resetSecurity">
-                Cancel
+                {{ $t("Cancel") }}
               </button>
             </div>
           </section>
@@ -324,7 +324,7 @@
                 <p class="text-sm text-slate-500 dark:text-slate-300">Configure outbound email delivery.</p>
               </div>
               <span v-if="notificationsDirty" class="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-700">
-                Unsaved changes
+                {{ $t("Unsaved changes") }}
               </span>
             </div>
 
@@ -380,10 +380,10 @@
 
             <div class="mt-6 flex flex-wrap items-center gap-3">
               <button type="button" class="btn-primary" :disabled="notificationsForm.processing" @click="saveNotifications">
-                Save changes
+                {{ $t("Save changes") }}
               </button>
               <button type="button" class="btn-ghost" :disabled="notificationsForm.processing" @click="resetNotifications">
-                Cancel
+                {{ $t("Cancel") }}
               </button>
             </div>
           </section>
@@ -395,7 +395,7 @@
                 <p class="text-sm text-slate-500 dark:text-slate-300">Configure what events send alerts.</p>
               </div>
               <span v-if="notificationsDirty" class="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-700">
-                Unsaved changes
+                {{ $t("Unsaved changes") }}
               </span>
             </div>
             <div class="mt-6 grid gap-3">
@@ -415,10 +415,10 @@
 
             <div class="mt-6 flex flex-wrap items-center gap-3">
               <button type="button" class="btn-primary" :disabled="notificationsForm.processing" @click="saveNotifications">
-                Save changes
+                {{ $t("Save changes") }}
               </button>
               <button type="button" class="btn-ghost" :disabled="notificationsForm.processing" @click="resetNotifications">
-                Cancel
+                {{ $t("Cancel") }}
               </button>
             </div>
           </section>
@@ -431,7 +431,7 @@
                 <p class="text-sm text-slate-500 dark:text-slate-300">Set defaults for tickets, tasks, and projects.</p>
               </div>
               <span v-if="defaultsDirty" class="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-700">
-                Unsaved changes
+                {{ $t("Unsaved changes") }}
               </span>
             </div>
 
@@ -469,7 +469,7 @@
                   </label>
                 </div>
                 <select v-model="defaultsForm.auto_assign_role" class="form-input mt-3" :disabled="!defaultsForm.auto_assign_enabled">
-                  <option value="">Select role</option>
+                  <option value="">{{ $t("Select role") }}</option>
                   <option v-for="role in options.autoAssignRoles" :key="role.id" :value="role.name">
                     {{ role.label }}
                   </option>
@@ -495,10 +495,10 @@
 
             <div class="mt-6 flex flex-wrap items-center gap-3">
               <button type="button" class="btn-primary" :disabled="defaultsForm.processing" @click="saveDefaults">
-                Save changes
+                {{ $t("Save changes") }}
               </button>
               <button type="button" class="btn-ghost" :disabled="defaultsForm.processing" @click="resetDefaults">
-                Cancel
+                {{ $t("Cancel") }}
               </button>
             </div>
           </section>
@@ -512,7 +512,7 @@
                 <p class="text-sm text-slate-500 dark:text-slate-300">Manage access matrix. Scroll horizontally to view all permissions.</p>
               </div>
               <span v-if="rolesDirty" class="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-700">
-                Unsaved changes
+                {{ $t("Unsaved changes") }}
               </span>
             </div>
 
@@ -552,10 +552,10 @@
 
             <div class="mt-6 flex flex-wrap items-center gap-3">
               <button type="button" class="btn-primary" :disabled="rolesSaving" @click="saveRoles">
-                Save changes
+                {{ $t("Save changes") }}
               </button>
               <button type="button" class="btn-ghost" :disabled="rolesSaving" @click="resetRoles">
-                Cancel
+                {{ $t("Cancel") }}
               </button>
             </div>
           </section>
@@ -594,7 +594,7 @@
                     Impersonate user
                   </button>
                   <button v-if="impersonationActive" type="button" class="btn-ghost" @click="stopImpersonate">
-                    Stop impersonation
+                    {{ $t("Stop impersonation") }}
                   </button>
                 </div>
                 <div class="mt-4 flex flex-wrap items-center gap-3">
@@ -602,7 +602,7 @@
                     Save security settings
                   </button>
                   <button type="button" class="btn-ghost" :disabled="securityForm.processing" @click="resetSecurity">
-                    Cancel
+                    {{ $t("Cancel") }}
                   </button>
                 </div>
               </div>
@@ -632,8 +632,8 @@
                 <input v-model.number="exportForm.limit" type="number" min="1" max="5000" class="form-input mt-2" />
               </div>
               <div>
-                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">Search</label>
-                <input v-model="exportForm.q" type="text" class="form-input mt-2" placeholder="Keyword" />
+                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t("Search") }}</label>
+                <input v-model="exportForm.q" type="text" class="form-input mt-2" :placeholder="$t(&quot;Keyword&quot;)" />
               </div>
               <div v-if="exportForm.type !== 'users'">
                 <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">Status</label>
@@ -644,11 +644,11 @@
                 <FancySelect v-model="exportForm.role" :options="exportRoleOptions" accent="subtle" class="mt-2" />
               </div>
               <div>
-                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">From</label>
+                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t("From") }}</label>
                 <FancySelect v-model="exportFromValue" :options="exportFromOptions" accent="subtle" class="mt-2" />
               </div>
               <div>
-                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">To</label>
+                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t("To") }}</label>
                 <FancySelect v-model="exportToValue" :options="exportToOptions" accent="subtle" class="mt-2" />
               </div>
             </div>
@@ -667,7 +667,7 @@
                 <p class="text-sm text-slate-500 dark:text-slate-300">Live environment diagnostics.</p>
               </div>
               <button type="button" class="btn-ghost" :disabled="healthLoading" @click="loadHealth">
-                Refresh
+                {{ $t("Refresh") }}
               </button>
             </div>
 
@@ -724,7 +724,7 @@
           <section class="rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
               <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Audit Log</h2>
+                  <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">{{ $t("Audit Log") }}</h2>
                   <p class="text-sm text-slate-500 dark:text-slate-300">Track changes across settings and system actions.</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
@@ -736,7 +736,7 @@
                     @keyup.enter="fetchAudit(1)"
                   />
                   <button type="button" class="btn-ghost" :disabled="auditLoading" @click="fetchAudit(1)">
-                    Refresh
+                    {{ $t("Refresh") }}
                   </button>
                 </div>
               </div>
@@ -764,7 +764,7 @@
                 <tbody>
                   <tr v-for="row in auditRows" :key="row.id" class="border-t border-slate-200 dark:border-slate-700">
                     <td class="px-4 py-3 text-xs text-slate-500">{{ formatDate(row.created_at) }}</td>
-                    <td class="px-4 py-3">{{ row.actor?.name || 'System' }}</td>
+                    <td class="px-4 py-3">{{ row.actor?.name || $t("System") }}</td>
                     <td class="px-4 py-3">{{ row.action }}</td>
                     <td class="px-4 py-3">{{ row.group }} {{ row.key ? '/' + row.key : '' }}</td>
                     <td class="px-4 py-3 text-xs text-slate-500">{{ row.old_value }}</td>
@@ -777,11 +777,11 @@
 
             <div v-if="auditMeta.last_page > 1" class="mt-4 flex items-center justify-between text-sm text-slate-500">
               <button type="button" class="btn-ghost" :disabled="auditMeta.current_page <= 1" @click="fetchAudit(auditMeta.current_page - 1)">
-                Previous
+                {{ $t("Previous") }}
               </button>
-              <span>Page {{ auditMeta.current_page }} of {{ auditMeta.last_page }}</span>
+              <span>Page {{ auditMeta.current_page }} {{ $t("of") }} {{ auditMeta.last_page }}</span>
               <button type="button" class="btn-ghost" :disabled="auditMeta.current_page >= auditMeta.last_page" @click="fetchAudit(auditMeta.current_page + 1)">
-                Next
+                {{ $t("Next") }}
               </button>
             </div>
           </section>
@@ -802,7 +802,7 @@
         <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">{{ confirmDialog.title }}</h3>
         <p class="mt-2 text-sm text-slate-500">{{ confirmDialog.message }}</p>
         <div class="mt-6 flex items-center justify-end gap-3">
-          <button type="button" class="btn-ghost" @click="closeConfirm">Cancel</button>
+          <button type="button" class="btn-ghost" @click="closeConfirm">{{ $t("Cancel") }}</button>
           <button type="button" class="btn-primary" @click="runConfirmDialog">Confirm</button>
         </div>
       </div>
@@ -811,6 +811,8 @@
 </template>
 
 <script setup>
+import { translateUi as uiText } from '../../i18n'
+
 import { computed, onMounted, ref, watch } from 'vue';
 import axios from 'axios';
 import { router, useForm, usePage } from '@inertiajs/vue3';
@@ -879,7 +881,7 @@ const statusOptions = computed(() =>
     value: option?.value ?? option?.label ?? option,
   }))
 );
-const exportStatusOptions = computed(() => [{ label: 'All', value: '' }, ...statusOptions.value]);
+const exportStatusOptions = computed(() => [{ label: uiText("All"), value: '' }, ...statusOptions.value]);
 const priorityOptions = computed(() =>
   (options.value.priorityOptions ?? []).map(option => ({
     label: option?.label ?? option?.value ?? option,
@@ -906,14 +908,14 @@ const timezoneSuggestions = computed(() => {
   return list;
 });
 const encryptionOptions = [
-  { label: 'None', value: 'none' },
+  { label: uiText("None"), value: 'none' },
   { label: 'TLS', value: 'tls' },
   { label: 'SSL', value: 'ssl' },
 ];
 const exportDatasetOptions = [
-  { label: 'Tickets', value: 'tickets' },
-  { label: 'Tasks', value: 'tasks' },
-  { label: 'Projects', value: 'projects' },
+  { label: uiText("Tickets"), value: 'tickets' },
+  { label: uiText("Tasks"), value: 'tasks' },
+  { label: uiText("Projects"), value: 'projects' },
   { label: 'Users', value: 'users' },
 ];
 const exportFormatOptions = [
@@ -1238,7 +1240,7 @@ const roleRows = ref((roleMatrix.value.roles ?? []).map(role => ({
   permissions: [...(role.permissions || [])],
 })));
 const exportRoleOptions = computed(() => [
-  { label: 'All', value: '' },
+  { label: uiText("All"), value: '' },
   ...(roleRows.value ?? []).map(role => ({
     label: role?.label ?? role?.name ?? 'Role',
     value: role?.name ?? role?.id ?? '',

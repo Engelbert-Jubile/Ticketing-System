@@ -91,7 +91,7 @@ final class WorkflowStatus
     /** @return array<string,string> */
     public static function labels(): array
     {
-        return self::orderedMap(self::LABEL_MAP);
+        return array_map(fn (string $label) => __($label), self::orderedMap(self::LABEL_MAP));
     }
 
     public static function label(string $status): string

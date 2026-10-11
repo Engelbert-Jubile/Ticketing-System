@@ -62,20 +62,20 @@ if ($isSuperadmin) {
 
             if ($unit !== "") {
                 $unitName = $unit;
-                $pageSubtitle = sprintf("Ringkasan tiket, task, dan project untuk unit %s.", $unit);
+                $pageSubtitle = sprintf(__("Ringkasan tiket, task, dan project untuk unit %s."), $unit);
             } else {
-                $unitName = "Semua Unit";
-                $pageSubtitle = "Ringkasan tiket, task, dan project untuk semua unit.";
+                $unitName = __("Semua Unit");
+                $pageSubtitle = __("Ringkasan tiket, task, dan project untuk semua unit.");
             }
 
             $usersCount = User::query()->count();
         } else {
 
 
-            $unitName = $unit !== "" ? $unit : "Unit tidak tersedia";
+            $unitName = $unit !== "" ? $unit : __("Unit tidak tersedia");
             $pageSubtitle = $unit !== ""
-                ? sprintf("Ringkasan tiket, task, dan project untuk unit %s.", $unit)
-                : "Unit belum diset pada akun anda.";
+                ? sprintf(__("Ringkasan tiket, task, dan project untuk unit %s."), $unit)
+                : __("Unit belum diset pada akun anda.");
             $usersCount = $unit !== ""
                 ? User::query()->where("unit", $unit)->count()
                 : 0;

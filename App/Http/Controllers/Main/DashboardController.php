@@ -233,7 +233,7 @@ class DashboardController extends Controller
 
         return Inertia::render('Dashboard/Index', [
             'pageTitle' => 'Overview',
-            'pageSubtitle' => 'Ringkasan tiket, task, dan project anda.',
+            'pageSubtitle' => __('Ringkasan tiket, task, dan project anda.'),
             'dateLabel' => Carbon::now()->format('D, d M Y'),
             'ticketsNew' => $ticketsNew,
             'ticketsInProgress' => $ticketsInProgress,

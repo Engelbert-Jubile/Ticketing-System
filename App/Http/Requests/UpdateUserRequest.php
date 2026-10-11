@@ -41,7 +41,7 @@ class UpdateUserRequest extends FormRequest
 
                     // Non-superadmin dilarang set 'superadmin'
                     if (RoleHelpers::canonical($value) === 'superadmin') {
-                        return $fail('Anda tidak berwenang memilih role tersebut.');
+                        return $fail(__('Anda tidak berwenang memilih role tersebut.'));
                     }
 
                     $isAdmin = false;
@@ -59,15 +59,15 @@ class UpdateUserRequest extends FormRequest
                     if ($isAdmin) {
                         if ((int) $targetId === (int) $me->id) {
                             if (RoleHelpers::canonical($value) !== 'admin') {
-                                return $fail('Anda tidak berwenang memilih role tersebut.');
+                                return $fail(__('Anda tidak berwenang memilih role tersebut.'));
                             }
                         } else {
                             if (RoleHelpers::canonical($value) !== 'user') {
-                                return $fail('Anda tidak berwenang memilih role tersebut.');
+                                return $fail(__('Anda tidak berwenang memilih role tersebut.'));
                             }
                         }
                     } elseif (RoleHelpers::canonical($value) !== 'user') {
-                        return $fail('Anda tidak berwenang memilih role tersebut.');
+                        return $fail(__('Anda tidak berwenang memilih role tersebut.'));
                     }
                 },
             ],
@@ -86,7 +86,7 @@ class UpdateUserRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'role.in' => 'Role tidak valid.',
+            'role.in' => __('Role tidak valid.'),
             'email.ends_with' => 'Email harus menggunakan domain @kftd.co.id.',
         ];
     }

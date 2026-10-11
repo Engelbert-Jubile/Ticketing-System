@@ -232,7 +232,7 @@ class SLAReportService
     protected function evaluateSla(?Carbon $target, ?Carbon $actual, ?Carbon $started, string $status): array
     {
         $now = now();
-        $res = ['status' => 'missing', 'label' => 'SLA tidak ditentukan', 'delta_minutes' => null, 'delta_human' => '—', 'target' => $this->presentDateTime($target), 'actual' => $this->presentDateTime($actual), 'duration' => $this->formatDurationMinutes($this->calculateDurationMinutes($started, $actual ?: $now))];
+        $res = ['status' => 'missing', 'label' => __('SLA not set'), 'delta_minutes' => null, 'delta_human' => '—', 'target' => $this->presentDateTime($target), 'actual' => $this->presentDateTime($actual), 'duration' => $this->formatDurationMinutes($this->calculateDurationMinutes($started, $actual ?: $now))];
         if (! $target) {
             return $res;
         }
@@ -240,15 +240,15 @@ class SLAReportService
         if ($effActual) {
             $diff = $effActual->diffInMinutes($target, false);
             $res['status'] = $diff >= 0 ? 'met' : 'breached';
-            $res['label'] = $diff >= 0 ? 'SLA tercapai' : 'Lewat '.$this->formatDurationMinutes(abs($diff));
+            $res['label'] = $diff >= 0 ? __('SLA met') : __('Overdue by :duration', ['duration' => $this->formatDurationMinutes(abs($diff))]);
             $res['delta_minutes'] = $diff;
-            $res['delta_human'] = $diff >= 0 ? 'Lebih cepat '.$this->formatDurationMinutes($diff) : 'Lewat '.$this->formatDurationMinutes(abs($diff));
+            $res['delta_human'] = $diff >= 0 ? __('Early by :duration', ['duration' => $this->formatDurationMinutes($diff)]) : __('Overdue by :duration', ['duration' => $this->formatDurationMinutes(abs($diff))]);
 
             return $res;
         }
         $diff = $now->diffInMinutes($target, false);
         $res['status'] = $diff >= 0 ? 'pending' : 'breached';
-        $res['label'] = $diff >= 0 ? 'Sisa '.$this->formatDurationMinutes($diff) : 'Lewat '.$this->formatDurationMinutes(abs($diff));
+        $res['label'] = $diff >= 0 ? __(':duration remaining', ['duration' => $this->formatDurationMinutes($diff)]) : __('Overdue by :duration', ['duration' => $this->formatDurationMinutes(abs($diff))]);
         $res['delta_minutes'] = $diff;
         $res['delta_human'] = $res['label'];
 
@@ -284,11 +284,11 @@ return ['raw' => $v->toDateTimeString(), 'display' => $v->translatedFormat('d M 
         $m %= 60;
         $p = [];
         if ($d > 0) {
-            $p[] = $d.' hari';
+            $p[] = trans_choice('{1} :count day|[0,*] :count days', $d);
         } if ($h > 0) {
-            $p[] = $h.' jam';
+            $p[] = trans_choice('{1} :count hour|[0,*] :count hours', $h);
         } if ($m > 0 || empty($p)) {
-            $p[] = $m.' menit';
+            $p[] = trans_choice('{1} :count minute|[0,*] :count minutes', $m);
         }
 
 return implode(' ', $p);

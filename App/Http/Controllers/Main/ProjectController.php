@@ -207,19 +207,19 @@ class ProjectController extends Controller
 
         $columns = [
             ['label' => 'Project No'],
-            ['label' => 'Judul'],
+            ['label' => __('Judul')],
             ['label' => 'Status'],
-            ['label' => 'Kategori'],
+            ['label' => __('Kategori')],
             ['label' => 'Ticket No'],
-            ['label' => 'Mulai'],
-            ['label' => 'Selesai'],
-            ['label' => 'Diperbarui'],
+            ['label' => __('Mulai')],
+            ['label' => __('Selesai')],
+            ['label' => __('Diperbarui')],
         ];
 
         $meta = [
             'filters' => [
-                'Pencarian' => $formFilters['q'] !== '' ? $formFilters['q'] : 'Semua',
-                'Status' => $normalizedStatus ? WorkflowStatus::label($normalizedStatus) : 'Semua',
+                'Pencarian' => $formFilters['q'] !== '' ? $formFilters['q'] : __('Semua'),
+                'Status' => $normalizedStatus ? WorkflowStatus::label($normalizedStatus) : __('Semua'),
                 'Rentang' => $this->formatDateRange($fromDate, $toDate),
                 'Total Data' => number_format(count($rows)),
             ],
@@ -227,7 +227,7 @@ class ProjectController extends Controller
 
         $filename = sprintf('projects-report-%s.pdf', now()->format('Ymd-His'));
 
-        return $this->reportExport->downloadPdf('Laporan Project', $columns, $rows, $meta, $filename);
+        return $this->reportExport->downloadPdf(__('Laporan Project'), $columns, $rows, $meta, $filename);
     }
 
     public function downloadDetail(Request $request, string $locale, Project $project)
@@ -251,7 +251,7 @@ class ProjectController extends Controller
 
         $description = strip_tags((string) ($detail['description'] ?? ''), '<p><br><strong><em><ul><ol><li><b><i><u>');
         if (trim(strip_tags($description)) === '') {
-            $description = '<p>Tidak ada deskripsi.</p>';
+            $description = __('<p>Tidak ada deskripsi.</p>');
         }
 
         $ticket = $detail['ticket'] ?? null;
@@ -527,7 +527,7 @@ class ProjectController extends Controller
         return redirect()->route('projects.create', [
             'locale' => $request->route('locale') ?? app()->getLocale(),
         ])
-            ->with('success', 'Project berhasil dibuat.');
+            ->with('success', __('Project berhasil dibuat.'));
     }
 
     public function edit(Request $request, string $locale, Project|string $project): Response
@@ -796,7 +796,7 @@ class ProjectController extends Controller
                 ->map(function ($attachment) {
                     return [
                         'id' => $attachment->id,
-                        'name' => $attachment->original_name ?? 'Lampiran ticket',
+                        'name' => $attachment->original_name ?? __('Lampiran ticket'),
                         'size' => $attachment->size,
                         'view_url' => $this->attachmentRoute('attachments.view', $attachment),
                         'download_url' => $this->attachmentRoute('attachments.download', $attachment),
@@ -891,7 +891,7 @@ class ProjectController extends Controller
 
         $currentStatus = WorkflowStatus::normalize($project->status ?? null);
         if ($workflowStatus !== $currentStatus && ! $project->canUserSetStatus($request->user(), $workflowStatus)) {
-            return back()->withInput()->with('error', 'Anda tidak memiliki izin untuk mengubah status project ini.');
+            return back()->withInput()->with('error', __('Anda tidak memiliki izin untuk mengubah status project ini.'));
         }
 
         $startRaw = $validated['start_date'] ?? data_get($validated, 'timeline.start');
@@ -932,7 +932,7 @@ class ProjectController extends Controller
         }
 
         return $this->redirectBackTo($request, 'projects.on-progress')
-            ->with('success', 'Project berhasil diperbarui.');
+            ->with('success', __('Project berhasil diperbarui.'));
     }
 
     public function destroy(Request $request, string $locale, Project $project): RedirectResponse
@@ -946,7 +946,7 @@ class ProjectController extends Controller
         });
 
         return $this->redirectBackTo($request, 'projects.on-progress')
-            ->with('success', 'Project berhasil dihapus.');
+            ->with('success', __('Project berhasil dihapus.'));
     }
 
     /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
@@ -1197,7 +1197,7 @@ class ProjectController extends Controller
             return WorkflowStatus::normalize($fallback ?? WorkflowStatus::IN_PROGRESS);
         }
 
-        $doneWords = ['done', 'selesai', 'complete', 'completed', 'finish', 'finished', 'ok', 'success', 'selasai'];
+        $doneWords = ['done', __('selesai'), 'complete', 'completed', 'finish', 'finished', 'ok', 'success', 'selasai'];
         foreach ($planning as $row) {
             $statusValue = strtolower(trim((string) ($row['status'] ?? '')));
             if ($statusValue === '' || ! in_array($statusValue, $doneWords, true)) {
@@ -1230,7 +1230,7 @@ class ProjectController extends Controller
     {
         if ($this->countPicMembers($entries) === 0) {
             throw ValidationException::withMessages([
-                'project_pics' => 'Minimal satu PIC wajib dipilih untuk project.',
+                'project_pics' => __('Minimal satu PIC wajib dipilih untuk project.'),
             ]);
         }
     }
@@ -1965,7 +1965,7 @@ class ProjectController extends Controller
     private function formatDateRange(?Carbon $from, ?Carbon $to): string
     {
         if (! $from && ! $to) {
-            return 'Semua';
+            return __('Semua');
         }
 
         $format = 'd M Y';
@@ -2091,9 +2091,9 @@ class ProjectController extends Controller
     {
         return [
             'default' => 'Status awal project selalu New.',
-            'agent' => 'Status In Progress dan Confirmation hanya dapat diubah oleh agent/assigned agent/PIC.',
-            'requester' => 'Status Revision, Done, Cancelled, dan On Hold hanya dapat diubah oleh Requester.',
-            'admin' => 'Hanya Super Admin yang dapat mengubah seluruh status.',
+            'agent' => __('Status In Progress dan Confirmation hanya dapat diubah oleh agent/assigned agent/PIC.'),
+            'requester' => __('Status Revision, Done, Cancelled, dan On Hold hanya dapat diubah oleh Requester.'),
+            'admin' => __('Hanya Super Admin yang dapat mengubah seluruh status.'),
         ];
     }
 

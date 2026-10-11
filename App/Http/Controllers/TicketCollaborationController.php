@@ -52,7 +52,7 @@ class TicketCollaborationController extends Controller
                     continue;
                 }
                 $user->notifications()->create(['id' => (string) Str::uuid(), 'type' => 'ticket.mention', 'data' => [
-                    'title' => 'Anda disebut di ticket '.$ticket->ticket_no, 'message' => 'Ada pesan baru yang membutuhkan perhatian Anda.',
+                    'title' => __('Anda disebut di ticket ').$ticket->ticket_no, 'message' => __('Ada pesan baru yang membutuhkan perhatian Anda.'),
                     'url' => route('tickets.show', ['locale' => $locale, 'ticket' => $ticket->id]), 'icon' => 'alternate_email',
                 ]]);
             }
@@ -97,7 +97,7 @@ class TicketCollaborationController extends Controller
                 }
                 $user->notifications()->create(['id' => (string) Str::uuid(), 'type' => 'ticket.follow-up', 'data' => [
                     'title' => 'Permintaan tindak lanjut '.$ticket->ticket_no,
-                    'message' => 'Requester memerlukan bantuan kembali. Tinjau penilaian dan hubungi requester.',
+                    'message' => __('Requester memerlukan bantuan kembali. Tinjau penilaian dan hubungi requester.'),
                     'url' => route('tickets.show', ['locale' => $locale, 'ticket' => $ticket->id]), 'icon' => 'feedback',
                 ]]);
             }

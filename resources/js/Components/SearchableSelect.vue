@@ -66,7 +66,7 @@
         </template>
 
         <p v-if="!groupedList.length" class="px-3 py-4 text-center text-sm text-slate-500 dark:text-slate-400">
-          No results
+          {{ $t("No results") }}
         </p>
       </div>
     </div>
@@ -74,6 +74,8 @@
 </template>
 
 <script setup>
+import { translateUi as uiText } from '../i18n'
+
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 const props = defineProps({
@@ -235,7 +237,7 @@ const selectedLabel = computed(() => {
   const current = combinedList.value.find(option => isSelected(option));
   if (current) return current.label;
   const fallback = flatOptions.value.find(option => isSelected(option));
-  return fallback?.label ?? 'Pilih opsi';
+  return fallback?.label ?? uiText("Pilih opsi");
 });
 
 const highlight = index => {

@@ -12,6 +12,8 @@
       :is-desktop="isDesktop"
       :theme="theme"
       :header-color="headerColor"
+      :locale-busy="localeBusy"
+      @update-locale="updateLocale"
       @toggle-sidebar="toggleSidebar"
       @toggle-theme="toggleTheme"
       @update-header-color="updateHeaderColor"
@@ -41,6 +43,7 @@
     >
       <div v-if="!isDesktop && sidebarOpen" class="overlay" @click="setSidebarOpen(false)"></div>
       <main class="app-main">
+        <p v-if="localeError" role="alert" class="mb-4 rounded-xl bg-rose-50 p-3 text-sm text-rose-800">{{ localeError }}</p>
         <p v-if="notificationError" role="alert" class="mb-4 rounded-xl bg-rose-50 p-3 text-sm text-rose-800 dark:bg-rose-950 dark:text-rose-200">{{ notificationError }}</p>
         <div
           v-if="impersonationActive"
@@ -75,7 +78,7 @@
               class="ml-auto text-xs font-semibold text-amber-800 underline underline-offset-4 transition hover:text-amber-900 dark:text-amber-100 dark:hover:text-white"
               @click="dismissAnnouncement"
             >
-              Tutup
+              {{ $t("Tutup") }}
             </button>
           </div>
         </div>
@@ -86,6 +89,8 @@
 </template>
 
 <script setup>
+import { translateUi as uiText } from '../i18n'
+
 import { Head, router, usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -102,7 +107,7 @@ const supportedLocales = ['en', 'id']
 const activeLocale = computed(() => {
   const url = page.url ?? '/'
   const match = url.match(/^\/(en|id)\b/)
-  return match ? match[1] : (page.props.locale || 'en')
+  return page.props.locale || (match ? match[1] : 'en')
 })
 
 const inertiaUrl = computed(() => page.url ?? '/')
@@ -161,7 +166,7 @@ const displayWindow = computed(() => {
   const start = announcement.value.start_at || announcement.value.starts_at
   const end = announcement.value.end_at || announcement.value.ends_at
   if (!start && !end) return ''
-  return `${start || 'Now'} \u2014 ${end || 'Open'}`
+  return `${start || 'Now'} \u2014 ${end || uiText("Open")}`
 })
 const showAnnouncement = ref(Boolean(announcement.value))
 
@@ -227,11 +232,11 @@ const navItems = computed(() => {
       match: path => path === '/dashboard',
     },
     {
-      type: 'link', key: 'work', label: 'Pekerjaan Saya', icon: 'assignment_ind',
+      type: 'link', key: 'work', label: uiText("Pekerjaan Saya"), icon: 'assignment_ind',
       href: resolveRouteName('work.index'), match: path => path === '/dashboard/my-work',
     },
     {
-      type: 'link', key: 'knowledge', label: 'Panduan & Template', icon: 'menu_book',
+      type: 'link', key: 'knowledge', label: uiText("Panduan & Template"), icon: 'menu_book',
       href: resolveRouteName('knowledge.index'), match: path => path === '/dashboard/knowledge',
     },
     {
@@ -329,7 +334,7 @@ const navItems = computed(() => {
   items.push({
     type: 'link',
     key: 'workflows',
-    label: 'Alur & Riwayat',
+    label: uiText("Alur & Riwayat"),
     icon: 'account_tree',
     href: resolveRouteName('workflows.index'),
     match: path => pathStartsWith(path, '/dashboard/workflows'),
@@ -567,6 +572,19 @@ watch(theme, value => {
   applyTheme(value)
 })
 
+const localeBusy = ref(false), localeError = ref('')
+const updateLocale = async value => {
+  if (localeBusy.value || value === authUser.value?.preferred_locale) return
+  localeBusy.value = true; localeError.value = ''
+  try {
+    const { data } = await axios.patch(resolveRouteName('account.locale.update'), { locale: value })
+    setLocale(data.locale)
+    const url = new URL(window.location.href)
+    url.pathname = url.pathname.replace(/^\/(en|id)(?=\/|$)/, '/' + data.locale)
+    router.visit(url.pathname + url.search + url.hash, { preserveScroll: true, preserveState: false, onFinish: () => { localeBusy.value = false } })
+  } catch (error) { localeBusy.value = false; localeError.value = t('Unable to save your language. Please try again.') }
+}
+
 const updateHeaderColor = value => {
   const normalized = typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value)
     ? value.toLowerCase()
@@ -651,7 +669,7 @@ const notificationVisit = async (method, url, applyLocalChange) => {
 
   notificationsState.value = previous
   notificationBusy.value = false
-  notificationError.value = 'Notifikasi belum tersimpan. Silakan coba lagi.'
+  notificationError.value = uiText("Notifikasi belum tersimpan. Silakan coba lagi.")
   return false
 }
 const markAllNotifications = () => notificationVisit('post', resolveRouteName('notifications.read-all'), () => {

@@ -48,6 +48,6 @@ class KnowledgeController extends Controller
         }
         $entry->fill($data)->save();
 
-        return back()->with('success', 'Artikel atau template tersimpan.');
+        return back()->with('success', __('Artikel atau template tersimpan.'));
     }
 }

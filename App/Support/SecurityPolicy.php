@@ -69,7 +69,7 @@ class SecurityPolicy
             $domain = count($parts) > 1 ? end($parts) : '';
 
             if ($domain === '' || ! in_array($domain, $domains, true)) {
-                $fail('Email harus menggunakan domain yang diizinkan.');
+                $fail(__('Email harus menggunakan domain yang diizinkan.'));
             }
         };
     }

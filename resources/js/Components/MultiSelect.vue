@@ -46,12 +46,14 @@
 </template>
 
 <script setup>
+import { translateUi as uiText } from '../i18n'
+
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 const props = defineProps({
   modelValue: { type: Array, default: () => [] },
   options: { type: Array, default: () => [] },
-  placeholder: { type: String, default: 'Pilih opsi' },
+  placeholder: { type: String, default: () => uiText("Pilih opsi") },
   maxTagCount: { type: Number, default: 2 },
 });
 

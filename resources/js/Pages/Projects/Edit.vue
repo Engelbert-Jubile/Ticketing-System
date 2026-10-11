@@ -39,18 +39,18 @@
               <span class="material-icons">fact_check</span>
             </div>
             <div>
-              <h2>Informasi Utama</h2>
-              <p>Identitas project dan relasi ticket.</p>
+              <h2>{{ $t("Informasi Utama") }}</h2>
+              <p>{{ $t("Identitas project dan relasi ticket.") }}</p>
             </div>
           </div>
           <div class="panel-grid">
             <div class="panel-field col-span-2">
-              <label>Judul Project</label>
-              <input v-model="form.title" type="text" placeholder="Contoh: Implementasi Dashboard Analytics" />
+              <label>{{ $t("Judul Project") }}</label>
+              <input v-model="form.title" type="text" :placeholder="$t(&quot;Contoh: Implementasi Dashboard Analytics&quot;)" />
               <p v-if="form.errors.title" class="field-error">{{ form.errors.title }}</p>
             </div>
             <div class="panel-field">
-              <label>Nomor Project</label>
+              <label>{{ $t("Nomor Project") }}</label>
               <input v-model="form.project_no" type="text" maxlength="20" placeholder="PRJ-2025-001" />
               <p v-if="form.errors.project_no" class="field-error">{{ form.errors.project_no }}</p>
             </div>
@@ -58,7 +58,7 @@
               <label>Status Workflow</label>
               <FancySelect v-model="form.status" :options="workflowStatusSelectOptions" :disabled="statusLocked" />
               <p v-if="form.errors.status" class="field-error">{{ form.errors.status }}</p>
-              <p v-if="statusLocked" class="field-hint">Status awal diset ke {{ statusDefaultLabel }}.</p>
+              <p v-if="statusLocked" class="field-hint">{{ $t("Status awal diset ke") }} {{ statusDefaultLabel }}.</p>
               <ul v-else-if="statusGuide" class="mt-1 list-disc space-y-0.5 pl-5 text-xs text-slate-500 dark:text-slate-400">
                 <li>{{ statusGuide.agent }}</li>
                 <li>{{ statusGuide.requester }}</li>
@@ -66,22 +66,22 @@
               </ul>
             </div>
             <div class="panel-field panel-field--full ticket-linker" ref="ticketCardRef">
-              <label>Ticket Terkait</label>
+              <label>{{ $t("Ticket Terkait") }}</label>
               <div class="relative ticket-card rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                 <div class="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">Hubungkan ke Ticket Aktif</p>
-                    <p class="text-xs text-slate-400">Pilih ticket sesuai unit.</p>
+                    <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">{{ $t("Hubungkan ke Ticket Aktif") }}</p>
+                    <p class="text-xs text-slate-400">{{ $t("Pilih ticket sesuai unit.") }}</p>
                   </div>
                   <div class="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                    <span>{{ selectedTicketOption ? '1 ticket terpilih' : 'Belum ada pilihan' }}</span>
+                    <span>{{ selectedTicketOption ? '1 ticket terpilih' : $t("Belum ada pilihan") }}</span>
                     <button
                       v-if="selectedTicketOption"
                       type="button"
                       class="rounded-full border border-rose-200 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-rose-600 transition hover:bg-rose-50 dark:border-rose-500/40 dark:text-rose-200 dark:hover:bg-rose-500/10"
                       @click="clearTicketSelection"
                     >
-                      Hapus
+                      {{ $t("Hapus") }}
                     </button>
                   </div>
                 </div>
@@ -96,10 +96,10 @@
                       class="inline-flex items-center gap-2 rounded-lg border border-indigo-200/70 bg-white px-3 py-1 text-xs font-medium text-indigo-700 dark:border-indigo-500/40 dark:bg-slate-900/70 dark:text-indigo-200"
                     >
                       <span class="font-semibold">{{ selectedTicketOption.ticket_no }}</span>
-                      <span class="max-w-[160px] truncate text-[11px] text-slate-400">{{ selectedTicketOption.title || 'Tanpa judul' }}</span>
+                      <span class="max-w-[160px] truncate text-[11px] text-slate-400">{{ selectedTicketOption.title || $t('Tanpa judul') }}</span>
                       <span class="rounded-full border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-[10px] uppercase tracking-wide text-indigo-600 dark:border-indigo-400/40 dark:bg-transparent">{{ selectedTicketOption.unit || ticketUnitPlaceholder }}</span>
                     </span>
-                    <span v-else class="text-xs font-normal text-slate-400">Pilih ticket aktif sesuai unit Anda</span>
+                    <span v-else class="text-xs font-normal text-slate-400">{{ $t("Pilih ticket aktif sesuai unit Anda") }}</span>
                   </div>
                   <span class="material-icons text-base text-slate-400 transition duration-200" :class="ticketDropdownOpen ? 'rotate-180 text-blue-500' : ''">expand_more</span>
                 </button>
@@ -142,21 +142,21 @@
                           />
                           <div class="min-w-0">
                             <p class="font-semibold text-slate-700 dark:text-slate-100">{{ ticket.ticket_no }}</p>
-                            <p class="truncate text-xs text-slate-400">{{ ticket.title || 'Tanpa judul' }}</p>
+                            <p class="truncate text-xs text-slate-400">{{ ticket.title || $t('Tanpa judul') }}</p>
                             <p class="text-[11px] text-slate-400">{{ ticket.unit || ticketUnitPlaceholder }}</p>
                           </div>
                     </div>
-                    <StatusPill :status="ticket.status || ticket.status_badge" :label="ticket.status_label || 'Aktif'" size="sm" />
+                    <StatusPill :status="ticket.status || ticket.status_badge" :label="ticket.status_label || $t(&quot;Aktif&quot;)" size="sm" />
                   </label>
-                    <p v-if="!activeTicketList.length" class="text-sm text-slate-400">Tidak ada ticket pada unit ini.</p>
+                    <p v-if="!activeTicketList.length" class="text-sm text-slate-400">{{ $t("Tidak ada ticket pada unit ini.") }}</p>
                   </div>
                     <div class="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
-                      <span>Hanya menampilkan ticket yang belum berstatus Done / Cancelled.</span>
-                      <button type="button" class="text-indigo-500 hover:underline" @click="clearTicketSelection">Tanpa ticket</button>
+                      <span>{{ $t("Hanya menampilkan ticket yang belum berstatus Done / Cancelled.") }}</span>
+                      <button type="button" class="text-indigo-500 hover:underline" @click="clearTicketSelection">{{ $t("Tanpa ticket") }}</button>
                     </div>
                   </div>
                 </transition>
-                <p class="mt-2 text-xs text-slate-400">Jika tidak ada ticket yang relevan, biarkan kosong untuk project mandiri.</p>
+                <p class="mt-2 text-xs text-slate-400">{{ $t("Jika tidak ada ticket yang relevan, biarkan kosong untuk project mandiri.") }}</p>
                 <p v-if="form.errors.ticket_id" class="field-error">{{ form.errors.ticket_id }}</p>
               </div>
             </div>
@@ -169,30 +169,30 @@
               <span class="material-icons">schedule</span>
             </div>
             <div>
-              <h2>Deskripsi &amp; Timeline</h2>
-              <p>Isi narasi project serta tentukan rentang waktunya.</p>
+              <h2>{{ $t("Deskripsi & Timeline") }}</h2>
+              <p>{{ $t("Isi narasi project serta tentukan rentang waktunya.") }}</p>
             </div>
           </div>
           <div class="panel-grid panel-grid--timeline">
             <div class="panel-field panel-field--full">
-              <label>Deskripsi Project</label>
+              <label>{{ $t("Deskripsi Project") }}</label>
               <div class="rich-editor rounded-2xl border border-slate-200/80 dark:border-slate-700/60">
                 <RichTextQuill v-model="form.description" />
               </div>
               <p v-if="form.errors.description" class="field-error">{{ form.errors.description }}</p>
             </div>
             <div class="panel-field">
-              <label>Mulai Project</label>
+              <label>{{ $t("Mulai Project") }}</label>
               <DatePickerFlatpickr v-model="form.start_date" :config="dateTimeConfig" placeholder="dd/mm/yyyy hh:mm" />
               <p v-if="form.errors.start_date" class="field-error">{{ form.errors.start_date }}</p>
             </div>
             <div class="panel-field">
-              <label>Selesai Project</label>
+              <label>{{ $t("Selesai Project") }}</label>
               <DatePickerFlatpickr v-model="form.end_date" :config="dateTimeConfig" placeholder="dd/mm/yyyy hh:mm" />
               <p v-if="form.errors.end_date" class="field-error">{{ form.errors.end_date }}</p>
             </div>
             <div class="panel-field panel-field--full timeline-hint text-xs text-slate-400">
-              Pastikan tanggal selesai berada setelah tanggal mulai. Kosongkan jika jadwal belum ditentukan.
+              {{ $t("Pastikan tanggal selesai berada setelah tanggal mulai. Kosongkan jika jadwal belum ditentukan.") }}
             </div>
           </div>
         </section>
@@ -203,8 +203,8 @@
               <span class="material-icons">groups</span>
             </div>
             <div>
-              <h2>Tim Project</h2>
-              <p>Kelola agent dan PIC yang terlibat.</p>
+              <h2>{{ $t("Tim Project") }}</h2>
+              <p>{{ $t("Kelola agent dan PIC yang terlibat.") }}</p>
             </div>
           </div>
           <div class="grid gap-6 lg:grid-cols-2">
@@ -212,13 +212,13 @@
               <div class="flex items-start justify-between gap-3">
                 <div>
                   <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">Agent</p>
-                  <p class="text-xs text-slate-400">Pilih beberapa agent lalu tandai yang utama.</p>
+                  <p class="text-xs text-slate-400">{{ $t("Pilih beberapa agent lalu tandai yang utama.") }}</p>
                 </div>
                 <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                  {{ agentMembers.length ? agentMembers.length + ' agent dipilih' : 'Belum ada pilihan' }}
+                  {{ agentMembers.length ? agentMembers.length + ' agent dipilih' : $t("Belum ada pilihan") }}
                 </span>
               </div>
-              <p class="mt-2 text-xs text-slate-400">Pilih unit untuk melihat daftar anggota.</p>
+              <p class="mt-2 text-xs text-slate-400">{{ $t("Pilih unit untuk melihat daftar anggota.") }}</p>
               <div class="relative mt-3 w-full">
                 <button
                   type="button"
@@ -237,7 +237,7 @@
                         <span class="material-icons text-[13px]">close</span>
                       </button>
                     </span>
-                    <span v-if="!selectedAgentDetails.length" class="text-xs font-normal text-slate-400">Belum ada agent dipilih</span>
+                    <span v-if="!selectedAgentDetails.length" class="text-xs font-normal text-slate-400">{{ $t("Belum ada agent dipilih") }}</span>
                   </div>
                   <span class="material-icons text-base text-slate-400 transition duration-200" :class="agentDropdownOpen ? 'rotate-180 text-blue-500' : ''">expand_more</span>
                 </button>
@@ -258,7 +258,7 @@
                       >
                         {{ unit }}
                       </button>
-                      <p v-if="!allUnits.length" class="text-xs text-slate-400">Belum ada unit terdaftar.</p>
+                      <p v-if="!allUnits.length" class="text-xs text-slate-400">{{ $t("Belum ada unit terdaftar.") }}</p>
                     </div>
                     <div class="mt-3 max-h-64 space-y-2 overflow-y-auto pr-1">
                       <label
@@ -284,16 +284,16 @@
                           :class="agentPrimary === normalizeSelectionId(option.id) ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/20 dark:text-blue-100' : 'text-slate-400 hover:text-blue-500'"
                           @click.stop="setAgentPrimary(option.id)"
                         >
-                          {{ agentPrimary === normalizeSelectionId(option.id) ? 'Utama' : 'Jadikan Utama' }}
+                          {{ agentPrimary === normalizeSelectionId(option.id) ? $t("Utama") : $t("Jadikan Utama") }}
                         </button>
                       </label>
-                      <p v-if="!activeAgentList.length" class="text-sm text-slate-400">Belum ada agent pada unit ini.</p>
+                      <p v-if="!activeAgentList.length" class="text-sm text-slate-400">{{ $t("Belum ada agent pada unit ini.") }}</p>
                     </div>
                   </div>
                 </transition>
               </div>
               <p class="mt-2 text-xs text-slate-400">
-                {{ agentMembers.length ? agentMembers.length + ' agent terhubung' : 'Belum ada agent terpilih' }}
+                {{ agentMembers.length ? agentMembers.length + ' agent terhubung' : $t("Belum ada agent terpilih") }}
               </p>
               <div class="mt-4 space-y-3">
                 <div
@@ -303,7 +303,7 @@
                 >
                   <div class="flex items-start justify-between gap-3">
                     <div>
-                      <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">{{ userInfo(member)?.label || 'Anggota tidak dikenal' }}</p>
+                      <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">{{ userInfo(member)?.label || $t("Anggota tidak dikenal") }}</p>
                       <p class="text-xs text-slate-400">
                         {{ userInfo(member)?.email || '—' }} · {{ userInfo(member)?.unit || unitPlaceholderLabel }}
                       </p>
@@ -312,12 +312,12 @@
                       <span class="material-icons text-base">delete</span>
                     </button>
                   </div>
-                  <label class="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Peran</label>
+                  <label class="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-500">{{ $t("Peran") }}</label>
                   <input
                     v-model="member.position"
                     type="text"
                     class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-                    placeholder="Contoh: Project Manager"
+                    :placeholder="$t(&quot;Contoh: Project Manager&quot;)"
                   />
                   <p v-if="projectPicError(member, 'position')" class="mt-1 text-xs text-red-500">{{ projectPicError(member, 'position') }}</p>
                   <div class="mt-2 flex items-center justify-between text-xs text-slate-500">
@@ -328,24 +328,24 @@
                       @click="setAgentPrimary(member.user_id)"
                     >
                       <span class="material-icons text-xs">verified_user</span>
-                      {{ member.is_primary ? 'Agent Utama' : 'Jadikan Utama' }}
+                      {{ member.is_primary ? $t('Agent Utama') : $t("Jadikan Utama") }}
                     </button>
                   </div>
                 </div>
-                <p v-if="!agentMembers.length" class="text-xs text-slate-400">Belum ada data.</p>
+                <p v-if="!agentMembers.length" class="text-xs text-slate-400">{{ $t("Belum ada data.") }}</p>
               </div>
             </div>
             <div ref="picCardRef" class="relative z-20 rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
               <div class="flex items-start justify-between gap-3">
                 <div>
-                  <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">Penanggung Jawab Utama</p>
-                  <p class="text-xs text-slate-400">Pilih PIC utama dari berbagai unit.</p>
+                  <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">{{ $t("Penanggung Jawab Utama") }}</p>
+                  <p class="text-xs text-slate-400">{{ $t("Pilih PIC utama dari berbagai unit.") }}</p>
                 </div>
                 <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                  {{ picMembers.length ? picMembers.length + ' PIC dipilih' : 'Belum ada pilihan' }}
+                  {{ picMembers.length ? picMembers.length + ' PIC dipilih' : $t("Belum ada pilihan") }}
                 </span>
               </div>
-              <p class="mt-2 text-xs text-slate-400">Pilih unit untuk melihat daftar anggota.</p>
+              <p class="mt-2 text-xs text-slate-400">{{ $t("Pilih unit untuk melihat daftar anggota.") }}</p>
               <div class="relative mt-3 w-full">
                 <button
                   type="button"
@@ -364,7 +364,7 @@
                         <span class="material-icons text-[13px]">close</span>
                       </button>
                     </span>
-                    <span v-if="!selectedPicDetails.length" class="text-xs font-normal text-slate-400">Belum ada PIC dipilih</span>
+                    <span v-if="!selectedPicDetails.length" class="text-xs font-normal text-slate-400">{{ $t("Belum ada PIC dipilih") }}</span>
                   </div>
                   <span class="material-icons text-base text-slate-400 transition duration-200" :class="picDropdownOpen ? 'rotate-180 text-emerald-500' : ''">expand_more</span>
                 </button>
@@ -385,7 +385,7 @@
                       >
                         {{ unit }}
                       </button>
-                      <p v-if="!allUnits.length" class="text-xs text-slate-400">Belum ada unit terdaftar.</p>
+                      <p v-if="!allUnits.length" class="text-xs text-slate-400">{{ $t("Belum ada unit terdaftar.") }}</p>
                     </div>
                     <div class="mt-3 max-h-64 space-y-2 overflow-y-auto pr-1">
                       <label
@@ -411,16 +411,16 @@
                           :class="picPrimary === normalizeSelectionId(option.id) ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-100' : 'text-slate-400 hover:text-emerald-500'"
                           @click.stop="setPicPrimary(option.id)"
                         >
-                          {{ picPrimary === normalizeSelectionId(option.id) ? 'Utama' : 'Jadikan Utama' }}
+                          {{ picPrimary === normalizeSelectionId(option.id) ? $t("Utama") : $t("Jadikan Utama") }}
                         </button>
                       </label>
-                      <p v-if="!activePicList.length" class="text-sm text-slate-400">Belum ada PIC pada unit ini.</p>
+                      <p v-if="!activePicList.length" class="text-sm text-slate-400">{{ $t("Belum ada PIC pada unit ini.") }}</p>
                     </div>
                   </div>
                 </transition>
               </div>
               <p class="mt-2 text-xs text-slate-400">
-                {{ picMembers.length ? picMembers.length + ' PIC terhubung' : 'Belum ada PIC' }}
+                {{ picMembers.length ? picMembers.length + ' PIC terhubung' : $t("Belum ada PIC") }}
               </p>
               <div class="mt-4 space-y-3">
                 <div
@@ -430,7 +430,7 @@
                 >
                   <div class="flex items-start justify-between gap-3">
                     <div>
-                      <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">{{ userInfo(member)?.label || 'Anggota tidak dikenal' }}</p>
+                      <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">{{ userInfo(member)?.label || $t("Anggota tidak dikenal") }}</p>
                       <p class="text-xs text-slate-400">
                         {{ userInfo(member)?.email || '—' }} · {{ userInfo(member)?.unit || unitPlaceholderLabel }}
                       </p>
@@ -439,12 +439,12 @@
                       <span class="material-icons text-base">delete</span>
                     </button>
                   </div>
-                  <label class="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Peran</label>
+                  <label class="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-500">{{ $t("Peran") }}</label>
                   <input
                     v-model="member.position"
                     type="text"
                     class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-                    placeholder="Contoh: Project Manager"
+                    :placeholder="$t(&quot;Contoh: Project Manager&quot;)"
                   />
                   <p v-if="projectPicError(member, 'position')" class="mt-1 text-xs text-red-500">{{ projectPicError(member, 'position') }}</p>
                   <div class="mt-2 flex items-center justify-between text-xs text-slate-500">
@@ -455,16 +455,16 @@
                       @click="setPicPrimary(member.user_id)"
                     >
                       <span class="material-icons text-xs">verified_user</span>
-                      {{ member.is_primary ? 'PIC Utama' : 'Jadikan Utama' }}
+                      {{ member.is_primary ? $t('PIC Utama') : $t("Jadikan Utama") }}
                     </button>
                   </div>
                 </div>
-                <p v-if="!picMembers.length" class="text-xs text-slate-400">Belum ada data.</p>
+                <p v-if="!picMembers.length" class="text-xs text-slate-400">{{ $t("Belum ada data.") }}</p>
               </div>
             </div>
           </div>
           <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-700 dark:bg-slate-900/60">
-            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-100">Ringkasan Pilihan</h3>
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-100">{{ $t("Ringkasan Pilihan") }}</h3>
             <div class="mt-3 grid gap-3 sm:grid-cols-2">
               <div class="rounded-xl border border-blue-200/60 bg-white p-3 dark:border-blue-500/30 dark:bg-slate-900">
                 <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-blue-700 dark:text-blue-200">
@@ -480,7 +480,7 @@
                     {{ person.label }}
                     <span v-if="person.member.position" class="text-slate-400"> · {{ person.member.position }}</span>
                   </span>
-                  <span v-if="!selectedAgentDetails.length" class="text-xs text-slate-400">Belum ada data</span>
+                  <span v-if="!selectedAgentDetails.length" class="text-xs text-slate-400">{{ $t("Belum ada data") }}</span>
                 </div>
               </div>
               <div class="rounded-xl border border-emerald-200/60 bg-white p-3 dark:border-emerald-500/30 dark:bg-slate-900">
@@ -497,13 +497,13 @@
                     {{ person.label }}
                     <span v-if="person.member.position" class="text-slate-400"> · {{ person.member.position }}</span>
                   </span>
-                  <span v-if="!selectedPicDetails.length" class="text-xs text-slate-400">Belum ada data</span>
+                  <span v-if="!selectedPicDetails.length" class="text-xs text-slate-400">{{ $t("Belum ada data") }}</span>
                 </div>
               </div>
             </div>
           </div>
           <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">
-            Minimal satu PIC wajib ditetapkan. Agent bertindak sebagai penanggung jawab utama project.
+            {{ $t("Minimal satu PIC wajib ditetapkan. Agent bertindak sebagai penanggung jawab utama project.") }}
           </p>
         </section>
 
@@ -514,30 +514,30 @@
             </div>
             <div>
               <h2>Action Plan</h2>
-              <p>Daftar aktivitas utama project.</p>
+              <p>{{ $t("Daftar aktivitas utama project.") }}</p>
             </div>
             <button type="button" class="chip-action" @click="addAction">
               <span class="material-icons">add_circle</span>
-              Tambah Action
+              {{ $t("Tambah Action") }}
             </button>
           </div>
 
           <div v-if="!form.project_actions.length" class="empty-hint">
-            Belum ada action. Tambahkan agar progress project tetap terpantau.
+            {{ $t("Belum ada action. Tambahkan agar progress project tetap terpantau.") }}
           </div>
 
           <div class="stacked-list">
             <div v-for="(action, index) in form.project_actions" :key="`action-${index}`" class="card-row overflow-visible">
               <div class="card-row__grid card-row__grid--two">
                 <div class="panel-field col-span-2">
-                  <label>Judul Action</label>
-                  <input v-model="action.title" type="text" placeholder="Contoh: Workshop Implementasi" />
+                  <label>{{ $t("Judul Action") }}</label>
+                  <input v-model="action.title" type="text" :placeholder="$t(&quot;Contoh: Workshop Implementasi&quot;)" />
                   <p v-if="form.errors[`project_actions.${index}.title`]" class="field-error">{{ form.errors[`project_actions.${index}.title`] }}</p>
                 </div>
                 <div class="panel-field">
                   <label>Status</label>
                   <FancySelect v-model="action.status_id" :options="statusSelectOptions" />
-                  <p class="mt-1 text-xs text-slate-400">Pilih status untuk action plan ini.</p>
+                  <p class="mt-1 text-xs text-slate-400">{{ $t("Pilih status untuk action plan ini.") }}</p>
                 </div>
                 <div class="panel-field">
                   <label>Progress (%)</label>
@@ -545,18 +545,18 @@
                   <p v-if="form.errors[`project_actions.${index}.progress`]" class="field-error">{{ form.errors[`project_actions.${index}.progress`] }}</p>
                 </div>
                 <div class="panel-field">
-                  <label>Mulai</label>
+                  <label>{{ $t("Mulai") }}</label>
                   <DatePickerFlatpickr v-model="action.start_date" :config="dateTimeConfig" placeholder="dd/mm/yyyy hh:mm" />
                   <p v-if="form.errors[`project_actions.${index}.start_date`]" class="field-error">{{ form.errors[`project_actions.${index}.start_date`] }}</p>
                 </div>
                 <div class="panel-field">
-                  <label>Selesai</label>
+                  <label>{{ $t("Selesai") }}</label>
                   <DatePickerFlatpickr v-model="action.end_date" :config="dateTimeConfig" placeholder="dd/mm/yyyy hh:mm" />
                   <p v-if="form.errors[`project_actions.${index}.end_date`]" class="field-error">{{ form.errors[`project_actions.${index}.end_date`] }}</p>
                 </div>
                 <div class="panel-field col-span-2">
-                  <label>Deskripsi</label>
-                  <textarea v-model="action.description" rows="2" placeholder="Penjelasan singkat action"></textarea>
+                  <label>{{ $t("Deskripsi") }}</label>
+                  <textarea v-model="action.description" rows="2" :placeholder="$t(&quot;Penjelasan singkat action&quot;)"></textarea>
                   <p v-if="form.errors[`project_actions.${index}.description`]" class="field-error">{{ form.errors[`project_actions.${index}.description`] }}</p>
                 </div>
               </div>
@@ -573,45 +573,45 @@
               <span class="material-icons">attach_money</span>
             </div>
             <div>
-              <h2>Rincian Budget</h2>
-              <p>Catat estimasi dan realisasi biaya.</p>
+              <h2>{{ $t("Rincian Budget") }}</h2>
+              <p>{{ $t("Catat estimasi dan realisasi biaya.") }}</p>
             </div>
             <button type="button" class="chip-action" @click="addCost">
               <span class="material-icons">add</span>
-              Tambah Biaya
+              {{ $t("Tambah Biaya") }}
             </button>
           </div>
 
           <div v-if="!form.project_costs.length" class="empty-hint">
-            Tambahkan biaya untuk memonitor alokasi budget.
+            {{ $t("Tambahkan biaya untuk memonitor alokasi budget.") }}
           </div>
 
           <div class="stacked-list">
             <div v-for="(cost, index) in form.project_costs" :key="`cost-${index}`" class="card-row overflow-visible">
               <div class="card-row__grid card-row__grid--two">
                 <div class="panel-field">
-                  <label>Item Biaya</label>
-                  <input v-model="cost.cost_item" type="text" placeholder="Contoh: Hardware" />
+                  <label>{{ $t("Item Biaya") }}</label>
+                  <input v-model="cost.cost_item" type="text" :placeholder="$t(&quot;Contoh: Hardware&quot;)" />
                   <p v-if="form.errors[`project_costs.${index}.cost_item`]" class="field-error">{{ form.errors[`project_costs.${index}.cost_item`] }}</p>
                 </div>
                 <div class="panel-field">
-                  <label>Kategori</label>
-                  <input v-model="cost.category" type="text" placeholder="Contoh: Infrastruktur" />
+                  <label>{{ $t("Kategori") }}</label>
+                  <input v-model="cost.category" type="text" :placeholder="$t(&quot;Contoh: Infrastruktur&quot;)" />
                   <p v-if="form.errors[`project_costs.${index}.category`]" class="field-error">{{ form.errors[`project_costs.${index}.category`] }}</p>
                 </div>
                 <div class="panel-field">
-                  <label>Estimasi</label>
+                  <label>{{ $t("Estimasi") }}</label>
                   <input v-model.number="cost.estimated_cost" type="number" min="0" :max="MAX_COST_VALUE" step="0.01" placeholder="0" />
                   <p v-if="form.errors[`project_costs.${index}.estimated_cost`]" class="field-error">{{ form.errors[`project_costs.${index}.estimated_cost`] }}</p>
                 </div>
                 <div class="panel-field">
-                  <label>Aktual</label>
+                  <label>{{ $t("Aktual") }}</label>
                   <input v-model.number="cost.actual_cost" type="number" min="0" :max="MAX_COST_VALUE" step="0.01" placeholder="0" />
                   <p v-if="form.errors[`project_costs.${index}.actual_cost`]" class="field-error">{{ form.errors[`project_costs.${index}.actual_cost`] }}</p>
                 </div>
                 <div class="panel-field col-span-2">
-                  <label>Catatan</label>
-                  <textarea v-model="cost.notes" rows="2" placeholder="Catatan tambahan"></textarea>
+                  <label>{{ $t("Catatan") }}</label>
+                  <textarea v-model="cost.notes" rows="2" :placeholder="$t(&quot;Catatan tambahan&quot;)"></textarea>
                   <p v-if="form.errors[`project_costs.${index}.notes`]" class="field-error">{{ form.errors[`project_costs.${index}.notes`] }}</p>
                 </div>
               </div>
@@ -628,53 +628,53 @@
               <span class="material-icons">warning_amber</span>
             </div>
             <div>
-              <h2>Mitigasi Risiko</h2>
-              <p>Kelola risiko dan rencana mitigasinya.</p>
+              <h2>{{ $t("Mitigasi Risiko") }}</h2>
+              <p>{{ $t("Kelola risiko dan rencana mitigasinya.") }}</p>
             </div>
             <button type="button" class="chip-action" @click="addRisk">
               <span class="material-icons">add_alert</span>
-              Tambah Risiko
+              {{ $t("Tambah Risiko") }}
             </button>
           </div>
 
           <div v-if="!form.project_risks.length" class="empty-hint">
-            Identifikasi risiko untuk mengurangi potensi kendala.
+            {{ $t("Identifikasi risiko untuk mengurangi potensi kendala.") }}
           </div>
 
           <div class="stacked-list">
             <div v-for="(risk, index) in form.project_risks" :key="`risk-${index}`" class="card-row overflow-visible">
               <div class="card-row__grid card-row__grid--two">
                 <div class="panel-field">
-                  <label>Nama Risiko</label>
-                  <input v-model="risk.name" type="text" placeholder="Contoh: Delay supplier" />
+                  <label>{{ $t("Nama Risiko") }}</label>
+                  <input v-model="risk.name" type="text" :placeholder="$t(&quot;Contoh: Delay supplier&quot;)" />
                   <p v-if="form.errors[`project_risks.${index}.name`]" class="field-error">{{ form.errors[`project_risks.${index}.name`] }}</p>
                 </div>
                 <div class="panel-field">
                   <label>Status</label>
                   <FancySelect v-model="risk.status_id" :options="statusSelectOptions" />
-                  <p class="mt-1 text-xs text-slate-400">Pilih status risiko.</p>
+                  <p class="mt-1 text-xs text-slate-400">{{ $t("Pilih status risiko.") }}</p>
                   <p v-if="form.errors[`project_risks.${index}.status_id`]" class="field-error">{{ form.errors[`project_risks.${index}.status_id`] }}</p>
                 </div>
                 <div class="panel-field">
-                  <label>Dampak</label>
+                  <label>{{ $t("Dampak") }}</label>
                   <FancySelect v-model="risk.impact" :options="riskImpactOptions" />
-                  <p class="mt-1 text-xs text-slate-400">Pilih tingkat dampak risiko.</p>
+                  <p class="mt-1 text-xs text-slate-400">{{ $t("Pilih tingkat dampak risiko.") }}</p>
                   <p v-if="form.errors[`project_risks.${index}.impact`]" class="field-error">{{ form.errors[`project_risks.${index}.impact`] }}</p>
                 </div>
                 <div class="panel-field">
-                  <label>Kemungkinan</label>
+                  <label>{{ $t("Kemungkinan") }}</label>
                   <FancySelect v-model="risk.likelihood" :options="riskLikelihoodOptions" />
-                  <p class="mt-1 text-xs text-slate-400">Pilih kemungkinan terjadinya risiko.</p>
+                  <p class="mt-1 text-xs text-slate-400">{{ $t("Pilih kemungkinan terjadinya risiko.") }}</p>
                   <p v-if="form.errors[`project_risks.${index}.likelihood`]" class="field-error">{{ form.errors[`project_risks.${index}.likelihood`] }}</p>
                 </div>
                 <div class="panel-field col-span-2">
-                  <label>Deskripsi</label>
-                  <textarea v-model="risk.description" rows="2" placeholder="Jelaskan risiko"></textarea>
+                  <label>{{ $t("Deskripsi") }}</label>
+                  <textarea v-model="risk.description" rows="2" :placeholder="$t(&quot;Jelaskan risiko&quot;)"></textarea>
                   <p v-if="form.errors[`project_risks.${index}.description`]" class="field-error">{{ form.errors[`project_risks.${index}.description`] }}</p>
                 </div>
                 <div class="panel-field col-span-2">
-                  <label>Rencana Mitigasi</label>
-                  <textarea v-model="risk.mitigation_plan" rows="2" placeholder="Langkah mitigasi"></textarea>
+                  <label>{{ $t("Rencana Mitigasi") }}</label>
+                  <textarea v-model="risk.mitigation_plan" rows="2" :placeholder="$t(&quot;Langkah mitigasi&quot;)"></textarea>
                   <p v-if="form.errors[`project_risks.${index}.mitigation_plan`]" class="field-error">{{ form.errors[`project_risks.${index}.mitigation_plan`] }}</p>
                 </div>
               </div>
@@ -692,51 +692,51 @@
             </div>
             <div>
               <h2>Deliverables</h2>
-              <p>Keluaran utama project dan status verifikasi.</p>
+              <p>{{ $t("Keluaran utama project dan status verifikasi.") }}</p>
             </div>
             <button type="button" class="chip-action" @click="addDeliverable">
               <span class="material-icons">playlist_add</span>
-              Tambah Deliverable
+              {{ $t("Tambah Deliverable") }}
             </button>
           </div>
 
           <div v-if="!form.project_deliverables.length" class="empty-hint">
-            Tambahkan deliverable untuk menandai output project.
+            {{ $t("Tambahkan deliverable untuk menandai output project.") }}
           </div>
 
           <div class="stacked-list">
             <div v-for="(deliverable, index) in form.project_deliverables" :key="`deliverable-${index}`" class="card-row overflow-visible">
               <div class="card-row__grid card-row__grid--two">
                 <div class="panel-field col-span-2">
-                  <label>Nama Deliverable</label>
-                  <input v-model="deliverable.name" type="text" placeholder="Contoh: Dashboard Analytics" />
+                  <label>{{ $t("Nama Deliverable") }}</label>
+                  <input v-model="deliverable.name" type="text" :placeholder="$t(&quot;Contoh: Dashboard Analytics&quot;)" />
                   <p v-if="form.errors[`project_deliverables.${index}.name`]" class="field-error">{{ form.errors[`project_deliverables.${index}.name`] }}</p>
                 </div>
                 <div class="panel-field">
                   <label>Status</label>
                   <FancySelect v-model="deliverable.status_id" :options="statusSelectOptions" />
-                  <p class="mt-1 text-xs text-slate-400">Pilih status deliverable.</p>
+                  <p class="mt-1 text-xs text-slate-400">{{ $t("Pilih status deliverable.") }}</p>
                   <p v-if="form.errors[`project_deliverables.${index}.status_id`]" class="field-error">{{ form.errors[`project_deliverables.${index}.status_id`] }}</p>
                 </div>
                 <div class="panel-field">
                   <label>Verified By</label>
                   <FancySelect v-model="deliverable.verified_by" :options="verifiedByOptions" />
-                  <p class="mt-1 text-xs text-slate-400">Pilih pihak yang memverifikasi deliverable.</p>
+                  <p class="mt-1 text-xs text-slate-400">{{ $t("Pilih pihak yang memverifikasi deliverable.") }}</p>
                   <p v-if="form.errors[`project_deliverables.${index}.verified_by`]" class="field-error">{{ form.errors[`project_deliverables.${index}.verified_by`] }}</p>
                 </div>
                 <div class="panel-field">
-                  <label>Selesai Pada</label>
+                  <label>{{ $t("Selesai Pada") }}</label>
                   <DatePickerFlatpickr v-model="deliverable.completed_at" :config="dateTimeConfig" placeholder="dd/mm/yyyy HH:mm" />
                   <p v-if="form.errors[`project_deliverables.${index}.completed_at`]" class="field-error">{{ form.errors[`project_deliverables.${index}.completed_at`] }}</p>
                 </div>
                 <div class="panel-field">
-                  <label>Terverifikasi Pada</label>
+                  <label>{{ $t("Terverifikasi Pada") }}</label>
                   <DatePickerFlatpickr v-model="deliverable.verified_at" :config="dateTimeConfig" placeholder="dd/mm/yyyy HH:mm" />
                   <p v-if="form.errors[`project_deliverables.${index}.verified_at`]" class="field-error">{{ form.errors[`project_deliverables.${index}.verified_at`] }}</p>
                 </div>
                 <div class="panel-field col-span-2">
-                  <label>Deskripsi</label>
-                  <textarea v-model="deliverable.description" rows="2" placeholder="Detail deliverable"></textarea>
+                  <label>{{ $t("Deskripsi") }}</label>
+                  <textarea v-model="deliverable.description" rows="2" :placeholder="$t(&quot;Detail deliverable&quot;)"></textarea>
                   <p v-if="form.errors[`project_deliverables.${index}.description`]" class="field-error">{{ form.errors[`project_deliverables.${index}.description`] }}</p>
                 </div>
               </div>
@@ -753,20 +753,20 @@
               <span class="material-icons">attach_file</span>
             </div>
             <div>
-              <h2>Lampiran</h2>
-              <p>Unggah dokumen pendukung project.</p>
+              <h2>{{ $t("Lampiran") }}</h2>
+              <p>{{ $t("Unggah dokumen pendukung project.") }}</p>
             </div>
             <label class="toggle">
               <input v-model="showUploader" type="checkbox" />
-              <span>Tambahkan lampiran baru</span>
+              <span>{{ $t("Tambahkan lampiran baru") }}</span>
             </label>
           </div>
 
           <div v-if="showTicketAttachmentsSection" class="mt-3 space-y-2">
             <p class="text-xs font-medium text-slate-600 dark:text-slate-300">
-              Lampiran dari ticket terkait:
+              {{ $t("Lampiran dari ticket terkait:") }}
               <span v-if="ticketAttachmentList.length">{{ ticketAttachmentList.length }} file.</span>
-              <span v-else>Belum ada lampiran ticket.</span>
+              <span v-else>{{ $t("Belum ada lampiran ticket.") }}</span>
             </p>
             <TicketAttachmentList :attachments="ticketAttachmentList" />
           </div>
@@ -775,7 +775,7 @@
             <div v-show="showUploader" class="attachment-uploader space-y-3">
               <div class="space-y-2">
                 <div>
-                  <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Jenis File</label>
+                  <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t("Jenis File") }}</label>
                   <FancySelect v-model="selectedAttachmentFilter" :options="attachmentFilterSelectOptions" class="mt-1" />
                   <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ attachmentFilterHint }}</p>
                 </div>
@@ -791,26 +791,26 @@
                     @error="handleUploadError"
                   />
                   <div class="mt-2 flex flex-wrap items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                    <span>{{ attachmentIds.length ? attachmentIds.length + ' file siap dikirim' : 'Belum ada file siap dikirim' }}</span>
+                    <span>{{ attachmentIds.length ? attachmentIds.length + ' file siap dikirim' : $t("Belum ada file siap dikirim") }}</span>
                     <button
                       v-if="attachmentIds.length"
                       type="button"
                       class="text-indigo-600 hover:underline dark:text-indigo-400"
                       @click="clearNewAttachments"
                     >
-                      Bersihkan Lampiran
+                      {{ $t("Bersihkan Lampiran") }}
                     </button>
                   </div>
                 </div>
               </div>
-              <p v-if="uploaderDisabled" class="field-hint text-amber-600">Pilih jenis file untuk mengaktifkan unggahan.</p>
+              <p v-if="uploaderDisabled" class="field-hint text-amber-600">{{ $t("Pilih jenis file untuk mengaktifkan unggahan.") }}</p>
               <p v-if="uploadError" class="field-error">{{ uploadError }}</p>
               <p v-if="form.errors.attachments" class="field-error">{{ form.errors.attachments }}</p>
             </div>
           </transition>
 
           <div v-if="existingAttachments.length" class="attachment-list">
-            <header>Lampiran Saat Ini</header>
+            <header>{{ $t("Lampiran Saat Ini") }}</header>
             <ul>
               <li v-for="item in existingAttachments" :key="item.id">
                 <div>
@@ -818,9 +818,9 @@
                   <span v-if="item.size" class="size">({{ formatSize(item.size) }})</span>
                 </div>
                 <div class="attachment-actions">
-                  <a :href="item.view_url" target="_blank">Lihat</a>
-                  <a :href="item.download_url">Unduh</a>
-                  <button type="button" @click="removeExistingAttachment(item)">Hapus</button>
+                  <a :href="item.view_url" target="_blank">{{ $t("Lihat") }}</a>
+                  <a :href="item.download_url">{{ $t("Unduh") }}</a>
+                  <button type="button" @click="removeExistingAttachment(item)">{{ $t("Hapus") }}</button>
                 </div>
               </li>
             </ul>
@@ -830,7 +830,7 @@
         <footer class="edit-actions">
           <Link :href="meta.backUrl || route('projects.report')" class="btn-secondary">
             <span class="material-icons">close</span>
-            Batal
+            {{ $t("Batal") }}
           </Link>
           <button type="submit" class="btn-primary" :disabled="form.processing">
             <span class="material-icons" v-if="form.processing">hourglass_top</span>
@@ -844,6 +844,8 @@
 </template>
 
 <script setup>
+import { translateUi as uiText } from '../../i18n'
+
 import { useFormDraft } from '@/composables/useFormDraft';
 import DraftNotice from '@/Components/DraftNotice.vue';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
@@ -863,11 +865,11 @@ const props = defineProps({
 });
 
 const steps = [
-  { key: 'overview', label: 'Informasi Utama' },
-  { key: 'timeline', label: 'Deskripsi & Timeline' },
+  { key: 'overview', label: uiText("Informasi Utama") },
+  { key: 'timeline', label: uiText("Deskripsi & Timeline") },
   { key: 'team', label: 'Tim & Action Plan' },
   { key: 'budget', label: 'Budget & Risiko' },
-  { key: 'deliverables', label: 'Deliverables & Lampiran' },
+  { key: 'deliverables', label: uiText("Deliverables & Lampiran") },
 ];
 
 const stepFieldPrefixes = {
@@ -990,15 +992,15 @@ function ensureStepMounted(key) {
   }
 }
 
-const breadcrumbLabel = computed(() => (isCreate.value ? 'Project � Buat' : 'Project � Ubah'));
-const titleLabel = computed(() => (isCreate.value ? 'Buat Project' : 'Edit Project'));
+const breadcrumbLabel = computed(() => (isCreate.value ? uiText("Project � Buat") : uiText("Project � Ubah")));
+const titleLabel = computed(() => (isCreate.value ? uiText("Buat Project") : 'Edit Project'));
 const subtitleLabel = computed(() => (
   isCreate.value
-    ? 'Lengkapi informasi project baru sebelum dipublikasikan.'
-    : 'Perbarui informasi project tanpa meninggalkan tampilan Inertia.'
+    ? uiText("Lengkapi informasi project baru sebelum dipublikasikan.")
+    : uiText('Perbarui informasi project tanpa meninggalkan tampilan Inertia.')
 ));
-const submitButtonLabel = computed(() => (isCreate.value ? 'Simpan Project' : 'Simpan Perubahan'));
-const ticketPlaceholder = computed(() => (isCreate.value ? '— Tanpa Ticket —' : '— Tidak diubah —'));
+const submitButtonLabel = computed(() => (isCreate.value ? uiText("Simpan Project") : uiText("Simpan Perubahan")));
+const ticketPlaceholder = computed(() => (isCreate.value ? '— Tanpa Ticket —' : uiText("— Tidak diubah —")));
 const ticketOptions = computed(() => props.options?.tickets || []);
 const metaTicketUnits = computed(() => {
   const raw = props.meta?.ticketUnits;
@@ -1016,7 +1018,7 @@ const ticketLookup = computed(() => {
   });
   return map;
 });
-const ticketUnitPlaceholder = 'Unit Tidak Tercatat';
+const ticketUnitPlaceholder = uiText("Unit Tidak Tercatat");
 const ticketUnits = computed(() => {
   const set = new Set();
   // unit dari user/agent (allUnits sudah mencakup metaUnitOptions + userOptions) — ikuti urutan create task
@@ -1055,7 +1057,7 @@ const ticketsByUnit = computed(() => {
   });
   return map;
 });
-const primaryButtonLabel = computed(() => (isLastStep.value ? submitButtonLabel.value : 'Lanjut'));
+const primaryButtonLabel = computed(() => (isLastStep.value ? submitButtonLabel.value : uiText('Lanjut')));
 const primaryButtonIcon = computed(() => (isLastStep.value ? 'save' : 'arrow_forward'));
 const statusGuide = computed(() => props.meta?.statusGuide ?? null);
 const statusLocked = computed(() => Boolean(props.meta?.lockStatus));
@@ -1249,7 +1251,7 @@ const filteredWorkflowStatuses = computed(() => {
     return {
       ...option,
       disabled: option.disabled || isLockedNew,
-      name: isLockedNew ? 'New' : option.name,
+      name: isLockedNew ? uiText("New") : option.name,
     };
   });
 });
@@ -1292,7 +1294,7 @@ function userInfo(member) {
   return userLookup.value.get(member.user_id) ?? null;
 }
 
-const unitPlaceholderLabel = 'Unit Tidak Tersedia';
+const unitPlaceholderLabel = uiText("Unit Tidak Tersedia");
 const metaUnitOptions = computed(() => {
   const raw = props.meta?.unitOptions;
   if (Array.isArray(raw)) {
@@ -1665,7 +1667,7 @@ const showUploader = ref(true);
 const existingAttachments = ref(props.project.attachments ? [...props.project.attachments] : []);
 const attachmentFilterChoices = attachmentFilterOptions;
 const attachmentFilterSelectOptions = computed(() => [
-  { value: '', label: 'Pilih extensi file' },
+  { value: '', label: uiText("Pilih extensi file") },
   ...attachmentFilterChoices,
 ]);
 const selectedAttachmentFilter = ref('');
@@ -1676,7 +1678,7 @@ const attachmentMimeTypes = computed(() => activeAttachmentFilter.value?.mimeTyp
 const attachmentAllowedExtensions = computed(() => activeAttachmentFilter.value?.extensions ?? []);
 const uploaderDisabled = computed(() => !showUploader.value || !activeAttachmentFilter.value);
 const attachmentFilterHint = computed(() => (
-  activeAttachmentFilter.value ? `Hanya ${activeAttachmentFilter.value.label}` : 'Pilih jenis file untuk mengaktifkan unggahan.'
+  activeAttachmentFilter.value ? (uiText("Hanya ") + (activeAttachmentFilter.value.label)) : uiText("Pilih jenis file untuk mengaktifkan unggahan.")
 ));
 const uploaderRef = ref(null);
 
@@ -1753,7 +1755,7 @@ function handleRemoved(id) {
 }
 
 function handleUploadError(error) {
-  uploadError.value = typeof error === 'string' ? error : 'Upload gagal, coba lagi.';
+  uploadError.value = typeof error === 'string' ? error : uiText("Upload gagal, coba lagi.");
 }
 
 function clearNewAttachments() {
@@ -1795,7 +1797,7 @@ function formatLikelihood(value) {
 
 function removeExistingAttachment(item) {
   if (!item?.id) return;
-  if (!confirm('Hapus lampiran ini?')) return;
+  if (!confirm(uiText("Hapus lampiran ini?"))) return;
 
   router.delete(route('attachments.destroy', { attachment: item.id }), {
     preserveScroll: true,

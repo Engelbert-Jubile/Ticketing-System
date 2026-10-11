@@ -324,9 +324,9 @@ class TicketController extends Controller
     {
         return [
             'default' => 'Status awal tiket selalu New.',
-            'agent' => 'Status In Progress dan Confirmation hanya dapat diubah oleh agent atau assigned user.',
-            'requester' => 'Status Revision, Done, Cancelled, dan On Hold hanya dapat diubah oleh Requester.',
-            'admin' => 'Hanya Super Admin yang dapat mengubah seluruh status di luar aturan di atas.',
+            'agent' => __('Status In Progress dan Confirmation hanya dapat diubah oleh agent atau assigned user.'),
+            'requester' => __('Status Revision, Done, Cancelled, dan On Hold hanya dapat diubah oleh Requester.'),
+            'admin' => __('Hanya Super Admin yang dapat mengubah seluruh status di luar aturan di atas.'),
         ];
     }
 
@@ -496,7 +496,7 @@ class TicketController extends Controller
             $defaults['description'] = '<p>'.nl2br(e($template->body)).'</p>';
             if ($template->default_assignee_id && $users->contains('id', $template->default_assignee_id)) {
                 $defaults['assigned_user_ids'] = [(int) $template->default_assignee_id];
-                $defaults['assignment_reason'] = 'PIC disarankan oleh template '.$template->title.'. Anda dapat mengubahnya.';
+                $defaults['assignment_reason'] = 'PIC disarankan oleh template '.$template->title.__('. Anda dapat mengubahnya.');
             }
         }
 
@@ -666,14 +666,14 @@ class TicketController extends Controller
         $idempotencyKey = sprintf('tickets:store:%d:%s', (int) ($actingUser?->id ?? 0), $submissionToken);
         $lock = Cache::lock($idempotencyKey.':lock', 30);
         if (! $lock->get()) {
-            return back()->with('error', 'Penyimpanan ticket sedang diproses.');
+            return back()->with('error', __('Penyimpanan ticket sedang diproses.'));
         }
 
         try {
             $existingTicketId = Cache::get($idempotencyKey);
             if ($existingTicketId && ($existingTicket = Ticket::find($existingTicketId))) {
                 return redirect()->route('tickets.report.detail.view', ['locale' => app()->getLocale(), 'ticket' => $existingTicket->ticket_no])
-                    ->with('success', 'Ticket sudah tersimpan.');
+                    ->with('success', __('Ticket sudah tersimpan.'));
             }
 
             $ticket = DB::transaction(function () use ($data, $validIds, $template) {
@@ -924,7 +924,7 @@ class TicketController extends Controller
         }
         $this->attachments->adoptFromServerIds($attachIds, $ticket);
 
-        return redirect()->route('tickets.attachments.manage', $ticket)->with('success', 'Lampiran diperbarui.');
+        return redirect()->route('tickets.attachments.manage', $ticket)->with('success', __('Lampiran diperbarui.'));
     }
 
     public function update(Request $request, string $locale, Ticket $ticket)
@@ -970,7 +970,7 @@ class TicketController extends Controller
             } catch (\Throwable) {
             }
 
-            return redirect()->to($backTo)->with('success', 'Lampiran diperbarui.');
+            return redirect()->to($backTo)->with('success', __('Lampiran diperbarui.'));
         }
 
         $missingValue = '__input_missing__';
@@ -1024,7 +1024,7 @@ class TicketController extends Controller
 
         if ($statusProvided && $requestedStatus !== $currentStatus && ! $ticket->canUserSetStatus($request->user(), $requestedStatus)) {
             return back()->withErrors([
-                'status' => 'Anda tidak memiliki izin untuk mengubah status tiket ini.',
+                'status' => __('Anda tidak memiliki izin untuk mengubah status tiket ini.'),
             ]);
         }
 
@@ -1255,14 +1255,14 @@ class TicketController extends Controller
     {
         UnitVisibility::ensureTicketAccess($request->user(), $ticket);
         $previousStatus = WorkflowStatus::normalize($ticket->status ?? WorkflowStatus::NEW);
-        abort_unless(in_array($status, WorkflowStatus::all(), true), 422, 'Status tidak valid.');
+        abort_unless(in_array($status, WorkflowStatus::all(), true), 422, __('Status tidak valid.'));
         $statusNormalized = WorkflowStatus::normalize($status);
         if (! in_array($statusNormalized, $this->statuses(), true)) {
             return back()->with('error', 'Invalid status.');
         }
 
         if (! $ticket->canUserSetStatus($request->user(), $statusNormalized)) {
-            return back()->with('error', 'Anda tidak memiliki izin untuk mengubah status tiket ini.');
+            return back()->with('error', __('Anda tidak memiliki izin untuk mengubah status tiket ini.'));
         }
 
         $ticket->update([
@@ -1394,7 +1394,7 @@ class TicketController extends Controller
             ->get();
 
         $tz = config('app.timezone');
-        $statusLabel = $statusNormalized ? WorkflowStatus::label($statusNormalized) : 'Semua';
+        $statusLabel = $statusNormalized ? WorkflowStatus::label($statusNormalized) : __('Semua');
 
         $rows = $tickets->map(function (Ticket $ticket) use ($tz) {
             $status = WorkflowStatus::normalize($ticket->status ?? WorkflowStatus::NEW);
@@ -1413,18 +1413,18 @@ class TicketController extends Controller
 
         $columns = [
             ['label' => 'Ticket No'],
-            ['label' => 'Judul'],
+            ['label' => __('Judul')],
             ['label' => 'Status'],
-            ['label' => 'Prioritas'],
-            ['label' => 'Jenis'],
-            ['label' => 'Jatuh Tempo'],
-            ['label' => 'Diperbarui'],
+            ['label' => __('Prioritas')],
+            ['label' => __('Jenis')],
+            ['label' => __('Jatuh Tempo')],
+            ['label' => __('Diperbarui')],
             ['label' => 'Requester'],
         ];
 
         $meta = [
             'filters' => [
-                'Pencarian' => $filters['q'] !== '' ? $filters['q'] : 'Semua',
+                'Pencarian' => $filters['q'] !== '' ? $filters['q'] : __('Semua'),
                 'Status' => $statusLabel,
                 'Total Data' => number_format($tickets->count()),
             ],
@@ -1432,7 +1432,7 @@ class TicketController extends Controller
 
         $filename = sprintf('tickets-report-%s.pdf', now()->format('Ymd-His'));
 
-        return $this->reportExport->downloadPdf('Laporan Tiket', $columns, $rows, $meta, $filename);
+        return $this->reportExport->downloadPdf(__('Laporan Tiket'), $columns, $rows, $meta, $filename);
     }
 
     private function ticketReportSummary(array $filters, string $type, ?User $viewer = null): array
@@ -1785,7 +1785,7 @@ class TicketController extends Controller
 
         $description = $this->sanitizeDescription((string) ($detail['description'] ?? ''));
         if (trim(strip_tags($description)) === '') {
-            $description = '<p>Tidak ada deskripsi.</p>';
+            $description = __('<p>Tidak ada deskripsi.</p>');
         }
 
         $assignedUsers = $detail['assigned_users'] ?? [];

@@ -1,4 +1,6 @@
 <script setup>
+import { translateUi as uiText } from '../../i18n'
+
 defineOptions({
   layout: page => page,
 });
@@ -8,9 +10,9 @@ const props = defineProps({
   code: { type: String, default: '403' },
   message: {
     type: String,
-    default: 'Anda tidak memiliki hak akses untuk halaman ini. Silakan hubungi admin jika ini keliru.',
+    default: () => uiText("Anda tidak memiliki hak akses untuk halaman ini. Silakan hubungi admin jika ini keliru."),
   },
-  buttonLabel: { type: String, default: 'Kembali' },
+  buttonLabel: { type: String, default: () => uiText("Kembali") },
   buttonUrl: { type: String, default: '/' },
   illustration: { type: String, default: '/images/access-denied-403.svg' },
 });
@@ -22,7 +24,7 @@ const props = defineProps({
       <section class="card" role="dialog" aria-labelledby="error-title" aria-describedby="error-message">
         <div class="content">
           <div class="art" :style="{ backgroundImage: `url(${props.illustration})` }" aria-hidden="true" />
-          <p class="helper">Akses dibatasi</p>
+          <p class="helper">{{ $t("Akses dibatasi") }}</p>
           <h1 id="error-code" class="code">{{ props.code }}</h1>
           <p id="error-title" class="title">{{ props.title }}</p>
           <p id="error-message" class="subtitle">{{ props.message }}</p>

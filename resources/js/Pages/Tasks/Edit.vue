@@ -3,23 +3,23 @@
     <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h1 class="text-3xl font-semibold text-slate-900 dark:text-slate-100">Edit Task</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-300">Perbarui informasi task, penanggung jawab, dan lampiran.</p>
+        <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Perbarui informasi task, penanggung jawab, dan lampiran.") }}</p>
       </div>
       <Link
         :href="taskShowUrl"
         class="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
       >
         <span class="material-icons text-base">visibility</span>
-        Lihat Task
+        {{ $t("Lihat Task") }}
       </Link>
     </header>
 
     <form class="space-y-6" @submit.prevent="submit">
       <section class="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/80">
-        <h2 class="section-title">Informasi Utama</h2>
+        <h2 class="section-title">{{ $t("Informasi Utama") }}</h2>
         <div class="grid gap-4 md:grid-cols-2">
           <div>
-            <label class="field-label" for="title">Judul Task</label>
+            <label class="field-label" for="title">{{ $t("Judul Task") }}</label>
             <input id="title" v-model="form.title" type="text" class="field-input" />
             <p v-if="form.errors.title" class="field-error">{{ form.errors.title }}</p>
           </div>
@@ -27,7 +27,7 @@
             <label class="field-label">Status</label>
             <FancySelect v-model="form.status" :options="statusDropdownOptions" :disabled="statusLocked" />
             <p v-if="form.errors.status" class="field-error">{{ form.errors.status }}</p>
-            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Status awal: {{ statusDefaultLabel }}.</p>
+            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ $t("Status awal:") }} {{ statusDefaultLabel }}.</p>
             <ul v-if="statusGuide" class="mt-1 list-disc space-y-0.5 pl-5 text-xs text-slate-500 dark:text-slate-400">
               <li>{{ statusGuide.agent }}</li>
               <li>{{ statusGuide.requester }}</li>
@@ -35,27 +35,27 @@
             </ul>
           </div>
           <div>
-            <label class="field-label">Prioritas</label>
+            <label class="field-label">{{ $t("Prioritas") }}</label>
             <FancySelect v-model="form.priority" :options="priorityOptions" />
             <p v-if="form.errors.priority" class="field-error">{{ form.errors.priority }}</p>
           </div>
           <div class="panel-field panel-field--full ticket-linker overflow-visible" ref="ticketCardRef">
-            <label class="field-label">Ticket Terkait</label>
+            <label class="field-label">{{ $t("Ticket Terkait") }}</label>
             <div class="relative z-30 ticket-card overflow-visible rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
               <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">Hubungkan ke Ticket Aktif</p>
-                  <p class="text-xs text-slate-400">Pilih ticket sesuai unit.</p>
+                  <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">{{ $t("Hubungkan ke Ticket Aktif") }}</p>
+                  <p class="text-xs text-slate-400">{{ $t("Pilih ticket sesuai unit.") }}</p>
                 </div>
                 <div class="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                  <span>{{ selectedTicketOption ? '1 ticket terpilih' : 'Belum ada pilihan' }}</span>
+                  <span>{{ selectedTicketOption ? '1 ticket terpilih' : $t("Belum ada pilihan") }}</span>
                   <button
                     v-if="selectedTicketOption"
                     type="button"
                     class="rounded-full border border-rose-200 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-rose-600 transition hover:bg-rose-50 dark:border-rose-500/40 dark:text-rose-200 dark:hover:bg-rose-500/10"
                     @click="clearTicketSelection"
                   >
-                    Hapus
+                    {{ $t("Hapus") }}
                   </button>
                 </div>
               </div>
@@ -72,10 +72,10 @@
                       class="inline-flex items-center gap-2 rounded-lg border border-indigo-200/70 bg-white px-3 py-1 text-xs font-medium text-indigo-700 dark:border-indigo-500/40 dark:bg-slate-900/70 dark:text-indigo-200"
                     >
                       <span class="font-semibold">{{ selectedTicketOption.ticket_no }}</span>
-                      <span class="max-w-[160px] truncate text-[11px] text-slate-400">{{ selectedTicketOption.title || 'Tanpa judul' }}</span>
+                      <span class="max-w-[160px] truncate text-[11px] text-slate-400">{{ selectedTicketOption.title || $t('Tanpa judul') }}</span>
                       <span class="rounded-full border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-[10px] uppercase tracking-wide text-indigo-600 dark:border-indigo-400/40 dark:bg-transparent">{{ selectedTicketOption.unit || ticketUnitPlaceholder }}</span>
                     </span>
-                    <span v-else class="text-xs font-normal text-slate-400">Pilih ticket aktif sesuai unit Anda</span>
+                    <span v-else class="text-xs font-normal text-slate-400">{{ $t("Pilih ticket aktif sesuai unit Anda") }}</span>
                   </div>
                   <span class="material-icons text-base text-slate-400 transition duration-200" :class="ticketDropdownOpen ? 'rotate-180 text-blue-500' : ''">expand_more</span>
                 </button>
@@ -115,29 +115,29 @@
                           />
                           <div class="min-w-0">
                             <p class="font-semibold text-slate-700 dark:text-slate-100">{{ ticket.ticket_no }}</p>
-                            <p class="truncate text-[11px] text-slate-400">{{ ticket.title || 'Tanpa judul' }}</p>
+                            <p class="truncate text-[11px] text-slate-400">{{ ticket.title || $t('Tanpa judul') }}</p>
                             <p class="text-[10px] text-slate-400">{{ ticket.unit || ticketUnitPlaceholder }}</p>
                           </div>
                         </div>
-                        <StatusPill :status="ticket.status || ticket.status_badge" :label="ticket.status_label || 'Aktif'" size="sm" />
+                        <StatusPill :status="ticket.status || ticket.status_badge" :label="ticket.status_label || $t(&quot;Aktif&quot;)" size="sm" />
                       </label>
-                      <p v-if="!activeTicketList.length" class="px-1 text-sm text-slate-400">Tidak ada ticket pada unit ini.</p>
+                      <p v-if="!activeTicketList.length" class="px-1 text-sm text-slate-400">{{ $t("Tidak ada ticket pada unit ini.") }}</p>
                     </div>
                     <div class="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400">
-                      <span>Hanya menampilkan ticket yang belum berstatus Done / Cancelled.</span>
-                      <button type="button" class="text-indigo-500 hover:underline" @click="clearTicketSelection">Tanpa ticket</button>
+                      <span>{{ $t("Hanya menampilkan ticket yang belum berstatus Done / Cancelled.") }}</span>
+                      <button type="button" class="text-indigo-500 hover:underline" @click="clearTicketSelection">{{ $t("Tanpa ticket") }}</button>
                     </div>
                   </div>
                 </transition>
               </div>
-              <p class="mt-2 text-xs text-slate-400">Jika tidak ada ticket yang relevan, biarkan kosong untuk task mandiri.</p>
+              <p class="mt-2 text-xs text-slate-400">{{ $t("Jika tidak ada ticket yang relevan, biarkan kosong untuk task mandiri.") }}</p>
               <p v-if="form.errors.ticket_id" class="field-error">{{ form.errors.ticket_id }}</p>
             </div>
           </div>
         </div>
 
         <div class="mt-4 relative z-0">
-          <label class="field-label">Deskripsi</label>
+          <label class="field-label">{{ $t("Deskripsi") }}</label>
           <div class="rounded-2xl border border-slate-200/80 dark:border-slate-700/60">
             <RichTextQuill v-model="form.description" />
           </div>
@@ -146,7 +146,7 @@
       </section>
 
       <section class="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/80">
-        <h2 class="section-title">Penugasan &amp; Timeline</h2>
+        <h2 class="section-title">{{ $t("Penugasan & Timeline") }}</h2>
         <div class="grid gap-4 md:grid-cols-2">
           <div class="relative" ref="agentCardRef">
             <label class="field-label">Agent</label>
@@ -165,7 +165,7 @@
                     <span class="material-icons text-[13px]">close</span>
                   </button>
                 </span>
-                <span v-else class="text-xs font-normal text-slate-400">Pilih agent utama</span>
+                <span v-else class="text-xs font-normal text-slate-400">{{ $t("Pilih agent utama") }}</span>
               </div>
               <span class="material-icons text-base text-slate-400 transition duration-200" :class="agentDropdownOpen ? 'rotate-180 text-blue-500' : ''">expand_more</span>
             </button>
@@ -185,7 +185,7 @@
                   >
                     {{ unit }}
                   </button>
-                  <p v-if="!allUnits.length" class="text-xs text-slate-400">Belum ada unit.</p>
+                  <p v-if="!allUnits.length" class="text-xs text-slate-400">{{ $t("Belum ada unit.") }}</p>
                 </div>
                 <div class="mt-3 max-h-64 space-y-2 overflow-y-auto pr-1">
                   <label
@@ -202,12 +202,12 @@
                       />
                       <div>
                         <p class="font-semibold text-slate-700 dark:text-slate-100">{{ user.label }}</p>
-                        <p class="text-xs text-slate-400">{{ user.email || '-' }} - {{ user.unit || 'Unit tidak tercatat' }}</p>
+                        <p class="text-xs text-slate-400">{{ user.email || '-' }} - {{ user.unit || $t("Unit tidak tercatat") }}</p>
                       </div>
                     </div>
-                    <span v-if="form.assignee_id === user.id" class="rounded-full bg-blue-50 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-blue-600 dark:bg-blue-500/10 dark:text-blue-200">Dipilih</span>
+                    <span v-if="form.assignee_id === user.id" class="rounded-full bg-blue-50 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-blue-600 dark:bg-blue-500/10 dark:text-blue-200">{{ $t("Dipilih") }}</span>
                   </label>
-                  <p v-if="!activeAgentList.length" class="text-sm text-slate-400">Belum ada agent pada unit ini.</p>
+                  <p v-if="!activeAgentList.length" class="text-sm text-slate-400">{{ $t("Belum ada agent pada unit ini.") }}</p>
                 </div>
               </div>
             </transition>
@@ -265,9 +265,9 @@
                             check
                           </span>
                         </button>
-                        <p v-if="!activeRequesterList.length" class="text-sm text-slate-400">Belum ada requester pada unit ini.</p>
+                        <p v-if="!activeRequesterList.length" class="text-sm text-slate-400">{{ $t("Belum ada requester pada unit ini.") }}</p>
                       </template>
-                      <p v-else class="text-sm text-slate-400">Pilih unit untuk melihat requester.</p>
+                      <p v-else class="text-sm text-slate-400">{{ $t("Pilih unit untuk melihat requester.") }}</p>
                     </div>
                   </div>
                 </transition>
@@ -275,7 +275,7 @@
             </template>
             <template v-else>
               <div class="field-input bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300">
-                {{ requesterLabel || 'Requester mengikuti data saat ini.' }}
+                {{ requesterLabel || $t("Requester mengikuti data saat ini.") }}
               </div>
             </template>
             <p v-if="form.errors.requester_id" class="field-error">{{ form.errors.requester_id }}</p>
@@ -300,7 +300,7 @@
                   <span class="material-icons text-[13px]">close</span>
                 </button>
               </span>
-              <span v-if="!selectedPicDetails.length" class="text-xs font-normal text-slate-400">Pilih PIC (bisa lebih dari satu)</span>
+              <span v-if="!selectedPicDetails.length" class="text-xs font-normal text-slate-400">{{ $t("Pilih PIC (bisa lebih dari satu)") }}</span>
             </div>
             <span class="material-icons text-base text-slate-400 transition duration-200" :class="picDropdownOpen ? 'rotate-180 text-emerald-500' : ''">expand_more</span>
           </button>
@@ -320,7 +320,7 @@
                 >
                   {{ unit }}
                 </button>
-                <p v-if="!allUnits.length" class="text-xs text-slate-400">Belum ada unit.</p>
+                <p v-if="!allUnits.length" class="text-xs text-slate-400">{{ $t("Belum ada unit.") }}</p>
               </div>
               <div class="mt-3 max-h-64 space-y-2 overflow-y-auto pr-1">
                 <label
@@ -337,17 +337,17 @@
                     />
                     <div>
                       <p class="font-semibold text-slate-700 dark:text-slate-100">{{ user.label }}</p>
-                      <p class="text-xs text-slate-400">{{ user.email || '-' }} - {{ user.unit || 'Unit tidak tercatat' }}</p>
+                      <p class="text-xs text-slate-400">{{ user.email || '-' }} - {{ user.unit || $t("Unit tidak tercatat") }}</p>
                     </div>
                   </div>
                   <span
                     v-if="form.assignees?.includes(user.id)"
                     class="rounded-full bg-emerald-50 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-200"
                   >
-                    Dipilih
+                    {{ $t("Dipilih") }}
                   </span>
                 </label>
-                <p v-if="!activePicList.length" class="text-sm text-slate-400">Belum ada PIC pada unit ini.</p>
+                <p v-if="!activePicList.length" class="text-sm text-slate-400">{{ $t("Belum ada PIC pada unit ini.") }}</p>
               </div>
             </div>
           </transition>
@@ -356,8 +356,8 @@
 
         <div class="mt-4 grid gap-4 md:grid-cols-2">
           <div>
-            <label class="field-label">Tenggat</label>
-            <DatePickerFlatpickr v-model="form.due_at" :config="dateConfig" placeholder="Pilih tanggal & waktu" />
+            <label class="field-label">{{ $t("Tenggat") }}</label>
+            <DatePickerFlatpickr v-model="form.due_at" :config="dateConfig" :placeholder="$t(&quot;Pilih tanggal & waktu&quot;)" />
             <p v-if="form.errors.due_at || form.errors.due_date" class="field-error">{{ form.errors.due_at || form.errors.due_date }}</p>
           </div>
           <div>
@@ -368,41 +368,41 @@
 
         <div class="mt-4 grid gap-4 md:grid-cols-2">
           <div>
-            <label class="field-label">Mulai</label>
-            <DatePickerFlatpickr v-model="form.start_date" :config="dateOnlyConfig" placeholder="Pilih tanggal mulai" />
+            <label class="field-label">{{ $t("Mulai") }}</label>
+            <DatePickerFlatpickr v-model="form.start_date" :config="dateOnlyConfig" :placeholder="$t(&quot;Pilih tanggal mulai&quot;)" />
             <p v-if="form.errors.start_date" class="field-error">{{ form.errors.start_date }}</p>
           </div>
           <div>
-            <label class="field-label">Selesai</label>
-            <DatePickerFlatpickr v-model="form.end_date" :config="dateOnlyConfig" placeholder="Pilih tanggal selesai" />
+            <label class="field-label">{{ $t("Selesai") }}</label>
+            <DatePickerFlatpickr v-model="form.end_date" :config="dateOnlyConfig" :placeholder="$t(&quot;Pilih tanggal selesai&quot;)" />
             <p v-if="form.errors.end_date" class="field-error">{{ form.errors.end_date }}</p>
           </div>
         </div>
 
         <div v-if="form.output_type === 'task_project'" class="mt-4 grid gap-4 md:grid-cols-3">
           <div>
-            <label class="field-label">Judul Project</label>
+            <label class="field-label">{{ $t("Judul Project") }}</label>
             <input v-model="form.project_title" type="text" class="field-input" />
           </div>
           <div>
-            <label class="field-label">Mulai</label>
+            <label class="field-label">{{ $t("Mulai") }}</label>
             <input v-model="form.project_start" type="date" class="field-input" />
           </div>
           <div>
-            <label class="field-label">Selesai</label>
+            <label class="field-label">{{ $t("Selesai") }}</label>
             <input v-model="form.project_end" type="date" class="field-input" />
           </div>
         </div>
       </section>
 
       <section class="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/80">
-        <h2 class="section-title">Lampiran</h2>
-        <p class="text-xs text-slate-500 dark:text-slate-400">Unggah lampiran baru atau kelola lampiran yang sudah ada.</p>
+        <h2 class="section-title">{{ $t("Lampiran") }}</h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400">{{ $t("Unggah lampiran baru atau kelola lampiran yang sudah ada.") }}</p>
         <div v-if="selectedTicketOption || initialTicketAttachments.length" class="mt-1 space-y-2">
           <p class="text-xs font-medium text-slate-600 dark:text-slate-300">
-            Lampiran dari ticket terkait:
+            {{ $t("Lampiran dari ticket terkait:") }}
             <span v-if="ticketAttachmentCount">{{ ticketAttachmentCount }} file.</span>
-            <span v-else>Belum ada lampiran ticket.</span>
+            <span v-else>{{ $t("Belum ada lampiran ticket.") }}</span>
           </p>
           <TicketAttachmentList :attachments="ticketAttachmentList" />
         </div>
@@ -417,8 +417,8 @@
               <div v-if="formatSize(attachment.size)" class="text-xs text-slate-400">{{ formatSize(attachment.size) }}</div>
             </div>
             <div class="flex items-center gap-2">
-              <a :href="attachment.view_url" target="_blank" class="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-semibold text-blue-600 transition hover:bg-blue-50 dark:border-blue-400/40 dark:text-blue-200 dark:hover:bg-blue-500/10">Lihat</a>
-              <a :href="attachment.download_url" class="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800">Unduh</a>
+              <a :href="attachment.view_url" target="_blank" class="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-semibold text-blue-600 transition hover:bg-blue-50 dark:border-blue-400/40 dark:text-blue-200 dark:hover:bg-blue-500/10">{{ $t("Lihat") }}</a>
+              <a :href="attachment.download_url" class="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800">{{ $t("Unduh") }}</a>
               <button
                 v-if="attachment.delete_url"
                 type="button"
@@ -428,14 +428,14 @@
               >
                 <span class="material-icons text-xs" v-if="deletingId === attachment.id">hourglass_top</span>
                 <span class="material-icons text-xs" v-else>delete</span>
-                Hapus
+                {{ $t("Hapus") }}
               </button>
             </div>
           </div>
         </div>
         <div class="mt-4 space-y-2">
           <div>
-            <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Jenis File</label>
+            <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t("Jenis File") }}</label>
             <FancySelect v-model="selectedAttachmentFilter" :options="attachmentFilterChoices" />
             <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ attachmentFilterHint }}</p>
           </div>
@@ -451,11 +451,11 @@
               @error="handleUploadError"
             />
             <div class="mt-2 flex flex-wrap items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-              <span>{{ attachmentIds.length ? attachmentIds.length + ' file siap diunggah' : 'Belum ada file siap diunggah' }}</span>
+              <span>{{ attachmentIds.length ? attachmentIds.length + ' file siap diunggah' : $t("Belum ada file siap diunggah") }}</span>
             </div>
           </div>
         </div>
-        <p v-if="uploaderDisabled" class="field-error text-amber-600">Pilih jenis file terlebih dahulu sebelum mengunggah.</p>
+        <p v-if="uploaderDisabled" class="field-error text-amber-600">{{ $t("Pilih jenis file terlebih dahulu sebelum mengunggah.") }}</p>
         <p v-if="form.errors.attachments" class="field-error">{{ form.errors.attachments }}</p>
         <p v-if="uploadError" class="field-error">{{ uploadError }}</p>
       </section>
@@ -465,7 +465,7 @@
           :href="cancelHref"
           class="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
         >
-          Batal
+          {{ $t("Batal") }}
         </Link>
         <button
           type="submit"
@@ -474,7 +474,7 @@
         >
           <span class="material-icons text-base" v-if="form.processing">hourglass_top</span>
           <span class="material-icons text-base" v-else>save</span>
-          Simpan Perubahan
+          {{ $t("Simpan Perubahan") }}
         </button>
       </div>
     </form>
@@ -482,6 +482,8 @@
 </template>
 
 <script setup>
+import { translateUi as uiText } from '../../i18n'
+
 import { computed, onBeforeUnmount, onMounted, ref, watch, watchEffect } from 'vue';
 import { Link, router, useForm } from '@inertiajs/vue3';
 import resolveRoute from '@/utils/resolveRoute';
@@ -549,10 +551,10 @@ const form = useForm({
   attachments: [],
 });
 
-const unitPlaceholderLabel = 'Unit Tidak Tercatat';
+const unitPlaceholderLabel = uiText("Unit Tidak Tercatat");
 const userOptions = computed(() => props.userOptions ?? []);
 const statusGuide = computed(() => props.meta?.statusGuide ?? null);
-const statusDefaultLabel = computed(() => props.meta?.statusDefault ?? 'New');
+const statusDefaultLabel = computed(() => props.meta?.statusDefault ?? uiText("New"));
 const canSelectRequester = computed(() => Boolean(props.meta?.canSelectRequester));
 const requesterLabel = computed(() => props.meta?.requesterLabel ?? '');
 const ticketOptionsList = computed(() => props.ticketOptions ?? []);
@@ -569,7 +571,7 @@ const attachmentMimeTypes = computed(() => activeAttachmentFilter.value?.mimeTyp
 const attachmentAllowedExtensions = computed(() => activeAttachmentFilter.value?.extensions ?? []);
 const uploaderDisabled = computed(() => !activeAttachmentFilter.value);
 const attachmentFilterHint = computed(() => (
-  activeAttachmentFilter.value ? `Hanya ${activeAttachmentFilter.value.label}` : 'Pilih jenis file untuk mengaktifkan unggahan.'
+  activeAttachmentFilter.value ? (uiText("Hanya ") + (activeAttachmentFilter.value.label)) : uiText("Pilih jenis file untuk mengaktifkan unggahan.")
 ));
 const uploaderRef = ref(null);
 const agentDropdownOpen = ref(false);
@@ -662,8 +664,8 @@ const statusDropdownOptions = computed(() => (
   }))
 ));
 const outputOptions = [
-  { value: 'task', label: 'Tetap sebagai Task' },
-  { value: 'task_project', label: 'Buat sebagai Project' },
+  { value: 'task', label: uiText('Tetap sebagai Task') },
+  { value: 'task_project', label: uiText("Buat sebagai Project") },
 ];
 
 const userLookup = computed(() => {
@@ -751,7 +753,7 @@ const requesterOptions = computed(() => userOptions.value.map(option => ({
 const selectedRequester = computed(() => requesterOptions.value.find(
   option => normalizeSelectionId(option.id) === normalizeSelectionId(form.requester_id)
 ) ?? null);
-const selectedRequesterLabel = computed(() => selectedRequester.value?.label ?? 'Pilih requester');
+const selectedRequesterLabel = computed(() => selectedRequester.value?.label ?? uiText("Pilih requester"));
 const activeRequesterList = computed(() => {
   if (!activeRequesterUnit.value) return [];
   return requesterOptions.value.filter(option => normalizeUnitValue(option.unit) === activeRequesterUnit.value);
@@ -1052,7 +1054,7 @@ function handleUploadError(error) {
   } else if (error?.response?.data?.message) {
     uploadError.value = error.response.data.message;
   } else {
-    uploadError.value = 'Gagal mengunggah file.';
+    uploadError.value = uiText("Gagal mengunggah file.");
   }
 }
 
@@ -1065,7 +1067,7 @@ watch(selectedAttachmentFilter, () => {
 
 function removeExisting(attachment) {
   if (!attachment?.delete_url) return;
-  if (!confirm('Hapus lampiran ini?')) {
+  if (!confirm(uiText("Hapus lampiran ini?"))) {
     return;
   }
   deletingId.value = attachment.id;
@@ -1106,7 +1108,7 @@ function formatRequesterTitle(option) {
 }
 
 function formatRequesterMeta(option) {
-  return option?.email || 'Email tidak tersedia';
+  return option?.email || uiText("Email tidak tersedia");
 }
 
 function formatRequesterLabel(option) {

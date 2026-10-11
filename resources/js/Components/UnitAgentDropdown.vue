@@ -20,7 +20,7 @@
           <div class="border-b border-slate-100 bg-slate-50 px-3 py-2 dark:border-slate-800 dark:bg-slate-800/40">
             <div class="flex items-center justify-between gap-3">
               <div>
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Unit tersedia</p>
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{{ $t("Unit tersedia") }}</p>
                 <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">{{ unitCount }} Unit · {{ filteredOptions.length }} Agent</p>
               </div>
               <button
@@ -29,7 +29,7 @@
                 @click.stop="toggleSearch"
               >
                 <span class="material-icons text-base">{{ searchOpen ? 'close' : 'search' }}</span>
-                {{ searchOpen ? 'Tutup' : 'Cari' }}
+                {{ searchOpen ? $t("Tutup") : $t("Cari") }}
               </button>
             </div>
           </div>
@@ -42,7 +42,7 @@
                   v-model="searchQuery"
                   type="text"
                   class="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400 dark:text-slate-100"
-                  placeholder="Cari nama agent, email, atau unit"
+                  :placeholder="$t(&quot;Cari nama agent, email, atau unit&quot;)"
                 />
                 <button v-if="searchQuery" type="button" class="text-xs text-slate-400 hover:text-rose-500" @click="clearSearch">Reset</button>
               </div>
@@ -60,7 +60,7 @@
                 >
                   <div>
                     <p class="text-base font-bold text-slate-800 dark:text-slate-100">{{ group.unitLabel }}</p>
-                    <p class="text-xs font-normal text-slate-400">{{ group.agents.length }} agent tersedia</p>
+                    <p class="text-xs font-normal text-slate-400">{{ group.agents.length }} {{ $t("agent tersedia") }}</p>
                   </div>
                   <span class="material-icons text-base">{{ expandedUnit === group.key ? 'expand_less' : 'expand_more' }}</span>
                 </button>
@@ -77,13 +77,13 @@
                       <span class="material-icons text-xs text-slate-400">person</span>
                       <span>{{ agent.label }}</span>
                     </p>
-                    <p class="text-xs text-slate-400">{{ agent.agent_label || 'User' }} · {{ agent.email || '—' }}</p>
+                    <p class="text-xs text-slate-400">{{ agent.agent_label || $t("User") }} · {{ agent.email || '—' }}</p>
                   </button>
                 </div>
               </div>
             </div>
           </template>
-          <p v-else class="px-4 py-4 text-sm text-slate-500">Tidak ada agent yang cocok dengan pencarian.</p>
+          <p v-else class="px-4 py-4 text-sm text-slate-500">{{ $t("Tidak ada agent yang cocok dengan pencarian.") }}</p>
         </div>
       </transition>
     </div>
@@ -92,13 +92,15 @@
 </template>
 
 <script setup>
+import { translateUi as uiText } from '../i18n'
+
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 const props = defineProps({
   modelValue: { type: [Number, String, null], default: null },
   options: { type: Array, default: () => [] },
   label: { type: String, default: '' },
-  placeholder: { type: String, default: 'Pilih agent berdasarkan unit' },
+  placeholder: { type: String, default: () => uiText("Pilih agent berdasarkan unit") },
   disabled: { type: Boolean, default: false },
   hint: { type: String, default: '' },
 });
@@ -111,7 +113,7 @@ const rootRef = ref(null);
 const searchOpen = ref(false);
 const searchQuery = ref('');
 
-const unitPlaceholder = 'Unit Tidak Tercatat';
+const unitPlaceholder = uiText("Unit Tidak Tercatat");
 
 const normalizedOptions = computed(() => Array.isArray(props.options) ? props.options : []);
 

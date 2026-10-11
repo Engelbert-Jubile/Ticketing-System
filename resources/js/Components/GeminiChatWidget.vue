@@ -7,16 +7,16 @@
         <header class="chat-header">
           <div class="chat-meta">
             <p class="chat-title">Tickora AI Assistant</p>
-            <p class="chat-subtitle">Partner untuk Tiket, Task, dan Project kamu</p>
+            <p class="chat-subtitle">{{ $t("Partner untuk Tiket, Task, dan Project kamu") }}</p>
             <div class="chat-status">
               <span class="status-dot" aria-hidden="true"></span>
               <div class="status-text">
-                <span class="status-state">{{ sending ? 'Memproses' : 'Asisten AI' }}</span>
-                <span class="status-caption">Periksa sumber sebelum mengambil keputusan</span>
+                <span class="status-state">{{ sending ? $t('Memproses') : $t('Asisten AI') }}</span>
+                <span class="status-caption">{{ $t("Periksa sumber sebelum mengambil keputusan") }}</span>
               </div>
             </div>
           </div>
-          <button type="button" class="icon-btn" aria-label="Tutup" @click="toggle">
+          <button type="button" class="icon-btn" :aria-label="$t(&quot;Tutup&quot;)" @click="toggle">
             <span class="material-icons">close</span>
           </button>
         </header>
@@ -40,12 +40,12 @@
               v-model="draft"
               type="text"
               maxlength="600"
-              aria-label="Pertanyaan untuk asisten AI"
+              :aria-label="$t(&quot;Pertanyaan untuk asisten AI&quot;)"
               class="chat-input"
-              :placeholder="sending ? 'Menunggu balasan...' : 'Tanyakan apa saja tentang tiket, task, project kamu'"
+              :placeholder="sending ? $t(&quot;Menunggu balasan...&quot;) : $t('Tanyakan apa saja tentang tiket, task, project kamu')"
               :disabled="sending"
             />
-            <button type="submit" aria-label="Kirim pertanyaan" class="send-btn" :disabled="sending || !draft.trim()">
+            <button type="submit" :aria-label="$t(&quot;Kirim pertanyaan&quot;)" class="send-btn" :disabled="sending || !draft.trim()">
               <span class="material-icons">send</span>
             </button>
           </form>
@@ -54,7 +54,7 @@
       </section>
     </transition>
 
-    <button type="button" class="fab" :aria-expanded="String(isOpen)" aria-label="Buka TMS AI" @click="toggle">
+    <button type="button" class="fab" :aria-expanded="String(isOpen)" :aria-label="$t(&quot;Buka TMS AI&quot;)" @click="toggle">
       <span class="material-icons" aria-hidden="true">smart_toy</span>
       <span class="fab-label">Tickora</span>
     </button>
@@ -62,6 +62,8 @@
 </template>
 
 <script setup>
+import { translateUi as uiText } from '../i18n'
+
 import axios from 'axios';
 import { computed, nextTick, ref, watch } from 'vue';
 
@@ -90,7 +92,7 @@ const messages = ref([
   {
     id: nextId(),
     role: 'assistant',
-    text: 'Halo! Saya Tickora AI dan siap membantu pertanyaan seputar Ticket Management System. Apa yang bisa saya bantu?',
+    text: uiText("Halo! Saya Tickora AI dan siap membantu pertanyaan seputar Ticket Management System. Apa yang bisa saya bantu?"),
   },
 ]);
 
@@ -134,12 +136,12 @@ const sendMessage = async () => {
     messages.value.push({
       id: nextId(),
       role: 'assistant',
-      text: data?.reply || 'Maaf, saya tidak bisa menjawab itu sekarang.',
+      text: data?.reply || uiText("Maaf, saya tidak bisa menjawab itu sekarang."),
       sources: data?.sources || [],
     });
   } catch (err) {
     draft.value = content;
-    error.value = err.response?.status === 429 ? 'Batas permintaan tercapai. Tunggu satu menit lalu coba kembali.' : 'Tidak dapat terhubung ke TMS AI. Pesan Anda dipulihkan untuk dicoba kembali.';
+    error.value = err.response?.status === 429 ? uiText("Batas permintaan tercapai. Tunggu satu menit lalu coba kembali.") : uiText("Tidak dapat terhubung ke TMS AI. Pesan Anda dipulihkan untuk dicoba kembali.");
   } finally {
     sending.value = false;
     scrollToBottom();

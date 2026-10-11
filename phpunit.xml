@@ -12,6 +12,7 @@
             <directory>tests/Feature</directory>
             <file>tests/WorkflowAuthorizationTest.php</file>
             <file>tests/AuditImprovementsTest.php</file>
+            <file>tests/LocalePreferencesTest.php</file>
         </testsuite>
     </testsuites>
     <source>

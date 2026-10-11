@@ -16,7 +16,7 @@
             class="action-chip"
           >
             <span class="material-icons text-sm" aria-hidden="true">picture_as_pdf</span>
-            Unduh PDF
+            {{ $t("Unduh PDF") }}
           </a>
           <Link v-if="task.links.edit" :href="task.links.edit" class="action-chip">
             <span class="material-icons text-sm">edit</span>
@@ -24,7 +24,7 @@
           </Link>
           <Link v-if="task.links.view" :href="task.links.view" class="action-chip">
             <span class="material-icons text-sm">visibility</span>
-            Mode Tampilan
+            {{ $t("Mode Tampilan") }}
           </Link>
           <button v-if="task.links.promote" type="button" class="action-chip" @click="promote">
             <span class="material-icons text-sm">upgrade</span>
@@ -38,12 +38,12 @@
     <div class="grid gap-6 lg:grid-cols-3">
       <div class="space-y-6 lg:col-span-2">
         <article v-if="task.description" class="rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-          <h2 class="mb-4 text-lg font-bold text-slate-900 dark:text-slate-100">Deskripsi</h2>
+          <h2 class="mb-4 text-lg font-bold text-slate-900 dark:text-slate-100">{{ $t("Deskripsi") }}</h2>
           <div class="prose prose-sm max-w-none text-slate-700 dark:prose-invert dark:text-slate-300" v-html="task.description"></div>
         </article>
 
         <article v-if="task.attachments.length" class="rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-          <h2 class="mb-4 text-lg font-bold text-slate-900 dark:text-slate-100">Lampiran ({{ task.attachments.length }})</h2>
+          <h2 class="mb-4 text-lg font-bold text-slate-900 dark:text-slate-100">{{ $t("Lampiran (") }}{{ task.attachments.length }})</h2>
           <ul class="space-y-2 text-sm text-slate-600 dark:text-slate-300">
             <li v-for="attachment in task.attachments" :key="attachment.id" class="flex flex-col items-start gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-slate-700 dark:bg-slate-800/60">
               <div class="w-full flex-1 truncate sm:w-auto">
@@ -51,8 +51,8 @@
                 <div v-if="formatSize(attachment.size)" class="text-xs text-slate-400">{{ formatSize(attachment.size) }}</div>
               </div>
               <div class="flex w-full flex-wrap items-center gap-2 sm:ml-4 sm:w-auto sm:justify-end">
-                <a :href="attachment.view_url" target="_blank" class="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-semibold text-blue-600 transition hover:bg-blue-50 dark:border-blue-400/40 dark:text-blue-200 dark:hover:bg-blue-500/10">Lihat</a>
-                <a :href="attachment.download_url" class="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800">Unduh</a>
+                <a :href="attachment.view_url" target="_blank" class="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-semibold text-blue-600 transition hover:bg-blue-50 dark:border-blue-400/40 dark:text-blue-200 dark:hover:bg-blue-500/10">{{ $t("Lihat") }}</a>
+                <a :href="attachment.download_url" class="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800">{{ $t("Unduh") }}</a>
               </div>
             </li>
           </ul>
@@ -60,12 +60,12 @@
 
         <article v-if="relatedTasks.length" class="rounded-2xl border border-blue-200/70 bg-white/95 p-6 shadow-sm dark:border-blue-500/40 dark:bg-slate-900">
           <div class="flex flex-wrap items-center justify-between gap-3">
-            <h2 class="text-lg font-bold text-slate-900 dark:text-slate-100">Task Terkait</h2>
+            <h2 class="text-lg font-bold text-slate-900 dark:text-slate-100">{{ $t("Task Terkait") }}</h2>
             <div v-if="task.ticket" class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">
               Ticket: <span class="font-bold text-blue-600 dark:text-blue-300">{{ task.ticket.ticket_no }}</span>
             </div>
           </div>
-          <p class="mt-1 text-sm text-slate-500 dark:text-slate-300">Daftar task lain pada ticket yang sama.</p>
+          <p class="mt-1 text-sm text-slate-500 dark:text-slate-300">{{ $t("Daftar task lain pada ticket yang sama.") }}</p>
           <div class="mt-4 space-y-3">
             <div
               v-for="related in relatedTasks"
@@ -83,7 +83,7 @@
                   <p class="text-base font-semibold text-slate-900 dark:text-slate-100">{{ related.title || '—' }}</p>
                   <span v-if="related.is_current" class="mt-1 inline-flex items-center gap-1 rounded-full bg-blue-600/10 px-3 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-500/20 dark:text-blue-200">
                     <span class="material-icons text-xs">visibility</span>
-                    Sedang dibuka
+                    {{ $t("Sedang dibuka") }}
                   </span>
                 </div>
                 <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-300">
@@ -105,7 +105,7 @@
                   @click="deleteRelatedTask(related)"
                 >
                   <span class="material-icons text-base" aria-hidden="true">{{ isDeletingRelated(related.id) ? 'hourglass_top' : 'delete' }}</span>
-                  Hapus
+                  {{ $t("Hapus") }}
                 </button>
               </div>
             </div>
@@ -118,7 +118,7 @@
           <div>
             <h3 class="card-title">Status</h3>
             <div>
-              <p class="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">Status Ditampilkan</p>
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">{{ $t("Status Ditampilkan") }}</p>
               <div class="mt-2">
                 <StatusBadge :status="task.status" :label="task.status_label" variant="status" />
               </div>
@@ -136,7 +136,7 @@
         </article>
 
         <article v-if="task.priority" class="card">
-          <h3 class="card-title">Prioritas</h3>
+          <h3 class="card-title">{{ $t("Prioritas") }}</h3>
           <StatusBadge :status="task.priority" :label="task.priority_label" variant="priority" />
         </article>
 
@@ -148,7 +148,7 @@
               <div v-if="assignmentAgent" class="mt-2 flex flex-wrap gap-2">
                 <TasksAssigneePill :name="assignmentAgent.name" :email="assignmentAgent.email" role="Agent" />
               </div>
-              <p v-else class="mt-2 text-sm font-medium text-slate-500 dark:text-slate-400">— Tidak ada agent —</p>
+              <p v-else class="mt-2 text-sm font-medium text-slate-500 dark:text-slate-400">{{ $t("— Tidak ada agent —") }}</p>
             </div>
             <div>
               <p class="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">PIC</p>
@@ -161,13 +161,13 @@
                   role="PIC"
                 />
               </div>
-              <p v-else class="mt-2 text-sm font-medium text-slate-500 dark:text-slate-400">— Tidak ada PIC —</p>
+              <p v-else class="mt-2 text-sm font-medium text-slate-500 dark:text-slate-400">{{ $t("— Tidak ada PIC —") }}</p>
             </div>
           </div>
         </article>
 
         <article v-if="task.requester" class="card">
-          <h3 class="card-title">Pembuat</h3>
+          <h3 class="card-title">{{ $t("Pembuat") }}</h3>
           <div class="flex items-center gap-3">
             <div class="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-sm font-semibold text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-200">
               {{ task.requester.name?.charAt(0)?.toUpperCase() || '?' }}
@@ -177,13 +177,13 @@
         </article>
 
         <article v-if="task.ticket" class="card">
-          <h3 class="card-title">Ticket Terkait</h3>
+          <h3 class="card-title">{{ $t("Ticket Terkait") }}</h3>
           <div class="text-sm text-slate-600 dark:text-slate-300">
             <div class="font-semibold text-slate-800 dark:text-slate-100">{{ task.ticket.ticket_no }}</div>
             <div class="line-clamp-2 text-xs">{{ task.ticket.title }}</div>
             <Link :href="task.ticket.link" class="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline dark:text-blue-400">
               <span class="material-icons text-xs">open_in_new</span>
-              Lihat Ticket
+              {{ $t("Lihat Ticket") }}
             </Link>
           </div>
         </article>
@@ -194,13 +194,13 @@
             <div class="font-semibold text-slate-800 dark:text-slate-100">{{ task.project.title }}</div>
             <Link :href="task.project.link" class="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline dark:text-blue-400">
               <span class="material-icons text-xs">open_in_new</span>
-              Lihat Project
+              {{ $t("Lihat Project") }}
             </Link>
           </div>
         </article>
 
         <article v-if="task.due_display !== '—'" class="card">
-          <h3 class="card-title">Target Selesai</h3>
+          <h3 class="card-title">{{ $t("Target Selesai") }}</h3>
           <div class="text-sm font-medium text-slate-900 dark:text-slate-100">{{ task.due_display }}</div>
         </article>
 
@@ -215,7 +215,7 @@
               <p class="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">{{ panel.label }}</p>
               <dl class="mt-2 space-y-2">
                 <div>
-                  <dt class="text-xs font-semibold text-slate-400 dark:text-slate-500">Mulai</dt>
+                  <dt class="text-xs font-semibold text-slate-400 dark:text-slate-500">{{ $t("Mulai") }}</dt>
                   <dd class="font-semibold text-slate-900 dark:text-slate-100">{{ panel.data.start || '—' }}</dd>
                 </div>
                 <div>
@@ -223,7 +223,7 @@
                   <dd class="font-semibold text-slate-900 dark:text-slate-100">{{ panel.data.due || '—' }}</dd>
                 </div>
                 <div>
-                  <dt class="text-xs font-semibold text-slate-400 dark:text-slate-500">Selesai</dt>
+                  <dt class="text-xs font-semibold text-slate-400 dark:text-slate-500">{{ $t("Selesai") }}</dt>
                   <dd class="font-semibold text-slate-900 dark:text-slate-100">{{ panel.data.end || '—' }}</dd>
                 </div>
               </dl>
@@ -236,6 +236,8 @@
 </template>
 
 <script setup>
+import { translateUi as uiText } from '../../i18n'
+
 import { computed, ref } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import StatusBadge from '@/Components/StatusBadge.vue';
@@ -265,7 +267,7 @@ function formatSize(size) {
 
 function promote() {
   if (!props.task?.links?.promote) return;
-  if (!confirm('Promosikan task ini menjadi project?')) {
+  if (!confirm(uiText("Promosikan task ini menjadi project?"))) {
     return;
   }
   router.post(props.task.links.promote, {}, { preserveScroll: true });
@@ -280,7 +282,7 @@ function deleteRelatedTask(item) {
   if (!item?.links?.delete) {
     return;
   }
-  if (!confirm(`Yakin ingin menghapus task "${item.title || item.task_no || 'tanpa judul'}"?`)) {
+  if (!confirm((uiText("Yakin ingin menghapus task \"") + (item.title || item.task_no || uiText('tanpa judul')) + "\"?"))) {
     return;
   }
   deletingRelatedId.value = item.id;

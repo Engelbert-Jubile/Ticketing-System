@@ -20,12 +20,12 @@
                 </span>
               </div>
               <p class="text-sm text-slate-500 dark:text-slate-300">
-                Narasi terintegrasi mengenai aktivitas tickets, tasks, projects, dan SLA dalam satu panel strategis.
+                {{ $t("Narasi terintegrasi mengenai aktivitas tickets, tasks, projects, dan SLA dalam satu panel strategis.") }}
               </p>
             </div>
             <div class="flex flex-wrap gap-4 text-xs text-slate-500 dark:text-slate-400">
               <span
-                ><span class="font-semibold text-slate-700 dark:text-slate-200">Periode:</span>
+                ><span class="font-semibold text-slate-700 dark:text-slate-200">{{ $t("Periode:") }}</span>
                 {{ filtersWindow.start }} → {{ filtersWindow.end }}</span
               >
               <span
@@ -40,7 +40,7 @@
           </div>
           <div class="flex flex-col gap-2">
             <label class="text-xs font-semibold uppercase tracking-[0.4em] text-slate-500 dark:text-slate-300"
-              >Rentang Analisis</label
+              >{{ $t("Rentang Analisis") }}</label
             >
             <div class="relative min-w-[180px]">
               <button
@@ -99,7 +99,7 @@
               {{ formatNumber(heroMeta.activeUnits) }}
             </p>
             <p class="text-xs text-slate-500 dark:text-slate-400">
-              Unit terhubung dengan aktivitas dalam periode terpilih.
+              {{ $t("Unit terhubung dengan aktivitas dalam periode terpilih.") }}
             </p>
           </div>
           <div
@@ -110,7 +110,7 @@
             </p>
             <p class="mt-1 text-3xl font-bold text-slate-900 dark:text-white">{{ heroMeta.completionRate }}%</p>
             <p class="text-xs text-slate-500 dark:text-slate-400">
-              {{ formatNumber(heroMeta.completed) }} item berhasil diselesaikan.
+              {{ formatNumber(heroMeta.completed) }} {{ $t("item berhasil diselesaikan.") }}
             </p>
           </div>
           <div
@@ -123,7 +123,7 @@
               {{ formatPercent(slaStats.compliance_rate) }}
             </p>
             <p class="text-xs text-slate-500 dark:text-slate-400">
-              {{ formatNumber(slaStats.with_deadline) }} item terikat SLA aktif.
+              {{ formatNumber(slaStats.with_deadline) }} {{ $t("item terikat SLA aktif.") }}
             </p>
           </div>
           <div
@@ -136,7 +136,7 @@
               {{ formatNumber(workloadTotals.pending) }}
             </p>
             <p class="text-xs text-slate-500 dark:text-slate-400">
-              Tickets {{ formatNumber(normalizedOverview.tickets.pending) }} • Tasks
+              {{ $t("Tickets") }} {{ formatNumber(normalizedOverview.tickets.pending) }} • Tasks
               {{ formatNumber(normalizedOverview.tasks.pending) }} • Projects
               {{ formatNumber(normalizedOverview.projects.pending) }}
             </p>
@@ -172,7 +172,7 @@
               <div>
                 <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">{{ card.label }}</p>
                 <p class="text-xs text-slate-500 dark:text-slate-400">
-                  Created {{ formatNumber(card.created) }} • Completed {{ formatNumber(card.completed) }}
+                  {{ $t("Created") }} {{ formatNumber(card.created) }} • Completed {{ formatNumber(card.completed) }}
                 </p>
               </div>
               <div class="text-right">
@@ -197,7 +197,7 @@
               <span class="text-lg font-semibold text-slate-900 dark:text-white">{{ formatNumber(peak.value) }}</span>
             </li>
           </ul>
-          <p v-else class="mt-3 text-sm text-slate-500 dark:text-slate-400">Belum ada aktivitas signifikan.</p>
+          <p v-else class="mt-3 text-sm text-slate-500 dark:text-slate-400">{{ $t("Belum ada aktivitas signifikan.") }}</p>
         </div>
       </aside>
     </section>
@@ -206,7 +206,7 @@
       <header class="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
         <div>
           <p class="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Workstream Snapshot</p>
-          <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Kapasitas lintas layanan</h3>
+          <h3 class="text-xl font-semibold text-slate-900 dark:text-white">{{ $t("Kapasitas lintas layanan") }}</h3>
         </div>
       </header>
       <div class="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
@@ -229,7 +229,7 @@
             <div>
               <p class="text-3xl font-bold text-slate-900 dark:text-white">{{ formatNumber(card.stats.total) }}</p>
               <p class="text-xs text-slate-500 dark:text-slate-400">
-                Aktif {{ formatNumber(card.stats.active) }} • Pending {{ formatNumber(card.stats.pending) }}
+                {{ $t("Aktif") }} {{ formatNumber(card.stats.active) }} • Pending {{ formatNumber(card.stats.pending) }}
               </p>
             </div>
             <div>
@@ -259,7 +259,7 @@
         <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div>
             <p class="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Status Distribution</p>
-            <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Health indicator per workstream</h3>
+            <h3 class="text-xl font-semibold text-slate-900 dark:text-white">{{ $t("Health indicator per workstream") }}</h3>
           </div>
           <span class="text-xs text-slate-500 dark:text-slate-400">{{ filtersWindow.label }}</span>
         </div>
@@ -320,7 +320,7 @@
           </div>
           <span
             class="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 dark:bg-white/10 dark:text-white">
-            {{ formatPercent(slaAlerts.metrics.complianceRate) }} patuh
+            {{ formatPercent(slaAlerts.metrics.complianceRate) }} {{ $t("patuh") }}
           </span>
         </header>
         <div class="grid gap-3 sm:grid-cols-2">
@@ -331,7 +331,7 @@
               {{ formatNumber(slaAlerts.metrics.breached) }}
             </p>
             <p class="text-xs text-slate-500 dark:text-white/60">
-              {{ formatPercent(slaAlerts.metrics.breachRate) }} dari SLA aktif
+              {{ formatPercent(slaAlerts.metrics.breachRate) }} {{ $t("dari SLA aktif") }}
             </p>
           </div>
           <div
@@ -341,7 +341,7 @@
               {{ formatNumber(slaAlerts.metrics.dueSoon) }}
             </p>
             <p class="text-xs text-slate-500 dark:text-white/60">
-              Rata-rata terlambat {{ formatAverage(slaAlerts.metrics.avgDelay, 'jam') }}
+              {{ $t("Rata-rata terlambat") }} {{ formatAverage(slaAlerts.metrics.avgDelay, 'jam') }}
             </p>
           </div>
         </div>
@@ -357,7 +357,7 @@
             </li>
           </ul>
           <p v-else class="mt-2 text-xs text-slate-500 dark:text-white/60">
-            Tidak ada SLA yang akan jatuh tempo dalam 3 hari.
+            {{ $t("Tidak ada SLA yang akan jatuh tempo dalam 3 hari.") }}
           </p>
         </div>
         <div class="rounded-2xl border border-slate-100/70 bg-slate-50/80 p-4 dark:border-white/10 dark:bg-white/5">
@@ -371,7 +371,7 @@
               <span class="text-slate-400 dark:text-white/50">{{ formatAverage(item.overdue_hours, 'jam') }}</span>
             </li>
           </ul>
-          <p v-else class="mt-2 text-xs text-slate-500 dark:text-white/60">Seluruh SLA berada pada status aman.</p>
+          <p v-else class="mt-2 text-xs text-slate-500 dark:text-white/60">{{ $t("Seluruh SLA berada pada status aman.") }}</p>
         </div>
       </article>
     </section>
@@ -390,12 +390,12 @@
                 class="flex items-center justify-between rounded-2xl border border-slate-100/70 bg-slate-50/60 px-4 py-2 text-sm dark:border-slate-700/70 dark:bg-slate-800/60">
                 <div>
                   <p class="font-semibold text-slate-700 dark:text-slate-100">{{ agent.name }}</p>
-                  <p class="text-xs text-slate-500 dark:text-slate-400">Resolved {{ formatNumber(agent.value) }}</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">{{ $t("Resolved") }} {{ formatNumber(agent.value) }}</p>
                 </div>
                 <span class="text-xs text-slate-400">{{ formatAverage(agent.avg, agent.avg_unit) }}</span>
               </li>
             </ul>
-            <p v-else class="mt-2 text-xs text-slate-500 dark:text-slate-400">Belum ada data resolver.</p>
+            <p v-else class="mt-2 text-xs text-slate-500 dark:text-slate-400">{{ $t("Belum ada data resolver.") }}</p>
           </div>
           <div>
             <p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Unit Requester</p>
@@ -405,10 +405,10 @@
                 :key="`req-${req.id}`"
                 class="flex items-center justify-between rounded-2xl border border-slate-100/70 bg-slate-50/60 px-4 py-2 text-sm dark:border-slate-700/70 dark:bg-slate-800/60">
                 <span class="font-semibold text-slate-700 dark:text-slate-100">{{ req.name }}</span>
-                <span class="text-xs text-slate-400">{{ formatNumber(req.value) }} permintaan</span>
+                <span class="text-xs text-slate-400">{{ formatNumber(req.value) }} {{ $t("permintaan") }}</span>
               </li>
             </ul>
-            <p v-else class="mt-2 text-xs text-slate-500 dark:text-slate-400">Belum ada data requester aktif.</p>
+            <p v-else class="mt-2 text-xs text-slate-500 dark:text-slate-400">{{ $t("Belum ada data requester aktif.") }}</p>
           </div>
         </div>
       </article>
@@ -425,12 +425,12 @@
                 class="flex items-center justify-between rounded-2xl border border-slate-100/70 bg-slate-50/60 px-4 py-2 text-sm dark:border-slate-700/70 dark:bg-slate-800/60">
                 <div>
                   <p class="font-semibold text-slate-700 dark:text-slate-100">{{ assignee.name }}</p>
-                  <p class="text-xs text-slate-500 dark:text-slate-400">Selesai {{ formatNumber(assignee.value) }}</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">{{ $t("Selesai") }} {{ formatNumber(assignee.value) }}</p>
                 </div>
                 <span class="text-xs text-slate-400">{{ formatAverage(assignee.avg, assignee.avg_unit) }}</span>
               </li>
             </ul>
-            <p v-else class="mt-2 text-xs text-slate-500 dark:text-slate-400">Belum ada data penyelesai tugas.</p>
+            <p v-else class="mt-2 text-xs text-slate-500 dark:text-slate-400">{{ $t("Belum ada data penyelesai tugas.") }}</p>
           </div>
           <div>
             <p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Project Owner</p>
@@ -446,7 +446,7 @@
                 <span class="text-xs text-slate-400">{{ formatAverage(owner.avg, owner.avg_unit) }}</span>
               </li>
             </ul>
-            <p v-else class="mt-2 text-xs text-slate-500 dark:text-slate-400">Belum ada project selesai.</p>
+            <p v-else class="mt-2 text-xs text-slate-500 dark:text-slate-400">{{ $t("Belum ada project selesai.") }}</p>
           </div>
         </div>
       </article>
@@ -465,7 +465,7 @@
                 <span class="text-slate-400">{{ displayDate(task.due_at) }}</span>
               </li>
             </ul>
-            <p v-else class="mt-2 text-xs text-slate-500 dark:text-slate-400">Tidak ada tugas kritikal.</p>
+            <p v-else class="mt-2 text-xs text-slate-500 dark:text-slate-400">{{ $t("Tidak ada tugas kritikal.") }}</p>
           </div>
           <div>
             <p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Projects ending soon</p>
@@ -479,7 +479,7 @@
               </li>
             </ul>
             <p v-else class="mt-2 text-xs text-slate-500 dark:text-slate-400">
-              Seluruh project berada pada jalur yang aman.
+              {{ $t("Seluruh project berada pada jalur yang aman.") }}
             </p>
           </div>
         </div>
@@ -492,7 +492,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xs font-semibold uppercase tracking-widest text-slate-400">Top Performer</p>
-            <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Unit dengan aktivitas tertinggi</h3>
+            <h3 class="text-xl font-semibold text-slate-900 dark:text-white">{{ $t("Unit dengan aktivitas tertinggi") }}</h3>
           </div>
           <span class="text-xs text-slate-500 dark:text-slate-400">Activity Score</span>
         </div>
@@ -505,7 +505,7 @@
               <p class="text-xs font-semibold text-slate-400">#{{ index + 1 }}</p>
               <p class="text-lg font-semibold text-slate-900 dark:text-white">{{ unit.name }}</p>
               <p class="text-xs text-slate-500 dark:text-slate-400">
-                {{ formatNumber(unit.total_work) }} item • {{ unit.completion_rate }}% selesai
+                {{ formatNumber(unit.total_work) }} item • {{ unit.completion_rate }}{{ $t("% selesai") }}
               </p>
             </div>
             <div class="text-right">
@@ -515,7 +515,7 @@
           </div>
         </div>
         <p v-else class="mt-4 text-sm text-slate-500 dark:text-slate-400">
-          Belum ada aktivitas yang dapat ditampilkan.
+          {{ $t("Belum ada aktivitas yang dapat ditampilkan.") }}
         </p>
       </article>
       <article
@@ -525,7 +525,7 @@
           <span class="text-sm font-medium text-slate-500 dark:text-white/70">{{ idleUnits.length }} unit</span>
         </div>
         <p class="mt-2 text-sm text-slate-600 dark:text-white/70">
-          Daftar unit tanpa update terbaru. Jadwalkan follow-up agar pipeline tetap bergerak.
+          {{ $t("Daftar unit tanpa update terbaru. Jadwalkan follow-up agar pipeline tetap bergerak.") }}
         </p>
         <div class="mt-5 flex flex-wrap gap-2">
           <span
@@ -537,7 +537,7 @@
           <span
             v-if="!idleUnits.length"
             class="rounded-full border border-slate-200 bg-slate-50 px-4 py-1 text-sm text-slate-700 dark:border-white/20 dark:bg-white/5 dark:text-white/80"
-            >Seluruh unit aktif</span
+            >{{ $t("Seluruh unit aktif") }}</span
           >
         </div>
       </article>
@@ -548,18 +548,18 @@
       <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <p class="text-xs font-semibold uppercase tracking-widest text-slate-400">Multi-Unit Pulse</p>
-          <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Aktivitas per unit</h3>
+          <h3 class="text-xl font-semibold text-slate-900 dark:text-white">{{ $t("Aktivitas per unit") }}</h3>
         </div>
-        <span class="text-xs text-slate-500 dark:text-slate-400">{{ units.length }} unit dipantau</span>
+        <span class="text-xs text-slate-500 dark:text-slate-400">{{ units.length }} {{ $t("unit dipantau") }}</span>
       </div>
       <div class="mt-4 overflow-x-auto">
         <table class="min-w-full divide-y divide-slate-100 text-sm dark:divide-slate-800">
           <thead>
             <tr class="text-left text-xs font-semibold uppercase tracking-widest text-slate-400">
               <th class="px-4 py-3">Unit</th>
-              <th class="px-4 py-3">Tickets</th>
-              <th class="px-4 py-3">Tasks</th>
-              <th class="px-4 py-3">Projects</th>
+              <th class="px-4 py-3">{{ $t("Tickets") }}</th>
+              <th class="px-4 py-3">{{ $t("Tasks") }}</th>
+              <th class="px-4 py-3">{{ $t("Projects") }}</th>
               <th class="px-4 py-3">Activity</th>
               <th class="px-4 py-3">Completion</th>
             </tr>
@@ -599,7 +599,7 @@
             </tr>
             <tr v-if="!units.length">
               <td colspan="6" class="px-4 py-10 text-center text-slate-500 dark:text-slate-400">
-                Belum ada data unit.
+                {{ $t("Belum ada data unit.") }}
               </td>
             </tr>
           </tbody>
@@ -610,6 +610,8 @@
 </template>
 
 <script setup>
+import { translateUi as uiText, uiLocale } from '../../i18n'
+
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
 import TrendLineChart from '@/Components/Reports/TrendLineChart.vue';
@@ -627,14 +629,14 @@ const props = defineProps({
   alerts: { type: Object, default: () => ({}) }
 });
 
-const formatNumber = value => new Intl.NumberFormat('id-ID').format(value ?? 0);
+const formatNumber = value => new Intl.NumberFormat(uiLocale.value).format(value ?? 0);
 const formatPercent = value => `${Number(value ?? 0).toFixed(1)}%`;
 
 const formatAverage = (value, unit = null) => {
   if (value === null || value === undefined || Number.isNaN(Number(value))) {
     return '—';
   }
-  const display = Number(value).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const display = Number(value).toLocaleString(uiLocale.value, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   return unit ? `${display} ${unit}` : display;
 };
 
@@ -642,7 +644,7 @@ const displayDate = value => {
   if (!value) return '—';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '—';
-  return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+  return date.toLocaleDateString(uiLocale.value, { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
 const defaults = { total: 0, active: 0, done: 0, pending: 0 };
@@ -691,7 +693,7 @@ const workloadTotals = computed(() => ({
 }));
 
 const filterState = computed(() => props.filters ?? {});
-const filtersWindow = computed(() => filterState.value.window ?? { start: '—', end: '—', label: 'Tanpa Rentang' });
+const filtersWindow = computed(() => filterState.value.window ?? { start: '—', end: '—', label: uiText('Tanpa Rentang') });
 const rangeOptions = computed(() => filterState.value.options ?? []);
 const selectedRange = ref(filterState.value.range ?? rangeOptions.value[0]?.value ?? 90);
 const rangeDropdownOpen = ref(false);
@@ -709,7 +711,7 @@ watch(
 
 const selectedRangeLabel = computed(() => {
   const option = rangeOptions.value.find(opt => opt.value === selectedRange.value);
-  return option?.label ?? `${selectedRange.value} Hari`;
+  return option?.label ?? ((selectedRange.value) + uiText(" Hari"));
 });
 
 const selectRange = value => {
@@ -818,7 +820,7 @@ const trendSummary = computed(() => ({
 const trendSummaryCards = computed(() => [
   {
     key: 'tickets',
-    label: 'Tickets',
+    label: uiText("Tickets"),
     created: trendSummary.value.tickets.created,
     completed: trendSummary.value.tickets.completed,
     total: trendSummary.value.tickets.created + trendSummary.value.tickets.completed,
@@ -828,7 +830,7 @@ const trendSummaryCards = computed(() => [
   },
   {
     key: 'tasks',
-    label: 'Tasks',
+    label: uiText("Tasks"),
     created: trendSummary.value.tasks.created,
     completed: trendSummary.value.tasks.completed,
     total: trendSummary.value.tasks.created + trendSummary.value.tasks.completed,
@@ -838,7 +840,7 @@ const trendSummaryCards = computed(() => [
   },
   {
     key: 'projects',
-    label: 'Projects',
+    label: uiText("Projects"),
     created: trendSummary.value.projects.created,
     completed: trendSummary.value.projects.completed,
     total: trendSummary.value.projects.created + trendSummary.value.projects.completed,
@@ -860,27 +862,27 @@ const completionRate = stats => {
 const missionCards = computed(() => [
   {
     key: 'tickets',
-    title: 'Tickets',
+    title: uiText("Tickets"),
     subtitle: 'Workload & SLA',
-    badge: 'Tickets',
+    badge: uiText("Tickets"),
     accent: 'from-sky-400 via-indigo-400 to-blue-500',
     stats: normalizedOverview.value.tickets,
     summary: trendSummary.value.tickets
   },
   {
     key: 'tasks',
-    title: 'Tasks',
+    title: uiText("Tasks"),
     subtitle: 'Operational Flow',
-    badge: 'Tasks',
+    badge: uiText("Tasks"),
     accent: 'from-amber-400 via-orange-500 to-red-500',
     stats: normalizedOverview.value.tasks,
     summary: trendSummary.value.tasks
   },
   {
     key: 'projects',
-    title: 'Projects',
+    title: uiText("Projects"),
     subtitle: 'Strategic Delivery',
-    badge: 'Projects',
+    badge: uiText("Projects"),
     accent: 'from-emerald-400 via-green-500 to-teal-500',
     stats: normalizedOverview.value.projects,
     summary: trendSummary.value.projects
@@ -920,24 +922,24 @@ const projectStatus = computed(() => buildDistribution(matrix.value.projects?.st
 const statusPanels = computed(() => [
   {
     key: 'tickets',
-    title: 'Tickets',
+    title: uiText("Tickets"),
     dataset: ticketStatus.value,
     completionRate: completionRate(normalizedOverview.value.tickets),
     segments: [
-      ticketPriority.value.items.length ? { label: 'Prioritas', items: ticketPriority.value.items } : null,
-      ticketType.value.items.length ? { label: 'Tipe', items: ticketType.value.items } : null
+      ticketPriority.value.items.length ? { label: uiText("Prioritas"), items: ticketPriority.value.items } : null,
+      ticketType.value.items.length ? { label: uiText("Tipe"), items: ticketType.value.items } : null
     ].filter(Boolean)
   },
   {
     key: 'tasks',
-    title: 'Tasks',
+    title: uiText("Tasks"),
     dataset: taskStatus.value,
     completionRate: completionRate(normalizedOverview.value.tasks),
     segments: []
   },
   {
     key: 'projects',
-    title: 'Projects',
+    title: uiText("Projects"),
     dataset: projectStatus.value,
     completionRate: completionRate(normalizedOverview.value.projects),
     segments: []

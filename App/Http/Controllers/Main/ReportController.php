@@ -38,7 +38,7 @@ class ReportController extends Controller
             }
         }
 
-        abort_unless($allowed, 403, 'Menu Reports hanya untuk Admin.');
+        abort_unless($allowed, 403, __('Menu Reports hanya untuk Admin.'));
 
         $unitNames = UserUnitOptions::values();
         $ticketStats = $this->aggregateTickets();
@@ -267,7 +267,7 @@ class ReportController extends Controller
                 90 => '90 Hari',
                 180 => '6 Bulan',
                 365 => '12 Bulan',
-                default => $days.' Hari',
+                default => $days.__(' Hari'),
             },
         ])->values()->all();
 
@@ -472,7 +472,7 @@ class ReportController extends Controller
         $total = (int) $rows->sum('total');
 
         $items = $rows->map(function ($row) use ($total) {
-            $label = $row->label ?? 'Tidak Diketahui';
+            $label = $row->label ?? __('Tidak Diketahui');
             $value = (int) $row->total;
 
             return [
@@ -491,7 +491,7 @@ class ReportController extends Controller
     private function formatLabel(?string $label): string
     {
         if ($label === null || $label === '') {
-            return 'Tidak Diketahui';
+            return __('Tidak Diketahui');
         }
 
         $normalized = strtolower($label);

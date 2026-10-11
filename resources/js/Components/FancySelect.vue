@@ -60,6 +60,8 @@
 </template>
 
 <script setup>
+import { translateUi as uiText } from '../i18n'
+
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 const props = defineProps({
@@ -67,7 +69,7 @@ const props = defineProps({
   options: { type: Array, default: () => [] },
   disabled: { type: Boolean, default: false },
   accent: { type: String, default: 'indigo' },
-  ariaLabel: { type: String, default: 'Pilih opsi' },
+  ariaLabel: { type: String, default: () => uiText("Pilih opsi") },
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -125,7 +127,7 @@ const panelClass = computed(() => `${accentConfig.value.border} ${accentConfig.v
 
 const selectedLabel = computed(() => {
   const current = props.options.find(option => String(option.value) === String(props.modelValue));
-  return current?.label ?? 'Pilih opsi';
+  return current?.label ?? uiText("Pilih opsi");
 });
 
 function toggle() {

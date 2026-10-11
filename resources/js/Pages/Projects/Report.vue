@@ -3,16 +3,16 @@
     <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div class="space-y-1.5">
         <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100">Project Report</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-300">Ringkasan project berdasarkan status beserta filter yang fleksibel.</p>
+        <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Ringkasan project berdasarkan status beserta filter yang fleksibel.") }}</p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <a :href="downloadUrl" class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50 dark:border-slate-600 dark:bg-slate-900 dark:text-blue-300 dark:hover:bg-slate-800">
           <span class="material-icons text-base">picture_as_pdf</span>
-          Download PDF
+          {{ $t("Download PDF") }}
         </a>
         <Link :href="route('projects.create')" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-blue-700">
           <span class="material-icons text-base">add</span>
-          Project Baru
+          {{ $t("Project Baru") }}
         </Link>
       </div>
     </header>
@@ -29,13 +29,13 @@
     <form class="grid gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900" @submit.prevent="applyFilters">
       <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <div>
-          <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Kata Kunci</label>
+          <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">{{ $t("Kata Kunci") }}</label>
           <div class="relative mt-1">
               <span class="material-icons pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
               <input
                 v-model="form.q"
                 type="search"
-                placeholder="Judul, deskripsi, atau nomor project"
+                :placeholder="$t(&quot;Judul, deskripsi, atau nomor project&quot;)"
                 class="w-full rounded-lg border border-slate-300 bg-white py-2 pl-10 pr-3 text-sm text-slate-700 focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
               />
             </div>
@@ -64,7 +64,7 @@
                   class="status-select__pill"
                   size="sm"
                   status="all"
-                  label="Semua Status"
+                  :label="$t(&quot;Semua Status&quot;)"
                 />
               </span>
               <span class="material-icons status-select__icon">{{ statusDropdownOpen ? 'expand_less' : 'expand_more' }}</span>
@@ -78,7 +78,7 @@
                 :aria-selected="form.status === ''"
                 @click="selectStatus('')"
               >
-                <StatusPill class="status-select__pill" size="sm" status="all" label="Semua Status" />
+                <StatusPill class="status-select__pill" size="sm" status="all" :label="$t(&quot;Semua Status&quot;)" />
                 <span v-if="form.status === ''" class="material-icons" aria-hidden="true">check</span>
               </button>
               <button
@@ -98,13 +98,13 @@
           </div>
         </div>
         <div>
-          <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Dari</label>
+          <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">{{ $t("Dari") }}</label>
           <div class="mt-1">
             <DatePickerFlatpickr v-model="form.from" :config="calendarConfig" placeholder="dd/mm/yyyy" />
           </div>
         </div>
         <div>
-          <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Sampai</label>
+          <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">{{ $t("Sampai") }}</label>
           <div class="mt-1">
             <DatePickerFlatpickr v-model="form.to" :config="calendarConfig" placeholder="dd/mm/yyyy" />
           </div>
@@ -125,7 +125,7 @@
           :disabled="submitting"
         >
           <span class="material-icons text-base">{{ submitting ? 'hourglass_top' : 'filter_alt' }}</span>
-          Terapkan
+          {{ $t("Terapkan") }}
         </button>
       </div>
     </form>
@@ -139,8 +139,8 @@
           :aria-expanded="accordion.ticket"
         >
           <div>
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Project Berbasis Ticket</h2>
-            <p class="text-sm text-slate-500 dark:text-slate-300">{{ ticketSummary.total }} project · {{ ticketSummary.in_progress }} in progress · {{ ticketSummary.done }} selesai</p>
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">{{ $t("Project Berbasis Ticket") }}</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-300">{{ ticketSummary.total }} project · {{ ticketSummary.in_progress }} in progress · {{ ticketSummary.done }} {{ $t("selesai") }}</p>
           </div>
           <span
             class="material-icons text-blue-700 transition-transform duration-200 dark:text-blue-300"
@@ -160,11 +160,11 @@
                   <p class="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ ticketSummary.total }}</p>
                 </div>
                 <div class="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 dark:border-blue-500/40 dark:bg-blue-500/10">
-                  <p class="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-200">In Progress</p>
+                  <p class="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-200">{{ $t("In Progress") }}</p>
                   <p class="mt-1 text-2xl font-semibold text-blue-700 dark:text-blue-100">{{ ticketSummary.in_progress }}</p>
                 </div>
                 <div class="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 dark:border-emerald-500/40 dark:bg-emerald-500/10">
-                  <p class="text-xs font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-200">Completed</p>
+                  <p class="text-xs font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-200">{{ $t("Completed") }}</p>
                   <p class="mt-1 text-2xl font-semibold text-emerald-700 dark:text-emerald-100">{{ ticketSummary.done }}</p>
                 </div>
               </div>
@@ -175,25 +175,25 @@
                     <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-300">
                       <tr>
                         <th class="px-4 py-3 text-left">#</th>
-                        <th class="px-4 py-3 text-left">Nama Project</th>
+                        <th class="px-4 py-3 text-left">{{ $t("Nama Project") }}</th>
                         <th class="px-4 py-3 text-left">Ticket</th>
                         <th class="px-4 py-3 text-left">Status</th>
                         <th class="px-4 py-3 text-left">Status ID</th>
                         <th class="px-4 py-3 text-left">Due</th>
-                        <th class="px-4 py-3 text-left">Dibuat</th>
-                        <th class="px-4 py-3 text-left">Diperbarui</th>
-                        <th class="px-4 py-3 text-right report-actions-col">Aksi</th>
+                        <th class="px-4 py-3 text-left">{{ $t("Dibuat") }}</th>
+                        <th class="px-4 py-3 text-left">{{ $t("Diperbarui") }}</th>
+                        <th class="px-4 py-3 text-right report-actions-col">{{ $t("Aksi") }}</th>
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200 bg-white dark:divide-slate-700 dark:bg-slate-900">
                       <tr v-if="ticketLoading">
-                        <td colspan="9" class="px-4 py-6 text-center text-slate-500 dark:text-slate-300">Memuat project ticket...</td>
+                        <td colspan="9" class="px-4 py-6 text-center text-slate-500 dark:text-slate-300">{{ $t("Memuat project ticket...") }}</td>
                       </tr>
                       <tr v-else-if="!ticketData">
-                        <td colspan="9" class="px-4 py-6 text-center text-slate-500 dark:text-slate-300">Klik bagian ini untuk memuat data.</td>
+                        <td colspan="9" class="px-4 py-6 text-center text-slate-500 dark:text-slate-300">{{ $t("Klik bagian ini untuk memuat data.") }}</td>
                       </tr>
                       <tr v-else-if="!ticketData.data.length">
-                        <td colspan="9" class="px-4 py-6 text-center text-slate-500 dark:text-slate-300">Tidak ada project dari ticket.</td>
+                        <td colspan="9" class="px-4 py-6 text-center text-slate-500 dark:text-slate-300">{{ $t("Tidak ada project dari ticket.") }}</td>
                       </tr>
                       <template v-else>
                         <template v-for="(group, index) in ticketData.data" :key="group.primary?.id ?? `ticket-group-${index}`">
@@ -203,7 +203,7 @@
                               <div class="font-semibold text-slate-900 dark:text-slate-100">{{ group.primary.title }}</div>
                               <div class="text-xs text-slate-500 dark:text-slate-300">No: {{ group.primary.project_no || '—' }}</div>
                               <p v-if="group.children.length" class="mt-1 text-[11px] font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-200">
-                                + {{ group.children.length }} project terkait
+                                + {{ group.children.length }} {{ $t("project terkait") }}
                               </p>
                             </td>
                             <td class="px-4 py-3">
@@ -224,7 +224,7 @@
                             <td class="px-4 py-3 text-slate-600 dark:text-slate-200">{{ group.primary.updated_display }}</td>
                             <td class="px-4 py-3 report-actions-col">
                               <div class="flex items-center justify-end gap-3">
-                                <Link :href="group.primary.links.show" class="text-sm text-blue-600 hover:underline dark:text-blue-400">Lihat</Link>
+                                <Link :href="group.primary.links.show" class="text-sm text-blue-600 hover:underline dark:text-blue-400">{{ $t("Lihat") }}</Link>
                                 <Link v-if="group.primary.links.edit" :href="group.primary.links.edit" class="text-sm text-blue-600 hover:underline dark:text-blue-400">Edit</Link>
                                 <Link v-if="group.primary.links.ticket" :href="group.primary.links.ticket" class="text-sm text-blue-600 hover:underline dark:text-blue-400">Ticket</Link>
                                 <button
@@ -235,7 +235,7 @@
                                   @click.stop="destroyProject(group.primary, 'ticket')"
                                 >
                                   <span class="material-icons text-base" aria-hidden="true">{{ isDeleting('ticket', group.primary.id) ? 'hourglass_top' : 'delete' }}</span>
-                                  Hapus
+                                  {{ $t("Hapus") }}
                                 </button>
                               </div>
                             </td>
@@ -276,8 +276,8 @@
           :aria-expanded="accordion.standalone"
         >
           <div>
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Project Mandiri</h2>
-            <p class="text-sm text-slate-500 dark:text-slate-300">{{ standaloneSummary.total }} project · {{ standaloneSummary.in_progress }} in progress · {{ standaloneSummary.done }} selesai</p>
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">{{ $t("Project Mandiri") }}</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-300">{{ standaloneSummary.total }} project · {{ standaloneSummary.in_progress }} in progress · {{ standaloneSummary.done }} {{ $t("selesai") }}</p>
           </div>
           <span
             class="material-icons text-purple-700 transition-transform duration-200 dark:text-purple-300"
@@ -297,11 +297,11 @@
                   <p class="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ standaloneSummary.total }}</p>
                 </div>
                 <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-500/40 dark:bg-amber-500/10">
-                  <p class="text-xs font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-200">In Progress</p>
+                  <p class="text-xs font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-200">{{ $t("In Progress") }}</p>
                   <p class="mt-1 text-2xl font-semibold text-amber-700 dark:text-amber-100">{{ standaloneSummary.in_progress }}</p>
                 </div>
                 <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-500/40 dark:bg-emerald-500/10">
-                  <p class="text-xs font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-200">Completed</p>
+                  <p class="text-xs font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-200">{{ $t("Completed") }}</p>
                   <p class="mt-1 text-2xl font-semibold text-emerald-700 dark:text-emerald-100">{{ standaloneSummary.done }}</p>
                 </div>
               </div>
@@ -312,25 +312,25 @@
                     <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-300">
                       <tr>
                         <th class="px-4 py-3 text-left">#</th>
-                        <th class="px-4 py-3 text-left">Nama Project</th>
-                        <th class="px-4 py-3 text-left">Tipe</th>
+                        <th class="px-4 py-3 text-left">{{ $t("Nama Project") }}</th>
+                        <th class="px-4 py-3 text-left">{{ $t("Tipe") }}</th>
                         <th class="px-4 py-3 text-left">Status</th>
-                        <th class="px-4 py-3 text-left">Start</th>
+                        <th class="px-4 py-3 text-left">{{ $t("Start") }}</th>
                         <th class="px-4 py-3 text-left">End</th>
-                        <th class="px-4 py-3 text-left">Dibuat</th>
-                        <th class="px-4 py-3 text-left">Diperbarui</th>
-                        <th class="px-4 py-3 text-right report-actions-col">Aksi</th>
+                        <th class="px-4 py-3 text-left">{{ $t("Dibuat") }}</th>
+                        <th class="px-4 py-3 text-left">{{ $t("Diperbarui") }}</th>
+                        <th class="px-4 py-3 text-right report-actions-col">{{ $t("Aksi") }}</th>
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200 bg-white dark:divide-slate-700 dark:bg-slate-900">
                       <tr v-if="standaloneLoading">
-                        <td colspan="9" class="px-4 py-6 text-center text-slate-500 dark:text-slate-300">Memuat project mandiri...</td>
+                        <td colspan="9" class="px-4 py-6 text-center text-slate-500 dark:text-slate-300">{{ $t("Memuat project mandiri...") }}</td>
                       </tr>
                       <tr v-else-if="!standaloneData">
-                        <td colspan="9" class="px-4 py-6 text-center text-slate-500 dark:text-slate-300">Klik bagian ini untuk memuat data.</td>
+                        <td colspan="9" class="px-4 py-6 text-center text-slate-500 dark:text-slate-300">{{ $t("Klik bagian ini untuk memuat data.") }}</td>
                       </tr>
                       <tr v-else-if="!standaloneData.data.length">
-                        <td colspan="9" class="px-4 py-6 text-center text-slate-500 dark:text-slate-300">Tidak ada project mandiri.</td>
+                        <td colspan="9" class="px-4 py-6 text-center text-slate-500 dark:text-slate-300">{{ $t("Tidak ada project mandiri.") }}</td>
                       </tr>
                       <template v-else>
                         <template v-for="(row, index) in standaloneData.data" :key="`standalone-row-${row.id}`">
@@ -352,7 +352,7 @@
                             <td class="px-4 py-3 text-slate-600 dark:text-slate-200">{{ row.updated_display }}</td>
                             <td class="px-4 py-3 report-actions-col">
                               <div class="flex items-center justify-end gap-3">
-                                <Link :href="row.links.show" class="text-sm text-blue-600 hover:underline dark:text-blue-400">Lihat</Link>
+                                <Link :href="row.links.show" class="text-sm text-blue-600 hover:underline dark:text-blue-400">{{ $t("Lihat") }}</Link>
                                 <Link v-if="row.links.edit" :href="row.links.edit" class="text-sm text-blue-600 hover:underline dark:text-blue-400">Edit</Link>
                               <button
                                 v-if="row.links.delete"
@@ -362,7 +362,7 @@
                                 @click.stop="destroyProject(row, 'standalone')"
                               >
                                 <span class="material-icons text-base" aria-hidden="true">{{ isDeleting('standalone', row.id) ? 'hourglass_top' : 'delete' }}</span>
-                                Hapus
+                                {{ $t("Hapus") }}
                               </button>
                             </div>
                           </td>
@@ -399,6 +399,8 @@
 </template>
 
 <script setup>
+import { translateUi as uiText } from '../../i18n'
+
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import DatePickerFlatpickr from '@/Components/DatePickerFlatpickr.vue';
@@ -711,21 +713,21 @@ function ticketMeta(row) {
     { label: 'Status', value: row.status_label || '—' },
     { label: 'Status ID', value: row.status_id || '—' },
     { label: 'Due', value: row.due_display || '—' },
-    { label: 'Dibuat', value: row.created_display || '—' },
-    { label: 'Diperbarui', value: row.updated_display || '—' },
-    { label: 'Dibuat Oleh', value: creatorName(row) },
+    { label: uiText("Dibuat"), value: row.created_display || '—' },
+    { label: uiText("Diperbarui"), value: row.updated_display || '—' },
+    { label: uiText("Dibuat Oleh"), value: creatorName(row) },
   ];
 }
 
 function standaloneMeta(row) {
   return [
     { label: 'Status', value: row.status_label || '—' },
-    { label: 'Tipe', value: row.type_label || '—' },
-    { label: 'Start', value: row.start_display || '—' },
+    { label: uiText("Tipe"), value: row.type_label || '—' },
+    { label: uiText("Start"), value: row.start_display || '—' },
     { label: 'End', value: row.due_display || '—' },
-    { label: 'Dibuat', value: row.created_display || '—' },
-    { label: 'Diperbarui', value: row.updated_display || '—' },
-    { label: 'Dibuat Oleh', value: creatorName(row) },
+    { label: uiText("Dibuat"), value: row.created_display || '—' },
+    { label: uiText("Diperbarui"), value: row.updated_display || '—' },
+    { label: uiText("Dibuat Oleh"), value: creatorName(row) },
   ];
 }
 
@@ -735,7 +737,7 @@ function isDeleting(scope, id) {
 
 function destroyProject(row, scope) {
   if (!row?.links?.delete) return;
-  if (!window.confirm(`Yakin ingin menghapus project "${row.title}"?`)) return;
+  if (!window.confirm((uiText("Yakin ingin menghapus project \"") + (row.title) + "\"?"))) return;
 
   deleting.scope = scope;
   deleting.id = row.id;

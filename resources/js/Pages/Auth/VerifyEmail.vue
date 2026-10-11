@@ -1,16 +1,16 @@
 <template>
   <div class="mx-auto w-full max-w-md rounded-3xl bg-white/90 p-8 shadow-xl backdrop-blur dark:bg-slate-900/90">
-    <Head title="Verifikasi Email" />
+    <Head :title="$t(&quot;Verifikasi Email&quot;)" />
     <div class="space-y-6 text-center">
       <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-blue-600">
         <span class="material-icons text-3xl">mark_email_unread</span>
       </div>
       <div>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Verifikasi Email Diperlukan</h1>
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">{{ $t("Verifikasi Email Diperlukan") }}</h1>
         <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
-          <span v-if="successMessage">Tautan verifikasi sudah dikirim</span>
-          <span v-else>Belum menerima tautan verifikasi?</span>
-          <span v-if="email"> ke email ({{ email }})</span>. Silakan cek kotak masuk atau folder spam.
+          <span v-if="successMessage">{{ $t("Tautan verifikasi sudah dikirim") }}</span>
+          <span v-else>{{ $t("Belum menerima tautan verifikasi?") }}</span>
+          <span v-if="email"> {{ $t("ke email (") }}{{ email }})</span>{{ $t(". Silakan cek kotak masuk atau folder spam.") }}
         </p>
       </div>
       <form @submit.prevent="resend" class="space-y-4">
@@ -20,14 +20,14 @@
           class="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-75"
         >
           <span class="material-icons text-base">refresh</span>
-          <span>Kirim Ulang Email Verifikasi</span>
+          <span>{{ $t("Kirim Ulang Email Verifikasi") }}</span>
         </button>
       </form>
       <p v-if="successMessage" class="text-sm font-semibold text-green-600">{{ successMessage }}</p>
       <p v-if="errorMessage" class="text-sm font-semibold text-red-500">{{ errorMessage }}</p>
       <p v-if="warningMessage" class="text-sm font-semibold text-amber-600">{{ warningMessage }}</p>
       <p v-if="checking" class="text-xs font-medium text-slate-500 dark:text-slate-400">
-        Menunggu verifikasi&hellip; halaman ini akan otomatis lanjut setelah kamu klik link di email.
+        {{ $t("Menunggu verifikasi… halaman ini akan otomatis lanjut setelah kamu klik link di email.") }}
       </p>
       <form @submit.prevent="logout" class="pt-2">
         <button
@@ -36,7 +36,7 @@
           class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900/5 px-5 py-2.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-900/10 disabled:cursor-not-allowed disabled:opacity-75 dark:bg-white/10 dark:text-slate-100 dark:ring-white/10 dark:hover:bg-white/15"
         >
           <span class="material-icons text-base">logout</span>
-          <span>Logout</span>
+          <span>{{ $t("Logout") }}</span>
         </button>
       </form>
     </div>
@@ -44,6 +44,8 @@
 </template>
 
 <script setup>
+import { translateUi as uiText } from '../../i18n'
+
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import MinimalAuthLayout from '../../Layouts/MinimalAuthLayout.vue';
@@ -58,7 +60,7 @@ const flashSuccess = computed(() => page.props.value?.flash?.success ?? null);
 const flashError = computed(() => page.props.value?.flash?.error ?? null);
 const flashWarning = computed(() => page.props.value?.flash?.warning ?? null);
 const successMessage = computed(() => {
-  if (status.value === 'verification-link-sent') return 'Tautan verifikasi berhasil dikirim.';
+  if (status.value === 'verification-link-sent') return uiText("Tautan verifikasi berhasil dikirim.");
   if (typeof flashSuccess.value === 'string' && flashSuccess.value.trim() !== '') return flashSuccess.value;
   return null;
 });

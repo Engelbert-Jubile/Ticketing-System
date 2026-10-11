@@ -24,8 +24,10 @@
 </template>
 
 <script setup>
+import { translateUi as uiText } from '../i18n'
+
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-const props = defineProps({ modelValue: { type: [String, Number, null], default: null }, options: { type: Array, default: () => [] }, placeholder: { type: String, default: 'Pilih opsi' }, ariaLabel: { type: String, default: 'Pilih opsi' }, disabled: Boolean, loading: Boolean, loadingText: { type: String, default: 'Memuat opsi...' }, emptyText: { type: String, default: 'Tidak ada opsi tersedia' } })
+const props = defineProps({ modelValue: { type: [String, Number, null], default: null }, options: { type: Array, default: () => [] }, placeholder: { type: String, default: () => uiText("Pilih opsi") }, ariaLabel: { type: String, default: () => uiText("Pilih opsi") }, disabled: Boolean, loading: Boolean, loadingText: { type: String, default: () => uiText("Memuat opsi...") }, emptyText: { type: String, default: () => uiText("Tidak ada opsi tersedia") } })
 const emit = defineEmits(['update:modelValue'])
 const anchor = ref(null), trigger = ref(null), panel = ref(null), open = ref(false), active = ref(-1), panelStyle = ref({})
 const listId = `workflow-select-${Math.random().toString(36).slice(2)}`

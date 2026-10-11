@@ -16,10 +16,10 @@
             Ticketing System
           </Link>
           <h1 class="mt-10 text-4xl font-semibold leading-tight text-white sm:text-[44px] sm:leading-tight">
-            Kelola tiket, task, dan project dengan tampilan modern
+            {{ $t("Kelola tiket, task, dan project dengan tampilan modern") }}
           </h1>
           <p class="mt-5 max-w-xl text-base text-slate-200">
-            Platform terpadu untuk tim Anda. Login atau daftar untuk mulai memantau seluruh pekerjaan dengan lebih teratur dan menyenangkan.
+            {{ $t("Platform terpadu untuk tim Anda. Login atau daftar untuk mulai memantau seluruh pekerjaan dengan lebih teratur dan menyenangkan.") }}
           </p>
           <div class="mt-8 flex flex-wrap items-center justify-center gap-4 text-xs font-semibold uppercase tracking-[0.35em] text-slate-100">
             <span class="inline-flex items-center gap-2 rounded-full bg-white/10 px-5 py-3 ring-1 ring-white/15">
@@ -28,11 +28,11 @@
             </span>
             <span class="inline-flex items-center gap-2 rounded-full bg-white/10 px-5 py-3 ring-1 ring-white/15">
               <span class="material-icons text-sm text-emerald-300">groups</span>
-              Dipercaya tim produktif
+              {{ $t("Dipercaya tim produktif") }}
             </span>
             <span class="inline-flex items-center gap-2 rounded-full bg-white/10 px-5 py-3 ring-1 ring-white/15">
               <span class="material-icons text-sm text-sky-300">bolt</span>
-              Integrasi cepat
+              {{ $t("Integrasi cepat") }}
             </span>
           </div>
         </div>

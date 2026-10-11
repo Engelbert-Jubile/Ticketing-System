@@ -9,12 +9,12 @@
         <StatusBadge :status="task.status" :label="task.status_label" variant="status" />
       </div>
       <div v-if="task.priority" class="text-sm text-slate-600 dark:text-slate-300">
-        Prioritas: <StatusBadge :status="task.priority" :label="task.priority_label" variant="priority" size="sm" />
+        {{ $t("Prioritas:") }} <StatusBadge :status="task.priority" :label="task.priority_label" variant="priority" size="sm" />
       </div>
     </header>
 
     <section v-if="task.description" class="rounded-3xl border border-slate-200 bg-white/95 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-      <h2 class="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">Deskripsi</h2>
+      <h2 class="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">{{ $t("Deskripsi") }}</h2>
       <div class="prose prose-sm max-w-none text-slate-700 dark:prose-invert" v-html="task.description"></div>
     </section>
 
@@ -27,7 +27,7 @@
               <div v-if="assignmentAgent" class="mt-2 flex flex-wrap gap-2">
                 <TasksAssigneePill :name="assignmentAgent.name" :email="assignmentAgent.email" role="Agent" />
               </div>
-              <p v-else class="mt-2 text-sm font-medium text-slate-500 dark:text-slate-400">— Tidak ada agent —</p>
+              <p v-else class="mt-2 text-sm font-medium text-slate-500 dark:text-slate-400">{{ $t("— Tidak ada agent —") }}</p>
             </div>
             <div>
               <p class="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">PIC</p>
@@ -40,18 +40,18 @@
                   role="PIC"
                 />
               </div>
-              <p v-else class="mt-2 text-sm font-medium text-slate-500 dark:text-slate-400">— Tidak ada PIC —</p>
+              <p v-else class="mt-2 text-sm font-medium text-slate-500 dark:text-slate-400">{{ $t("— Tidak ada PIC —") }}</p>
             </div>
           </div>
         </article>
 
       <article class="card" v-if="task.requester">
-        <h3 class="card-title">Pembuat</h3>
+        <h3 class="card-title">{{ $t("Pembuat") }}</h3>
         <div class="text-sm text-slate-700 dark:text-slate-200">{{ task.requester.name }}</div>
       </article>
 
       <article class="card" v-if="task.ticket">
-        <h3 class="card-title">Ticket Terkait</h3>
+        <h3 class="card-title">{{ $t("Ticket Terkait") }}</h3>
         <div class="text-sm text-slate-600 dark:text-slate-300">
           <div class="font-semibold text-slate-800 dark:text-slate-100">{{ task.ticket.ticket_no }}</div>
           <div class="line-clamp-2 text-xs">{{ task.ticket.title }}</div>
@@ -64,13 +64,13 @@
       </article>
 
       <article class="card" v-if="task.due_display !== '—'">
-        <h3 class="card-title">Target Selesai</h3>
+        <h3 class="card-title">{{ $t("Target Selesai") }}</h3>
         <div class="text-sm font-medium text-slate-900 dark:text-slate-100">{{ task.due_display }}</div>
       </article>
     </section>
 
     <section v-if="task.attachments.length" class="rounded-3xl border border-slate-200 bg-white/95 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-      <h2 class="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">Lampiran</h2>
+      <h2 class="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">{{ $t("Lampiran") }}</h2>
       <ul class="space-y-2 text-sm text-slate-600 dark:text-slate-300">
         <li v-for="attachment in task.attachments" :key="attachment.id" class="flex flex-col items-start gap-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-slate-700 dark:bg-slate-800/60">
           <div class="w-full flex-1 truncate sm:w-auto">
@@ -78,8 +78,8 @@
             <div v-if="formatSize(attachment.size)" class="text-xs text-slate-400">{{ formatSize(attachment.size) }}</div>
           </div>
           <div class="flex w-full flex-wrap items-center gap-2 sm:ml-4 sm:w-auto sm:justify-end">
-            <a :href="attachment.view_url" target="_blank" class="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-semibold text-blue-600 transition hover:bg-blue-50 dark:border-blue-400/40 dark:text-blue-200 dark:hover:bg-blue-500/10">Lihat</a>
-            <a :href="attachment.download_url" class="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800">Unduh</a>
+            <a :href="attachment.view_url" target="_blank" class="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-semibold text-blue-600 transition hover:bg-blue-50 dark:border-blue-400/40 dark:text-blue-200 dark:hover:bg-blue-500/10">{{ $t("Lihat") }}</a>
+            <a :href="attachment.download_url" class="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800">{{ $t("Unduh") }}</a>
           </div>
         </li>
       </ul>

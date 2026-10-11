@@ -59,6 +59,7 @@ createInertiaApp({
       || detectLocaleFromUrl()
       || 'en';
     const i18n = createI18n(initialLocale);
+    i18n.setLocale(initialLocale);
     Ziggy.defaults = { locale: initialLocale };
 
     const wrapRouteWithLocale = () => {
@@ -66,7 +67,7 @@ createInertiaApp({
       if (window.route.__localeWrapped) return;
       const original = window.route;
       window.route = (name, params = {}, absolute, config) => {
-        const locale = detectLocaleFromUrl();
+        const locale = i18n.getLocale();
         if (locale && params && typeof params === 'object' && !('locale' in params)) {
           return original(name, { locale, ...params }, absolute, config);
         }

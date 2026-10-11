@@ -23,7 +23,7 @@ class VerifyEmailController extends Controller
         if (! $user) {
             return redirect()
                 ->route('login', ['locale' => $locale])
-                ->with('error', 'User tidak ditemukan.');
+                ->with('error', __('User tidak ditemukan.'));
         }
 
         $emailHash = sha1($user->getEmailForVerification());
@@ -44,7 +44,7 @@ class VerifyEmailController extends Controller
 
         return redirect()
             ->route('login', ['locale' => $locale])
-            ->with('success', 'Email berhasil diverifikasi. Silakan login.');
+            ->with('success', __('Email berhasil diverifikasi. Silakan login.'));
     }
 
     private function resolveLocale(Request $request): string

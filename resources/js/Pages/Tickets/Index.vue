@@ -2,17 +2,17 @@
   <div class="mx-auto max-w-7xl space-y-6 px-4 py-6 lg:px-6">
     <header class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100">Tickets</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-300">Kelola dan telusuri daftar ticket terbaru.</p>
+        <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ $t("Tickets") }}</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Kelola dan telusuri daftar ticket terbaru.") }}</p>
       </div>
       <div class="flex flex-wrap gap-2">
         <a :href="downloadUrl" class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50 dark:border-slate-600 dark:bg-slate-800 dark:text-blue-300 dark:hover:bg-slate-700">
           <span class="material-icons text-[18px]">picture_as_pdf</span>
-          Download PDF
+          {{ $t("Download PDF") }}
         </a>
         <Link :href="createUrl" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-blue-700">
           <span class="material-icons text-[18px]">add</span>
-          Buat Ticket
+          {{ $t("Buat Ticket") }}
         </Link>
       </div>
     </header>
@@ -22,21 +22,21 @@
         <input
           v-model="form.q"
           type="search"
-          placeholder="Cari ticket"
+          :placeholder="$t(&quot;Cari ticket&quot;)"
           class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
         />
         <select
           v-model="form.status"
           class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 sm:w-48"
         >
-          <option value="">Semua status</option>
+          <option value="">{{ $t("Semua status") }}</option>
           <option v-for="option in statusOptions" :key="option.value" :value="option.value">
             {{ option.label }}
           </option>
         </select>
         <div class="flex gap-2">
           <button type="submit" class="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-blue-700">
-            Terapkan
+            {{ $t("Terapkan") }}
           </button>
           <button type="button" class="inline-flex items-center rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800" @click="reset">
             Reset
@@ -50,10 +50,10 @@
             <tr>
               <th class="px-4 py-3">Ticket</th>
               <th class="px-4 py-3">Status</th>
-              <th class="px-4 py-3">Prioritas</th>
-              <th class="px-4 py-3">Jenis</th>
-              <th class="px-4 py-3">Jatuh Tempo</th>
-              <th class="px-4 py-3">Diperbarui</th>
+              <th class="px-4 py-3">{{ $t("Prioritas") }}</th>
+              <th class="px-4 py-3">{{ $t("Jenis") }}</th>
+              <th class="px-4 py-3">{{ $t("Jatuh Tempo") }}</th>
+              <th class="px-4 py-3">{{ $t("Diperbarui") }}</th>
               <th class="px-4 py-3"></th>
             </tr>
           </thead>
@@ -87,13 +87,13 @@
                     @click.stop="destroyTicket(ticket)"
                   >
                     <span class="material-icons text-base" aria-hidden="true">{{ deletingId === ticket.id ? 'hourglass_top' : 'delete' }}</span>
-                    Hapus
+                    {{ $t("Hapus") }}
                   </button>
                 </div>
               </td>
             </tr>
             <tr v-if="!tickets.data.length">
-              <td colspan="7" class="px-4 py-6 text-center text-slate-500">Tidak ada ticket yang cocok.</td>
+              <td colspan="7" class="px-4 py-6 text-center text-slate-500">{{ $t("Tidak ada ticket yang cocok.") }}</td>
             </tr>
           </tbody>
         </table>
@@ -122,6 +122,10 @@
 </template>
 
 <script setup>
+import { translateUi as uiText } from '../../i18n'
+
+import { uiLocale } from '../../i18n'
+
 import { Link, router } from '@inertiajs/vue3';
 import { computed, reactive, ref } from 'vue';
 import StatusPill from '@/Components/StatusPill.vue';
@@ -195,7 +199,7 @@ function buildDownloadUrl(base, params) {
 
 function destroyTicket(ticket) {
   if (!ticket?.links?.delete) return;
-  if (!window.confirm(`Yakin ingin menghapus ticket "${ticket.title}"?`)) return;
+  if (!window.confirm((uiText("Yakin ingin menghapus ticket \"") + (ticket.title) + "\"?"))) return;
 
   deletingId.value = ticket.id;
   router.delete(ticket.links.delete, {
@@ -215,6 +219,6 @@ function formatDate(value, withTime = false) {
   const options = withTime
     ? { dateStyle: 'medium', timeStyle: 'short' }
     : { dateStyle: 'medium' };
-  return new Intl.DateTimeFormat('id-ID', options).format(date);
+  return new Intl.DateTimeFormat(uiLocale.value, options).format(date);
 }
 </script>

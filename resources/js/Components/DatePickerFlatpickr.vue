@@ -12,12 +12,14 @@
 </template>
 
 <script setup>
+import { translateUi as uiText } from '../i18n'
+
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 const props = defineProps({
   modelValue: { type: [String, Date, null], default: null },
   ariaLabel: { type: String, default: '' },
-  placeholder: { type: String, default: 'Pilih tanggal' },
+  placeholder: { type: String, default: () => uiText("Pilih tanggal") },
   disabled: { type: Boolean, default: false },
   config: {
     type: Object,

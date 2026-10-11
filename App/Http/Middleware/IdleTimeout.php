@@ -33,7 +33,7 @@ class IdleTimeout
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
 
-                $statusMessage = 'Sesi berakhir karena tidak ada aktivitas. Silakan login ulang.';
+                $statusMessage = __('Sesi berakhir karena tidak ada aktivitas. Silakan login ulang.');
 
                 // If this was an Inertia visit, a normal 302 redirect will be treated as an invalid
                 // Inertia response and shown as an iframe/modal ("double page"). Force a hard visit.

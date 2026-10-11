@@ -26,12 +26,12 @@
 
     <section class="grid grid-cols-1 gap-4 sm:grid-cols-2" :class="showProjectUnit ? 'xl:grid-cols-4' : 'xl:grid-cols-3'">
       <div class="summary-card">
-        <div class="summary-label">Tickets</div>
+        <div class="summary-label">{{ $t("Tickets") }}</div>
         <div class="summary-value text-blue-600">{{ ticketsTotal }}</div>
         <p class="summary-hint">New: {{ ticketsNew }} - Progress: {{ ticketsInProgress }} - Done: {{ ticketsDone }}</p>
       </div>
       <div class="summary-card">
-        <div class="summary-label">Tasks</div>
+        <div class="summary-label">{{ $t("Tasks") }}</div>
         <div class="summary-value text-emerald-600">{{ tasksTotal }}</div>
         <p class="summary-hint">Done: {{ tasksDone }} - Active: {{ tasksActive }}</p>
       </div>
@@ -46,30 +46,30 @@
       <div class="panel">
         <header class="panel-head">
           <div>
-            <p class="panel-kicker">Performa Unit</p>
+            <p class="panel-kicker">{{ $t("Performa Unit") }}</p>
             <h2 class="panel-title">Ticket</h2>
           </div>
-          <span class="panel-badge">{{ ticketsCompletion }}% selesai</span>
+          <span class="panel-badge">{{ ticketsCompletion }}{{ $t("% selesai") }}</span>
         </header>
         <div class="panel-body">
           <div class="meter" :class="meterClass(ticketsCompletion)"><i :style="`--w:${ticketsCompletion}%`"></i></div>
           <p class="panel-hint">New: {{ ticketsNew }} - In Progress: {{ ticketsInProgress }} - Done: {{ ticketsDone }}</p>
-          <p class="panel-hint">Periode: {{ tasksPeriod }}</p>
+          <p class="panel-hint">{{ $t("Periode:") }} {{ tasksPeriod }}</p>
         </div>
       </div>
 
       <div class="panel">
         <header class="panel-head">
           <div>
-            <p class="panel-kicker">Performa Unit</p>
+            <p class="panel-kicker">{{ $t("Performa Unit") }}</p>
             <h2 class="panel-title">Task</h2>
           </div>
-          <span class="panel-badge">{{ tasksCompletion }}% selesai</span>
+          <span class="panel-badge">{{ tasksCompletion }}{{ $t("% selesai") }}</span>
         </header>
         <div class="panel-body">
           <div class="meter" :class="meterClass(tasksCompletion)"><i :style="`--w:${tasksCompletion}%`"></i></div>
-          <p class="panel-hint">Selesai: {{ tasksDone }} - Total: {{ tasksTotal }}</p>
-          <p class="panel-hint">Periode: {{ tasksPeriod }}</p>
+          <p class="panel-hint">{{ $t("Selesai:") }} {{ tasksDone }} - Total: {{ tasksTotal }}</p>
+          <p class="panel-hint">{{ $t("Periode:") }} {{ tasksPeriod }}</p>
         </div>
       </div>
 
@@ -78,8 +78,8 @@
     <section class="panel">
         <header class="panel-head">
           <div>
-            <p class="panel-kicker">Tim Unit</p>
-              <h2 class="panel-title">{{ isSuperadmin && !selectedUnitModel ? "Unit" : "User" }}</h2>
+            <p class="panel-kicker">{{ $t("Tim Unit") }}</p>
+              <h2 class="panel-title">{{ isSuperadmin && !selectedUnitModel ? "Unit" : $t("User") }}</h2>
           </div>
 
           <div class="flex items-center gap-2">
@@ -95,7 +95,7 @@
             </template>
 
               <span class="panel-badge" v-if="isSuperadmin && !selectedUnitModel">{{ unitSummary.length }} unit</span>
-            <span class="panel-badge" v-else>{{ agents.length }} orang</span>
+            <span class="panel-badge" v-else>{{ agents.length }} {{ $t("orang") }}</span>
           </div>
         </header>
 
@@ -105,13 +105,13 @@
               <tr class="text-xs uppercase tracking-wide text-slate-500">
                 <th class="py-2">Unit</th>
                 <th class="py-2 text-center">Users</th>
-                <th class="py-2 text-center">Tickets</th>
-                <th class="py-2 text-center">Tasks</th>
+                <th class="py-2 text-center">{{ $t("Tickets") }}</th>
+                <th class="py-2 text-center">{{ $t("Tasks") }}</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="!unitSummary.length">
-                <td colspan="4" class="py-4 text-center text-sm text-slate-500">Belum ada data unit.</td>
+                <td colspan="4" class="py-4 text-center text-sm text-slate-500">{{ $t("Belum ada data unit.") }}</td>
               </tr>
               <tr
                 v-for="row in unitSummary"
@@ -135,15 +135,15 @@
           <table class="w-full min-w-[640px] text-left">
             <thead>
               <tr class="text-xs uppercase tracking-wide text-slate-500">
-                <th class="py-2">Nama</th>
+                <th class="py-2">{{ $t("Nama") }}</th>
                 <th class="py-2">Email</th>
-                <th class="py-2 text-center">Tickets</th>
-                <th class="py-2 text-center">Tasks</th>
+                <th class="py-2 text-center">{{ $t("Tickets") }}</th>
+                <th class="py-2 text-center">{{ $t("Tasks") }}</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="!agents.length">
-                <td colspan="4" class="py-4 text-center text-sm text-slate-500">Belum ada anggota di unit ini.</td>
+                <td colspan="4" class="py-4 text-center text-sm text-slate-500">{{ $t("Belum ada anggota di unit ini.") }}</td>
               </tr>
               <tr
                 v-for="agent in agents"
@@ -163,6 +163,8 @@
 </template>
 
 <script setup>
+import { translateUi as uiText } from '../../i18n'
+
 import { Link, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import resolveRoute from '../../utils/resolveRoute';
@@ -171,7 +173,7 @@ import FancySelect from "../../Components/FancySelect.vue";
 const showProjectUnit = false;
 
 const props = defineProps({
-  pageTitle: { type: String, default: 'Unit Reports' },
+  pageTitle: { type: String, default: () => uiText("Unit Reports") },
   pageSubtitle: { type: String, default: '' },
   unitName: { type: String, default: '' },
   dateLabel: { type: String, default: '' },
@@ -201,7 +203,7 @@ const unitOptions = computed(() => (Array.isArray(props.unitOptions) ? props.uni
 const unitSummary = computed(() => (Array.isArray(props.unitSummary) ? props.unitSummary : []));
 
 // FancySelect - Unit filter
-const unitSelectOptions = computed(() => [{ value: "", label: "Semua Unit" }].concat(
+const unitSelectOptions = computed(() => [{ value: "", label: uiText("Semua Unit") }].concat(
   unitOptions.value.map(u => ({ value: String(u), label: String(u) }))
 ));
 
@@ -222,8 +224,8 @@ const selectedUnitModel = computed({
 
 
 
-const titleText = computed(() => props.pageTitle || 'Unit Reports');
-const subtitleText = computed(() => (props.pageSubtitle || 'Ringkasan ticket dan task untuk unit.').replace('ticket, task, dan project untuk unit', 'ticket dan task untuk unit').replace('ticket, task, dan project', 'ticket dan task'));
+const titleText = computed(() => props.pageTitle || uiText("Unit Reports"));
+const subtitleText = computed(() => (props.pageSubtitle || uiText("Ringkasan ticket dan task untuk unit.")).replace(uiText("ticket, task, dan project untuk unit"), uiText("ticket dan task untuk unit")).replace(uiText("ticket, task, dan project"), uiText("ticket dan task")));
 const dateLabel = computed(() => props.dateLabel || '');
 const usersCount = computed(() => Number(props.usersCount ?? 0));
 const tasksPeriod = computed(() => props.tasksPeriod || '-');
@@ -264,15 +266,15 @@ const quickActions = computed(() => [
     href: resolveRoute('tickets.create'),
     icon: 'add_task',
     iconClass: 'text-blue-600 dark:text-blue-400',
-    label: 'Buat Ticket',
-    description: 'Catat masalah baru untuk unit',
+    label: uiText("Buat Ticket"),
+    description: uiText("Catat masalah baru untuk unit"),
   },
   {
     href: resolveRoute('tasks.create'),
     icon: 'checklist',
     iconClass: 'text-emerald-600 dark:text-emerald-400',
-    label: 'Tambah Task',
-    description: 'Breakdown pekerjaan tim unit',
+    label: uiText("Tambah Task"),
+    description: uiText("Breakdown pekerjaan tim unit"),
   },
 ]);
 </script>

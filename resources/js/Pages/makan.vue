@@ -7,9 +7,9 @@
         <span class="material-icons text-base text-indigo-500">confirmation_number</span>
         Ticketing System
       </span>
-      <h1 class="text-3xl font-bold text-slate-900">Kelola tiket, task, dan project secara terpadu</h1>
+      <h1 class="text-3xl font-bold text-slate-900">{{ $t("Kelola tiket, task, dan project secara terpadu") }}</h1>
       <p class="text-sm text-gray-500">
-        Pantau pekerjaan tim Anda dengan antarmuka modern yang konsisten di seluruh perangkat. Mulai dengan login atau daftar akun baru dalam hitungan detik.
+        {{ $t("Pantau pekerjaan tim Anda dengan antarmuka modern yang konsisten di seluruh perangkat. Mulai dengan login atau daftar akun baru dalam hitungan detik.") }}
       </p>
     </div>
 
@@ -26,9 +26,9 @@
 
     <div class="mx-auto rounded-2xl bg-white/95 p-6 shadow-lg shadow-indigo-200/40 ring-1 ring-indigo-100 sm:p-8">
       <div class="space-y-3 text-center">
-        <h2 class="text-3xl font-bold text-slate-900">Mulai Atur Workspace</h2>
+        <h2 class="text-3xl font-bold text-slate-900">{{ $t("Mulai Atur Workspace") }}</h2>
         <p class="text-sm text-gray-500">
-          Satu klik untuk kembali ke pekerjaan Anda atau buat akun baru bagi anggota tim yang belum terdaftar.
+          {{ $t("Satu klik untuk kembali ke pekerjaan Anda atau buat akun baru bagi anggota tim yang belum terdaftar.") }}
         </p>
       </div>
 
@@ -46,7 +46,7 @@
           class="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-400 text-sm font-semibold text-white shadow-lg shadow-emerald-400/40 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200 focus-visible:ring-offset-2 focus-visible:ring-offset-white hover:from-emerald-600 hover:to-teal-500 active:from-emerald-700 active:to-teal-600"
         >
           <span class="material-icons text-base">person_add</span>
-          <span>Register</span>
+          <span>{{ $t("Register") }}</span>
         </Link>
       </div>
     </div>
@@ -54,6 +54,8 @@
 </template>
 
 <script setup>
+import { translateUi as uiText } from '../i18n'
+
 import { Head, Link } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import resolveRoute from '../utils/resolveRoute'
@@ -63,7 +65,7 @@ const registerUrl = computed(() => resolveRoute('register'))
 
 const chips = [
   { icon: 'workspace_premium', iconColor: 'text-indigo-500', label: 'Pro Workspace' },
-  { icon: 'groups', iconColor: 'text-emerald-500', label: 'Dipercaya tim produktif' },
-  { icon: 'bolt', iconColor: 'text-sky-500', label: 'Integrasi cepat' },
+  { icon: 'groups', iconColor: 'text-emerald-500', label: uiText("Dipercaya tim produktif") },
+  { icon: 'bolt', iconColor: 'text-sky-500', label: uiText("Integrasi cepat") },
 ]
 </script>

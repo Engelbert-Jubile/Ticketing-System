@@ -33,13 +33,13 @@ class GeminiAIService
     public function respond(User $user, string $message, array $history = [], array $sources = []): string
     {
         if (blank($this->apiKey)) {
-            throw new \RuntimeException('Gemini API key belum dikonfigurasi.');
+            throw new \RuntimeException(__('Gemini API key belum dikonfigurasi.'));
         }
 
         $message = trim($message);
 
         if ($message === '') {
-            throw new \InvalidArgumentException('Pesan tidak boleh kosong.');
+            throw new \InvalidArgumentException(__('Pesan tidak boleh kosong.'));
         }
 
         $context = $this->buildContext($user);
@@ -102,19 +102,19 @@ PROMPT;
                 ],
             ]);
         } catch (\Throwable $e) {
-            throw new \RuntimeException('Gagal terhubung ke Gemini: '.$e->getMessage(), 0, $e);
+            throw new \RuntimeException(__('Gagal terhubung ke Gemini: ').$e->getMessage(), 0, $e);
         }
 
         if ($response->failed()) {
             $errorBody = data_get($response->json(), 'error.message') ?: $response->body();
 
-            throw new \RuntimeException('Gagal terhubung ke Gemini: '.$errorBody);
+            throw new \RuntimeException(__('Gagal terhubung ke Gemini: ').$errorBody);
         }
 
         $text = data_get($response->json(), 'candidates.0.content.parts.0.text');
 
         if (! $text) {
-            throw new \RuntimeException('Gemini tidak mengembalikan jawaban.');
+            throw new \RuntimeException(__('Gemini tidak mengembalikan jawaban.'));
         }
 
         return trim($text);

@@ -10,7 +10,7 @@
         </Link>
         <div>
           <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100">Task Reports</h1>
-          <p class="text-sm text-slate-500 dark:text-slate-300">Atur pekerjaan tim, lihat status terbaru, dan tindak lanjuti pekerjaan yang tertunda.</p>
+          <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Atur pekerjaan tim, lihat status terbaru, dan tindak lanjuti pekerjaan yang tertunda.") }}</p>
         </div>
       </div>
       <Link
@@ -18,7 +18,7 @@
         class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/30 transition hover:shadow-xl"
       >
         <span class="material-icons text-[18px]">add_task</span>
-        Task Baru
+        {{ $t("Task Baru") }}
       </Link>
     </header>
 
@@ -28,7 +28,7 @@
         class="filter-pill"
         :class="!filters.status ? 'filter-pill--active' : ''"
         @click="applyFilter('')"
-      >Semua</button>
+      >{{ $t("Semua") }}</button>
       <button
         v-for="option in statusOptions"
         :key="option.value"
@@ -46,13 +46,13 @@
       <table class="min-w-[820px] divide-y divide-slate-200/70 text-sm dark:divide-slate-700/60">
         <thead class="bg-slate-50/80 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800/70 dark:text-slate-300">
           <tr>
-            <th class="px-4 py-3">Title</th>
-            <th class="px-4 py-3">Priority</th>
+            <th class="px-4 py-3">{{ $t("Title") }}</th>
+            <th class="px-4 py-3">{{ $t("Priority") }}</th>
             <th class="px-4 py-3">Status</th>
             <th class="px-4 py-3">Status ID</th>
             <th class="px-4 py-3">Due</th>
-            <th class="px-4 py-3">Attachments</th>
-            <th class="px-4 py-3 text-right">Actions</th>
+            <th class="px-4 py-3">{{ $t("Attachments") }}</th>
+            <th class="px-4 py-3 text-right">{{ $t("Actions") }}</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-200/60 bg-white dark:divide-slate-800/70 dark:bg-slate-900/60">
@@ -72,9 +72,9 @@
               <template v-if="task.attachments.length">
                 <ul class="list-disc list-inside text-xs">
                   <li v-for="attachment in task.attachments" :key="attachment.id">
-                    <a :href="attachment.view_url" target="_blank" class="text-blue-600 hover:underline dark:text-blue-400">Lihat</a>
+                    <a :href="attachment.view_url" target="_blank" class="text-blue-600 hover:underline dark:text-blue-400">{{ $t("Lihat") }}</a>
                     <span class="text-slate-400">·</span>
-                    <a :href="attachment.download_url" class="text-blue-600 hover:underline dark:text-blue-400">Unduh</a>
+                    <a :href="attachment.download_url" class="text-blue-600 hover:underline dark:text-blue-400">{{ $t("Unduh") }}</a>
                   </li>
                 </ul>
               </template>
@@ -82,15 +82,15 @@
             </td>
             <td class="px-4 py-3">
               <div class="flex flex-wrap justify-end gap-2">
-                <Link :href="task.links.show" class="action-btn action-btn--view">View</Link>
+                <Link :href="task.links.show" class="action-btn action-btn--view">{{ $t("View") }}</Link>
                 <Link :href="task.links.edit" class="action-btn action-btn--edit">Edit</Link>
-                <button type="button" class="action-btn action-btn--delete" @click="destroyTask(task)">Delete</button>
+                <button type="button" class="action-btn action-btn--delete" @click="destroyTask(task)">{{ $t("Delete") }}</button>
               </div>
             </td>
           </tr>
           <tr v-if="!tasks.length">
             <td colspan="7" class="px-4 py-10 text-center text-slate-500 dark:text-slate-300">
-              Belum ada task untuk ditampilkan.
+              {{ $t("Belum ada task untuk ditampilkan.") }}
             </td>
           </tr>
         </tbody>
@@ -101,6 +101,8 @@
 </template>
 
 <script setup>
+import { translateUi as uiText } from '../../i18n'
+
 import { computed } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import StatusBadge from '@/Components/StatusBadge.vue';
@@ -123,7 +125,7 @@ function applyFilter(value) {
 
 function destroyTask(task) {
   if (!task?.links?.delete) return;
-  if (!confirm('Hapus task ini?')) {
+  if (!confirm(uiText("Hapus task ini?"))) {
     return;
   }
   router.delete(task.links.delete, { preserveScroll: true });

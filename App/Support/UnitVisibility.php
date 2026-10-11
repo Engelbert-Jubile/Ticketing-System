@@ -180,7 +180,7 @@ class UnitVisibility
             return;
         }
 
-        abort(403, 'Anda tidak memiliki akses ke unit ini.');
+        abort(403, __('Anda tidak memiliki akses ke unit ini.'));
     }
 
     public static function ensureTaskAccess(?User $user, Task $task): void
@@ -201,7 +201,7 @@ class UnitVisibility
             return;
         }
 
-        abort(403, 'Anda tidak memiliki akses ke unit ini.');
+        abort(403, __('Anda tidak memiliki akses ke unit ini.'));
     }
 
     public static function ensureProjectAccess(?User $user, Project $project): void
@@ -239,7 +239,7 @@ class UnitVisibility
             return;
         }
 
-        abort(403, 'Anda tidak memiliki akses ke unit ini.');
+        abort(403, __('Anda tidak memiliki akses ke unit ini.'));
     }
 
     private static function userRelatesToTicket(?User $user, Ticket $ticket): bool
