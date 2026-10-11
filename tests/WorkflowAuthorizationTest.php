@@ -348,7 +348,10 @@ test('workflow index applies search type status pagination and permissions', fun
         ->get(route('workflows.index', ['locale' => 'id', 'search' => 'searchable', 'type' => 'ticket', 'status' => 'new']))
         ->assertOk()
         ->assertJsonCount(1, 'props.items.data')
-        ->assertJsonPath('props.items.data.0.number', 'TCK-USER-001');
+        ->assertJsonPath('props.items.data.0.number', 'TCK-USER-001')
+        ->assertJsonCount(7, 'props.items.data.0.process_stages')
+        ->assertJsonPath('props.items.data.0.process_stages.0.is_current', true)
+        ->assertJsonPath('props.items.data.0.process_stages.1.is_current', false);
 
     $this->actingAs($user)->withHeaders(workflowInertiaHeaders())
         ->get(route('workflows.index', ['locale' => 'id', 'type' => 'task', 'status' => 'done']))

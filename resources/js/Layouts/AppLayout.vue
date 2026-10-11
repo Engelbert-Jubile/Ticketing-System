@@ -329,7 +329,7 @@ const navItems = computed(() => {
   items.push({
     type: 'link',
     key: 'workflows',
-    label: 'Workflows',
+    label: 'Alur & Riwayat',
     icon: 'account_tree',
     href: resolveRouteName('workflows.index'),
     match: path => pathStartsWith(path, '/dashboard/workflows'),

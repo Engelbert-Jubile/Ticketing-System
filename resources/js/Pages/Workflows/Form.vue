@@ -1,8 +1,8 @@
 <template>
   <div class="mx-auto max-w-5xl space-y-6">
-    <Head title="Workflows" />
+    <Head title="Definisi Alur" />
     <Transition name="fade"><div v-if="notice" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 dark:border-rose-400/30 dark:bg-rose-400/10 dark:text-rose-200">{{ notice }}</div></Transition>
-    <header><Link :href="resolveRoute('workflows.index')" class="text-sm font-semibold text-blue-600">← Kembali</Link><h1 class="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{{ editing ? 'Edit Workflow' : 'Buat Workflow' }}</h1><p class="text-sm text-slate-500">Workflow hanya berlaku untuk Ticket dan Task.</p></header>
+    <header><Link :href="resolveRoute('workflows.index')" class="text-sm font-semibold text-blue-600">← Alur &amp; Riwayat</Link><h1 class="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{{ editing ? 'Edit definisi alur' : 'Buat definisi alur' }}</h1><p class="text-sm text-slate-500">Atur tahapan dan aturan proses untuk Ticket atau Task. Pekerjaan harian tersedia di menu Pekerjaan Saya.</p></header>
     <form class="space-y-6" @submit.prevent="submit">
       <section class="grid gap-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:grid-cols-2 dark:border-slate-700 dark:bg-slate-900">
         <label class="field">Nama workflow<input v-model="form.name" required maxlength="120" class="input" /><small v-if="form.errors.name" class="error">{{ form.errors.name }}</small></label>
@@ -40,7 +40,7 @@
           </article>
         </div>
       </section>
-      <div class="flex justify-end gap-3"><Link :href="resolveRoute('workflows.index')" class="btn-secondary">Batal</Link><button :disabled="form.processing" class="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{{ form.processing ? 'Menyimpan...' : 'Simpan Workflow' }}</button></div>
+      <div class="flex justify-end gap-3"><Link :href="resolveRoute('workflows.index')" class="btn-secondary">Batal</Link><button :disabled="form.processing" class="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{{ form.processing ? 'Menyimpan...' : 'Simpan definisi alur' }}</button></div>
     </form>
     <Teleport to="body"><div v-if="pendingSwap" class="swap-backdrop" @click.self="pendingSwap = null"><div class="swap-modal" role="alertdialog" aria-modal="true" aria-labelledby="swap-title"><span class="material-icons rounded-xl bg-violet-50 p-3 text-violet-600 dark:bg-violet-400/15 dark:text-violet-300">swap_horiz</span><h2 id="swap-title" class="mt-4 text-xl font-bold text-slate-900 dark:text-white">Tukar status tahap?</h2><p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300"><strong>{{ statusLabel(pendingSwap.nextStatus) }}</strong> saat ini digunakan oleh Tahap {{ pendingSwap.conflictIndex + 1 }} ({{ form.stages[pendingSwap.conflictIndex]?.name }}). Tukar status kedua tahap?</p><div class="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"><p>Tahap {{ pendingSwap.sourceIndex + 1 }}: {{ statusLabel(pendingSwap.previousStatus) }} → {{ statusLabel(pendingSwap.nextStatus) }}</p><p class="mt-1">Tahap {{ pendingSwap.conflictIndex + 1 }}: {{ statusLabel(pendingSwap.nextStatus) }} → {{ statusLabel(pendingSwap.previousStatus) }}</p></div><div class="mt-6 flex justify-end gap-3"><button type="button" class="btn-secondary" @click="pendingSwap = null">Batal</button><button type="button" class="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-700" @click="confirmStatusSwap">Ya, tukar status</button></div></div></div></Teleport>
   </div>

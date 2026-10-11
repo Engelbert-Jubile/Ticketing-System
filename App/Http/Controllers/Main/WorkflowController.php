@@ -897,6 +897,11 @@ class WorkflowController extends Controller
             'status' => $status,
             'status_label' => WorkflowStatus::label($status),
             'stage_name' => $instance->currentStage?->name ?? WorkflowStatus::label($status),
+            'process_stages' => $instance->workflow->stages->map(fn (WorkflowStage $stage) => [
+                'id' => $stage->id,
+                'name' => $stage->name,
+                'is_current' => (int) $stage->id === (int) $instance->current_stage_id,
+            ])->values(),
             'created_at' => $subject->created_at?->toIso8601String(),
             'updated_at' => $subject->updated_at?->toIso8601String(),
             'date' => $subject->updated_at?->toIso8601String(),

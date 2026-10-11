@@ -32,6 +32,7 @@ class SearchController extends Controller
         ]);
         return Inertia::render('Search/Results', [
             'personal' => $personal, 'filters' => $filters,
+            'canViewWorkflows' => $request->user()->can('view workflows'),
             'statuses' => WorkflowStatus::labels(),
             'results' => $service->fetch($request->user(), $filters, $personal),
         ]);

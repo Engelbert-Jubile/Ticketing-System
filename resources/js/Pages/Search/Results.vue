@@ -3,13 +3,22 @@
     <Head :title="heading || (personal ? 'Pekerjaan Saya' : 'Pencarian')" />
     <header class="flex flex-wrap items-center justify-between gap-3">
       <div><h1 class="text-2xl font-bold">{{ heading || (personal ? 'Pekerjaan Saya' : 'Pencarian') }}</h1>
-        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ personal ? 'Tindak lanjuti pekerjaan dan konfirmasi yang membutuhkan perhatian Anda.' : 'Cari nomor, judul, atau deskripsi ticket, task, dan project.' }}</p></div>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ personal ? 'Mulai pekerjaan harian di sini: pilih prioritas, buka pekerjaan, lalu tindak lanjuti.' : 'Cari nomor, judul, atau deskripsi ticket, task, dan project.' }}</p></div>
       <Link :href="resolveRoute('tickets.create')" class="rounded-xl bg-blue-600 px-4 py-2 font-semibold text-white">Buat ticket</Link>
     </header>
+    <aside v-if="personal" class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100">
+      <p><strong>Fokus menu ini: pekerjaan yang perlu Anda perhatikan.</strong><br />Untuk melihat tahapan dan catatan perpindahan status, gunakan Alur &amp; Riwayat.</p>
+      <Link v-if="canViewWorkflows" :href="resolveRoute('workflows.index')" class="inline-flex items-center gap-1 rounded-lg px-3 py-2 font-semibold underline underline-offset-4 focus-visible:outline focus-visible:outline-2">Lihat alur proses <span aria-hidden="true">→</span></Link>
+    </aside>
     <nav v-if="personal" class="flex flex-wrap gap-2" aria-label="Antrean pekerjaan">
       <button v-for="(label, value) in views" :key="value" type="button" :aria-pressed="form.view === value" @click="form.view = value; apply()"
         class="rounded-full border px-4 py-2 text-sm" :class="form.view === value ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300 dark:border-slate-600'">{{ label }}</button>
     </nav>
+    <div v-if="personal" class="flex flex-wrap items-center justify-between gap-3">
+      <div><h2 class="font-semibold">{{ views[form.view] || views.mine }}</h2><p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ viewDescriptions[form.view] || viewDescriptions.mine }}</p></div>
+      <button type="button" :aria-expanded="showFilters" aria-controls="work-filters" @click="showFilters = !showFilters" class="rounded-lg border border-slate-300 px-4 py-2 text-sm dark:border-slate-600">{{ showFilters ? 'Tutup pencarian & filter' : 'Cari / filter pekerjaan' }}</button>
+    </div>
+    <div id="work-filters" v-show="!personal || showFilters" class="space-y-3">
     <form @submit.prevent="apply" class="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900 sm:grid-cols-2 lg:grid-cols-4">
       <label class="text-sm">Kata kunci<input v-model="form.query" maxlength="150" type="search" placeholder="Nomor atau judul pekerjaan" class="mt-1 w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-800" /></label>
       <label class="text-sm">Jenis<select v-model="form.type" :disabled="Boolean(endpoint)" class="mt-1 w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-800"><option value="">Semua jenis</option><option value="ticket">Ticket</option><option value="task">Task</option><option value="project">Project</option></select></label>
@@ -21,16 +30,21 @@
       <button v-if="saved" type="button" @click="restoreView" class="rounded-lg px-3 py-2 text-blue-600 dark:text-blue-400">Gunakan filter tersimpan</button>
       <span role="status">{{ savedMessage }}</span>
     </div>
-    <p class="text-sm text-slate-500 dark:text-slate-400" role="status">{{ results.total }} hasil · Diurutkan berdasarkan deadline terdekat</p>
+    </div>
+    <p class="text-sm text-slate-500 dark:text-slate-400" role="status">{{ results.total }} {{ personal ? 'pekerjaan' : 'hasil' }} · Diurutkan berdasarkan deadline terdekat</p>
     <section v-if="!results.data.length" class="rounded-2xl border border-dashed border-slate-300 p-10 text-center dark:border-slate-600">
       <h2 class="font-semibold">Tidak ada pekerjaan untuk filter ini</h2><p class="mt-2 text-sm text-slate-500">Ubah kata kunci atau reset filter untuk melihat hasil lainnya.</p>
     </section>
     <div v-else class="grid gap-3 md:grid-cols-2">
-      <Link v-for="item in results.data" :key="item.type + '-' + item.id" :href="item.url" class="rounded-2xl border border-slate-200 bg-white p-5 transition hover:border-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:border-slate-700 dark:bg-slate-900">
+      <article v-for="item in results.data" :key="item.type + '-' + item.id" class="rounded-2xl border border-slate-200 bg-white p-5 transition hover:border-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:border-slate-700 dark:bg-slate-900">
         <div class="flex flex-wrap items-center justify-between gap-2"><span class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ item.type }} · {{ item.number || '—' }}</span><StatusPill :status="item.status" :label="item.status_label" size="sm" /></div>
-        <h2 class="mt-3 break-words font-semibold">{{ item.title }}</h2>
+        <h3 class="mt-3 break-words font-semibold">{{ item.title }}</h3>
         <div class="mt-4 flex flex-wrap justify-between gap-2 text-sm"><span :class="item.overdue ? 'font-semibold text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'">{{ item.overdue ? 'Terlambat · ' : 'Deadline · ' }}{{ date(item.due_at) }}</span><span v-if="item.priority" class="capitalize">{{ item.priority }}</span></div>
-      </Link>
+        <div v-if="personal" class="mt-4 rounded-xl bg-slate-50 p-3 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+          <p class="font-semibold text-slate-800 dark:text-slate-100">{{ guidance(item).title }}</p><p class="mt-1">{{ guidance(item).body }}</p>
+        </div>
+        <Link :href="item.url" :aria-label="(personal ? 'Buka pekerjaan: ' : 'Lihat detail: ') + item.title" class="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500">{{ personal ? 'Buka pekerjaan' : 'Lihat detail' }} <span aria-hidden="true">→</span></Link>
+      </article>
     </div>
     <nav v-if="results.last_page > 1" class="flex items-center justify-between gap-3" aria-label="Halaman hasil">
       <Link v-if="results.prev_page_url" :href="results.prev_page_url" preserve-scroll class="rounded-lg border px-4 py-2">Sebelumnya</Link><span v-else></span>
@@ -45,11 +59,29 @@ import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import StatusPill from '@/Components/StatusPill.vue'
 import resolveRoute from '@/utils/resolveRoute'
-const props = defineProps({ personal: Boolean, filters: Object, statuses: Object, results: Object, heading: String, endpoint: String })
+const props = defineProps({ personal: Boolean, filters: Object, statuses: Object, results: Object, heading: String, endpoint: String, canViewWorkflows: Boolean })
 const page = usePage()
 const clean = f => ({ query: f?.query || '', type: f?.type || '', status: f?.status || '', view: f?.view || 'mine' })
 const form = reactive(clean(props.filters))
-const views = { mine: 'Pekerjaan aktif', waiting: 'Menunggu konfirmasi saya', due: 'Jatuh tempo 24 jam', overdue: 'Terlambat' }
+const views = { mine: 'Pekerjaan aktif saya', waiting: 'Perlu konfirmasi saya', due: 'Jatuh tempo 24 jam', overdue: 'Terlambat' }
+const showFilters = ref(Boolean(props.filters?.query || props.filters?.type || props.filters?.status))
+const viewDescriptions = {
+  mine: 'Pekerjaan yang terkait dengan Anda, dari deadline paling dekat.',
+  waiting: 'Buka pekerjaan dan periksa hasil yang menunggu konfirmasi Anda.',
+  due: 'Tindak lanjuti pekerjaan yang akan jatuh tempo dalam 24 jam.',
+  overdue: 'Periksa kendala dan koordinasikan pekerjaan yang melewati deadline.',
+}
+const guidance = item => {
+  if (['done', 'cancelled'].includes(item.status)) return { title: 'Pekerjaan sudah ditutup', body: 'Buka rincian untuk melihat hasil atau catatan pekerjaan.' }
+  if (form.view === 'waiting' && item.status === 'confirmation') return { title: 'Periksa hasil pekerjaan', body: 'Tinjau hasil dan catatan sebelum memberikan konfirmasi.' }
+  return ({
+    new: { title: 'Permintaan baru', body: 'Buka rincian untuk memeriksa kebutuhan dan PIC pekerjaan.' },
+    in_progress: { title: 'Pekerjaan sedang berjalan', body: 'Periksa pembaruan dan koordinasikan langkah yang masih diperlukan.' },
+    revision: { title: 'Ada revisi yang perlu ditinjau', body: 'Baca catatan revisi dan koordinasikan perbaikannya dengan PIC.' },
+    confirmation: { title: 'Hasil menunggu konfirmasi', body: 'Buka rincian untuk memeriksa hasil dan tanggapan requester.' },
+    on_hold: { title: 'Pekerjaan sedang ditunda', body: 'Periksa alasan penundaan dan koordinasikan tindak lanjut.' },
+  })[item.status] || { title: 'Periksa pembaruan', body: 'Buka pekerjaan untuk melihat rincian dan catatan terbaru.' }
+}
 const loading = ref(false)
 const saved = ref(false)
 const savedMessage = ref('')
@@ -60,5 +92,5 @@ const saveView = () => { try { localStorage.setItem(key.value, JSON.stringify(fo
 const restoreView = () => { try { const f = clean(JSON.parse(localStorage.getItem(key.value))); if (!['', 'ticket', 'task', 'project'].includes(f.type) || !(f.view in views) || (f.status && !(f.status in props.statuses))) throw new Error(); Object.assign(form, f); apply() } catch (_) { savedMessage.value = 'Filter tidak dapat dipulihkan.' } }
 const date = value => value ? new Intl.DateTimeFormat(page.props.locale === 'en' ? 'en-GB' : 'id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value.replace(' ', 'T'))) : 'Belum ditentukan'
 onMounted(() => { try { saved.value = Boolean(localStorage.getItem(key.value)) } catch (_) {} })
-watch(() => props.filters, value => Object.assign(form, clean(value)))
+watch(() => props.filters, value => { Object.assign(form, clean(value)); if (value?.query || value?.type || value?.status) showFilters.value = true })
 </script>
