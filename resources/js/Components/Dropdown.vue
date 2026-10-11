@@ -92,6 +92,12 @@ function handleClickOutside(event) {
   close();
 }
 
+function handleScroll(event) {
+  if (!open.value || menu.value?.contains(event.target)) return;
+  // Dismiss when the surrounding page moves, but allow scrolling inside the menu.
+  close();
+}
+
 function updateMenuPosition() {
   if (!props.teleport || !trigger.value || !menu.value || !open.value) return;
 
@@ -132,14 +138,14 @@ onMounted(() => {
   document.addEventListener('click', handleClickOutside, true);
   document.addEventListener('keyup', handleKeyUp, true);
   window.addEventListener('resize', updateMenuPosition);
-  window.addEventListener('scroll', updateMenuPosition, true);
+  window.addEventListener('scroll', handleScroll, true);
 });
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside, true);
   document.removeEventListener('keyup', handleKeyUp, true);
   window.removeEventListener('resize', updateMenuPosition);
-  window.removeEventListener('scroll', updateMenuPosition, true);
+  window.removeEventListener('scroll', handleScroll, true);
 });
 
 function handleKeyUp(event) {
