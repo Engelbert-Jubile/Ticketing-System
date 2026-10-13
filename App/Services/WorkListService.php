@@ -27,6 +27,20 @@ class WorkListService
                 'project' => UnitVisibility::scopeProjects(Project::query(), $viewer),
             };
             $id = $viewer->id;
+            $statusExpression = 'status';
+            $statusBindings = [];
+            if ($type === 'task') {
+                $ticketStatus = UnitVisibility::scopeTickets(Ticket::query(), $viewer)
+                    ->whereColumn('tickets.id', 'tasks.ticket_id')
+                    ->select('tickets.status')->limit(1)->toBase();
+                $statusExpression = 'COALESCE(('.$ticketStatus->toSql().'), tasks.status)';
+                $statusBindings = $ticketStatus->getBindings();
+            }
+            $filterStatuses = function (array $statuses, bool $exclude = false) use ($query, $statusExpression, $statusBindings) {
+                $placeholders = implode(',', array_fill(0, count($statuses), '?'));
+                $operator = $exclude ? 'NOT IN' : 'IN';
+                $query->whereRaw("{$statusExpression} {$operator} ({$placeholders})", array_merge($statusBindings, $statuses));
+            };
             if ($personal) {
                 if ($type === 'ticket') {
                     $query->where(fn ($q) => $q->where('requester_id', $id)->orWhere('agent_id', $id)->orWhere('assigned_id', $id)->orWhereHas('assignedUsers', fn ($u) => $u->where('users.id', $id)));
@@ -42,15 +56,15 @@ class WorkListService
                 $query->where(fn ($b) => $b->where($number, 'like', '%'.$q.'%')->orWhere('title', 'like', '%'.$q.'%')->orWhere('description', 'like', '%'.$q.'%'));
             }
             if ($filters['status'] ?? '') {
-                $query->whereIn('status', WorkflowStatus::equivalents($filters['status']));
+                $filterStatuses(WorkflowStatus::equivalents($filters['status']));
             } elseif ($filters['active_work'] ?? false) {
-                $query->whereIn('status', array_merge(WorkflowStatus::equivalents(WorkflowStatus::IN_PROGRESS), WorkflowStatus::equivalents(WorkflowStatus::CONFIRMATION)));
+                $filterStatuses(array_merge(WorkflowStatus::equivalents(WorkflowStatus::IN_PROGRESS), WorkflowStatus::equivalents(WorkflowStatus::CONFIRMATION)));
             } elseif ($personal) {
-                $query->whereNotIn('status', ['done', 'completed', 'complete', 'closed', 'cancelled', 'cancel', 'canc']);
+                $filterStatuses(['done', 'completed', 'complete', 'closed', 'cancelled', 'cancel', 'canc'], true);
             }
             $view = $filters['view'] ?? 'mine';
             if ($personal && $view === 'waiting') {
-                $query->whereIn('status', WorkflowStatus::equivalents(WorkflowStatus::CONFIRMATION));
+                $filterStatuses(WorkflowStatus::equivalents(WorkflowStatus::CONFIRMATION));
                 $query->where(function ($b) use ($id, $type) {
                     $b->where($type === 'ticket' ? 'requester_id' : 'created_by', $id);
                     if ($type === 'project') {
@@ -75,7 +89,7 @@ class WorkListService
             }
             $slug = $type === 'ticket' ? 'NULL' : 'public_slug';
             $priority = $type === 'project' ? 'NULL' : 'priority';
-            $queries[] = $query->selectRaw("id, '{$type}' AS type, {$number} AS number, title, status, {$priority} AS priority, {$due} AS due_at, updated_at, {$slug} AS slug")->toBase();
+            $queries[] = $query->selectRaw("id, '{$type}' AS type, {$number} AS number, title, {$statusExpression} AS status, {$priority} AS priority, {$due} AS due_at, updated_at, {$slug} AS slug", $statusBindings)->toBase();
         }
         $union = array_shift($queries);
         foreach ($queries as $query) {
