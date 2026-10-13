@@ -5,10 +5,6 @@
         <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Edit User</h1>
         <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Perbarui informasi pengguna dan hak akses.") }}</p>
       </div>
-      <Link :href="backUrl" class="inline-flex items-center gap-2 text-sm text-blue-600 hover:underline dark:text-blue-300">
-        <span class="material-icons text-base">arrow_back</span>
-        {{ $t("Kembali") }}
-      </Link>
     </header>
 
     <form :action="meta.updateUrl" method="post" class="space-y-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900" @submit="isSubmitting = true">
@@ -109,9 +105,9 @@
         </button>
 
         <div class="ml-auto flex gap-2">
-          <Link :href="backUrl" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800">
+          <a :href="backUrl" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800">
             {{ $t("Batal") }}
-          </Link>
+          </a>
           <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60" :disabled="isSubmitting">
             <span class="material-icons text-base">save</span>
             {{ isSubmitting ? $t('Menyimpan...') : $t("Simpan Perubahan") }}
@@ -149,7 +145,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import { Link, router, useForm, usePage } from '@inertiajs/vue3';
+import { router, useForm, usePage } from '@inertiajs/vue3';
 import { useRoute } from 'ziggy-js';
 import { Ziggy } from '@/ziggy';
 import WorkflowSelect from '../../Components/WorkflowSelect.vue';
@@ -213,7 +209,7 @@ const roles = computed(() => props.roles ?? []);
 const unitOptions = computed(() => unitRequired.value ? props.units : [{ value: '', label: '—' }, ...props.units]);
 const unitRequired = computed(() => props.meta?.unitRequired ?? true);
 const can = computed(() => props.can ?? {});
-const backUrl = computed(() => props.meta?.from || route('users.report', { locale: locale.value }));
+const backUrl = computed(() => props.meta?.backUrl || props.meta?.from || route('users.report', { locale: locale.value }, false));
 
 const user = computed(() => props.user);
 </script>

@@ -194,6 +194,7 @@ class UserController extends Controller
             ],
             'meta' => [
                 'from' => $request->query('from'),
+                'backUrl' => $request->query('from') ?: routeLocale('users.report'),
                 'unitRequired' => ! $viewerIsSuper,
                 'updateUrl' => routeLocale('users.update', ['user' => $user->id]),
                 'csrfToken' => csrf_token(),
