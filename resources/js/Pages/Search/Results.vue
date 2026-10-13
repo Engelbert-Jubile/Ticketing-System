@@ -22,7 +22,7 @@
     <form @submit.prevent="apply" class="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900 sm:grid-cols-2 lg:grid-cols-4">
       <label class="text-sm">{{ $t("Kata kunci") }}<input v-model="form.query" maxlength="150" type="search" :placeholder="$t(&quot;Nomor atau judul pekerjaan&quot;)" class="mt-1 w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-800" /></label>
       <label class="text-sm">{{ $t("Jenis") }}<select v-model="form.type" :disabled="Boolean(endpoint)" class="mt-1 w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-800"><option value="">{{ $t("Semua jenis") }}</option><option value="ticket">Ticket</option><option value="task">Task</option><option value="project">Project</option></select></label>
-      <label class="text-sm">Status<select v-model="form.status" class="mt-1 w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-800"><option value="">{{ personal ? $t("Semua yang aktif") : endpoint ? $t("Dikerjakan / konfirmasi") : $t("Semua status") }}</option><option v-for="(label, value) in statuses" :key="value" :value="value">{{ label }}</option></select></label>
+      <div class="text-sm"><label for="work-status">Status</label><WorkflowSelect id="work-status" v-model="form.status" :options="statusOptions" aria-label="Status" :disabled="loading" class="mt-1" /></div>
       <div class="flex items-end gap-2"><button type="submit" :disabled="loading" class="rounded-lg bg-blue-600 px-4 py-2 text-white disabled:opacity-50">{{ loading ? $t("Memuat…") : $t("Terapkan") }}</button><button type="button" @click="reset" class="rounded-lg border border-slate-300 px-4 py-2 dark:border-slate-600">Reset</button></div>
     </form>
     <div v-if="personal" class="flex flex-wrap items-center gap-2 text-sm">
@@ -60,11 +60,16 @@ import { translateUi as uiText } from '../../i18n'
 import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import StatusPill from '@/Components/StatusPill.vue'
+import WorkflowSelect from '../../Components/WorkflowSelect.vue'
 import resolveRoute from '@/utils/resolveRoute'
 const props = defineProps({ personal: Boolean, filters: Object, statuses: Object, results: Object, heading: String, endpoint: String, canViewWorkflows: Boolean })
 const page = usePage()
 const clean = f => ({ query: f?.query || '', type: f?.type || '', status: f?.status || '', view: f?.view || 'mine' })
 const form = reactive(clean(props.filters))
+const statusOptions = computed(() => [
+  { value: '', label: props.personal ? uiText('Semua yang aktif') : props.endpoint ? uiText('Dikerjakan / konfirmasi') : uiText('Semua status') },
+  ...Object.entries(props.statuses || {}).map(([value, label]) => ({ value, label })),
+])
 const views = { mine: uiText("Pekerjaan aktif saya"), waiting: uiText("Perlu konfirmasi saya"), due: uiText("Jatuh tempo 24 jam"), overdue: uiText("Terlambat") }
 const showFilters = ref(Boolean(props.filters?.query || props.filters?.type || props.filters?.status))
 const viewDescriptions = {
@@ -88,7 +93,11 @@ const loading = ref(false)
 const saved = ref(false)
 const savedMessage = ref('')
 const key = computed(() => 'tickora:work-filter:' + page.props.auth?.user?.id)
-const apply = () => router.get(resolveRoute(props.endpoint || (props.personal ? 'work.index' : 'search')), { ...form }, { preserveState: true, preserveScroll: true, onStart: () => loading.value = true, onFinish: () => loading.value = false })
+const apply = () => {
+  const filters = { query: form.query, type: form.type, status: form.status }
+  if (props.personal) filters.view = form.view
+  router.get(resolveRoute(props.endpoint || (props.personal ? 'work.index' : 'search'), {}, false), filters, { preserveState: true, preserveScroll: true, onStart: () => loading.value = true, onFinish: () => loading.value = false })
+}
 const reset = () => { Object.assign(form, clean(props.endpoint ? { type: props.filters.type } : {})); apply() }
 const saveView = () => { try { localStorage.setItem(key.value, JSON.stringify(form)); saved.value = true; savedMessage.value = uiText('Filter tersimpan.') } catch (_) { savedMessage.value = uiText("Penyimpanan perangkat tidak tersedia.") } }
 const restoreView = () => { try { const f = clean(JSON.parse(localStorage.getItem(key.value))); if (!['', 'ticket', 'task', 'project'].includes(f.type) || !(f.view in views) || (f.status && !(f.status in props.statuses))) throw new Error(); Object.assign(form, f); apply() } catch (_) { savedMessage.value = uiText("Filter tidak dapat dipulihkan.") } }

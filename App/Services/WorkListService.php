@@ -21,7 +21,9 @@ class WorkListService
             }
             $query = match ($type) {
                 'ticket' => UnitVisibility::scopeTickets(Ticket::query(), $viewer),
-                'task' => UnitVisibility::scopeTasks(Task::query(), $viewer),
+                'task' => UnitVisibility::requiresRestriction($viewer)
+                    ? UnitVisibility::scopeWorkflowTasks(Task::query(), $viewer)
+                    : Task::query(),
                 'project' => UnitVisibility::scopeProjects(Project::query(), $viewer),
             };
             $id = $viewer->id;
