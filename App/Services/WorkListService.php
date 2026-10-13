@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Support\UnitVisibility;
 use App\Support\WorkflowStatus;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class WorkListService
 {
@@ -83,13 +84,28 @@ class WorkListService
                 'project' => $day('end_date'),
                 default => 'due_at',
             };
+            $dueBindings = [];
+            if ($type === 'task') {
+                $ticketDue = UnitVisibility::scopeTickets(Ticket::query(), $viewer)
+                    ->whereColumn('tickets.id', 'tasks.ticket_id')
+                    ->selectRaw('COALESCE(tickets.due_at, '.$day('tickets.due_date').')')
+                    ->limit(1)->toBase();
+                $taskDates = ['tasks.due_at'];
+                if (Schema::hasColumn('tasks', 'due_date')) {
+                    $taskDates[] = $day('tasks.due_date');
+                }
+                $taskDates[] = $day('tasks.end_date');
+                $taskDates[] = '('.$ticketDue->toSql().')';
+                $due = 'COALESCE('.implode(', ', $taskDates).')';
+                $dueBindings = $ticketDue->getBindings();
+            }
             if ($personal && in_array($view, ['due', 'overdue'], true)) {
                 $query->whereRaw($view === 'overdue' ? "{$due} < ?" : "{$due} BETWEEN ? AND ?",
-                    $view === 'overdue' ? [now()->toDateTimeString()] : [now()->toDateTimeString(), now()->addDay()->toDateTimeString()]);
+                    array_merge($dueBindings, $view === 'overdue' ? [now()->toDateTimeString()] : [now()->toDateTimeString(), now()->addDay()->toDateTimeString()]));
             }
             $slug = $type === 'ticket' ? 'NULL' : 'public_slug';
             $priority = $type === 'project' ? 'NULL' : 'priority';
-            $queries[] = $query->selectRaw("id, '{$type}' AS type, {$number} AS number, title, {$statusExpression} AS status, {$priority} AS priority, {$due} AS due_at, updated_at, {$slug} AS slug", $statusBindings)->toBase();
+            $queries[] = $query->selectRaw("id, '{$type}' AS type, {$number} AS number, title, {$statusExpression} AS status, {$priority} AS priority, {$due} AS due_at, updated_at, {$slug} AS slug", array_merge($statusBindings, $dueBindings))->toBase();
         }
         $union = array_shift($queries);
         foreach ($queries as $query) {
