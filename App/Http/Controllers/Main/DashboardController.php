@@ -8,6 +8,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Support\RoleHelpers;
+use App\Support\UnitVisibility;
+use App\Support\WorkflowStatus;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -79,9 +81,6 @@ class DashboardController extends Controller
         $ticketsValues = [$ticketsNew, $ticketsInProgress, $ticketsConfirm, $ticketsRevision, $ticketsDone];
 
         /* ===== Tasks ===== */
-        $taskCol = $this->pickCol('tasks');
-        $lcTask = $this->lcCast($taskCol);
-
         $tasksBase = Task::query();
         if (! $isSuperAdmin && $viewerId > 0) {
             $tasksBase->where(function (Builder $builder) use ($viewerId) {
@@ -99,7 +98,22 @@ class DashboardController extends Controller
             $tasksBase->whereRaw('1=0');
         }
 
-        $taskAgg = $this->statusCounts($tasksBase, $taskCol);
+        $taskColumns = ['tasks.status', 'tasks.ticket_id', 'tasks.created_at', 'tasks.updated_at'];
+        if (Schema::hasColumn('tasks', 'completed_at')) {
+            $taskColumns[] = 'tasks.completed_at';
+        }
+        $taskRecords = (clone $tasksBase)->with([
+            'ticket' => fn ($ticket) => UnitVisibility::scopeTickets($ticket->getQuery(), $request->user())
+                ->select(['id', 'status', 'updated_at']),
+        ])->get($taskColumns)->map(fn (Task $task) => [
+            'status' => WorkflowStatus::normalize($task->ticket?->status ?? $task->status),
+            'created_at' => $task->created_at,
+            'completed_at' => $task->ticket?->updated_at ?? $task->completed_at ?? $task->updated_at ?? $task->created_at,
+        ]);
+        $taskAgg = array_fill_keys(WorkflowStatus::all(), 0);
+        foreach ($taskRecords as $task) {
+            $taskAgg[$task['status']]++;
+        }
         $tasksDone = $taskAgg[\App\Support\WorkflowStatus::DONE];
 
         $taskStatusLabels = ['New', 'In Progress', 'Confirmation', 'Revision', 'Done'];
@@ -150,30 +164,23 @@ class DashboardController extends Controller
         $taskMonths = max(3, min(12, (int) env('DASHBOARD_TASK_MONTHS', env('DASHBOARD_PROJECT_MONTHS', 6))));
         $taskMonthStart = Carbon::now()->startOfMonth()->subMonths($taskMonths - 1);
 
-        $taskDoneRows = (clone $tasksBase)
-            ->selectRaw('DATE_FORMAT(COALESCE(completed_at, updated_at, created_at), "%Y-%m") AS ym, COUNT(*) AS c')
-            ->whereRaw("$lcTask REGEXP '(done|completed|complete|finished|selesai|tuntas|2)'")
-            ->whereRaw('COALESCE(completed_at, updated_at, created_at) >= ?', [$taskMonthStart->copy()->startOfDay()])
-            ->groupBy('ym')
-            ->pluck('c', 'ym');
-
-        if ($taskDoneRows->isEmpty() && Schema::hasColumn('tasks', 'completed_at')) {
-            $taskDoneRows = (clone $tasksBase)
-                ->selectRaw('DATE_FORMAT(completed_at, "%Y-%m") AS ym, COUNT(*) AS c')
-                ->whereNotNull('completed_at')
-                ->where('completed_at', '>=', $taskMonthStart)
-                ->whereRaw("$lcTask REGEXP '(done|completed|complete|finished|selesai|tuntas|2)'")
-                ->groupBy('ym')
-                ->pluck('c', 'ym');
+        $taskDoneRows = [];
+        $taskProgressRows = [];
+        foreach ($taskRecords as $task) {
+            if ($task['status'] === WorkflowStatus::DONE && $task['completed_at']) {
+                $completed = Carbon::parse($task['completed_at']);
+                if ($completed->greaterThanOrEqualTo($taskMonthStart)) {
+                    $key = $completed->format('Y-m');
+                    $taskDoneRows[$key] = ($taskDoneRows[$key] ?? 0) + 1;
+                }
+            } elseif ($task['status'] === WorkflowStatus::IN_PROGRESS && $task['created_at']) {
+                $created = Carbon::parse($task['created_at']);
+                if ($created->greaterThanOrEqualTo($taskMonthStart)) {
+                    $key = $created->format('Y-m');
+                    $taskProgressRows[$key] = ($taskProgressRows[$key] ?? 0) + 1;
+                }
+            }
         }
-
-        $taskActivePattern = '(progress|proses|in[_ ]?progress|on[_ ]?progress|active|open|new|baru|pending|revision|confirmation|review|1)';
-        $taskProgressRows = (clone $tasksBase)
-            ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") AS ym, COUNT(*) AS c')
-            ->where('created_at', '>=', $taskMonthStart)
-            ->whereRaw("$lcTask REGEXP '$taskActivePattern'")
-            ->groupBy('ym')
-            ->pluck('c', 'ym');
 
         $taskReportLabels = [];
         $taskReportDoneCounts = [];
