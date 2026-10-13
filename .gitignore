@@ -123,3 +123,4 @@ docs/workflow-language-update*.md
 /phpunit.xml
 /tests/Pest.php
 **/UserEditTest.php
+/tests/AuditImprovementsTest.php
