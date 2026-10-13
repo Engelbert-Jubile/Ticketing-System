@@ -130,7 +130,7 @@
           class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
           :required="unitRequired"
         >
-          <option value="" disabled>{{ $t("Pilih Unit") }}</option>
+          <option value="" :disabled="unitRequired">{{ $t("Pilih Unit") }}</option>
           <option v-for="unit in unitOptions" :key="unit.value" :value="unit.value">{{ unit.label }}</option>
         </select>
         <p v-if="form.errors.unit" class="mt-1 text-xs text-rose-500">{{ form.errors.unit }}</p>

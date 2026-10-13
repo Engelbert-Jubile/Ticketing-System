@@ -65,7 +65,9 @@
         <label for="role" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Role</label>
         <select
           id="role"
+          name="role"
           v-model="form.role"
+          :disabled="form.processing"
           class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
           required
         >
@@ -78,11 +80,13 @@
         <label for="unit" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Unit</label>
         <select
           id="unit"
+          name="unit"
           v-model="form.unit"
+          :disabled="form.processing"
           class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
           :required="unitRequired"
         >
-          <option value="" disabled>{{ $t("Pilih Unit") }}</option>
+          <option value="" :disabled="unitRequired">{{ $t("Pilih Unit") }}</option>
           <option v-for="unit in unitOptions" :key="unit.value" :value="unit.value">{{ unit.label }}</option>
         </select>
         <p v-if="form.errors.unit" class="mt-1 text-xs text-rose-500">{{ form.errors.unit }}</p>
@@ -120,7 +124,7 @@
           </Link>
           <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60" :disabled="form.processing">
             <span class="material-icons text-base">save</span>
-            {{ $t("Simpan Perubahan") }}
+            {{ form.processing ? $t('Menyimpan...') : $t("Simpan Perubahan") }}
           </button>
         </div>
       </div>
@@ -155,7 +159,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import { Link, router, useForm } from '@inertiajs/vue3';
+import { Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { useRoute } from 'ziggy-js';
 import { Ziggy } from '@/ziggy';
 
@@ -168,6 +172,8 @@ const props = defineProps({
 });
 
 const route = useRoute(Ziggy);
+const page = usePage();
+const locale = computed(() => page.props.locale || Ziggy.defaults.locale);
 
 const form = useForm({
   username: props.user.username || '',
@@ -180,7 +186,7 @@ const form = useForm({
 });
 
 function submit() {
-  form.put(route('users.update', props.user.id), {
+  form.put(route('users.update', { locale: locale.value, user: props.user.id }), {
     preserveScroll: true,
     onSuccess: () => {
       form.reset('password');
@@ -200,7 +206,7 @@ function closeDelete() {
 
 function performDelete() {
   deleteDialog.value.processing = true;
-  router.delete(route('users.destroy', { locale: route().params.locale, user: props.user.id }), {
+  router.delete(route('users.destroy', { locale: locale.value, user: props.user.id }), {
     preserveScroll: true,
     onFinish: () => {
       deleteDialog.value.processing = false;
@@ -222,7 +228,7 @@ const roles = computed(() => props.roles ?? []);
 const unitOptions = computed(() => props.units ?? []);
 const unitRequired = computed(() => props.meta?.unitRequired ?? true);
 const can = computed(() => props.can ?? {});
-const backUrl = computed(() => props.meta?.from || route('users.report'));
+const backUrl = computed(() => props.meta?.from || route('users.report', { locale: locale.value }));
 
 const user = computed(() => props.user);
 </script>
