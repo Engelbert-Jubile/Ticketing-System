@@ -11,12 +11,15 @@
       </Link>
     </header>
 
-    <form class="space-y-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900" @submit.prevent="submit">
+    <form :action="meta.updateUrl" method="post" class="space-y-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900" @submit="isSubmitting = true">
+      <input type="hidden" name="_token" :value="meta.csrfToken" />
+      <input type="hidden" name="_method" value="PUT" />
       <div class="grid gap-4 md:grid-cols-2">
         <div>
           <label for="username" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Username</label>
           <input
             id="username"
+            name="username"
             v-model="form.username"
             type="text"
             class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
@@ -28,6 +31,7 @@
           <label for="email" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Email</label>
           <input
             id="email"
+            name="email"
             v-model="form.email"
             type="email"
             class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
@@ -42,6 +46,7 @@
           <label for="first_name" class="block text-sm font-medium text-slate-700 dark:text-slate-200">First Name</label>
           <input
             id="first_name"
+            name="first_name"
             v-model="form.first_name"
             type="text"
             class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
@@ -53,6 +58,7 @@
           <label for="last_name" class="block text-sm font-medium text-slate-700 dark:text-slate-200">{{ $t("Last Name (opsional)") }}</label>
           <input
             id="last_name"
+            name="last_name"
             v-model="form.last_name"
             type="text"
             class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
@@ -63,32 +69,15 @@
 
       <div>
         <label for="role" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Role</label>
-        <select
-          id="role"
-          name="role"
-          v-model="form.role"
-          :disabled="form.processing"
-          class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
-          required
-        >
-          <option v-for="option in roles" :key="option.value" :value="option.value">{{ option.label }}</option>
-        </select>
+        <WorkflowSelect id="role" v-model="form.role" :options="roles" aria-label="Role" :placeholder="$t('Pilih Role')" class="mt-1" required />
+        <input type="hidden" name="role" :value="form.role" />
         <p v-if="form.errors.role" class="mt-1 text-xs text-rose-500">{{ form.errors.role }}</p>
       </div>
 
       <div>
         <label for="unit" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Unit</label>
-        <select
-          id="unit"
-          name="unit"
-          v-model="form.unit"
-          :disabled="form.processing"
-          class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
-          :required="unitRequired"
-        >
-          <option value="" :disabled="unitRequired">{{ $t("Pilih Unit") }}</option>
-          <option v-for="unit in unitOptions" :key="unit.value" :value="unit.value">{{ unit.label }}</option>
-        </select>
+        <WorkflowSelect id="unit" v-model="form.unit" :options="unitOptions" aria-label="Unit" :placeholder="$t('Pilih Unit')" :required="unitRequired" class="mt-1" />
+        <input type="hidden" name="unit" :value="form.unit" />
         <p v-if="form.errors.unit" class="mt-1 text-xs text-rose-500">{{ form.errors.unit }}</p>
         <p v-else-if="unitRequired" class="mt-1 text-xs text-slate-500">{{ $t("Unit wajib diisi bila akun dikelola Admin/User.") }}</p>
       </div>
@@ -97,6 +86,7 @@
         <label for="password" class="block text-sm font-medium text-slate-700 dark:text-slate-200">{{ $t("Password (opsional)") }}</label>
         <input
           id="password"
+          name="password"
           v-model="form.password"
           type="password"
           autocomplete="new-password"
@@ -122,9 +112,9 @@
           <Link :href="backUrl" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800">
             {{ $t("Batal") }}
           </Link>
-          <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60" :disabled="form.processing">
+          <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60" :disabled="isSubmitting">
             <span class="material-icons text-base">save</span>
-            {{ form.processing ? $t('Menyimpan...') : $t("Simpan Perubahan") }}
+            {{ isSubmitting ? $t('Menyimpan...') : $t("Simpan Perubahan") }}
           </button>
         </div>
       </div>
@@ -162,6 +152,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { useRoute } from 'ziggy-js';
 import { Ziggy } from '@/ziggy';
+import WorkflowSelect from '../../Components/WorkflowSelect.vue';
 
 const props = defineProps({
   user: { type: Object, required: true },
@@ -174,25 +165,19 @@ const props = defineProps({
 const route = useRoute(Ziggy);
 const page = usePage();
 const locale = computed(() => page.props.locale || Ziggy.defaults.locale);
+const isSubmitting = ref(false);
+const oldInput = props.meta.oldInput || {};
 
 const form = useForm({
-  username: props.user.username || '',
-  email: props.user.email || '',
-  first_name: props.user.first_name || '',
-  last_name: props.user.last_name || '',
-  role: props.user.role || (props.roles[0]?.value ?? 'user'),
+  username: oldInput.username ?? props.user.username ?? '',
+  email: oldInput.email ?? props.user.email ?? '',
+  first_name: oldInput.first_name ?? props.user.first_name ?? '',
+  last_name: oldInput.last_name ?? props.user.last_name ?? '',
+  role: oldInput.role ?? props.user.role ?? (props.roles[0]?.value ?? 'user'),
   password: '',
-  unit: props.user.unit || '',
+  unit: oldInput.unit ?? props.user.unit ?? '',
 });
-
-function submit() {
-  form.put(route('users.update', { locale: locale.value, user: props.user.id }), {
-    preserveScroll: true,
-    onSuccess: () => {
-      form.reset('password');
-    },
-  });
-}
+form.setError(page.props.errors || {});
 
 const deleteDialog = ref({ open: false, processing: false });
 
@@ -225,7 +210,7 @@ onMounted(() => document.addEventListener('keydown', handleEscape));
 onBeforeUnmount(() => document.removeEventListener('keydown', handleEscape));
 
 const roles = computed(() => props.roles ?? []);
-const unitOptions = computed(() => props.units ?? []);
+const unitOptions = computed(() => unitRequired.value ? props.units : [{ value: '', label: '—' }, ...props.units]);
 const unitRequired = computed(() => props.meta?.unitRequired ?? true);
 const can = computed(() => props.can ?? {});
 const backUrl = computed(() => props.meta?.from || route('users.report', { locale: locale.value }));

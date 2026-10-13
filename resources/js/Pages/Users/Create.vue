@@ -108,31 +108,15 @@
 
       <div>
         <label for="role" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Role</label>
-        <select
-          id="role"
-          name="role"
-          v-model="form.role"
-          class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
-          required
-        >
-          <option value="" disabled>{{ $t("Pilih Role") }}</option>
-          <option v-for="option in roles" :key="option.value" :value="option.value">{{ option.label }}</option>
-        </select>
+        <WorkflowSelect id="role" v-model="form.role" :options="roles" aria-label="Role" :placeholder="$t('Pilih Role')" class="mt-1" required />
+        <input type="hidden" name="role" :value="form.role" />
         <p v-if="form.errors.role" class="mt-1 text-xs text-rose-500">{{ form.errors.role }}</p>
       </div>
 
       <div>
         <label for="unit" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Unit</label>
-        <select
-          id="unit"
-          name="unit"
-          v-model="form.unit"
-          class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
-          :required="unitRequired"
-        >
-          <option value="" :disabled="unitRequired">{{ $t("Pilih Unit") }}</option>
-          <option v-for="unit in unitOptions" :key="unit.value" :value="unit.value">{{ unit.label }}</option>
-        </select>
+        <WorkflowSelect id="unit" v-model="form.unit" :options="unitOptions" aria-label="Unit" :placeholder="$t('Pilih Unit')" :required="unitRequired" class="mt-1" />
+        <input type="hidden" name="unit" :value="form.unit" />
         <p v-if="form.errors.unit" class="mt-1 text-xs text-rose-500">{{ form.errors.unit }}</p>
         <p v-else-if="unitRequired" class="mt-1 text-xs text-slate-500">{{ $t("Unit wajib diisi bila akun dibuat oleh Admin/User.") }}</p>
       </div>
@@ -155,6 +139,7 @@ import { computed, ref } from 'vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
 import { useRoute } from 'ziggy-js';
 import { Ziggy } from '@/ziggy';
+import WorkflowSelect from '../../Components/WorkflowSelect.vue';
 
 const props = defineProps({
   roles: { type: Array, default: () => [] },
@@ -181,10 +166,12 @@ if (props.roles.length === 1) {
 }
 
 const page = usePage();
+Object.assign(form, props.meta.oldInput || {});
+form.setError(page.props.errors || {});
 const flash = computed(() => page.props.flash || {});
 
 const roles = computed(() => props.roles ?? []);
-const unitOptions = computed(() => props.units ?? []);
+const unitOptions = computed(() => unitRequired.value ? props.units : [{ value: '', label: '—' }, ...props.units]);
 const unitRequired = computed(() => props.meta?.unitRequired ?? true);
 </script>
 

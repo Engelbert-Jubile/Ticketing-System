@@ -108,6 +108,7 @@ class UserController extends Controller
                 'unitRequired' => ! $viewerIsSuper,
                 'storeUrl' => routeLocale('users.store'),
                 'csrfToken' => csrf_token(),
+                'oldInput' => collect($request->old())->only(['username', 'email', 'first_name', 'last_name', 'role', 'unit'])->all(),
             ],
         ]);
     }
@@ -194,6 +195,9 @@ class UserController extends Controller
             'meta' => [
                 'from' => $request->query('from'),
                 'unitRequired' => ! $viewerIsSuper,
+                'updateUrl' => routeLocale('users.update', ['user' => $user->id]),
+                'csrfToken' => csrf_token(),
+                'oldInput' => collect($request->old())->only(['username', 'email', 'first_name', 'last_name', 'role', 'unit'])->all(),
             ],
         ]);
     }
