@@ -119,3 +119,7 @@ docs/AUDIT_FITUR_UI_DAN_ROADMAP*.md
 docs/IMPLEMENTASI_AUDIT_2026_10_10*.md
 docs/UI_NAVIGATION_2026_10_12*.md
 docs/workflow-language-update*.md
+
+/phpunit.xml
+/tests/Pest.php
+**/UserEditTest.php
