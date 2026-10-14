@@ -16,6 +16,7 @@ class WorkListService
     public function fetch(User $viewer, array $filters, bool $personal = false)
     {
         $queries = [];
+        $listedTickets = null;
         foreach (['ticket', 'task', 'project'] as $type) {
             if (($filters['type'] ?? '') && $filters['type'] !== $type) {
                 continue;
@@ -102,6 +103,14 @@ class WorkListService
             if ($personal && in_array($view, ['due', 'overdue'], true)) {
                 $query->whereRaw($view === 'overdue' ? "{$due} < ?" : "{$due} BETWEEN ? AND ?",
                     array_merge($dueBindings, $view === 'overdue' ? [now()->toDateTimeString()] : [now()->toDateTimeString(), now()->addDay()->toDateTimeString()]));
+            }
+            if ($type === 'ticket') {
+                $listedTickets = (clone $query)->select('tickets.id')->toBase();
+            } elseif ($type === 'task' && $listedTickets !== null) {
+                // A linked task represents the same work as its ticket. Keep it
+                // only when that ticket is absent from the filtered, visible list.
+                $query->where(fn ($q) => $q->whereNull('tasks.ticket_id')
+                    ->orWhereNotIn('tasks.ticket_id', $listedTickets));
             }
             $slug = $type === 'ticket' ? 'NULL' : 'public_slug';
             $priority = $type === 'project' ? 'NULL' : 'priority';
