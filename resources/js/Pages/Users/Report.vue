@@ -115,7 +115,7 @@
                 </div>
               </td>
               <td class="px-4 py-3 text-right">
-                <Dropdown v-if="user.can.update || user.can.delete" align="right" width-class="w-44">
+                <Dropdown v-if="user.can.update || user.can.delete" align="right" width-class="w-44" teleport>
                   <template #trigger>
                     <span class="material-icons text-base">more_vert</span>
                   </template>
