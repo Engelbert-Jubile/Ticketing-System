@@ -9,18 +9,7 @@
 <form id="login-form" method="POST" action="{{ route('login.store', ['locale' => $currentLocale]) }}" class="space-y-4">
       @csrf
       {{-- Email --}}
-        <label for="password" ...>Password</label>
-  <input id="password" ... />
-<a href="https://wa.me/62895393358741?text={{ urlencode('Halo, saya ingin reset password akun Tickora. Email saya: ' . old('email')) }}"
-   onclick="return confirm('Anda akan diarahkan ke WhatsApp untuk mengirim permintaan reset password. Lanjutkan?')"
-   target="_blank" rel="noopener"
-   class="mt-2 block text-right text-sm text-blue-600 hover:underline">
-  Lupa Password?
-</a>
-
-  @error('password') ...
-</div>
-<div>
+      <div>
         <label for="email" class="block mb-1 font-medium text-gray-700 dark:text-gray-300">Email</label>
         <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus
                class="w-full px-3 py-2 border rounded
@@ -41,6 +30,12 @@
                       text-gray-900 dark:text-gray-100
                       focus:outline-none focus:ring-2 focus:ring-blue-500" />
         @error('password') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+        <a href="https://wa.me/62895393358741?text={{ urlencode('Halo, saya ingin reset password akun Tickora. Email saya: ' . old('email')) }}"
+           onclick="return confirm('Anda akan diarahkan ke WhatsApp untuk mengirim permintaan reset password. Lanjutkan?')"
+           target="_blank" rel="noopener"
+           class="mt-2 block text-right text-sm text-blue-600 hover:underline">
+          Lupa Password?
+        </a>
       </div>
 
       {{-- Submit --}}

@@ -6,6 +6,7 @@ use App\Support\RoleHelpers;
 use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Schema;
@@ -78,7 +79,7 @@ class User extends Authenticatable implements MustVerifyEmail
         HasRoles::assignRole as protected traitAssignRole;
         HasRoles::syncRoles as protected traitSyncRoles;
     }
-    use MustVerifyEmailTrait;
+    use MustVerifyEmailTrait, SoftDeletes;
 
     /** Spatie Permission guard */
     protected $guard_name = 'web';
