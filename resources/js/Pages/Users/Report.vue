@@ -213,7 +213,13 @@ const props = defineProps({
   can: { type: Object, default: () => ({}) },
 });
 
-const route = (name, params = undefined, absolute = true) => ziggyRoute(name, params, absolute, Ziggy);
+const page = usePage();
+const route = (name, params = {}, absolute = false) => ziggyRoute(
+  name,
+  { locale: page.props.locale || 'en', ...params },
+  absolute,
+  Ziggy,
+);
 
 const perPageOptions = [10, 15, 25, 50, 100];
 
@@ -442,7 +448,6 @@ function handleKeydown(event) {
   }
 }
 
-const page = usePage();
 const flash = computed(() => page.props.flash || {});
 
 const can = computed(() => props.can || {});
