@@ -168,14 +168,18 @@ class InjectLoginLoadingOverlay
     <div class="emblem">
       <span class="orbit" aria-hidden="true"></span>
     </div>
-    <p class="title">Sedang masuk, mohon tunggu...</p>
-    <p class="subtitle">Kami sedang menyiapkan dasbor Tickora Anda.</p>
+    <p class="title">__LOGIN_TITLE__</p>
+    <p class="subtitle">__LOGIN_SUBTITLE__</p>
   </div>
 </div>
 
 <script__NONCE__ src="/js/login-overlay.js" defer></script>
 HTML;
 
-        return str_replace('__NONCE__', $nonceAttr, $html);
+        return strtr($html, [
+            '__NONCE__' => $nonceAttr,
+            '__LOGIN_TITLE__' => e(__('Signing in, please wait...')),
+            '__LOGIN_SUBTITLE__' => e(__('We are preparing your Tickora dashboard.')),
+        ]);
     }
 }

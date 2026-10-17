@@ -82,7 +82,7 @@ dark){:root{--lo-primary:#60a5fa;--lo-text:#334155;--lo-text-strong:#0f172a;--lo
             <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="0.9s" repeatCount="indefinite" />
           </circle>
         </svg>
-        <div class="msg">Sedang masuk, mohon tunggu…</div>
+        <div class="msg">{{ __('Signing in, please wait...') }}</div>
       </div>
     </div>
     <script nonce="{{ $cspNonce }}">

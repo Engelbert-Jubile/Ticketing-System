@@ -63,6 +63,10 @@ test('public pages follow the global language including form and script labels',
             $response->assertSee($english ? 'Show password' : 'Tampilkan password')
                 ->assertSee(route('welcome', ['locale' => $locale]), false);
         }
+        if ($page === 'login') {
+            $response->assertSee($english ? 'Signing in, please wait...' : 'Sedang masuk, mohon tunggu...')
+                ->assertSee($english ? 'We are preparing your Tickora dashboard.' : 'Kami sedang menyiapkan dasbor Tickora Anda.');
+        }
     }
 })->with(['en', 'id']);
 
