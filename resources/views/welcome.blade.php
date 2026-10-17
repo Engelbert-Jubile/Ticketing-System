@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" class="transition-colors duration-300">
+<html lang="{{ app()->getLocale() }}" class="transition-colors duration-300">
 
 <head>
     <meta charset="UTF-8">
-    <title>Ticket Management System - Tickora</title>
+    <title>{{ __('Ticket Management System') }} - Tickora</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -108,14 +108,14 @@
         $announcement = $announcement ?? ['enabled' => false];
         $maintenance = $maintenance ?? ['enabled' => false];
         $maintenanceEnabled = (bool) ($maintenance['enabled'] ?? false);
-        $maintenanceMessage = $maintenance['message'] ?? 'The system is temporarily unavailable while we perform maintenance.';
+        $maintenanceMessage = $maintenance['message'] ?? __('The system is temporarily unavailable while we perform maintenance.');
         $announcementEnabled = (bool) ($announcement['enabled'] ?? false);
-        $announcementTitle = $announcement['title'] ?? 'Announcement';
+        $announcementTitle = $announcement['title'] ?? __('Announcement');
         $announcementBody = $announcement['body'] ?? ($announcement['message'] ?? null);
         $announcementStart = $announcement['start_at'] ?? ($announcement['starts_at'] ?? null);
         $announcementEnd = $announcement['end_at'] ?? ($announcement['ends_at'] ?? null);
         $announcementWindow = ($announcementStart || $announcementEnd)
-            ? ($announcementStart ?: 'Now').' - '.($announcementEnd ?: 'Open')
+            ? ($announcementStart ?: __('Now')).' - '.($announcementEnd ?: __('Open'))
             : null;
     @endphp
 </head>
@@ -133,7 +133,7 @@
             <div class="flex w-full max-w-4xl items-center gap-3 rounded-2xl border border-indigo-200/70 bg-white/90 px-5 py-4 text-slate-900 shadow-xl shadow-indigo-200/50 ring-1 ring-indigo-100/80 backdrop-blur dark:border-indigo-500/40 dark:bg-slate-900/90 dark:text-white dark:ring-indigo-500/40">
                 <span class="material-icons text-2xl text-indigo-600 dark:text-indigo-200">lock</span>
                 <div class="text-left">
-                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-700 dark:text-indigo-200">Maintenance Mode</p>
+                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-700 dark:text-indigo-200">{{ __('Maintenance Mode') }}</p>
                     <p class="text-sm">{{ $maintenanceMessage }}</p>
                 </div>
             </div>
@@ -150,7 +150,7 @@
                             <span class="material-icons text-lg">campaign</span>
                         </span>
                         <div class="space-y-1">
-                            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700 dark:text-amber-100">Announcement</p>
+                            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700 dark:text-amber-100">{{ __('Announcement') }}</p>
                             <p class="text-lg font-semibold leading-tight text-slate-900 dark:text-white">{{ $announcementTitle }}</p>
                             @if($announcementBody)
                                 <p class="text-sm text-slate-700 dark:text-slate-200">{{ $announcementBody }}</p>
@@ -163,7 +163,7 @@
                     <div class="hidden sm:flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-blue-900/80 dark:text-blue-100/80">
                         <span class="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-2 text-blue-700 ring-1 ring-blue-100 dark:bg-blue-900/40 dark:text-blue-100 dark:ring-blue-700/50">
                             <span class="material-icons text-base">schedule</span>
-                            <span>{{ $announcementStart ?: 'Now' }} @if($announcementEnd) — {{ $announcementEnd }} @endif</span>
+                            <span>{{ $announcementStart ?: __('Now') }} @if($announcementEnd) — {{ $announcementEnd }} @endif</span>
                         </span>
                     </div>
                 </div>
@@ -180,7 +180,7 @@
             </div>
             <h1 class="flex flex-col gap-1 tms-title">
                 <span class="tms-title-main text-4xl font-bold tracking-tight sm:text-5xl">TIC<span class="accent-k" data-letter="K">K</span>ORA</span>
-                <span class="tms-subtitle text-xl font-medium tracking-wide sm:text-2xl">Ticket Management System</span>
+                <span class="tms-subtitle text-xl font-medium tracking-wide sm:text-2xl">{{ __('Ticket Management System') }}</span>
             </h1>
         </div>
 
@@ -188,28 +188,28 @@
             <div class="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100 text-blue-600 shadow-sm">
                 <span class="material-icons text-3xl">login</span>
             </div>
-            <h2 class="text-2xl font-semibold text-slate-900">Masuk ke akun Anda</h2>
+            <h2 class="text-2xl font-semibold text-slate-900">{{ __('Sign in to your account') }}</h2>
             <p class="mt-2 text-sm text-slate-600">
-                Akses seluruh fitur Dashboard, Ticket, Task, Project.
+                {{ __('Access all Dashboard, Ticket, Task, and Project features.') }}
             </p>
             <div class="mt-6 grid gap-3">
                 <a href="{{ route('login', ['locale' => app()->getLocale() ?? config('app.locale', 'en')]) }}" class="inline-flex items-center justify-center gap-2 rounded-xl border border-blue-600 bg-white px-6 py-3 text-sm font-semibold text-blue-600 transition hover:bg-blue-50">
                     <span class="material-icons text-base">login</span>
-                    <span>Login</span>
+                    <span>{{ __('Login') }}</span>
                 </a>
                 @if($maintenanceEnabled)
                     <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-100 px-6 py-3 text-sm font-semibold text-slate-500 shadow-inner" disabled aria-disabled="true">
                         <span class="material-icons text-base">lock_person</span>
-                        <span>Register (disabled)</span>
+                        <span>{{ __('Register (disabled)') }}</span>
                     </button>
                 @else
                     <a href="{{ route('register', ['locale' => app()->getLocale() ?? config('app.locale', 'en')]) }}" class="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-600 bg-white px-6 py-3 text-sm font-semibold text-emerald-600 transition hover:bg-emerald-50">
                         <span class="material-icons text-base">person_add</span>
-                        <span>Register</span>
+                        <span>{{ __('Register') }}</span>
                     </a>
                 @endif
                 @if($maintenanceEnabled)
-                <p class="text-[11px] font-medium uppercase tracking-[0.2em] text-slate-500">Tidak dapat Login selama maintenance.</p>
+                <p class="text-[11px] font-medium uppercase tracking-[0.2em] text-slate-500">{{ __('Login is unavailable during maintenance.') }}</p>
                 @endif
             </div>
         </div>
@@ -221,8 +221,8 @@
                         <span class="material-icons text-xl">workspace_premium</span>
                     </span>
                     <span class="flex flex-col text-slate-900 leading-tight">
-                        <span>Team</span>
-                        <span>Workspace</span>
+                        <span>{{ __('Team') }}</span>
+                        <span>{{ __('Workspace') }}</span>
                     </span>
                 </span>
             </div>
@@ -232,8 +232,8 @@
                         <span class="material-icons text-xl">groups</span>
                     </span>
                     <span class="flex flex-col text-slate-900 leading-tight">
-                        <span>Team</span>
-                        <span>Collaboration</span>
+                        <span>{{ __('Team') }}</span>
+                        <span>{{ __('Collaboration') }}</span>
                     </span>
                 </span>
                 <span class="inline-flex w-60 items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-2 shadow-sm shadow-slate-200/70">
@@ -241,8 +241,8 @@
                         <span class="material-icons text-xl">bolt</span>
                     </span>
                     <span class="flex flex-col text-slate-900 leading-tight">
-                        <span>Team</span>
-                        <span>Operations</span>
+                        <span>{{ __('Team') }}</span>
+                        <span>{{ __('Operations') }}</span>
                     </span>
                 </span>
             </div>
@@ -255,7 +255,7 @@
                 <a href="https://kftd.co.id/" class="font-semibold text-blue-600 hover:text-blue-700" target="_blank" rel="noopener">
                     Kimia Farma Trading &amp; Distribution
                 </a>.
-                All rights reserved.
+                {{ __('All rights reserved.') }}
             </p>
         </div>
             </div>

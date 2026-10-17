@@ -4,7 +4,7 @@ $unitOptions = $units ?? \App\Support\UserUnitOptions::values();
 $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
 @endphp
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 
 <head>
 
@@ -54,7 +54,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>Register - Tickora</title>
+  <title>{{ __('Register') }} - Tickora</title>
   <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v={{ filemtime(public_path('favicon.svg')) }}">
   <link rel="alternate icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v={{ filemtime(public_path('favicon.ico')) }}">
 
@@ -196,14 +196,14 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
             TIC<span class="brand-accent-k" data-letter="K">K</span>ORA
           </h1>
           <p class="mt-2 text-sm font-medium tracking-wide" style="color: var(--brand-blue);">
-            Ticket Management System
+            {{ __('Ticket Management System') }}
           </p>
         </div>
 
         <div class="auth-gpu-safe-surface rounded-3xl bg-white/85 p-8 shadow-xl shadow-blue-200/40 ring-1 ring-slate-200/70 backdrop-blur dark:bg-slate-900/70 dark:ring-slate-800/70 dark:shadow-none sm:p-10">
           <div class="mb-6 space-y-1 text-center">
-            <h2 class="text-2xl font-semibold tracking-tight">Daftar Akun Baru</h2>
-            <p class="text-sm text-slate-600 dark:text-slate-300">Buat akun untuk mulai mengelola ticket dan pekerjaan tim.</p>
+            <h2 class="text-2xl font-semibold tracking-tight">{{ __('Create a new account') }}</h2>
+            <p class="text-sm text-slate-600 dark:text-slate-300">{{ __('Create an account to start managing tickets and team work.') }}</p>
           </div>
 
           @php
@@ -227,7 +227,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
             @endphp
 
             <div class="space-y-1">
-              <label for="username" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Username</label>
+              <label for="username" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">{{ __('Username') }}</label>
               <div class="relative">
                 <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                   <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -243,7 +243,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
 
             <div class="grid gap-4 sm:grid-cols-2">
               <div class="space-y-1">
-                <label for="first_name" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Nama Depan</label>
+                <label for="first_name" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">{{ __('First name') }}</label>
                 <div class="relative">
                   <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -258,7 +258,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
               </div>
 
               <div class="space-y-1">
-                <label for="last_name" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Nama Belakang</label>
+                <label for="last_name" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">{{ __('Last name') }}</label>
                 <div class="relative">
                   <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -274,7 +274,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
             </div>
 
             <div class="space-y-1">
-              <label for="email_local" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Email</label>
+              <label for="email_local" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">{{ __('Email') }}</label>
               <div class="relative">
                 <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                   <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -284,7 +284,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
                 </span>
                 <input id="email" type="hidden" name="email" value="{{ ($oldEmailLocal ?? '') ? (($oldEmailLocal ?? '') . ($lockedDomain ?? '@kftd.co.id')) : '' }}" />
                 <input id="email_local" type="text" inputmode="email" autocapitalize="none" spellcheck="false" value="{{ $oldEmailLocal ?? '' }}" required autocomplete="username"
-                  aria-label="Email (tanpa domain)"
+                  aria-label="{{ __('Email (without domain)') }}"
                   class="auth-input-stable w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-3 pl-10 pr-28 text-sm text-slate-900 shadow-sm shadow-slate-200/40 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:shadow-none" />
                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-xs font-semibold tracking-wide text-slate-500 dark:text-slate-300">{{ $lockedDomain ?? '@kftd.co.id' }}</span>
               </div>
@@ -292,7 +292,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
             </div>
 
             <div class="space-y-1">
-              <label for="unitButton" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Unit</label>
+              <label for="unitButton" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">{{ __('Unit') }}</label>
               <div class="unit-select relative" id="unitSelect" data-open="false" data-side="bottom">
                 <input id="unit" type="hidden" name="unit" value="{{ old('unit') }}" />
                 <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
@@ -306,7 +306,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
                 <button id="unitButton" type="button"
                   class="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-3 pl-10 pr-10 text-left text-sm text-slate-900 shadow-sm shadow-slate-200/40 outline-none transition hover:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:shadow-none dark:hover:bg-slate-950/55"
                   aria-haspopup="listbox" aria-expanded="false" aria-controls="unitListbox">
-                  <span id="unitButtonLabel" class="{{ old('unit') ? '' : 'text-slate-500 dark:text-slate-400' }}">{{ old('unit') ?: 'Pilih Unit' }}</span>
+                  <span id="unitButtonLabel" class="{{ old('unit') ? '' : 'text-slate-500 dark:text-slate-400' }}">{{ old('unit') ?: __('Select unit') }}</span>
                 </button>
 
                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400">
@@ -318,7 +318,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
                 <div
                   class="unit-menu unit-menu-panel absolute left-0 right-0 z-30 rounded-2xl border border-slate-200 bg-white/95 shadow-xl shadow-slate-200/60 ring-1 ring-slate-200/60 backdrop-blur dark:border-slate-800 dark:bg-slate-950/85 dark:shadow-none">
                   <div class="unit-menu-head rounded-t-2xl border-b border-slate-200/80 px-4 py-3 dark:border-slate-800/80">
-                    <p class="text-sm font-semibold text-slate-800 dark:text-slate-100">Pilih Unit</p>
+                    <p class="text-sm font-semibold text-slate-800 dark:text-slate-100">{{ __('Select unit') }}</p>
                     <div class="relative mt-3">
                       <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -331,8 +331,8 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
                         type="search"
                         autocomplete="off"
                         spellcheck="false"
-                        aria-label="Cari unit"
-                        placeholder="Cari unit..."
+                        aria-label="{{ __('Search units') }}"
+                        placeholder="{{ __('Search units...') }}"
                         class="unit-search-input w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 pl-9 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950/60 dark:text-slate-100"
                       />
                     </div>
@@ -345,7 +345,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
                     </button>
                     @endforeach
                     <div id="unitEmptyState" class="hidden px-4 py-4 text-sm text-slate-500 dark:text-slate-400">
-                      Unit tidak ditemukan
+                      {{ __('No units found') }}
                     </div>
                   </div>
                 </div>
@@ -356,7 +356,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
 
             <div class="grid gap-4 sm:grid-cols-2">
               <div class="space-y-1">
-                <label for="password" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Password</label>
+                <label for="password" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">{{ __('Password') }}</label>
                 <div class="relative">
                   <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -369,7 +369,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
                   <button type="button"
                     class="absolute inset-y-0 right-0 inline-flex items-center px-3 text-slate-500 transition hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 dark:text-slate-300 dark:hover:text-white"
                     data-password-toggle="password"
-                    aria-label="Tampilkan password" aria-pressed="false" title="Tampilkan password">
+                    aria-label="{{ __('Show password') }}" aria-pressed="false" title="{{ __('Show password') }}">
                     <svg data-eye="closed" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18"></path>
                       <path stroke-linecap="round" stroke-linejoin="round" d="M9 9c-.633.873-1 1.918-1 3 0 2.761 2.239 5 5 5 1.082 0 2.127-.367 3-1"></path>
@@ -386,7 +386,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
               </div>
 
               <div class="space-y-1">
-                <label for="password_confirmation" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Konfirmasi Password</label>
+                <label for="password_confirmation" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">{{ __('Confirm password') }}</label>
                 <div class="relative">
                   <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -399,7 +399,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
                   <button type="button"
                     class="absolute inset-y-0 right-0 inline-flex items-center px-3 text-slate-500 transition hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 dark:text-slate-300 dark:hover:text-white"
                     data-password-toggle="password_confirmation"
-                    aria-label="Tampilkan password" aria-pressed="false" title="Tampilkan password">
+                    aria-label="{{ __('Show password') }}" aria-pressed="false" title="{{ __('Show password') }}">
                     <svg data-eye="closed" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18"></path>
                       <path stroke-linecap="round" stroke-linejoin="round" d="M9 9c-.633.873-1 1.918-1 3 0 2.761 2.239 5 5 5 1.082 0 2.127-.367 3-1"></path>
@@ -425,7 +425,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
 
             <button type="submit"
               class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-sm shadow-emerald-600/25 transition hover:bg-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:opacity-70 dark:focus-visible:ring-offset-slate-900">
-              <span class="!text-white">Daftar</span>
+              <span class="!text-white">{{ __('Register') }}</span>
               <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M15.5 21v-1.2a4.8 4.8 0 0 0-4.8-4.8H6.8A4.8 4.8 0 0 0 2 19.8V21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
                 <path d="M8.75 11.5a3.25 3.25 0 1 0 0-6.5 3.25 3.25 0 0 0 0 6.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
@@ -436,10 +436,10 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
           </form>
 
           <div class="mt-6 flex flex-col items-center gap-3 text-center text-sm text-slate-600 dark:text-slate-300">
-            <a href="{{ url('/') }}" class="font-medium text-slate-700 underline-offset-4 hover:underline dark:text-slate-200">Kembali ke halaman welcome</a>
+            <a href="{{ route('welcome', ['locale' => $currentLocale]) }}" class="font-medium text-slate-700 underline-offset-4 hover:underline dark:text-slate-200">{{ __('Back to welcome page') }}</a>
             <p>
-              Sudah punya akun?
-              <a href="{{ route('login', ['locale' => $currentLocale]) }}" class="font-semibold text-blue-700 underline-offset-4 hover:underline dark:text-blue-300">Login di sini</a>
+              {{ __('Already have an account?') }}
+              <a href="{{ route('login', ['locale' => $currentLocale]) }}" class="font-semibold text-blue-700 underline-offset-4 hover:underline dark:text-blue-300">{{ __('Log in here') }}</a>
             </p>
           </div>
         </div>
@@ -510,7 +510,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
 
   <div id="registerOverlay" aria-hidden="true">
     <div class="wrap">
-      <svg class="spinner-svg" width="60" height="60" viewBox="0 0 50 50" aria-label="Loading" role="status">
+      <svg class="spinner-svg" width="60" height="60" viewBox="0 0 50 50" aria-label="{{ __('Loading') }}" role="status">
         <defs>
           <linearGradient id="ro-g" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stop-color="#a7f3d0" stop-opacity="0.22" />
@@ -522,7 +522,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
           <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="0.9s" repeatCount="indefinite" />
         </circle>
       </svg>
-      <div class="msg">Sedang mendaftar, mohon tunggu&hellip;</div>
+      <div class="msg">{{ __('Creating your account, please wait…') }}</div>
     </div>
   </div>
 
@@ -537,7 +537,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
           input.setAttribute('type', nextType);
           var visible = nextType === 'text';
           btn.setAttribute('aria-pressed', visible ? 'true' : 'false');
-          var label = visible ? 'Sembunyikan password' : 'Tampilkan password';
+          var label = visible ? @json(__('Hide password')) : @json(__('Show password'));
           btn.setAttribute('aria-label', label);
           btn.setAttribute('title', label);
           var openIcon = btn.querySelector('[data-eye="open"]');
@@ -637,7 +637,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
       function setSelectedValue(value) {
         input.value = value || "";
         var hasValue = Boolean(value);
-        buttonLabel.textContent = hasValue ? value : "Pilih Unit";
+        buttonLabel.textContent = hasValue ? value : @json(__('Select unit'));
         buttonLabel.classList.toggle("text-slate-500", !hasValue);
         buttonLabel.classList.toggle("dark:text-slate-400", !hasValue);
         options.forEach(function(optionButton) {
@@ -850,7 +850,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
         if (unitInput && !unitInput.value) {
           e.preventDefault();
           if (unitClientError) {
-            unitClientError.textContent = 'Unit wajib dipilih.';
+            unitClientError.textContent = @json(__('Please select a unit.'));
             unitClientError.classList.remove('hidden');
           }
           if (unitButton) unitButton.focus();
@@ -866,9 +866,9 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
             btn.setAttribute('aria-busy', 'true');
             var label = btn.querySelector('span');
             if (label) {
-              label.textContent = 'Mendaftar...';
+              label.textContent = @json(__('Registering...'));
             } else {
-              btn.textContent = 'Mendaftar...';
+              btn.textContent = @json(__('Registering...'));
             }
           }
           if (overlay) {

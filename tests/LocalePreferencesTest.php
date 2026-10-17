@@ -43,6 +43,29 @@ function localeHeaders(): array
     return ['X-Inertia' => 'true', 'X-Inertia-Version' => hash_file('xxh128', public_path('build/manifest.json'))];
 }
 
+test('public pages follow the global language including form and script labels', function (string $locale) {
+    localeDefault($locale);
+    $this->withoutVite();
+    $english = $locale === 'en';
+    foreach (['welcome', 'login', 'register'] as $page) {
+        $response = $this->get('/'.$locale.'/'.$page)->assertOk()
+            ->assertSee('lang="'.$locale.'"', false);
+        $response->assertSee($page === 'register'
+            ? ($english ? 'Create a new account' : 'Daftar Akun Baru')
+            : ($english ? 'Sign in to your account' : 'Masuk ke akun Anda'));
+        if ($page === 'register') {
+            $response->assertSee($english ? 'First name' : 'Nama Depan')
+                ->assertSee($english ? 'Select unit' : 'Pilih Unit')
+                ->assertSee($english ? 'No units found' : 'Unit tidak ditemukan')
+                ->assertSee($english ? 'Please select a unit.' : 'Unit wajib dipilih.');
+        }
+        if ($page !== 'welcome') {
+            $response->assertSee($english ? 'Show password' : 'Tampilkan password')
+                ->assertSee(route('welcome', ['locale' => $locale]), false);
+        }
+    }
+})->with(['en', 'id']);
+
 test('language belongs only to the authenticated account and survives a new session', function () {
     $alice = User::factory()->create(); $bob = User::factory()->create();
     $this->actingAs($alice)->patchJson('/en/dashboard/account/locale', ['locale' => 'id', 'user_id' => $bob->id, 'globalLocale' => 'id'])

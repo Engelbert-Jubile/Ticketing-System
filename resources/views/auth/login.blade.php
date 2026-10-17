@@ -3,7 +3,7 @@ $recaptcha = app(\App\Services\Security\RecaptchaVerifier::class);
 $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
 @endphp
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 
 <head>
 
@@ -31,7 +31,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>Login - Tickora</title>
+  <title>{{ __('Login') }} - Tickora</title>
   <meta name="application-name" content="Tickora">
   <meta name="apple-mobile-web-app-title" content="Tickora">
   <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v={{ filemtime(public_path('favicon.svg')) }}">
@@ -100,14 +100,14 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
             TIC<span class="brand-accent-k" data-letter="K">K</span>ORA
           </h1>
           <p class="mt-2 text-sm font-medium tracking-wide" style="color: var(--brand-blue);">
-            Ticket Management System
+            {{ __('Ticket Management System') }}
           </p>
         </div>
 
         <div class="auth-gpu-safe-surface rounded-3xl bg-white/85 p-8 shadow-xl shadow-blue-200/40 ring-1 ring-slate-200/70 backdrop-blur dark:bg-slate-900/70 dark:ring-slate-800/70 dark:shadow-none sm:p-10">
           <div class="mb-8 space-y-2 text-center">
-            <h2 class="text-2xl font-semibold tracking-tight">Masuk ke akun Anda</h2>
-            <p class="text-sm text-slate-600 dark:text-slate-300">Kelola ticket, task, dan project dalam satu dashboard.</p>
+            <h2 class="text-2xl font-semibold tracking-tight">{{ __('Sign in to your account') }}</h2>
+            <p class="text-sm text-slate-600 dark:text-slate-300">{{ __('Manage tickets, tasks, and projects in one dashboard.') }}</p>
           </div>
 
           @if (session('status'))
@@ -139,7 +139,7 @@ class="space-y-6" >
             @endphp
 
             <div class="space-y-1">
-              <label for="email_local" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Email</label>
+              <label for="email_local" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">{{ __('Email') }}</label>
               <div class="relative">
                 <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                   <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -149,7 +149,7 @@ class="space-y-6" >
                 </span>
                 <input id="email" type="hidden" name="email" value="{{ ($oldEmailLocal ?? '') ? (($oldEmailLocal ?? '') . ($lockedDomain ?? '@kftd.co.id')) : '' }}" />
                 <input id="email_local" type="text" inputmode="email" autocapitalize="none" spellcheck="false" value="{{ $oldEmailLocal ?? '' }}" required autofocus autocomplete="username"
-                  aria-label="Email (tanpa domain)"
+                  aria-label="{{ __('Email (without domain)') }}"
                   class="auth-input-stable w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-3 pl-10 pr-28 text-sm text-slate-900 shadow-sm shadow-slate-200/40 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:shadow-none" />
                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-xs font-semibold tracking-wide text-slate-500 dark:text-slate-300">{{ $lockedDomain ?? '@kftd.co.id' }}</span>
               </div>
@@ -157,7 +157,7 @@ class="space-y-6" >
             </div>
 
             <div class="space-y-1">
-              <label for="password" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Password</label>
+              <label for="password" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">{{ __('Password') }}</label>
               <div class="relative">
                 <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                   <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -170,7 +170,7 @@ class="space-y-6" >
                 <button type="button"
                   class="absolute inset-y-0 right-0 inline-flex items-center px-3 text-slate-500 transition hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 dark:text-slate-300 dark:hover:text-white"
                   data-password-toggle="password"
-                  aria-label="Tampilkan password" aria-pressed="false" title="Tampilkan password">
+                  aria-label="{{ __('Show password') }}" aria-pressed="false" title="{{ __('Show password') }}">
                   <svg data-eye="closed" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18"></path>
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 9c-.633.873-1 1.918-1 3 0 2.761 2.239 5 5 5 1.082 0 2.127-.367 3-1"></path>
@@ -188,7 +188,7 @@ class="space-y-6" >
             </div>
  
 <div class="mt-2 mb-3 text-right">
-  <a href="{{ route('password.request', ['locale' => request()->route('locale') ?? app()->getLocale()]) }}" class="text-sm font-semibold text-blue-600 hover:underline">Lupa password?</a>
+  <a href="{{ route('password.request', ['locale' => request()->route('locale') ?? app()->getLocale()]) }}" class="text-sm font-semibold text-blue-600 hover:underline">{{ __('Forgot password?') }}</a>
 </div>
 
             @if ($recaptcha->isEnabled())
@@ -202,7 +202,7 @@ class="space-y-6" >
 
             <button type="submit"
               class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm shadow-blue-600/30 transition hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:opacity-70 dark:focus-visible:ring-offset-slate-900">
-              <span class="!text-white">Login</span>
+              <span class="!text-white">{{ __('Login') }}</span>
               <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M14 4h5a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
                 <path d="M10 17l5-5-5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
@@ -216,10 +216,10 @@ class="space-y-6" >
           </form>
 
           <div class="mt-6 flex flex-col items-center gap-3 text-center text-sm text-slate-600 dark:text-slate-300">
-            <a href="{{ route('welcome', ['locale' => $currentLocale]) }}" class="font-medium text-slate-700 underline-offset-4 hover:underline dark:text-slate-200">Kembali ke halaman welcome</a>
+            <a href="{{ route('welcome', ['locale' => $currentLocale]) }}" class="font-medium text-slate-700 underline-offset-4 hover:underline dark:text-slate-200">{{ __('Back to welcome page') }}</a>
             <p>
-              Belum punya akun?
-              <a href="{{ route('register', ['locale' => $currentLocale]) }}" class="font-semibold text-blue-700 underline-offset-4 hover:underline dark:text-blue-300">Daftar di sini</a>
+              {{ __('Don’t have an account?') }}
+              <a href="{{ route('register', ['locale' => $currentLocale]) }}" class="font-semibold text-blue-700 underline-offset-4 hover:underline dark:text-blue-300">{{ __('Register here') }}</a>
             </p>
           </div>
         </div>
@@ -388,7 +388,7 @@ rgba(0,0,0,0.15), rgba(0,0,0,0.55), rgba(0,0,0,0.15));
       e.preventDefault();
       var url = waLink.getAttribute("data-wa") || waLink.href;
       if (!url) return;
-      if (confirm("Anda akan diarahkan ke WhatsApp untuk mengirim permintaan reset password. Lanjutkan?")) {
+      if (confirm(@json(__('You will be redirected to WhatsApp to request a password reset. Continue?')))) {
         window.open(url, "_blank", "noopener");
       }
     });
@@ -421,7 +421,7 @@ rgba(0,0,0,0.15), rgba(0,0,0,0.55), rgba(0,0,0,0.15));
     var visible = input.getAttribute('type') === 'text';
     var activeIcon = visible ? openIcon : closedIcon;
     var inactiveIcon = visible ? closedIcon : openIcon;
-    var label = visible ? 'Sembunyikan password' : 'Tampilkan password';
+    var label = visible ? @json(__('Hide password')) : @json(__('Show password'));
 
     btn.setAttribute('aria-pressed', visible ? 'true' : 'false');
     btn.setAttribute('aria-label', label);
@@ -485,7 +485,7 @@ rgba(0,0,0,0.15), rgba(0,0,0,0.55), rgba(0,0,0,0.15));
       e.preventDefault();
       var url = waLink.getAttribute("data-wa");
       if (!url) return;
-      if (confirm("Anda akan diarahkan ke WhatsApp untuk mengirim permintaan reset password. Lanjutkan?")) {
+      if (confirm(@json(__('You will be redirected to WhatsApp to request a password reset. Continue?')))) {
         window.open(url, "_blank", "noopener");
       }
     });

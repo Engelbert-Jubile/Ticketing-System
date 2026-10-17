@@ -125,3 +125,4 @@ docs/workflow-language-update*.md
 **/UserEditTest.php
 /tests/AuditImprovementsTest.php
 /tests/Unit/WorkListServiceTest*.php
+/tests/LocalePreferencesTest*.php
