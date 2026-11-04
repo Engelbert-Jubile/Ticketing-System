@@ -92,6 +92,7 @@ resources/js/*
 !resources/js/Components/
 resources/js/Components/*
 !resources/js/Components/WorkflowSelect.vue
+!resources/js/Components/ProfileAvatar.vue
 !resources/js/Components/WorkflowStatusDialog.vue
 !resources/js/Components/DraftNotice.vue
 !resources/js/Components/TicketCollaboration.vue
@@ -123,6 +124,7 @@ docs/workflow-language-update*.md
 /phpunit.xml
 /tests/Pest.php
 **/UserEditTest.php
-/tests/AuditImprovementsTest.php
+/tests/AuditImprovementsTest*.php
 /tests/Unit/WorkListServiceTest*.php
 /tests/LocalePreferencesTest*.php
+/tests/AccountProfileTest*.php

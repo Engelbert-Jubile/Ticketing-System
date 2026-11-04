@@ -1,181 +1,103 @@
 <template>
-  <div class="mx-auto max-w-2xl space-y-6 px-4 py-6">
-    <header class="space-y-1">
-      <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">{{ $t("Profil") }}</h1>
-      <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Perbarui informasi dasar akun Anda.") }}</p>
-    </header>
-
-    <section v-if="flash.success" class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-900/30 dark:text-emerald-200">
-      {{ flash.success }}
-    </section>
-    <section v-else-if="Object.keys(form.errors).length" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-900/30 dark:text-rose-200">
-      {{ $t("Periksa kembali input Anda.") }}
-    </section>
-
-    <form class="space-y-5 rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-xl shadow-blue-100/40 ring-1 ring-slate-200/80 backdrop-blur dark:border-slate-700 dark:bg-slate-900/80 dark:shadow-none dark:ring-slate-700" @submit.prevent="submit" novalidate>
-      <div class="space-y-1">
-        <label for="username" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Username</label>
-        <div class="relative">
-          <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" stroke="currentColor" stroke-width="1.8" />
-              <path d="M4 20a8 8 0 0 1 16 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-            </svg>
-          </span>
-          <input
-            id="username"
-            v-model="form.username"
-            type="text"
-            autocomplete="username"
-            required
-            class="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-3 pl-10 text-sm text-slate-900 shadow-sm shadow-slate-200/40 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:shadow-none"
-          />
+  <div class="profile-page mx-auto max-w-6xl space-y-6 px-4 py-8">
+    <header><p class="eyebrow">TICKORA / {{ tr('Akun saya', 'My account') }}</p><h1 class="mt-2 text-3xl font-bold">{{ tr('Profil & preferensi', 'Profile & preferences') }}</h1><p class="mt-2 text-sm text-slate-500">{{ tr('Kelola identitas, foto, dan keamanan akun Anda dalam satu tempat.', 'Manage your identity, photo, and account security in one place.') }}</p></header>
+    <div v-if="flash.success || flash.error" role="status" class="panel text-sm" :class="flash.error ? 'text-rose-600' : 'text-emerald-600'">{{ flash.success || flash.error }}</div>
+    <div class="grid items-start gap-6 lg:grid-cols-[280px,minmax(0,1fr)]">
+      <aside class="panel overflow-hidden !p-0">
+        <div class="profile-cover h-24"></div>
+        <div class="px-6 pb-6">
+          <ProfileAvatar :src="avatar" :template="form.avatar_template" :label="fullName" class="-mt-12 h-24 w-24 ring-4 ring-white dark:ring-slate-900" />
+          <h2 class="mt-4 break-words text-xl font-bold">{{ fullName }}</h2><p class="mt-1 break-all text-sm text-slate-500">{{ user.email }}</p>
+          <span class="role-chip mt-4 inline-flex rounded-full px-3 py-1 text-xs font-semibold">{{ user.role || tr('Anggota', 'Member') }}</span>
+          <dl class="mt-6 space-y-4 border-t border-slate-200 pt-5 text-sm dark:border-slate-700"><div><dt class="text-xs text-slate-500">{{ tr('Jabatan', 'Position') }}</dt><dd class="mt-1 break-words">{{ form.position || '—' }}</dd></div><div><dt class="text-xs text-slate-500">Unit</dt><dd class="mt-1">{{ user.unit || '—' }}</dd></div></dl>
+          <nav class="mt-6 flex flex-col gap-3 text-sm font-medium"><a href="#personal">{{ tr('Informasi pribadi', 'Personal information') }} ↗</a><a href="#security">{{ tr('Keamanan akun', 'Account security') }} ↗</a></nav>
         </div>
-        <p v-if="form.errors.username" class="text-xs text-rose-500">{{ form.errors.username }}</p>
-      </div>
-
-      <div class="grid gap-4 md:grid-cols-2">
-        <div class="space-y-1">
-          <label for="first_name" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t("Nama Depan") }}</label>
-          <div class="relative">
-            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-              <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M6.5 19.5h11A2.5 2.5 0 0 0 20 17V7A2.5 2.5 0 0 0 17.5 4.5h-11A2.5 2.5 0 0 0 4 7v10A2.5 2.5 0 0 0 6.5 19.5Z" stroke="currentColor" stroke-width="1.8" />
-                <path d="M8 9h8M8 12h8M8 15h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-              </svg>
-            </span>
-            <input
-              id="first_name"
-              v-model="form.first_name"
-              type="text"
-              autocomplete="given-name"
-              required
-              class="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-3 pl-10 text-sm text-slate-900 shadow-sm shadow-slate-200/40 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:shadow-none"
-            />
+      </aside>
+      <div class="space-y-6">
+        <form id="personal" class="panel space-y-6" @submit.prevent="submit">
+          <div><h2 class="text-lg font-bold">{{ tr('Informasi pribadi', 'Personal information') }}</h2><p class="mt-1 text-sm text-slate-500">{{ tr('Tampilkan versi terbaik dari diri Anda.', 'Put your best self forward.') }}</p></div>
+          <div class="rounded-2xl border border-dashed border-slate-300 p-4 dark:border-slate-600">
+            <div class="flex flex-wrap items-center gap-4"><ProfileAvatar :src="avatar" :template="form.avatar_template" class="h-16 w-16" /><div><div class="flex flex-wrap gap-2"><button type="button" class="secondary" :disabled="form.processing" @click="fileInput.click()">{{ tr('Pilih foto', 'Choose photo') }}</button><button v-if="avatar" type="button" class="secondary" :disabled="form.processing" @click="removePhoto">{{ tr('Hapus foto', 'Remove photo') }}</button></div><p class="mt-2 text-xs text-slate-500">JPG, PNG, WebP · {{ tr('Maksimal 2 MB, 6000 × 6000 piksel.', 'Up to 2 MB, 6000 × 6000 pixels.') }}</p></div></div>
+            <input ref="fileInput" type="file" accept="image/jpeg,image/png,image/webp" class="hidden" :aria-label="tr('Foto profil', 'Profile photo')" @change="choosePhoto" />
+            <p v-if="form.errors.photo" role="alert" class="error">{{ form.errors.photo }}</p>
+            <label for="avatar-template" class="mt-4 block text-xs font-semibold text-slate-500">{{ tr('Avatar default saat tidak memakai foto', 'Default avatar when no photo is used') }}</label>
+            <select id="avatar-template" v-model="form.avatar_template" class="input mt-2" :disabled="form.processing"><option value="male">{{ tr('Laki-laki', 'Male') }}</option><option value="female">{{ tr('Perempuan', 'Female') }}</option></select>
+            <p v-if="form.errors.avatar_template" class="error">{{ form.errors.avatar_template }}</p>
           </div>
-          <p v-if="form.errors.first_name" class="text-xs text-rose-500">{{ form.errors.first_name }}</p>
-        </div>
-
-        <div class="space-y-1">
-          <label for="last_name" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t("Nama Belakang") }}</label>
-          <div class="relative">
-            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-              <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M6.5 19.5h11A2.5 2.5 0 0 0 20 17V7A2.5 2.5 0 0 0 17.5 4.5h-11A2.5 2.5 0 0 0 4 7v10A2.5 2.5 0 0 0 6.5 19.5Z" stroke="currentColor" stroke-width="1.8" />
-                <path d="M8 9h8M8 12h8M8 15h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-              </svg>
-            </span>
-            <input
-              id="last_name"
-              v-model="form.last_name"
-              type="text"
-              autocomplete="family-name"
-              class="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-3 pl-10 text-sm text-slate-900 shadow-sm shadow-slate-200/40 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:shadow-none"
-            />
+          <div class="grid gap-5 sm:grid-cols-2">
+            <div v-for="field in fields" :key="field.key" :class="field.key === 'bio' ? 'sm:col-span-2' : ''">
+              <label :for="field.key" class="mb-2 block text-sm font-medium">{{ field.label }}</label>
+              <textarea v-if="field.key === 'bio'" :id="field.key" v-model="form[field.key]" class="input min-h-24" maxlength="1000" :disabled="form.processing"></textarea>
+              <input v-else :id="field.key" v-model="form[field.key]" :type="field.key === 'phone_wa' ? 'tel' : 'text'" :autocomplete="field.autocomplete" :required="['username', 'first_name'].includes(field.key)" :maxlength="field.key === 'address' ? 500 : field.key === 'phone_wa' ? 30 : 255" class="input" :disabled="form.processing" :aria-invalid="Boolean(form.errors[field.key])" />
+              <p v-if="form.errors[field.key]" class="error">{{ form.errors[field.key] }}</p>
+            </div>
+            <div class="sm:col-span-2"><label for="profile-email" class="mb-2 block text-sm font-medium">Email</label><input id="profile-email" :value="user.email" type="email" class="input opacity-70" readonly /><p class="mt-2 text-xs text-slate-500">{{ tr('Hubungi administrator untuk mengubah email akun.', 'Contact your administrator to change your account email.') }}</p></div>
           </div>
-          <p v-if="form.errors.last_name" class="text-xs text-rose-500">{{ form.errors.last_name }}</p>
-        </div>
+          <p v-if="form.progress" role="status" class="text-sm text-slate-500">{{ tr('Mengunggah', 'Uploading') }} {{ form.progress.percentage }}%</p>
+          <div class="flex flex-wrap items-center justify-end gap-3 border-t border-slate-200 pt-5 dark:border-slate-700"><span v-if="form.recentlySuccessful" role="status" class="mr-auto text-sm text-emerald-600">{{ tr('Perubahan tersimpan', 'Changes saved') }}</span><button type="button" class="secondary" :disabled="form.processing" @click="reset">{{ tr('Batalkan perubahan', 'Discard changes') }}</button><button class="primary" :disabled="form.processing">{{ form.processing ? tr('Menyimpan…', 'Saving…') : tr('Simpan perubahan', 'Save changes') }}</button></div>
+        </form>
+        <form id="security" class="panel space-y-5" @submit.prevent="savePassword">
+          <div><h2 class="text-lg font-bold">{{ tr('Keamanan akun', 'Account security') }}</h2><p class="mt-1 text-sm text-slate-500">{{ tr('Perbarui password untuk melindungi akun Anda.', 'Update your password to protect your account.') }}</p></div>
+          <div v-for="field in passwordFields" :key="field.key"><label :for="field.key" class="mb-2 block text-sm font-medium">{{ field.label }}</label><div class="relative"><input :id="field.key" v-model="password[field.key]" :type="visible[field.key] ? 'text' : 'password'" :autocomplete="field.key === 'current_password' ? 'current-password' : 'new-password'" required class="input !pr-12" :disabled="password.processing" /><button type="button" class="absolute inset-y-0 right-3 text-slate-500" :aria-label="tr('Tampilkan atau sembunyikan password', 'Show or hide password')" :aria-pressed="Boolean(visible[field.key])" @click="visible[field.key] = !visible[field.key]"><span class="material-icons text-xl">{{ visible[field.key] ? 'visibility_off' : 'visibility' }}</span></button></div><p v-if="password.errors[field.key]" class="error">{{ password.errors[field.key] }}</p></div>
+          <p class="text-xs text-slate-500">{{ tr('Gunakan password unik sesuai kebijakan keamanan organisasi.', 'Use a unique password that meets your organization security policy.') }}</p>
+          <div class="flex items-center justify-end gap-3"><span v-if="password.recentlySuccessful" role="status" class="text-sm text-emerald-600">{{ tr('Password diperbarui', 'Password updated') }}</span><button class="primary" :disabled="password.processing">{{ password.processing ? tr('Menyimpan…', 'Saving…') : tr('Perbarui password', 'Update password') }}</button></div>
+        </form>
       </div>
-
-      <div class="space-y-1">
-        <label for="email" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Email</label>
-        <div class="relative">
-          <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h11A2.5 2.5 0 0 1 20 7.5v9A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-9Z" stroke="currentColor" stroke-width="1.8" />
-              <path d="m5.5 7 6.1 4.07a1 1 0 0 0 1.1 0L18.8 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </span>
-          <input
-            id="email"
-            v-model="form.email"
-            type="email"
-            autocomplete="email"
-            required
-            class="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-3 pl-10 pr-28 text-sm text-slate-900 shadow-sm shadow-slate-200/40 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-100 dark:shadow-none"
-          />
-          <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-xs font-semibold tracking-wide text-slate-500 dark:text-slate-300">{{ emailDomain }}</span>
-        </div>
-        <p v-if="form.errors.email" class="text-xs text-rose-500">{{ form.errors.email }}</p>
-      </div>
-
-      <div class="flex justify-end gap-3 pt-2">
-        <Link :href="route('dashboard')" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800">
-          {{ $t("Batal") }}
-        </Link>
-        <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60" :disabled="form.processing">
-          <span class="material-icons text-base">save</span>
-          {{ $t("Simpan") }}
-        </button>
-      </div>
-    </form>
+    </div>
   </div>
 </template>
-
 <script setup>
-import { computed, watch } from 'vue';
-import { Link, useForm, usePage } from '@inertiajs/vue3';
-
-const props = defineProps({
-  user: { type: Object, required: true },
-  meta: { type: Object, default: () => ({}) },
-});
-
-const defaultValues = {
-  username: props.user.username || '',
-  first_name: props.user.first_name || '',
-  last_name: props.user.last_name || '',
-  email: props.user.email || '',
-};
-
-const form = useForm({ ...defaultValues });
-
-function submit() {
-  const url = formAction.value;
-  const options = { preserveScroll: true };
-
-  switch (formMethod.value) {
-    case 'patch':
-      form.patch(url, options);
-      break;
-    case 'post':
-      form.post(url, options);
-      break;
-    case 'put':
-    default:
-      form.put(url, options);
-      break;
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { useForm, usePage } from '@inertiajs/vue3'
+import ProfileAvatar from '@/Components/ProfileAvatar.vue'
+const props = defineProps({ user: { type: Object, required: true }, meta: { type: Object, default: () => ({}) } })
+const page = usePage()
+const tr = (id, en) => page.props.locale === 'en' ? en : id
+const flash = computed(() => page.props.flash || {})
+const values = () => Object.fromEntries(['username', 'first_name', 'last_name', 'position', 'phone_wa', 'bio', 'address', 'avatar_template'].map(key => [key, props.user[key] || (key === 'avatar_template' ? 'male' : '')]))
+const form = useForm({ ...values(), photo: null, remove_photo: false })
+const password = useForm({ current_password: '', password: '', password_confirmation: '' })
+const visible = reactive({})
+const fileInput = ref(null)
+const preview = ref(null)
+const avatar = computed(() => preview.value || (!form.remove_photo ? props.user.photo_url : null))
+const fullName = computed(() => `${form.first_name} ${form.last_name}`.trim() || form.username)
+const fields = computed(() => [
+  { key: 'first_name', label: tr('Nama depan', 'First name'), autocomplete: 'given-name' },
+  { key: 'last_name', label: tr('Nama belakang', 'Last name'), autocomplete: 'family-name' },
+  { key: 'username', label: 'Username', autocomplete: 'username' },
+  { key: 'position', label: tr('Jabatan', 'Position'), autocomplete: 'organization-title' },
+  { key: 'phone_wa', label: tr('Nomor telepon / WhatsApp', 'Phone / WhatsApp'), autocomplete: 'tel' },
+  { key: 'address', label: tr('Alamat', 'Address'), autocomplete: 'street-address' },
+  { key: 'bio', label: tr('Tentang saya', 'About me') },
+])
+const passwordFields = computed(() => [
+  { key: 'current_password', label: tr('Password saat ini', 'Current password') },
+  { key: 'password', label: tr('Password baru', 'New password') },
+  { key: 'password_confirmation', label: tr('Konfirmasi password baru', 'Confirm new password') },
+])
+function clearPreview() { if (preview.value) URL.revokeObjectURL(preview.value); preview.value = null; if (fileInput.value) fileInput.value.value = '' }
+function choosePhoto(event) {
+  const file = event.target.files?.[0]
+  if (!file) return
+  form.clearErrors('photo')
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 2 * 1024 * 1024) {
+    form.setError('photo', tr('Pilih JPG, PNG, atau WebP maksimal 2 MB.', 'Choose a JPG, PNG, or WebP up to 2 MB.')); event.target.value = ''; return
   }
+  clearPreview(); form.photo = file; form.remove_photo = false; preview.value = URL.createObjectURL(file)
 }
-
-const page = usePage();
-const flash = computed(() => page.props.flash || {});
-
-const formAction = computed(() => props.meta?.updateRoute ?? route('account.update-profile'));
-const formMethod = computed(() => String(props.meta?.method ?? 'put').toLowerCase());
-
-const emailDomain = computed(() => {
-  const email = form.email || '';
-  const at = email.indexOf('@');
-  return at !== -1 ? email.slice(at) : '@kftd.co.id';
-});
-
-watch(
-  () => props.user,
-  value => {
-    form.defaults({
-      username: value?.username || '',
-      first_name: value?.first_name || '',
-      last_name: value?.last_name || '',
-      email: value?.email || '',
-    });
-    form.reset();
-  }
-);
+function removePhoto() { clearPreview(); form.photo = null; form.remove_photo = true; form.clearErrors('photo') }
+function reset() { clearPreview(); form.defaults({ ...values(), photo: null, remove_photo: false }); form.reset(); form.clearErrors() }
+function submit() { form.transform(data => ({ ...data, _method: props.meta.method || 'put' })).post(props.meta.updateRoute || route('account.update-profile'), { forceFormData: true, preserveScroll: true, onSuccess: reset }) }
+function savePassword() { password.put(route('account.password.update'), { preserveScroll: true, onSuccess: () => { password.reset(); Object.keys(visible).forEach(key => { visible[key] = false }) } }) }
+watch(() => props.user, reset)
+onBeforeUnmount(clearPreview)
 </script>
-
 <style scoped>
-.material-icons {
-  font-size: inherit;
-}
+.profile-page{color:#0f172a;--accent:var(--user-accent-color,#4338ca)}.dark .profile-page{color:#f1f5f9}
+.panel{border:1px solid #e2e8f0;border-radius:1.5rem;background:#fff;padding:1.5rem;box-shadow:0 8px 32px -24px #33415533;scroll-margin-top:100px}.dark .panel{background:#0f172a;border-color:#334155}
+.eyebrow{font-size:.65rem;font-weight:700;letter-spacing:.16em;color:var(--accent);text-transform:uppercase}.profile-cover{background:linear-gradient(120deg,color-mix(in srgb,var(--accent) 65%,white),var(--accent),color-mix(in srgb,var(--accent) 70%,black))}
+.role-chip{color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent)}.dark .role-chip{color:color-mix(in srgb,var(--accent) 40%,white)}
+.input{width:100%;border:1px solid #cbd5e1;border-radius:.8rem;background:transparent;padding:.75rem .9rem;font-size:.875rem;transition:border-color .15s,box-shadow .15s}.input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 15%,transparent)}.dark .input{border-color:#475569;color:#e2e8f0;color-scheme:dark}
+.primary,.secondary{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;border-radius:.75rem;padding:.7rem 1rem;font-size:.8rem;font-weight:600}.primary{background:var(--accent);color:#fff}.secondary{border:1px solid #cbd5e1}.primary:hover,.secondary:hover{filter:brightness(.93)}button:disabled{opacity:.5;cursor:wait}.error{margin-top:.5rem;color:#e11d48;font-size:.75rem}
 </style>

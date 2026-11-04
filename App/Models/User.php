@@ -97,6 +97,11 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     /** Hidden */
+    public function getPhotoUrlAttribute(): ?string
+    {
+        return $this->photo ? \Illuminate\Support\Facades\Storage::disk('public')->url($this->photo) : null;
+    }
+
     protected $hidden = [
         'password',
         'remember_token',

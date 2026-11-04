@@ -432,12 +432,6 @@ const navItems = computed(() => {
         href: resolveRouteName('account.profile'),
         match: path => path === '/dashboard/account/profile',
       },
-      {
-        key: 'account.change-password',
-        label: t('nav.changePassword'),
-        href: resolveRouteName('account.change-password'),
-        match: path => path === '/dashboard/account/change-password',
-      },
     ],
     match: path => pathStartsWith(path, '/dashboard/account'),
   })

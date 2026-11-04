@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -39,9 +40,31 @@ class AccountController extends Controller
             'username' => 'required|string|max:255|unique:users,username,'.$user->id,
             'first_name' => 'required|string|max:255',
             'last_name' => 'nullable|string|max:255',
+            'position' => 'nullable|string|max:255',
+            'phone_wa' => 'nullable|string|max:30',
+            'bio' => 'nullable|string|max:1000',
+            'address' => 'nullable|string|max:500',
+            'avatar_template' => 'sometimes|required|in:male,female',
+            'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048|dimensions:max_width=6000,max_height=6000',
+            'remove_photo' => 'sometimes|boolean',
         ]);
 
-        $user->update($validated);
+        $oldPhoto = $user->photo;
+        $newPhoto = $request->hasFile('photo')
+            ? $request->file('photo')->store('profile-photos', 'public') : null;
+        unset($validated['photo'], $validated['remove_photo']);
+        if ($newPhoto || $request->boolean('remove_photo')) {
+            $validated['photo'] = $newPhoto;
+        }
+        try {
+            $user->forceFill($validated)->save();
+        } catch (\Throwable $exception) {
+            if ($newPhoto) Storage::disk('public')->delete($newPhoto);
+            throw $exception;
+        }
+        if ($oldPhoto && $oldPhoto !== $user->photo && str_starts_with($oldPhoto, 'profile-photos/')) {
+            Storage::disk('public')->delete($oldPhoto);
+        }
 
         return back()->with('success', __('Profil berhasil diperbarui.'));
     }
@@ -127,6 +150,14 @@ class AccountController extends Controller
             'first_name' => $user->first_name,
             'last_name' => $user->last_name,
             'email' => $user->email,
+            'position' => $user->position,
+            'phone_wa' => $user->phone_wa,
+            'bio' => $user->bio,
+            'address' => $user->address,
+            'avatar_template' => $user->avatar_template ?? 'male',
+            'photo_url' => $user->photo_url,
+            'role' => $user->role_label,
+            'unit' => $user->unit,
         ];
     }
 }

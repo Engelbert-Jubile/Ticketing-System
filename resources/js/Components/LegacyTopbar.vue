@@ -142,7 +142,7 @@
               :title="t('topbar.accountSettings')"
               @click="toggleAccount"
             >
-              <span class="material-icons text-[22px] text-white">account_circle</span>
+              <ProfileAvatar :src="user?.photo_url" :template="user?.avatar_template || 'male'" :label="displayName" class="h-7 w-7" />
             </button>
 
             <transition name="fade">
@@ -239,6 +239,7 @@ import { translateUi as uiText } from '../i18n'
 import { Link } from '@inertiajs/vue3'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from '../i18n'
+import ProfileAvatar from './ProfileAvatar.vue'
 
 const props = defineProps({
   localeBusy: { type: Boolean, default: false },

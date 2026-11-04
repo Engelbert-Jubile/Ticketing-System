@@ -82,6 +82,8 @@ class HandleInertiaRequests extends Middleware
                     'last_name' => $user->last_name ?? null,
                     'unit' => $user->unit ?? null,
                     'header_color' => $user->header_color ?? null,
+                    'photo_url' => $user->photo_url,
+                    'avatar_template' => $user->avatar_template ?? 'male',
                     'preferred_locale' => $user->preferred_locale ?? null,
                     'roles' => $this->resolveRoles($user),
                 ] : null,
