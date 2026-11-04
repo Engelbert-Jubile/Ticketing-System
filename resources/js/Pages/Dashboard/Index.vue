@@ -13,10 +13,12 @@
       <div class="text-sm text-slate-500 dark:text-slate-400">{{ dateLabel }}</div>
     </div>
 
-    <section class="flex flex-wrap items-center gap-x-8 gap-y-3 rounded-2xl border border-slate-200 bg-white px-5 py-3 dark:border-slate-700 dark:bg-slate-900" :aria-label="usageText('Statistik penggunaan', 'Usage statistics')">
-      <div class="flex items-center gap-3"><span class="material-icons text-slate-400" aria-hidden="true">visibility</span><div><p class="text-xs text-slate-500">Total Visit</p><p class="text-lg font-bold text-slate-900 dark:text-slate-100">{{ formatUsage(usageMetrics.visits) }}</p></div></div>
-      <div class="flex items-center gap-3"><span class="material-icons text-slate-400" aria-hidden="true">login</span><div><p class="text-xs text-slate-500">{{ usageText('Total Frekuensi Login', 'Total Login Frequency') }}</p><p class="text-lg font-bold text-slate-900 dark:text-slate-100">{{ formatUsage(usageMetrics.logins) }}</p></div></div>
-      <p class="max-w-sm text-xs leading-relaxed text-slate-500 sm:ml-auto">{{ usageMetrics.scope === 'all' ? usageText('Seluruh pengguna', 'All users') : usageText('Aktivitas Anda', 'Your activity') }} · {{ usageText('Kunjungan dashboard & login berhasil.', 'Dashboard views & successful logins.') }}<span class="mt-1 block">{{ usageMetrics.since ? usageText('Dicatat sejak ', 'Tracked since ') + usageMetrics.since : usageText('Pencatatan dimulai setelah fitur diaktifkan.', 'Tracking starts when this feature is enabled.') }}</span></p>
+    <section class="usage-grid" :aria-label="usageText('Statistik penggunaan', 'Usage statistics')">
+      <article v-for="metric in usageCards" :key="metric.icon" class="usage-card">
+        <div class="usage-icon" :class="metric.variant"><span class="material-icons" aria-hidden="true">{{ metric.icon }}</span></div>
+        <div class="usage-content"><h2 class="usage-label">{{ metric.label }}</h2><p class="usage-value">{{ formatUsage(metric.value) }}</p><p class="usage-caption">{{ metric.caption }}</p></div>
+        <div class="usage-meta"><span class="usage-scope">{{ usageMetrics.scope === 'all' ? usageText('Semua pengguna', 'All users') : usageText('Anda', 'You') }}</span><span class="usage-since" :title="usageText('Pencatatan dimulai saat fitur diaktifkan', 'Tracking starts when this feature is enabled')">{{ usageMetrics.since ? usageText('Sejak ', 'Since ') + usageMetrics.since : usageText('Belum ada data', 'No data yet') }}</span></div>
+      </article>
     </section>
 
     <div class="grid grid-cols-1 gap-4 fade-in" :class="showProjectDashboard ? 'md:grid-cols-3' : 'md:grid-cols-2'">
@@ -207,6 +209,10 @@ const sumArray = values => (values ?? []).reduce((total, value) => total + Numbe
 const { t } = useI18n();
 const usagePage = usePage();
 const usageText = (id, en) => usagePage.props.locale === 'en' ? en : id;
+const usageCards = computed(() => [
+  { label: 'Total Visit', value: props.usageMetrics.visits, icon: 'visibility', variant: 'usage-icon--visits', caption: usageText('Kunjungan dashboard', 'Dashboard visits') },
+  { label: usageText('Total Frekuensi Login', 'Total Login Frequency'), value: props.usageMetrics.logins, icon: 'login', variant: 'usage-icon--logins', caption: usageText('Login berhasil', 'Successful sign-ins') },
+]);
 const formatUsage = value => value === null || value === undefined ? '—' : Number(value).toLocaleString();
 const showProjectDashboard = false;
 
@@ -395,6 +401,16 @@ onBeforeUnmount(() => {
   max-width: 1120px;
   margin-inline: auto;
 }
+
+.usage-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+.usage-card{display:flex;align-items:center;gap:1rem;min-width:0;padding:1.2rem 1.25rem;border:1px solid #e2e8f0;border-radius:1rem;background:#fff;box-shadow:0 2px 5px -3px rgb(15 23 42/.12)}
+.usage-icon{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:3rem;height:3rem;border-radius:.95rem}
+.usage-icon--visits{background:#eff6ff;color:#2563eb}.usage-icon--logins{background:#f0fdfa;color:#0d9488}.usage-icon .material-icons{font-size:1.5rem}
+.usage-content{min-width:0}.usage-label{font-size:.8rem;font-weight:600;color:#475569;line-height:1.4}.usage-value{margin-top:.2rem;font-size:1.85rem;font-weight:750;line-height:1.15;letter-spacing:-.04em;font-variant-numeric:tabular-nums;color:#0f172a;overflow-wrap:anywhere}.usage-caption{margin-top:.35rem;font-size:.7rem;color:#64748b}
+.usage-meta{display:flex;flex-direction:column;align-items:flex-end;align-self:stretch;justify-content:space-between;gap:.75rem;margin-left:auto;text-align:right;flex-shrink:0}.usage-scope{border-radius:999px;padding:.3rem .55rem;background:#f1f5f9;color:#64748b;font-size:.62rem;font-weight:600;white-space:nowrap}.usage-since{font-size:.62rem;color:#94a3b8;white-space:nowrap}
+.dark .usage-card{background:#1e293b;border-color:#334155}.dark .usage-label{color:#cbd5e1}.dark .usage-value{color:#f8fafc}.dark .usage-caption{color:#94a3b8}.dark .usage-scope{background:#334155;color:#cbd5e1}.dark .usage-icon--visits{background:rgb(59 130 246/.15);color:#93c5fd}.dark .usage-icon--logins{background:rgb(20 184 166/.15);color:#5eead4}
+@media(max-width:767px){.usage-card{flex-wrap:wrap;padding:1rem;gap:.75rem}.usage-meta{flex-basis:100%;flex-direction:row;align-items:center;margin-left:0;padding-top:.5rem;border-top:1px solid #f1f5f9}.dark .usage-meta{border-color:#334155}.usage-value{font-size:1.6rem}.usage-icon{height:2.5rem;width:2.5rem}}
+@media(max-width:479px){.usage-grid{grid-template-columns:1fr}.usage-card{flex-wrap:nowrap}.usage-meta{flex-basis:auto;flex-direction:column;align-items:flex-end;margin-left:auto;padding-top:0;border:0}.usage-since{white-space:normal}}
 
 .fade-in {
   animation: fadeInUp 0.4s var(--ease-smooth, cubic-bezier(.22, .61, .36, 1)) forwards;
