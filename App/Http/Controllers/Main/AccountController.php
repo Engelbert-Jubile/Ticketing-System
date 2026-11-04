@@ -52,6 +52,11 @@ class AccountController extends Controller
         $oldPhoto = $user->photo;
         $newPhoto = $request->hasFile('photo')
             ? $request->file('photo')->store('profile-photos', 'public') : null;
+        if ($request->hasFile('photo') && ! $newPhoto) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'photo' => __('Foto gagal disimpan. Silakan coba lagi.'),
+            ]);
+        }
         unset($validated['photo'], $validated['remove_photo']);
         if ($newPhoto || $request->boolean('remove_photo')) {
             $validated['photo'] = $newPhoto;
@@ -67,6 +72,20 @@ class AccountController extends Controller
         }
 
         return back()->with('success', __('Profil berhasil diperbarui.'));
+    }
+
+    public function photo(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $path = $request->user()->photo;
+        $disk = Storage::disk('public');
+        abort_unless($path && str_starts_with($path, 'profile-photos/') && ! str_contains($path, '..'), 404);
+        abort_unless($disk->exists($path), 404);
+        abort_unless(in_array($disk->mimeType($path), ['image/jpeg', 'image/png', 'image/webp'], true), 404);
+
+        return $disk->response($path, null, [
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 
     public function updateHeaderColor(Request $request): JsonResponse

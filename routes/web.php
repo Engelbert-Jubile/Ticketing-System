@@ -387,6 +387,7 @@ Route::middleware($emailVerificationEnabled
     /* Ã¢Å¡â„¢Ã¯Â¸Â Account */
     Route::prefix('dashboard/account')->name('account.')->group(function () {
         Route::get('/profile', [AccountController::class, 'profile'])->name('profile');
+        Route::get('/photo', [AccountController::class, 'photo'])->name('photo');
         Route::put('/profile', [AccountController::class, 'updateProfile'])->name('update-profile');
         Route::patch('/header-color', [AccountController::class, 'updateHeaderColor'])->name('header-color.update');
             Route::patch('/locale', [AccountController::class, 'updateLocale'])->name('locale.update');
