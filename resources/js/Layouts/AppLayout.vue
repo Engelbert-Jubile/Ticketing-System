@@ -236,10 +236,6 @@ const navItems = computed(() => {
       href: resolveRouteName('work.index'), match: path => path === '/dashboard/my-work',
     },
     {
-      type: 'link', key: 'knowledge', label: uiText("Panduan & Template"), icon: 'menu_book',
-      href: resolveRouteName('knowledge.index'), match: path => path === '/dashboard/knowledge',
-    },
-    {
       type: 'group',
       key: 'tickets',
       label: t('nav.tickets'),
@@ -447,6 +443,10 @@ const navItems = computed(() => {
   })
 
   items.push(
+    {
+      type: 'link', key: 'knowledge', label: uiText("Panduan & Template"), icon: 'menu_book',
+      href: resolveRouteName('knowledge.index'), match: path => path === '/dashboard/knowledge',
+    },
     { type: 'logout', key: 'logout', label: t('nav.logout'), icon: 'logout' }
   )
 
