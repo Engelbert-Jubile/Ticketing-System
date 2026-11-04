@@ -310,11 +310,11 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   box-shadow: 0 12px 32px -18px rgba(37, 99, 235, 0.2);
-  --sidebar-active-bg: #2563eb;
-  --sidebar-active-shadow-strong: 0 18px 42px -26px rgba(37, 99, 235, 0.65);
-  --sidebar-active-shadow-medium: 0 18px 38px -24px rgba(37, 99, 235, 0.6);
-  --sidebar-active-shadow-sub: 0 12px 30px -20px rgba(37, 99, 235, 0.5);
-  --sidebar-pill-shadow: 0 10px 24px -18px rgba(37, 99, 235, 0.6);
+  --sidebar-active-bg: var(--user-accent-color, #4338ca);
+  --sidebar-active-shadow-strong: 0 18px 42px -26px color-mix(in srgb, var(--sidebar-active-bg) 65%, transparent);
+  --sidebar-active-shadow-medium: 0 18px 38px -24px color-mix(in srgb, var(--sidebar-active-bg) 60%, transparent);
+  --sidebar-active-shadow-sub: 0 12px 30px -20px color-mix(in srgb, var(--sidebar-active-bg) 50%, transparent);
+  --sidebar-pill-shadow: 0 10px 24px -18px color-mix(in srgb, var(--sidebar-active-bg) 60%, transparent);
 }
 
 .dark .sidebar {
@@ -392,36 +392,45 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(37, 99, 235, 0.12);
-  color: #1d4ed8;
+  background: color-mix(in srgb, var(--sidebar-active-bg) 12%, transparent);
+  color: var(--sidebar-active-bg);
   transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
   border: none;
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.18);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sidebar-active-bg) 18%, transparent);
 }
 
 .hb-btn--locked {
-  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  background: var(--sidebar-active-bg);
   color: #fff;
-  box-shadow: 0 14px 34px -22px rgba(79, 70, 229, 0.72);
+  box-shadow: var(--sidebar-active-shadow-strong);
 }
 
 .hb-btn--locked .hb-icon {
   color: #f8fafc;
 }
 
-.hb-btn:not(.hb-btn--locked):hover {
-  background: rgba(37, 99, 235, 0.18);
-  box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.3);
+.hb-btn:hover,
+.hb-btn:focus-visible {
+  background: var(--sidebar-active-bg);
+  color: #fff;
+  box-shadow: var(--sidebar-active-shadow-medium);
   transform: translateY(-1px);
 }
 
 .dark .hb-btn:not(.hb-btn--locked) {
-  background: rgba(37, 99, 235, 0.24);
-  color: #dbeafe;
-  box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.35);
+  background: color-mix(in srgb, var(--sidebar-active-bg) 24%, transparent);
+  color: color-mix(in srgb, var(--sidebar-active-bg) 30%, white);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sidebar-active-bg) 35%, transparent);
+}
+
+.dark .hb-btn:hover,
+.dark .hb-btn:focus-visible {
+  background: var(--sidebar-active-bg);
+  color: #fff;
+  box-shadow: var(--sidebar-active-shadow-medium);
 }
 
 .hb-icon {
@@ -510,9 +519,9 @@ onMounted(() => {
 }
 
 .nav-btn--logout:hover {
-  background: rgba(239, 68, 68, 0.2);
+  background: var(--sidebar-active-bg);
   color: #fff;
-  box-shadow: 0 16px 30px -20px rgba(239, 68, 68, 0.5);
+  box-shadow: var(--sidebar-active-shadow-medium);
 }
 
 .nav-item--indicator > .nav-btn .material-icons,
