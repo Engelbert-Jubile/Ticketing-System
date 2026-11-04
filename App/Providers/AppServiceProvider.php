@@ -22,6 +22,11 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        \Illuminate\Support\Facades\Event::listen(\Illuminate\Auth\Events\Login::class, function ($event) {
+            if ($event->guard === 'web') {
+                app(\App\Services\UsageMetrics::class)->recordLogin((int) $event->user->getAuthIdentifier());
+            }
+        });
         // Daftarkan alias Livewire untuk RegisterUser (sesuaikan jika namespace berbeda)
         Livewire::component('auth.register-user', RegisterUser::class);
 

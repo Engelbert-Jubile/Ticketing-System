@@ -130,3 +130,4 @@ docs/workflow-language-update*.md
 /tests/LocalePreferencesTest*.php
 /tests/AccountProfileTest*.php
 /tests/CsrfRotationTest*.php
+/tests/UsageMetricsTest*.php

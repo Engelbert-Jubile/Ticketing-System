@@ -238,7 +238,11 @@ class DashboardController extends Controller
 
         $projectsPeriod = $monthStart->format('M Y').' – '.Carbon::now()->format('M Y');
 
+        $usage = app(\App\Services\UsageMetrics::class);
+        $usage->recordDashboardVisit($request);
+
         return Inertia::render('Dashboard/Index', [
+            'usageMetrics' => $usage->totals($isSuperAdmin ? null : $viewerId),
             'pageTitle' => 'Overview',
             'pageSubtitle' => __('Ringkasan tiket, task, dan project anda.'),
             'dateLabel' => Carbon::now()->format('D, d M Y'),

@@ -13,6 +13,12 @@
       <div class="text-sm text-slate-500 dark:text-slate-400">{{ dateLabel }}</div>
     </div>
 
+    <section class="flex flex-wrap items-center gap-x-8 gap-y-3 rounded-2xl border border-slate-200 bg-white px-5 py-3 dark:border-slate-700 dark:bg-slate-900" :aria-label="usageText('Statistik penggunaan', 'Usage statistics')">
+      <div class="flex items-center gap-3"><span class="material-icons text-slate-400" aria-hidden="true">visibility</span><div><p class="text-xs text-slate-500">Total Visit</p><p class="text-lg font-bold text-slate-900 dark:text-slate-100">{{ formatUsage(usageMetrics.visits) }}</p></div></div>
+      <div class="flex items-center gap-3"><span class="material-icons text-slate-400" aria-hidden="true">login</span><div><p class="text-xs text-slate-500">{{ usageText('Total Frekuensi Login', 'Total Login Frequency') }}</p><p class="text-lg font-bold text-slate-900 dark:text-slate-100">{{ formatUsage(usageMetrics.logins) }}</p></div></div>
+      <p class="max-w-sm text-xs leading-relaxed text-slate-500 sm:ml-auto">{{ usageMetrics.scope === 'all' ? usageText('Seluruh pengguna', 'All users') : usageText('Aktivitas Anda', 'Your activity') }} · {{ usageText('Kunjungan dashboard & login berhasil.', 'Dashboard views & successful logins.') }}<span class="mt-1 block">{{ usageMetrics.since ? usageText('Dicatat sejak ', 'Tracked since ') + usageMetrics.since : usageText('Pencatatan dimulai setelah fitur diaktifkan.', 'Tracking starts when this feature is enabled.') }}</span></p>
+    </section>
+
     <div class="grid grid-cols-1 gap-4 fade-in" :class="showProjectDashboard ? 'md:grid-cols-3' : 'md:grid-cols-2'">
       <Link
         v-for="action in quickActions"
@@ -160,13 +166,14 @@
 <script setup>
 import { translateUi as uiText } from '../../i18n'
 
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, watch } from 'vue';
 import GeminiChatWidget from '../../Components/GeminiChatWidget.vue';
 import resolveRoute from '../../utils/resolveRoute';
 import { useI18n } from '../../i18n';
 
 const props = defineProps({
+  usageMetrics: { type: Object, default: () => ({ visits: null, logins: null, since: null, scope: 'personal' }) },
   pageTitle: { type: String, default: '' },
   pageSubtitle: { type: String, default: '' },
   dateLabel: { type: String, default: '' },
@@ -198,6 +205,9 @@ const toJson = value => JSON.stringify(value ?? []);
 const sumArray = values => (values ?? []).reduce((total, value) => total + Number(value ?? 0), 0);
 
 const { t } = useI18n();
+const usagePage = usePage();
+const usageText = (id, en) => usagePage.props.locale === 'en' ? en : id;
+const formatUsage = value => value === null || value === undefined ? '—' : Number(value).toLocaleString();
 const showProjectDashboard = false;
 
 const titleText = computed(() => t('dashboard.title'));
