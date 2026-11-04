@@ -128,3 +128,4 @@ docs/workflow-language-update*.md
 /tests/Unit/WorkListServiceTest*.php
 /tests/LocalePreferencesTest*.php
 /tests/AccountProfileTest*.php
+/tests/CsrfRotationTest*.php
