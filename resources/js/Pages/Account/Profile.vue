@@ -1,22 +1,17 @@
 <template>
-  <div class="profile-page mx-auto max-w-6xl space-y-6 px-4 py-8">
+  <div class="profile-page mx-auto max-w-[1440px] space-y-4 px-4 py-5">
     <header><p class="eyebrow">TICKORA / {{ tr('Akun saya', 'My account') }}</p><h1 class="mt-2 text-3xl font-bold">{{ tr('Profil & preferensi', 'Profile & preferences') }}</h1><p class="mt-2 text-sm text-slate-500">{{ tr('Kelola identitas, foto, dan keamanan akun Anda dalam satu tempat.', 'Manage your identity, photo, and account security in one place.') }}</p></header>
-    <div v-if="flash.success || flash.error" role="status" class="panel text-sm" :class="flash.error ? 'text-rose-600' : 'text-emerald-600'">{{ flash.success || flash.error }}</div>
-    <div class="grid items-start gap-6 lg:grid-cols-[280px,minmax(0,1fr)]">
-      <aside class="panel overflow-hidden !p-0">
-        <div class="profile-cover h-24"></div>
-        <div class="px-6 pb-6">
-          <ProfileAvatar :src="avatar" :template="form.avatar_template" :label="fullName" class="-mt-12 h-24 w-24 ring-4 ring-white dark:ring-slate-900" />
-          <h2 class="mt-4 break-words text-xl font-bold">{{ fullName }}</h2><p class="mt-1 break-all text-sm text-slate-500">{{ user.email }}</p>
-          <span class="role-chip mt-4 inline-flex rounded-full px-3 py-1 text-xs font-semibold">{{ user.role || tr('Anggota', 'Member') }}</span>
-          <dl class="mt-6 space-y-4 border-t border-slate-200 pt-5 text-sm dark:border-slate-700"><div><dt class="text-xs text-slate-500">{{ tr('Jabatan', 'Position') }}</dt><dd class="mt-1 break-words">{{ form.position || '—' }}</dd></div><div><dt class="text-xs text-slate-500">Unit</dt><dd class="mt-1">{{ user.unit || '—' }}</dd></div></dl>
-          <nav class="mt-6 flex flex-col gap-3 text-sm font-medium"><a href="#personal">{{ tr('Informasi pribadi', 'Personal information') }} ↗</a><a href="#security">{{ tr('Keamanan akun', 'Account security') }} ↗</a></nav>
-        </div>
-      </aside>
-      <div class="space-y-6">
-        <form id="personal" class="panel space-y-6" @submit.prevent="submit">
+    <div v-if="flash.success || flash.error" role="status" class="notice text-sm" :class="flash.error ? 'text-rose-600' : 'text-emerald-600'">{{ flash.success || flash.error }}</div>
+    <section class="account-summary flex flex-wrap items-center gap-4 rounded-2xl border border-slate-200 bg-white px-5 py-3 dark:border-slate-700 dark:bg-slate-900" :aria-label="tr('Ringkasan akun', 'Account summary')">
+      <ProfileAvatar :src="avatar" :template="form.avatar_template" :label="fullName" class="h-12 w-12" />
+      <div class="min-w-0 flex-1"><h2 class="break-words font-bold">{{ fullName }}</h2><p class="break-all text-xs text-slate-500">{{ user.email }}</p></div>
+      <span class="role-chip rounded-full px-3 py-1 text-xs font-semibold">{{ user.role || tr('Anggota', 'Member') }}</span>
+      <p class="text-xs text-slate-500">{{ user.unit || '—' }}<span v-if="form.position" class="mt-1 block font-medium text-slate-700 dark:text-slate-300">{{ form.position }}</span></p>
+    </section>
+    <div class="account-grid">
+        <form id="personal" class="panel space-y-4" @submit.prevent="submit">
           <div><h2 class="text-lg font-bold">{{ tr('Informasi pribadi', 'Personal information') }}</h2><p class="mt-1 text-sm text-slate-500">{{ tr('Tampilkan versi terbaik dari diri Anda.', 'Put your best self forward.') }}</p></div>
-          <div class="rounded-2xl border border-dashed border-slate-300 p-4 dark:border-slate-600">
+          <div class="photo-settings rounded-2xl border border-dashed border-slate-300 p-3 dark:border-slate-600">
             <div class="flex flex-wrap items-center gap-4"><ProfileAvatar :src="avatar" :template="form.avatar_template" class="h-16 w-16" /><div><div class="flex flex-wrap gap-2"><button type="button" class="secondary" :disabled="form.processing" @click="fileInput.click()">{{ tr('Pilih foto', 'Choose photo') }}</button><button v-if="avatar" type="button" class="secondary" :disabled="form.processing" @click="removePhoto">{{ tr('Hapus foto', 'Remove photo') }}</button></div><p class="mt-2 text-xs text-slate-500">JPG, PNG, WebP · {{ tr('Maksimal 2 MB, 6000 × 6000 piksel.', 'Up to 2 MB, 6000 × 6000 pixels.') }}</p></div></div>
             <button v-if="avatar" type="button" class="secondary mt-3" :disabled="form.processing" @click="editPhoto">{{ tr('Atur / potong foto', 'Adjust / crop photo') }}</button>
             <input ref="fileInput" type="file" accept="image/jpeg,image/png,image/webp" class="hidden" :aria-label="tr('Foto profil', 'Profile photo')" @change="choosePhoto" />
@@ -25,10 +20,10 @@
             <select id="avatar-template" v-model="form.avatar_template" class="input mt-2" :disabled="form.processing"><option value="male">{{ tr('Laki-laki', 'Male') }}</option><option value="female">{{ tr('Perempuan', 'Female') }}</option></select>
             <p v-if="form.errors.avatar_template" class="error">{{ form.errors.avatar_template }}</p>
           </div>
-          <div class="grid gap-5 sm:grid-cols-2">
+          <div class="profile-fields grid gap-x-4 gap-y-3 sm:grid-cols-2">
             <div v-for="field in fields" :key="field.key" :class="field.key === 'bio' ? 'sm:col-span-2' : ''">
               <label :for="field.key" class="mb-2 block text-sm font-medium">{{ field.label }}</label>
-              <textarea v-if="field.key === 'bio'" :id="field.key" v-model="form[field.key]" class="input min-h-24" maxlength="1000" :disabled="form.processing"></textarea>
+              <textarea v-if="field.key === 'bio'" :id="field.key" v-model="form[field.key]" class="input" rows="2" maxlength="1000" :disabled="form.processing"></textarea>
               <input v-else :id="field.key" v-model="form[field.key]" :type="field.key === 'phone_wa' ? 'tel' : 'text'" :autocomplete="field.autocomplete" :required="['username', 'first_name'].includes(field.key)" :maxlength="field.key === 'address' ? 500 : field.key === 'phone_wa' ? 30 : 255" class="input" :disabled="form.processing" :aria-invalid="Boolean(form.errors[field.key])" />
               <p v-if="form.errors[field.key]" class="error">{{ form.errors[field.key] }}</p>
             </div>
@@ -37,13 +32,12 @@
           <p v-if="form.progress" role="status" class="text-sm text-slate-500">{{ tr('Mengunggah', 'Uploading') }} {{ form.progress.percentage }}%</p>
           <div class="flex flex-wrap items-center justify-end gap-3 border-t border-slate-200 pt-5 dark:border-slate-700"><span v-if="form.recentlySuccessful" role="status" class="mr-auto text-sm text-emerald-600">{{ tr('Perubahan tersimpan', 'Changes saved') }}</span><button type="button" class="secondary" :disabled="form.processing" @click="reset">{{ tr('Batalkan perubahan', 'Discard changes') }}</button><button class="primary" :disabled="form.processing">{{ form.processing ? tr('Menyimpan…', 'Saving…') : tr('Simpan perubahan', 'Save changes') }}</button></div>
         </form>
-        <form id="security" class="panel space-y-5" @submit.prevent="savePassword">
+        <form id="security" class="panel security-panel space-y-4" @submit.prevent="savePassword">
           <div><h2 class="text-lg font-bold">{{ tr('Keamanan akun', 'Account security') }}</h2><p class="mt-1 text-sm text-slate-500">{{ tr('Perbarui password untuk melindungi akun Anda.', 'Update your password to protect your account.') }}</p></div>
           <div v-for="field in passwordFields" :key="field.key"><label :for="field.key" class="mb-2 block text-sm font-medium">{{ field.label }}</label><div class="relative"><input :id="field.key" v-model="password[field.key]" :type="visible[field.key] ? 'text' : 'password'" :autocomplete="field.key === 'current_password' ? 'current-password' : 'new-password'" required class="input !pr-12" :disabled="password.processing" /><button type="button" class="absolute inset-y-0 right-3 text-slate-500" :aria-label="tr('Tampilkan atau sembunyikan password', 'Show or hide password')" :aria-pressed="Boolean(visible[field.key])" @click="visible[field.key] = !visible[field.key]"><span class="material-icons text-xl">{{ visible[field.key] ? 'visibility_off' : 'visibility' }}</span></button></div><p v-if="password.errors[field.key]" class="error">{{ password.errors[field.key] }}</p></div>
           <p class="text-xs text-slate-500">{{ tr('Gunakan password unik sesuai kebijakan keamanan organisasi.', 'Use a unique password that meets your organization security policy.') }}</p>
           <div class="flex items-center justify-end gap-3"><span v-if="password.recentlySuccessful" role="status" class="text-sm text-emerald-600">{{ tr('Password diperbarui', 'Password updated') }}</span><button class="primary" :disabled="password.processing">{{ password.processing ? tr('Menyimpan…', 'Saving…') : tr('Perbarui password', 'Update password') }}</button></div>
         </form>
-      </div>
     </div>
     <ProfilePhotoEditor :src="editorSource" @close="closeEditor" @apply="applyCrop" />
   </div>
@@ -108,4 +102,8 @@ onBeforeUnmount(() => { clearPreview(); closeEditor() })
 .role-chip{color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent)}.dark .role-chip{color:color-mix(in srgb,var(--accent) 40%,white)}
 .input{width:100%;border:1px solid #cbd5e1;border-radius:.8rem;background:transparent;padding:.75rem .9rem;font-size:.875rem;transition:border-color .15s,box-shadow .15s}.input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 15%,transparent)}.dark .input{border-color:#475569;color:#e2e8f0;color-scheme:dark}
 .primary,.secondary{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;border-radius:.75rem;padding:.7rem 1rem;font-size:.8rem;font-weight:600}.primary{background:var(--accent);color:#fff}.secondary{border:1px solid #cbd5e1}.primary:hover,.secondary:hover{filter:brightness(.93)}button:disabled{opacity:.5;cursor:wait}.error{margin-top:.5rem;color:#e11d48;font-size:.75rem}
+.account-grid{display:grid;align-items:start;gap:1rem;min-width:0}.account-grid>.panel{min-width:0;padding:1.25rem}.notice{padding:.65rem 1rem;border-radius:.8rem;background:color-mix(in srgb,var(--accent) 6%,transparent)}
+.profile-fields label,.security-panel label{margin-bottom:.35rem;font-size:.8rem}.profile-page .input{padding:.6rem .8rem}.profile-page .primary,.profile-page .secondary{padding:.6rem .85rem}.photo-settings .h-16{height:3rem;width:3rem}.photo-settings p{max-width:32rem}.profile-fields textarea{resize:vertical;min-height:4rem}
+@media(min-width:640px){.photo-settings{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:1rem;align-items:center}.photo-settings>div:first-child{grid-column:1/-1}.photo-settings>label{grid-column:1;margin-top:.75rem}.photo-settings>select{grid-column:2;grid-row:2;width:10rem;margin-top:.75rem}.photo-settings>button{grid-column:1;grid-row:3;justify-self:start;margin-top:.5rem}.photo-settings>.error{grid-column:1/-1}}
+@media(min-width:1100px){.account-grid{grid-template-columns:minmax(0,1.85fr) minmax(300px,1fr)}.security-panel{position:sticky;top:calc(var(--topbar-h,72px) + 16px)}}
 </style>
