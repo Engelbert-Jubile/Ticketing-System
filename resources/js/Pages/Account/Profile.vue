@@ -17,7 +17,7 @@
             <input ref="fileInput" type="file" accept="image/jpeg,image/png,image/webp" class="hidden" :aria-label="tr('Foto profil', 'Profile photo')" @change="choosePhoto" />
             <p v-if="form.errors.photo" role="alert" class="error">{{ form.errors.photo }}</p>
             <label for="avatar-template" class="mt-4 block text-xs font-semibold text-slate-500">{{ tr('Avatar default saat tidak memakai foto', 'Default avatar when no photo is used') }}</label>
-            <select id="avatar-template" v-model="form.avatar_template" class="input mt-2" :disabled="form.processing"><option value="male">{{ tr('Laki-laki', 'Male') }}</option><option value="female">{{ tr('Perempuan', 'Female') }}</option></select>
+            <WorkflowSelect id="avatar-template" v-model="form.avatar_template" class="avatar-template-select mt-2" :options="avatarOptions" :aria-label="tr('Avatar default saat tidak memakai foto', 'Default avatar when no photo is used')" :disabled="form.processing" />
             <p v-if="form.errors.avatar_template" class="error">{{ form.errors.avatar_template }}</p>
           </div>
           <div class="profile-fields grid gap-x-4 gap-y-3 sm:grid-cols-2">
@@ -47,9 +47,14 @@ import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useForm, usePage } from '@inertiajs/vue3'
 import ProfileAvatar from '@/Components/ProfileAvatar.vue'
 import ProfilePhotoEditor from '@/Components/ProfilePhotoEditor.vue'
+import WorkflowSelect from '@/Components/WorkflowSelect.vue'
 const props = defineProps({ user: { type: Object, required: true }, meta: { type: Object, default: () => ({}) } })
 const page = usePage()
 const tr = (id, en) => page.props.locale === 'en' ? en : id
+const avatarOptions = computed(() => [
+  { value: 'male', label: tr('Laki-laki', 'Male') },
+  { value: 'female', label: tr('Perempuan', 'Female') },
+])
 const flash = computed(() => page.props.flash || {})
 const values = () => Object.fromEntries(['username', 'first_name', 'last_name', 'position', 'phone_wa', 'bio', 'address', 'avatar_template'].map(key => [key, props.user[key] || (key === 'avatar_template' ? 'male' : '')]))
 const form = useForm({ ...values(), photo: null, remove_photo: false })
@@ -104,6 +109,6 @@ onBeforeUnmount(() => { clearPreview(); closeEditor() })
 .primary,.secondary{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;border-radius:.75rem;padding:.7rem 1rem;font-size:.8rem;font-weight:600}.primary{background:var(--accent);color:#fff}.secondary{border:1px solid #cbd5e1}.primary:hover,.secondary:hover{filter:brightness(.93)}button:disabled{opacity:.5;cursor:wait}.error{margin-top:.5rem;color:#e11d48;font-size:.75rem}
 .account-grid{display:grid;align-items:start;gap:1rem;min-width:0}.account-grid>.panel{min-width:0;padding:1.25rem}.notice{padding:.65rem 1rem;border-radius:.8rem;background:color-mix(in srgb,var(--accent) 6%,transparent)}
 .profile-fields label,.security-panel label{margin-bottom:.35rem;font-size:.8rem}.profile-page .input{padding:.6rem .8rem}.profile-page .primary,.profile-page .secondary{padding:.6rem .85rem}.photo-settings .h-16{height:3rem;width:3rem}.photo-settings p{max-width:32rem}.profile-fields textarea{resize:vertical;min-height:4rem}
-@media(min-width:640px){.photo-settings{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:1rem;align-items:center}.photo-settings>div:first-child{grid-column:1/-1}.photo-settings>label{grid-column:1;margin-top:.75rem}.photo-settings>select{grid-column:2;grid-row:2;width:10rem;margin-top:.75rem}.photo-settings>button{grid-column:1;grid-row:3;justify-self:start;margin-top:.5rem}.photo-settings>.error{grid-column:1/-1}}
+@media(min-width:640px){.photo-settings{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:1rem;align-items:center}.photo-settings>div:first-child{grid-column:1/-1}.photo-settings>label{grid-column:1;margin-top:.75rem}.photo-settings>.avatar-template-select{grid-column:2;grid-row:2;width:10rem;margin-top:.75rem}.photo-settings>button{grid-column:1;grid-row:3;justify-self:start;margin-top:.5rem}.photo-settings>.error{grid-column:1/-1}}
 @media(min-width:1100px){.account-grid{grid-template-columns:minmax(0,1.85fr) minmax(300px,1fr)}.security-panel{position:sticky;top:calc(var(--topbar-h,72px) + 16px)}}
 </style>
