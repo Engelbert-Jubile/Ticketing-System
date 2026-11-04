@@ -18,6 +18,7 @@
           <div><h2 class="text-lg font-bold">{{ tr('Informasi pribadi', 'Personal information') }}</h2><p class="mt-1 text-sm text-slate-500">{{ tr('Tampilkan versi terbaik dari diri Anda.', 'Put your best self forward.') }}</p></div>
           <div class="rounded-2xl border border-dashed border-slate-300 p-4 dark:border-slate-600">
             <div class="flex flex-wrap items-center gap-4"><ProfileAvatar :src="avatar" :template="form.avatar_template" class="h-16 w-16" /><div><div class="flex flex-wrap gap-2"><button type="button" class="secondary" :disabled="form.processing" @click="fileInput.click()">{{ tr('Pilih foto', 'Choose photo') }}</button><button v-if="avatar" type="button" class="secondary" :disabled="form.processing" @click="removePhoto">{{ tr('Hapus foto', 'Remove photo') }}</button></div><p class="mt-2 text-xs text-slate-500">JPG, PNG, WebP · {{ tr('Maksimal 2 MB, 6000 × 6000 piksel.', 'Up to 2 MB, 6000 × 6000 pixels.') }}</p></div></div>
+            <button v-if="avatar" type="button" class="secondary mt-3" :disabled="form.processing" @click="editPhoto">{{ tr('Atur / potong foto', 'Adjust / crop photo') }}</button>
             <input ref="fileInput" type="file" accept="image/jpeg,image/png,image/webp" class="hidden" :aria-label="tr('Foto profil', 'Profile photo')" @change="choosePhoto" />
             <p v-if="form.errors.photo" role="alert" class="error">{{ form.errors.photo }}</p>
             <label for="avatar-template" class="mt-4 block text-xs font-semibold text-slate-500">{{ tr('Avatar default saat tidak memakai foto', 'Default avatar when no photo is used') }}</label>
@@ -44,12 +45,14 @@
         </form>
       </div>
     </div>
+    <ProfilePhotoEditor :src="editorSource" @close="closeEditor" @apply="applyCrop" />
   </div>
 </template>
 <script setup>
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useForm, usePage } from '@inertiajs/vue3'
 import ProfileAvatar from '@/Components/ProfileAvatar.vue'
+import ProfilePhotoEditor from '@/Components/ProfilePhotoEditor.vue'
 const props = defineProps({ user: { type: Object, required: true }, meta: { type: Object, default: () => ({}) } })
 const page = usePage()
 const tr = (id, en) => page.props.locale === 'en' ? en : id
@@ -60,6 +63,11 @@ const password = useForm({ current_password: '', password: '', password_confirma
 const visible = reactive({})
 const fileInput = ref(null)
 const preview = ref(null)
+const editorSource = ref('')
+let originalPhotoUrl = null
+function closeEditor() { editorSource.value = ''; if (originalPhotoUrl) URL.revokeObjectURL(originalPhotoUrl); originalPhotoUrl = null }
+function editPhoto() { if (!form.processing) editorSource.value = avatar.value || '' }
+function applyCrop(file) { clearPreview(); form.photo = file; form.remove_photo = false; form.clearErrors('photo'); preview.value = URL.createObjectURL(file) }
 const avatar = computed(() => preview.value || (!form.remove_photo ? props.user.photo_url : null))
 const fullName = computed(() => `${form.first_name} ${form.last_name}`.trim() || form.username)
 const fields = computed(() => [
@@ -84,14 +92,14 @@ function choosePhoto(event) {
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 2 * 1024 * 1024) {
     form.setError('photo', tr('Pilih JPG, PNG, atau WebP maksimal 2 MB.', 'Choose a JPG, PNG, or WebP up to 2 MB.')); event.target.value = ''; return
   }
-  clearPreview(); form.photo = file; form.remove_photo = false; preview.value = URL.createObjectURL(file)
+  closeEditor(); originalPhotoUrl = URL.createObjectURL(file); editorSource.value = originalPhotoUrl; event.target.value = ''
 }
 function removePhoto() { clearPreview(); form.photo = null; form.remove_photo = true; form.clearErrors('photo') }
 function reset() { clearPreview(); form.defaults({ ...values(), photo: null, remove_photo: false }); form.reset(); form.clearErrors() }
 function submit() { form.transform(data => ({ ...data, _method: props.meta.method || 'put' })).post(props.meta.updateRoute || route('account.update-profile'), { forceFormData: true, preserveScroll: true, onSuccess: reset }) }
 function savePassword() { password.put(route('account.password.update'), { preserveScroll: true, onSuccess: () => { password.reset(); Object.keys(visible).forEach(key => { visible[key] = false }) } }) }
 watch(() => props.user, reset)
-onBeforeUnmount(clearPreview)
+onBeforeUnmount(() => { clearPreview(); closeEditor() })
 </script>
 <style scoped>
 .profile-page{color:#0f172a;--accent:var(--user-accent-color,#4338ca)}.dark .profile-page{color:#f1f5f9}
