@@ -7,12 +7,13 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
 <html lang="{{ app()->getLocale() }}">
 
 <head>
+  @include('partials.theme-bootstrap')
 
 <style>
   input[type="password"]::-ms-reveal,
   input[type="password"]::-ms-clear { display: none; }
 
-  /* Keep insertion caret stable and force dark text cursor color */
+  /* Keep the insertion caret stable in the selected colour mode. */
   #register-form .auth-input-stable,
   .dark #register-form .auth-input-stable,
   #username,
@@ -21,16 +22,17 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
   #email_local,
   #password,
   #password_confirmation {
-    color: #0f172a !important;
-    -webkit-text-fill-color: #0f172a !important;
-    caret-color: #0f172a !important;
+    color: var(--auth-text, #0f172a) !important;
+    -webkit-text-fill-color: var(--auth-text, #0f172a) !important;
+    caret-color: var(--auth-text, #0f172a) !important;
     text-shadow: none !important;
   }
 
-  /* Force pointer I-beam to stay dark (fix white I-beam on GPU acceleration) */
+  /* Let the browser select the matching system text cursor. */
   #register-form input[type="text"],
   #register-form input[type="password"] {
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M12 4v16M9 4h6M9 20h6' stroke='%230f172a' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E") 12 12, text !important;
+    cursor: text;
+  }
     .password-toggle-btn {
       overflow: hidden;
     }
@@ -49,7 +51,6 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
       opacity: .75;
       transform: scale(.92) rotate(-8deg);
     }
-  }
 </style>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -60,7 +61,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
 
   <link rel="preconnect" href="https://fonts.bunny.net">
   <link href="https://fonts.bunny.net/css?family=inter:400,500,600&display=swap" rel="stylesheet" />
-  @vite(['resources/css/app.css'])
+  @vite(['resources/css/app.css', 'resources/css/public.css'])
   @livewireStyles
   <style>
     :root {
@@ -174,8 +175,8 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
 </head>
 
 <body class="font-sans antialiased">
-  <div class="relative min-h-screen overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-    <div aria-hidden="true" class="pointer-events-none absolute inset-0">
+  <div class="public-page relative min-h-screen overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <div aria-hidden="true" class="public-ambient pointer-events-none absolute inset-0">
       <div class="absolute -top-24 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-blue-200/70 blur-3xl dark:bg-blue-900/30"></div>
       <div class="absolute -bottom-28 -left-28 h-80 w-80 rounded-full bg-amber-200/70 blur-3xl dark:bg-amber-900/25"></div>
       <div class="absolute top-1/3 -right-28 h-96 w-96 rounded-full bg-indigo-200/60 blur-3xl dark:bg-indigo-900/25"></div>
@@ -200,7 +201,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
           </p>
         </div>
 
-        <div class="auth-gpu-safe-surface rounded-3xl bg-white/85 p-8 shadow-xl shadow-blue-200/40 ring-1 ring-slate-200/70 backdrop-blur dark:bg-slate-900/70 dark:ring-slate-800/70 dark:shadow-none sm:p-10">
+        <div class="public-card auth-gpu-safe-surface rounded-3xl bg-white/85 p-8 shadow-xl shadow-blue-200/40 ring-1 ring-slate-200/70 backdrop-blur dark:bg-slate-900/70 dark:ring-slate-800/70 dark:shadow-none sm:p-10">
           <div class="mb-6 space-y-1 text-center">
             <h2 class="text-2xl font-semibold tracking-tight">{{ __('Create a new account') }}</h2>
             <p class="text-sm text-slate-600 dark:text-slate-300">{{ __('Create an account to start managing tickets and team work.') }}</p>
@@ -508,7 +509,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
     }
   </style>
 
-  <div id="registerOverlay" aria-hidden="true">
+  <div id="registerOverlay" class="auth-loading-overlay" aria-hidden="true" role="status" aria-live="polite">
     <div class="wrap">
       <svg class="spinner-svg" width="60" height="60" viewBox="0 0 50 50" aria-label="{{ __('Loading') }}" role="status">
         <defs>
@@ -519,7 +520,6 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
           </linearGradient>
         </defs>
         <circle cx="25" cy="25" r="20" fill="none" stroke="url(#ro-g)" stroke-width="6" stroke-linecap="round" stroke-dasharray="110" stroke-dashoffset="80">
-          <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="0.9s" repeatCount="indefinite" />
         </circle>
       </svg>
       <div class="msg">{{ __('Creating your account, please wait…') }}</div>
@@ -873,10 +873,11 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
           }
           if (overlay) {
             overlay.classList.add('show');
+            overlay.setAttribute('aria-hidden', 'false');
           }
         } catch (_) {}
         e.preventDefault();
-        var MIN_OVERLAY_TIME = 700;
+        var MIN_OVERLAY_TIME = 0;
         requestAnimationFrame(function() {
           requestAnimationFrame(function() {
             setTimeout(function() {

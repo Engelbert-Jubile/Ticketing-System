@@ -87,6 +87,9 @@ fonts/
 html/
 html-starter/
 js/
+!public/js/
+public/js/*
+!public/js/login-overlay.js
 !resources/js/
 resources/js/*
 !resources/js/attachmentPreview.js
@@ -139,3 +142,4 @@ docs/workflow-language-update*.md
 /tests/AttachmentPreview*.Test.php
 /tests/AttachmentPreviewTest*.php
 /tests/appearance.*test.mjs
+/tests/theme-preferences*.test.mjs

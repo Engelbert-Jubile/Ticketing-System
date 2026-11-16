@@ -596,17 +596,15 @@ onMounted(() => {
 }
 </style>
 <style scoped>
-/* Keep sidebar transitions even when OS requests reduced motion */
+/* Honour reduced motion for both interface themes. */
 @media (prefers-reduced-motion: reduce) {
   .sidebar,
   .nav-item,
   .nav-btn,
   .nav-link,
   .sidebar__inner {
-    transition-property: all !important;
-    transition-duration: 0.25s !important;
-    transition-timing-function: ease !important;
-    animation-duration: 0.25s !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
   }
 }
 </style>

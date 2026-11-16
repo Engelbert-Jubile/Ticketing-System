@@ -30,7 +30,7 @@
 .appearance-option__mock-sidebar { inset: 13px auto 0 0; width: 24px; background: #fff; border-right: 1px solid #e2e8f0; }
 .appearance-option__mock-card { left: 32px; right: 8px; top: 21px; height: 25px; border-radius: 5px; background: #fff; border: 1px solid rgb(148 163 184 / .2); }
 .appearance-option__mock-card--small { top: 52px; height: 20px; }
-.appearance-option__preview--glassy { background: url('/images/glass-wallpaper.svg') center / cover; }
+.appearance-option__preview--glassy { background: linear-gradient(135deg, #b5d8df, #c1c9e2 55%, #e8cfc2); }
 .appearance-option__preview--glassy .appearance-option__mock-header { background: rgb(255 255 255 / .18); border-bottom: 1px solid rgb(255 255 255 / .8); }
 .appearance-option__preview--glassy .appearance-option__mock-sidebar { background: rgb(255 255 255 / .12); border-color: rgb(255 255 255 / .6); }
 .appearance-option__preview--glassy .appearance-option__mock-card { background: linear-gradient(135deg, rgb(255 255 255 / .6), rgb(255 255 255 / .08) 55%, rgb(255 255 255 / .24)); border-color: rgb(255 255 255 / .8); box-shadow: inset 0 1px 0 rgb(255 255 255 / .8), 0 3px 8px rgb(15 23 42 / .15); backdrop-filter: blur(3px); }
@@ -53,7 +53,7 @@
 .dark .appearance-option__preview--default { background: #0b1220; }
 .dark .appearance-option__preview--default .appearance-option__mock-header { background: #253348; }
 .dark .appearance-option__preview--default .appearance-option__mock-sidebar, .dark .appearance-option__preview--default .appearance-option__mock-card { background: #1e293b; border-color: #334155; }
-.dark .appearance-option__preview--glassy { background: linear-gradient(rgb(12 21 40 / .65), rgb(12 21 40 / .65)), url('/images/glass-wallpaper.svg') center / cover; }
+.dark .appearance-option__preview--glassy { background: linear-gradient(135deg, #234453, #29354d 55%, #443b47); }
 .dark .appearance-option__preview--glassy .appearance-option__mock-header, .dark .appearance-option__preview--glassy .appearance-option__mock-sidebar, .dark .appearance-option__preview--glassy .appearance-option__mock-card { background: linear-gradient(135deg, rgb(255 255 255 / .17), rgb(255 255 255 / .025) 55%, rgb(255 255 255 / .07)); border-color: rgb(230 240 255 / .4); }
 
 /* All glass styling is opt-in. Default retains the existing component styles. */
@@ -69,8 +69,9 @@ html[data-appearance="glassy"] {
   --glass-line: rgb(89 118 145 / .22);
   --glass-reflection: linear-gradient(135deg, rgb(255 255 255 / .43), rgb(255 255 255 / .035) 38%, rgb(255 255 255 / .015) 64%, rgb(255 255 255 / .17));
   --glass-shadow: inset 0 1px 0 rgb(255 255 255 / .9), inset 1px 0 0 rgb(255 255 255 / .26), inset 0 -1px 0 rgb(255 255 255 / .22), 0 18px 38px -25px rgb(31 51 83 / .36), 0 2px 6px -3px rgb(31 51 83 / .13);
-  --glass-blur: blur(26px) saturate(150%);
-  --glass-wallpaper: linear-gradient(rgb(240 248 255 / .08), rgb(240 248 255 / .08)), url('/images/glass-wallpaper.svg');
+  --glass-blur: blur(14px) saturate(135%);
+  --glass-popup-blur: blur(16px) saturate(130%);
+  --glass-background: radial-gradient(ellipse at 5% 15%, rgb(130 189 201 / .6), transparent 60%), radial-gradient(ellipse at 96% 65%, rgb(218 185 166 / .55), transparent 62%), linear-gradient(135deg, #dfebee, #c5cfe0 55%, #e8d8cf);
 }
 html.dark[data-appearance="glassy"] {
   --glass-text: #edf3fa;
@@ -84,11 +85,10 @@ html.dark[data-appearance="glassy"] {
   --glass-line: rgb(181 207 233 / .18);
   --glass-reflection: linear-gradient(135deg, rgb(240 248 255 / .16), rgb(240 248 255 / .02) 38%, rgb(240 248 255 / .005) 64%, rgb(240 248 255 / .065));
   --glass-shadow: inset 0 1px 0 rgb(235 245 255 / .38), inset 1px 0 0 rgb(235 245 255 / .09), inset 0 -1px 0 rgb(235 245 255 / .07), 0 20px 46px -24px rgb(0 0 0 / .55), 0 2px 8px -3px rgb(0 0 0 / .2);
-  --glass-wallpaper: linear-gradient(rgb(9 16 34 / .72), rgb(9 16 34 / .72)), url('/images/glass-wallpaper.svg');
+  --glass-background: radial-gradient(ellipse at 5% 15%, rgb(45 92 109 / .5), transparent 60%), radial-gradient(ellipse at 96% 65%, rgb(92 72 79 / .45), transparent 62%), linear-gradient(135deg, #132a38, #202b40 55%, #2c2934);
 }
 html[data-appearance="glassy"] .app-shell {
-  background: var(--glass-wallpaper) !important;
-  background-attachment: fixed !important;
+  background: var(--glass-background) !important;
   background-size: cover !important;
   background-position: center !important;
   color: var(--glass-text);
@@ -125,20 +125,20 @@ html[data-appearance="glassy"] .app-main :is(.card, .chart-card, .usage-card, .s
   border-color: var(--glass-border) !important;
   box-shadow: var(--glass-shadow) !important;
 }
-/* Dashboard tiles have no nested menus or fixed dialogs, so they can frost the
-   wallpaper directly without changing how interactive page overlays are positioned. */
+/* The ambient background is already soft. Static material avoids a separate
+   live blur layer for every dashboard tile while retaining its glass reflection. */
 html[data-appearance="glassy"] .legacy-dashboard :is(.card, .chart-card, .usage-card) {
   border-radius: 20px;
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 html[data-appearance="glassy"] .legacy-dashboard > a:first-child {
   background: var(--glass-reflection), var(--glass-surface) !important;
   color: var(--glass-text) !important;
   border-color: var(--glass-border) !important;
   box-shadow: var(--glass-shadow) !important;
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 html[data-appearance="glassy"] .app-main :is(.bg-slate-50, .bg-slate-100, .bg-gray-50, .bg-gray-100, [class*="bg-slate-50/"], .mini-info) {
   background: var(--glass-wash) !important;
@@ -178,8 +178,8 @@ html[data-appearance="glassy"] :is(.topbar-dropdown, .header-color-picker, .work
   box-shadow: var(--glass-shadow) !important;
 }
 html[data-appearance="glassy"] :is(.topbar-dropdown, .header-color-picker, .workflow-select-panel, .flatpickr-calendar) {
-  -webkit-backdrop-filter: blur(36px) saturate(140%) !important;
-  backdrop-filter: blur(36px) saturate(140%) !important;
+  -webkit-backdrop-filter: var(--glass-popup-blur) !important;
+  backdrop-filter: var(--glass-popup-blur) !important;
 }
 html[data-appearance="glassy"] :is(.notif-card, .dropdown-header, .dropdown-account__header) { background: var(--glass-wash); border-color: var(--glass-line); }
 html[data-appearance="glassy"] .attachment-preview { --preview-bg: var(--glass-elevated); --preview-surface: var(--glass-field); --preview-border: var(--glass-line); --preview-text: var(--glass-text); --preview-muted: var(--glass-muted); background: var(--glass-elevated); }
@@ -187,7 +187,7 @@ html[data-appearance="glassy"] :is(.modal, .modal-panel, .swap-modal) :is(.field
 
 @media (max-width: 640px) {
   .appearance-panel.header-color-picker { right: 12px; padding: 16px; }
-  html[data-appearance="glassy"] { --glass-blur: blur(18px) saturate(140%); }
+  html[data-appearance="glassy"] { --glass-blur: blur(8px) saturate(125%); --glass-popup-blur: blur(10px) saturate(125%); }
 }
 @media (prefers-reduced-transparency: reduce) {
   html[data-appearance="glassy"] { --glass-surface: rgb(245 250 255 / .42); --glass-elevated: rgb(246 250 253 / .94); --glass-field: rgb(248 250 252 / .72); }

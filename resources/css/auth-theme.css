@@ -1,0 +1,108 @@
+/* Shared by Blade welcome/auth pages and the Inertia authentication layouts. */
+:root {
+  --auth-text: #0f172a;
+  --auth-muted: #475569;
+  --auth-panel: #fff;
+  --auth-field: rgb(255 255 255 / .82);
+  --auth-border: #dbe3ef;
+  --auth-scrim: rgb(226 232 240 / .68);
+  --auth-background: radial-gradient(ellipse at 20% 5%, rgb(199 210 254 / .6), transparent 55%), radial-gradient(ellipse at 95% 30%, rgb(165 228 243 / .5), transparent 55%), radial-gradient(ellipse at 0% 100%, rgb(253 230 138 / .38), transparent 45%), #f8fafc;
+}
+html.dark {
+  --auth-text: #edf3fa;
+  --auth-muted: #becbde;
+  --auth-panel: #111d30;
+  --auth-field: rgb(7 17 32 / .65);
+  --auth-border: #34445c;
+  --auth-scrim: rgb(2 6 23 / .65);
+  --auth-background: radial-gradient(ellipse at 20% 5%, rgb(49 46 129 / .32), transparent 55%), radial-gradient(ellipse at 95% 30%, rgb(14 116 144 / .22), transparent 55%), #0b1423;
+  --brand-blue: #b5d4ff;
+}
+.public-page {
+  min-height: 100vh;
+  min-height: 100svh;
+  background: var(--auth-background) !important;
+  color: var(--auth-text);
+}
+/* Paint ambient colours once instead of keeping large blurred DOM layers. */
+.public-ambient { display: none; }
+.public-card { background: var(--auth-panel); color: var(--auth-text); }
+.public-page :is(.text-slate-900, .text-slate-800, .text-slate-700, .text-gray-900) { color: var(--auth-text); }
+.public-page :is(.text-slate-600, .text-slate-500, .text-slate-400, .text-gray-500, .text-gray-600) { color: var(--auth-muted); }
+html.dark .public-page :is(.bg-white, .bg-white\/95, .bg-white\/85, .bg-white\/80, .icon-wrapper) { background-color: var(--auth-panel); border-color: var(--auth-border); }
+.public-page input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.public-page textarea, .public-page select, .public-page [role="combobox"],
+.public-page #unitButton {
+  background-color: var(--auth-field) !important;
+  border-color: var(--auth-border) !important;
+  color: var(--auth-text) !important;
+  -webkit-text-fill-color: var(--auth-text);
+  caret-color: var(--auth-text) !important;
+}
+.public-page input::placeholder, .public-page textarea::placeholder { color: var(--auth-muted); opacity: .8; }
+.public-page .unit-menu-panel, .public-page .unit-menu-head { background: var(--auth-panel) !important; color: var(--auth-text); border-color: var(--auth-border); }
+.public-page .unit-menu-head { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+.public-page .unit-select .unit-menu { max-height: var(--unit-dropdown-max-height); visibility: hidden; transition: opacity .16s ease, transform .16s ease, visibility .16s ease; }
+.public-page .unit-select[data-open="true"] .unit-menu { visibility: visible; }
+.public-page .icon-glow { animation: none; }
+html.dark .public-page .icon-image { filter: brightness(0) invert(1); }
+html.dark .public-page .bg-blue-100 { background: rgb(59 130 246 / .18); }
+html.dark .public-page .bg-blue-100 > .material-icons { color: #93c5fd; }
+html[data-appearance="glassy"] {
+  --auth-text: var(--glass-text);
+  --auth-muted: var(--glass-muted);
+  --auth-field: var(--glass-field);
+  --auth-border: var(--glass-line);
+}
+html[data-appearance="glassy"] .public-page { background: var(--glass-background) !important; }
+html[data-appearance="glassy"] .public-page :is(.public-card, .public-content .card, .icon-wrapper, .auth-gpu-safe-surface, .bg-white) {
+  background: var(--glass-reflection), var(--glass-surface) !important;
+  border-color: var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+html[data-appearance="glassy"] .public-page .unit-menu-panel {
+  background: var(--glass-reflection), var(--glass-elevated) !important;
+  box-shadow: var(--glass-shadow);
+}
+/* Only the small Glassy popup needs live blur; the scrim is a simple paint. */
+html :is(#loginOverlay, #registerOverlay) {
+  background: var(--auth-scrim) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  padding: 16px;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+}
+html #loginOverlay::before, html #loginOverlay .panel::before, html #loginOverlay .panel::after { display: none !important; }
+html #loginOverlay .panel, html #registerOverlay .wrap {
+  width: min(100%, 360px);
+  min-width: 0;
+  height: auto;
+  padding: 28px;
+  border-radius: 28px;
+  border: 1px solid var(--auth-border);
+  background: var(--auth-panel);
+  color: var(--auth-text);
+  box-shadow: 0 24px 70px -22px rgb(15 23 42 / .35);
+  text-align: center;
+}
+html #loginOverlay .title, html #registerOverlay .msg { color: var(--auth-text); text-shadow: none; }
+html #loginOverlay .subtitle { color: var(--auth-muted); }
+html.dark #loginOverlay .emblem { background: rgb(99 102 241 / .23); }
+html.dark #loginOverlay .orbit { background: #a5b4fc; }
+html #loginOverlay .emblem::after, html #loginOverlay .orbit, html #loginOverlay .ring { animation-play-state: paused; }
+html #loginOverlay:is(.show, .visible) .emblem::after, html #loginOverlay:is(.show, .visible) .orbit, html #loginOverlay:is(.show, .visible) .ring { animation-play-state: running; }
+html #registerOverlay .spinner-svg { animation: auth-spinner .9s linear infinite; animation-play-state: paused; filter: none; }
+html #registerOverlay.show .spinner-svg { animation-play-state: running; }
+html[data-appearance="glassy"] #loginOverlay .panel, html[data-appearance="glassy"] #registerOverlay .wrap {
+  background: var(--glass-reflection), var(--glass-elevated);
+  border-color: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: var(--glass-popup-blur);
+  backdrop-filter: var(--glass-popup-blur);
+}
+@keyframes auth-spinner { to { transform: rotate(360deg); } }
+@media (max-width: 480px) {
+  .public-page .public-card { padding: 24px 20px; }
+}

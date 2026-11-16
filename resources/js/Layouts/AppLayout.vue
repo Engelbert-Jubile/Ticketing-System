@@ -767,7 +767,7 @@ const sidebarWidth = computed(() => {
     return '0px'
   }
 
-  if (sidebarLocked.value || sidebarOpen.value) {
+  if (sidebarLocked.value) {
     return '18rem'
   }
 

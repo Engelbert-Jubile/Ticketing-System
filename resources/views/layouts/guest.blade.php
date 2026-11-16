@@ -2,10 +2,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    @include('partials.theme-bootstrap')
     <meta charset="utf-8">
     <title>{{ config('app.name', 'Tickora') }}</title>
 
-    @vite('resources/css/app.css')
+    @vite(['resources/css/app.css', 'resources/css/public.css'])
     @livewireStyles
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 flex items-center justify-center min-h-screen">

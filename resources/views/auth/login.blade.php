@@ -6,26 +6,27 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
 <html lang="{{ app()->getLocale() }}">
 
 <head>
+  @include('partials.theme-bootstrap')
 
   <style>
     input[type="password"]::-ms-reveal,
     input[type="password"]::-ms-clear { display: none; }
 
-    /* Keep insertion caret stable and force dark text cursor color */
+    /* Keep the insertion caret stable in the selected colour mode. */
     #login-form .auth-input-stable,
     .dark #login-form .auth-input-stable,
     #email_local,
     #password {
-      color: #0f172a !important;
-      -webkit-text-fill-color: #0f172a !important;
-      caret-color: #0f172a !important;
+      color: var(--auth-text, #0f172a) !important;
+      -webkit-text-fill-color: var(--auth-text, #0f172a) !important;
+      caret-color: var(--auth-text, #0f172a) !important;
       text-shadow: none !important;
     }
 
-    /* Force pointer I-beam to stay dark (fix white I-beam on GPU acceleration) */
+    /* Let the browser select the matching system text cursor. */
     #login-form input[type="text"],
     #login-form input[type="password"] {
-      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M12 4v16M9 4h6M9 20h6' stroke='%230f172a' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E") 12 12, text !important;
+      cursor: text;
     }
   </style>
   <meta charset="UTF-8">
@@ -39,7 +40,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
 
   <link rel="preconnect" href="https://fonts.bunny.net">
   <link href="https://fonts.bunny.net/css?family=inter:400,500,600&display=swap" rel="stylesheet" />
-  @vite(['resources/css/app.css'])
+  @vite(['resources/css/app.css', 'resources/css/public.css'])
   @livewireStyles
   <style>
     :root {
@@ -78,8 +79,8 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
   <div class="spinner"></div>
 </div>
 
-  <div class="relative min-h-screen overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-    <div aria-hidden="true" class="pointer-events-none absolute inset-0">
+  <div class="public-page relative min-h-screen overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <div aria-hidden="true" class="public-ambient pointer-events-none absolute inset-0">
       <div class="absolute -top-24 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-blue-200/70 blur-3xl dark:bg-blue-900/30"></div>
       <div class="absolute -bottom-28 -left-28 h-80 w-80 rounded-full bg-amber-200/70 blur-3xl dark:bg-amber-900/25"></div>
       <div class="absolute top-1/3 -right-28 h-96 w-96 rounded-full bg-indigo-200/60 blur-3xl dark:bg-indigo-900/25"></div>
@@ -104,7 +105,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
           </p>
         </div>
 
-        <div class="auth-gpu-safe-surface rounded-3xl bg-white/85 p-8 shadow-xl shadow-blue-200/40 ring-1 ring-slate-200/70 backdrop-blur dark:bg-slate-900/70 dark:ring-slate-800/70 dark:shadow-none sm:p-10">
+        <div class="public-card auth-gpu-safe-surface rounded-3xl bg-white/85 p-8 shadow-xl shadow-blue-200/40 ring-1 ring-slate-200/70 backdrop-blur dark:bg-slate-900/70 dark:ring-slate-800/70 dark:shadow-none sm:p-10">
           <div class="mb-8 space-y-2 text-center">
             <h2 class="text-2xl font-semibold tracking-tight">{{ __('Sign in to your account') }}</h2>
             <p class="text-sm text-slate-600 dark:text-slate-300">{{ __('Manage tickets, tasks, and projects in one dashboard.') }}</p>
@@ -183,8 +184,7 @@ class="space-y-6" >
                   </svg>
                 </button>
               </div>
-              </div>
-@error('password') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+              @error('password') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
  
 <div class="mt-2 mb-3 text-right">
@@ -231,11 +231,11 @@ class="space-y-6" >
     (function () {
       window.showBgLoading = function () {
         var ov = document.getElementById("loginOverlay");
-        if (ov) ov.classList.add("show");
+        if (ov) { ov.classList.add("show"); ov.setAttribute('aria-hidden', 'false'); }
       };
       window.hideBgLoading = function () {
         var ov = document.getElementById("loginOverlay");
-        if (ov) ov.classList.remove("show");
+        if (ov) { ov.classList.remove("show", "visible"); ov.setAttribute('aria-hidden', 'true'); }
       };
     })();
   </script>

@@ -2,6 +2,7 @@
 <html lang="{{ app()->getLocale() }}" class="transition-colors duration-300">
 
 <head>
+    @include('partials.theme-bootstrap')
     <meta charset="UTF-8">
     <title>{{ __('Ticket Management System') }} - Tickora</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,7 +12,7 @@
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v={{ filemtime(public_path('favicon.svg')) }}">
     <link rel="alternate icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v={{ filemtime(public_path('favicon.ico')) }}">
 
-    @vite(['resources/css/app.css'])
+    @vite(['resources/css/app.css', 'resources/css/public.css'])
     @livewireStyles
     <style>
         :root {
@@ -121,8 +122,8 @@
 </head>
 
 <body class="font-sans antialiased">
-    <div class="relative min-h-screen overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-        <div aria-hidden="true" class="pointer-events-none absolute inset-0">
+    <div class="public-page relative min-h-screen overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+        <div aria-hidden="true" class="public-ambient pointer-events-none absolute inset-0">
             <div class="absolute -top-24 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-blue-200/70 blur-3xl dark:bg-blue-900/30"></div>
             <div class="absolute -bottom-28 -left-28 h-80 w-80 rounded-full bg-amber-200/70 blur-3xl dark:bg-amber-900/25"></div>
             <div class="absolute top-1/3 -right-28 h-96 w-96 rounded-full bg-indigo-200/60 blur-3xl dark:bg-indigo-900/25"></div>

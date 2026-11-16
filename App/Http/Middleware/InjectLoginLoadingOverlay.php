@@ -81,16 +81,16 @@ class InjectLoginLoadingOverlay
   inset:0;
   display:grid;
   place-items:center;
-  background:rgba(255,255,255,.08);
-  -webkit-backdrop-filter:blur(8px);
-  backdrop-filter:blur(8px);
+  background:var(--auth-scrim, rgba(255,255,255,.4));
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
   visibility:hidden;
   opacity:0;
   pointer-events:none;
   transition:opacity .28s ease, visibility .28s ease;
   z-index:1050;
 }
-#loginOverlay.visible{
+#loginOverlay.visible, #loginOverlay.show{
   visibility:visible;
   opacity:1;
   pointer-events:auto;
@@ -114,7 +114,7 @@ class InjectLoginLoadingOverlay
   gap:10px;
   padding:28px 36px 30px;
   border-radius:32px;
-  background:rgba(255,255,255,.95);
+  background:var(--auth-panel, #fff);
   box-shadow:0 30px 80px rgba(15,23,42,.45);
   min-width:280px;
   text-align:center;
@@ -148,12 +148,12 @@ class InjectLoginLoadingOverlay
   margin:0;
   font-size:18px;
   font-weight:700;
-  color:#0f172a;
+  color:var(--auth-text, #0f172a);
 }
 #loginOverlay .subtitle{
   margin:0;
   font-size:13px;
-  color:#475569;
+  color:var(--auth-muted, #475569);
 }
 @keyframes orbit{to{transform:rotate(360deg)}}
 @keyframes drift{
@@ -163,7 +163,7 @@ class InjectLoginLoadingOverlay
 }
 </style>
 
-<div id="loginOverlay" aria-hidden="true">
+<div id="loginOverlay" class="auth-loading-overlay" aria-hidden="true" role="status" aria-live="polite">
   <div class="panel">
     <div class="emblem">
       <span class="orbit" aria-hidden="true"></span>

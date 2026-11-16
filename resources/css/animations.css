@@ -8,16 +8,7 @@
 }
 
 /* Animation Optimizations */
-.optimize-animations * {
-  -webkit-backface-visibility: hidden;
-  -moz-backface-visibility: hidden;
-  backface-visibility: hidden;
-  -webkit-transform: translate3d(0, 0, 0);
-  -moz-transform: translate3d(0, 0, 0);
-  -ms-transform: translate3d(0, 0, 0);
-  transform: translate3d(0, 0, 0);
-  will-change: transform;
-}
+/* Avoid promoting every descendant: it consumes GPU memory and traps fixed overlays. */
 
 /* Smooth transitions */
 .sidebar {
@@ -40,7 +31,6 @@
   transition:
     transform 0.3s var(--ease-smooth, cubic-bezier(0.22, 0.61, 0.36, 1)),
     width 0.3s var(--ease-smooth, cubic-bezier(0.22, 0.61, 0.36, 1));
-  will-change: transform, width;
 }
 
 /* Prevent transition flicker */
@@ -49,15 +39,10 @@
 .sidebar .nav-li > form > button {
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
-  transition: all var(--trans-short, 0.2s) var(--ease-out, cubic-bezier(0.22, 0.61, 0.36, 1));
+  transition: color .18s ease, background-color .18s ease, transform .18s ease;
 }
 
 /* Optimize GPU rendering */
-.sidebar,
-.sidebar * {
-  -webkit-transform-style: preserve-3d;
-  transform-style: preserve-3d;
-}
 
 /* Prevent FOUC only during boot */
 .booting .sidebar:not(.initialized) {
@@ -74,17 +59,17 @@
   .sidebar .nav-li > a:hover,
   .sidebar .nav-li > button:hover,
   .sidebar .nav-li > form > button:hover {
-    transition: all var(--trans-short, 0.2s) var(--ease-out, cubic-bezier(0.22, 0.61, 0.36, 1));
+    transition: color .18s ease, background-color .18s ease, transform .18s ease;
   }
 }
 
 /* Reduce motion if user prefers */
 @media (prefers-reduced-motion: reduce) {
-  .sidebar,
-  .sidebar *,
-  .sb-spacer {
+  *, *::before, *::after {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
   }
 }
 
