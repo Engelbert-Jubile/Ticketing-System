@@ -7,7 +7,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
 <html lang="{{ app()->getLocale() }}">
 
 <head>
-  @include('partials.theme-bootstrap')
+  @include('partials.public-theme-bootstrap')
 
 <style>
   input[type="password"]::-ms-reveal,

@@ -7,8 +7,6 @@ use Illuminate\Http\Request;
 
 class UserTheme
 {
-    public const PUBLIC_SESSION_KEY = 'public.theme_preferences';
-
     public static function normalize(mixed $preferences): array
     {
         $preferences = is_array($preferences) ? $preferences : [];
@@ -30,9 +28,7 @@ class UserTheme
 
         return [
             'user_id' => $user?->getKey(),
-            'preferences' => $user ? self::forUser($user) : self::normalize(
-                $request->hasSession() ? $request->session()->get(self::PUBLIC_SESSION_KEY) : null
-            ),
+            'preferences' => $user ? self::forUser($user) : self::normalize(null),
             'save_url' => $user ? route('account.theme.update', ['locale' => app()->getLocale()]) : null,
         ];
     }

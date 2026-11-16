@@ -29,11 +29,9 @@ class IdleTimeout
             $lastActivity = (int) $request->session()->get('last_activity', $now);
 
             if (($now - $lastActivity) > ($idleMinutes * 60)) {
-                $publicTheme = \App\Support\UserTheme::forUser($request->user());
                 Auth::guard('web')->logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
-                $request->session()->put(\App\Support\UserTheme::PUBLIC_SESSION_KEY, $publicTheme);
 
                 $statusMessage = __('Sesi berakhir karena tidak ada aktivitas. Silakan login ulang.');
 

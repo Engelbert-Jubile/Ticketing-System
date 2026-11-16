@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    @include('partials.theme-bootstrap')
+    @include('partials.public-theme-bootstrap')
     <meta charset="utf-8">
     <title>{{ config('app.name', 'Tickora') }}</title>
 
