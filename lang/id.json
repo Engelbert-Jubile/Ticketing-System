@@ -1076,5 +1076,13 @@
   "Email": "Email",
   "Unit": "Unit",
   "Password": "Kata sandi",
-  "Login": "Masuk"
+  "Login": "Masuk",
+  "Appearance": "Tampilan",
+  "Make your workspace feel like you.": "Pilih tampilan yang nyaman untuk Anda.",
+  "Interface theme": "Tema antarmuka",
+  "Default": "Default",
+  "Classic and familiar": "Tampilan seperti semula",
+  "Soft, frosted surfaces": "Efek kaca yang lembut",
+  "Both themes work with light and dark mode.": "Kedua tema mendukung mode terang dan gelap.",
+  "Close appearance settings": "Tutup pengaturan tampilan"
 }

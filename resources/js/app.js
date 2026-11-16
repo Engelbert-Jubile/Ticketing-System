@@ -4,6 +4,7 @@ import '../css/app.css';
 import '../css/header.css';
 import '../css/header-fixes.css';
 import '../css/animations.css';
+import '../css/glassy.css';
 import { createApp, h } from 'vue';
 import { createInertiaApp, router } from '@inertiajs/vue3';
 import { InertiaProgress } from '@inertiajs/progress';

@@ -11,11 +11,13 @@
       :account-password-url="resolveRouteName('account.change-password')"
       :is-desktop="isDesktop"
       :theme="theme"
+      :appearance="appearance"
       :header-color="headerColor"
       :locale-busy="localeBusy"
       @update-locale="updateLocale"
       @toggle-sidebar="toggleSidebar"
       @toggle-theme="toggleTheme"
+      @update-appearance="setAppearance"
       @update-header-color="updateHeaderColor"
       @search="performSearch"
       @mark-all-notifications="markAllNotifications"
@@ -98,6 +100,7 @@ import LegacySidebar from '../Components/LegacySidebar.vue'
 import LegacyTopbar from '../Components/LegacyTopbar.vue'
 import resolveRoute from '../utils/resolveRoute'
 import { useI18n } from '../i18n'
+import { APPEARANCE_KEY, applyAppearance, normalizeAppearance, readAppearance, saveAppearance } from '../utils/appearance'
 
 const page = usePage()
 const { t, setLocale } = useI18n()
@@ -198,7 +201,19 @@ const searchQuery = computed(() => {
 
 const sidebarOpen = ref(false)
 const sidebarLocked = ref(false)
-const theme = ref('light')
+const theme = ref(typeof document !== 'undefined' && document.documentElement.classList.contains('dark') ? 'dark' : 'light')
+const appearance = ref(readAppearance())
+applyAppearance(appearance.value)
+const setAppearance = value => {
+  appearance.value = saveAppearance(value)
+  applyAppearance(appearance.value)
+}
+const syncAppearance = event => {
+  if (event.key === APPEARANCE_KEY || event.key === null) {
+    appearance.value = normalizeAppearance(event.newValue)
+    applyAppearance(appearance.value)
+  }
+}
 const headerColor = ref(authUser.value?.header_color ?? null)
 const isDesktop = ref(false)
 let headerColorSaveTimer = null
@@ -542,6 +557,7 @@ const applyTheme = value => {
   if (typeof document !== 'undefined') {
     document.documentElement.classList.toggle('dark', value === 'dark')
     document.documentElement.classList.toggle('light', value === 'light')
+    document.documentElement.style.colorScheme = value === 'dark' ? 'dark' : 'light'
   }
 }
 
@@ -766,6 +782,7 @@ const contentStyle = computed(() => {
 })
 
 onMounted(() => {
+  window.addEventListener('storage', syncAppearance)
   notificationTimer = window.setInterval(refreshNotifications, 30000)
   window.addEventListener('focus', refreshNotifications)
   loadSidebarState()
@@ -778,6 +795,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  window.removeEventListener('storage', syncAppearance)
   window.clearInterval(notificationTimer)
   window.removeEventListener('focus', refreshNotifications)
   cleanupBreakpoint()

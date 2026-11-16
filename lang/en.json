@@ -1096,5 +1096,13 @@
   "Unit": "Unit",
   "Password": "Password",
   "Login": "Login",
-  "Register": "Register"
+  "Register": "Register",
+  "Appearance": "Appearance",
+  "Make your workspace feel like you.": "Make your workspace feel like you.",
+  "Interface theme": "Interface theme",
+  "Default": "Default",
+  "Classic and familiar": "Classic and familiar",
+  "Soft, frosted surfaces": "Soft, frosted surfaces",
+  "Both themes work with light and dark mode.": "Both themes work with light and dark mode.",
+  "Close appearance settings": "Close appearance settings"
 }

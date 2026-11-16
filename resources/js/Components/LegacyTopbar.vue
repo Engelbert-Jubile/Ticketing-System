@@ -170,20 +170,37 @@
 
           <div class="relative" ref="colorPickerRef">
             <button
+              ref="appearanceButtonRef"
               type="button"
               class="topbar-icon-btn"
               :class="{ 'is-active': colorPickerOpen }"
-              :title="$t(&quot;Change header colour&quot;)"
-              :aria-label="$t(&quot;Change header colour&quot;)"
+              :title="$t('Appearance')"
+              :aria-label="$t('Appearance')"
+              aria-haspopup="dialog"
+              aria-controls="appearance-panel"
               :aria-expanded="String(colorPickerOpen)"
               @click="toggleColorPicker"
             >
               <i class="material-icons">palette</i>
             </button>
 
+            <Teleport to="body">
             <transition name="fade">
-              <div v-if="colorPickerOpen" class="header-color-picker">
+              <div v-if="colorPickerOpen" id="appearance-panel" ref="appearancePanelRef" class="header-color-picker appearance-panel" role="dialog" :aria-label="$t('Appearance')" @focusout="handleAppearanceFocusOut">
+                <div class="appearance-panel__heading"><div><h2>{{ $t('Appearance') }}</h2><p>{{ $t('Make your workspace feel like you.') }}</p></div><button type="button" class="appearance-panel__close" :aria-label="$t('Close appearance settings')" @click="closeAppearance"><span class="material-icons" aria-hidden="true">close</span></button></div>
+                <fieldset class="appearance-options">
+                  <legend>{{ $t('Interface theme') }}</legend>
+                  <label v-for="option in ['default', 'glassy']" :key="option" class="appearance-option" :class="{ 'appearance-option--selected': appearance === option }">
+                    <input type="radio" name="interface-appearance" :value="option" :checked="appearance === option" @change="emit('update-appearance', option)" />
+                    <span class="appearance-option__preview" :class="`appearance-option__preview--${option}`" aria-hidden="true"><span class="appearance-option__mock-header"></span><span class="appearance-option__mock-sidebar"></span><span class="appearance-option__mock-card"></span><span class="appearance-option__mock-card appearance-option__mock-card--small"></span></span>
+                    <span class="appearance-option__label">{{ option === 'default' ? $t('Default') : 'Glassy' }}<span v-if="appearance === option" class="material-icons" aria-hidden="true">check_circle</span></span>
+                    <span class="appearance-option__caption">{{ option === 'default' ? $t('Classic and familiar') : $t('Soft, frosted surfaces') }}</span>
+                  </label>
+                </fieldset>
+                <p class="appearance-panel__hint"><span class="material-icons" aria-hidden="true">contrast</span>{{ $t('Both themes work with light and dark mode.') }}</p>
+                <div class="appearance-panel__colour">
                 <label class="header-color-picker__label" for="header-color-input">{{ $t("Header colour") }}</label>
+                <div class="appearance-panel__colour-row">
                 <input
                   id="header-color-input"
                   :value="pickerColor"
@@ -192,11 +209,14 @@
                   @input="changeHeaderColor"
                 />
                 <div class="header-color-picker__value">{{ pickerColor }}</div>
+                </div>
                 <button type="button" class="header-color-picker__reset" @click="resetHeaderColor">
                   {{ $t("Use default colour") }}
                 </button>
+                </div>
               </div>
             </transition>
+            </Teleport>
           </div>
 
           <button
@@ -242,6 +262,7 @@ import { useI18n } from '../i18n'
 import ProfileAvatar from './ProfileAvatar.vue'
 
 const props = defineProps({
+  appearance: { type: String, default: 'default' },
   localeBusy: { type: Boolean, default: false },
   user: {
     type: Object,
@@ -290,6 +311,7 @@ const emit = defineEmits([
   'toggle-theme',
   'update-locale',
   'update-header-color',
+  'update-appearance',
   'search',
   'mark-all-notifications',
   'mark-notification',
@@ -308,6 +330,8 @@ const colorPickerOpen = ref(false)
 const notificationsRef = ref(null)
 const accountRef = ref(null)
 const colorPickerRef = ref(null)
+const appearanceButtonRef = ref(null)
+const appearancePanelRef = ref(null)
 
 const notificationItems = computed(() => (Array.isArray(props.notifications?.items) ? props.notifications.items : []))
 const unreadCount = computed(() => Math.max(0, Number(props.notifications?.unread_count ?? notificationItems.value.filter(item => item.read_at == null).length) || 0))
@@ -364,6 +388,15 @@ const closeAccount = () => {
 
 const closeColorPicker = () => {
   colorPickerOpen.value = false
+}
+const closeAppearance = () => {
+  closeColorPicker()
+  appearanceButtonRef.value?.focus()
+}
+const handleAppearanceFocusOut = () => {
+  nextTick(() => {
+    if (colorPickerOpen.value && !colorPickerRef.value?.contains(document.activeElement) && !appearancePanelRef.value?.contains(document.activeElement)) closeColorPicker()
+  })
 }
 
 const toggleColorPicker = () => {
@@ -440,13 +473,14 @@ const handleClickOutside = event => {
     closeAccount()
   }
 
-  if (colorPickerOpen.value && colorPickerRef.value && !colorPickerRef.value.contains(event.target)) {
+  if (colorPickerOpen.value && colorPickerRef.value && !colorPickerRef.value.contains(event.target) && !appearancePanelRef.value?.contains(event.target)) {
     closeColorPicker()
   }
 }
 
 const handleEsc = event => {
   if (event.key === 'Escape') {
+    if (colorPickerOpen.value) closeAppearance()
     closeNotifications()
     closeAccount()
     closeColorPicker()
@@ -496,6 +530,12 @@ watch(
 
 watch([notificationsOpen, accountOpen, colorPickerOpen], () => {
   nextTick(scheduleTopbarHeightUpdate)
+})
+
+watch(colorPickerOpen, async open => {
+  if (!open) return
+  await nextTick()
+  appearancePanelRef.value?.querySelector('input[type="radio"]:checked')?.focus()
 })
 
 defineExpose({

@@ -12,6 +12,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}">
+      try {
+        const root = document.documentElement;
+        const dark = localStorage.getItem('theme') === 'dark';
+        root.classList.toggle('dark', dark);
+        root.classList.toggle('light', !dark);
+        root.style.colorScheme = dark ? 'dark' : 'light';
+        root.dataset.appearance = localStorage.getItem('tickora:appearance') === 'glassy' ? 'glassy' : 'default';
+      } catch (_) {}
+    </script>
     <title inertia>{{ $initialTitle }}</title>
     <meta name="application-name" content="Tickora">
     <meta name="apple-mobile-web-app-title" content="Tickora">

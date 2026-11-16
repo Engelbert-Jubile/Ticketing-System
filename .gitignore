@@ -106,6 +106,7 @@ resources/js/utils/*
 !resources/js/utils/workflowStatus.js
 !resources/js/utils/plainText.js
 !resources/js/utils/attachmentPreview.js
+!resources/js/utils/appearance.js
 !resources/js/Pages/
 resources/js/Pages/*
 !resources/js/Pages/Workflows/
@@ -136,4 +137,5 @@ docs/workflow-language-update*.md
 /tests/UsageMetricsTest*.php
 /tests/attachment-preview*.test.mjs
 /tests/AttachmentPreview*.Test.php
-/tests/AttachmentPreviewTest.php
+/tests/AttachmentPreviewTest*.php
+/tests/appearance.*test.mjs

@@ -38,6 +38,7 @@
           localStorage.setItem('theme', 'light');
         }
         document.documentElement.classList.toggle('dark', stored === 'dark');
+        document.documentElement.dataset.appearance = localStorage.getItem('tickora:appearance') === 'glassy' ? 'glassy' : 'default';
       } catch (_) {}
     })();
   </script>
