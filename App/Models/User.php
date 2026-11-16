@@ -112,6 +112,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /** Casts */
     protected $casts = [
+        'theme_preferences' => 'array',
         'email_verified_at' => 'datetime',
         'password' => 'hashed', // otomatis hash saat set string
     ];

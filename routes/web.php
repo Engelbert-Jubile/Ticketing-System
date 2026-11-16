@@ -390,6 +390,7 @@ Route::middleware($emailVerificationEnabled
         Route::get('/photo', [AccountController::class, 'photo'])->name('photo');
         Route::put('/profile', [AccountController::class, 'updateProfile'])->name('update-profile');
         Route::patch('/header-color', [AccountController::class, 'updateHeaderColor'])->name('header-color.update');
+        Route::patch('/theme-preferences', [AccountController::class, 'updateTheme'])->name('theme.update');
             Route::patch('/locale', [AccountController::class, 'updateLocale'])->name('locale.update');
         Route::get('/change-password', [AccountController::class, 'changePassword'])->name('change-password');
         Route::put('/change-password', [AccountController::class, 'updatePassword'])->name('password.update');

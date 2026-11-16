@@ -143,3 +143,5 @@ docs/workflow-language-update*.md
 /tests/AttachmentPreviewTest*.php
 /tests/appearance.*test.mjs
 /tests/theme-preferences*.test.mjs
+/tests/user-theme*.test.mjs
+/tests/UserThemePreferencesTest*.php

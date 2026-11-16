@@ -1,7 +1,7 @@
 import './legacy';
 import './attachmentPreview';
 import '../css/glassy.css';
-import { applyAppearance, readAppearance } from './utils/appearance';
+import { applyThemePreferences } from './utils/appearance';
 
-applyAppearance(readAppearance());
-document.addEventListener('livewire:navigated', () => applyAppearance(readAppearance()));
+applyThemePreferences(window.tickoraTheme?.preferences);
+document.addEventListener('livewire:navigated', () => applyThemePreferences(window.tickoraTheme?.preferences));

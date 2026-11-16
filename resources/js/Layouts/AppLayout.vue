@@ -12,6 +12,7 @@
       :is-desktop="isDesktop"
       :theme="theme"
       :appearance="appearance"
+      :theme-busy="themeBusy"
       :header-color="headerColor"
       :locale-busy="localeBusy"
       @update-locale="updateLocale"
@@ -45,6 +46,7 @@
     >
       <div v-if="!isDesktop && sidebarOpen" class="overlay" @click="setSidebarOpen(false)"></div>
       <main class="app-main">
+        <p v-if="themeError" role="alert" class="mb-4 rounded-xl bg-rose-50 p-3 text-sm text-rose-800 dark:bg-rose-950 dark:text-rose-200">{{ themeError }}</p>
         <p v-if="localeError" role="alert" class="mb-4 rounded-xl bg-rose-50 p-3 text-sm text-rose-800">{{ localeError }}</p>
         <p v-if="notificationError" role="alert" class="mb-4 rounded-xl bg-rose-50 p-3 text-sm text-rose-800 dark:bg-rose-950 dark:text-rose-200">{{ notificationError }}</p>
         <div
@@ -100,7 +102,7 @@ import LegacySidebar from '../Components/LegacySidebar.vue'
 import LegacyTopbar from '../Components/LegacyTopbar.vue'
 import resolveRoute from '../utils/resolveRoute'
 import { useI18n } from '../i18n'
-import { APPEARANCE_KEY, applyAppearance, normalizeAppearance, readAppearance, saveAppearance } from '../utils/appearance'
+import { applyThemePreferences, cacheThemePreferences, normalizeThemePreferences } from '../utils/appearance'
 
 const page = usePage()
 const { t, setLocale } = useI18n()
@@ -201,19 +203,51 @@ const searchQuery = computed(() => {
 
 const sidebarOpen = ref(false)
 const sidebarLocked = ref(false)
-const theme = ref(typeof document !== 'undefined' && document.documentElement.classList.contains('dark') ? 'dark' : 'light')
-const appearance = ref(readAppearance())
-applyAppearance(appearance.value)
-const setAppearance = value => {
-  appearance.value = saveAppearance(value)
-  applyAppearance(appearance.value)
+const initialTheme = normalizeThemePreferences(authUser.value?.theme_preferences)
+const theme = ref(initialTheme.color_mode)
+const appearance = ref(initialTheme.appearance)
+const themeBusy = ref(false), themeError = ref('')
+let savedTheme = initialTheme, themeSavePromise = null, themeMounted = true
+const renderTheme = preferences => {
+  const normalized = applyThemePreferences(preferences)
+  theme.value = normalized.color_mode
+  appearance.value = normalized.appearance
+  if (window.tickoraTheme) window.tickoraTheme.preferences = normalized
 }
-const syncAppearance = event => {
-  if (event.key === APPEARANCE_KEY || event.key === null) {
-    appearance.value = normalizeAppearance(event.newValue)
-    applyAppearance(appearance.value)
-  }
+renderTheme(initialTheme)
+const syncAccountTheme = event => {
+  if (themeBusy.value || String(event.detail?.user_id) !== String(authUser.value?.id)) return
+  savedTheme = normalizeThemePreferences(event.detail.preferences)
+  renderTheme(savedTheme)
 }
+const saveTheme = preferences => {
+  if (themeBusy.value || !authUser.value?.id) return themeSavePromise
+  const userId = authUser.value.id
+  const next = normalizeThemePreferences(preferences)
+  const previous = savedTheme
+  const url = window.tickoraTheme?.save_url || resolveRouteName('account.theme.update')
+  themeBusy.value = true
+  themeError.value = ''
+  renderTheme(next)
+  themeSavePromise = (async () => {
+    try {
+      const { data } = await axios.patch(url, { user_id: userId, ...next })
+      if (!themeMounted || authUser.value?.id !== userId) return
+      savedTheme = normalizeThemePreferences(data.theme_preferences)
+      renderTheme(savedTheme)
+      cacheThemePreferences(userId, savedTheme)
+    } catch (_) {
+      if (!themeMounted || authUser.value?.id !== userId) return
+      renderTheme(previous)
+      themeError.value = uiText('Unable to save your theme. Please try again.')
+    } finally {
+      if (authUser.value?.id === userId) themeBusy.value = false
+    }
+  })()
+  return themeSavePromise
+}
+const setAppearance = value => saveTheme({ appearance: value, color_mode: theme.value })
+const toggleTheme = () => saveTheme({ appearance: appearance.value, color_mode: theme.value === 'dark' ? 'light' : 'dark' })
 const headerColor = ref(authUser.value?.header_color ?? null)
 const isDesktop = ref(false)
 let headerColorSaveTimer = null
@@ -553,35 +587,6 @@ const loadSidebarState = () => {
   }
 }
 
-const applyTheme = value => {
-  if (typeof document !== 'undefined') {
-    document.documentElement.classList.toggle('dark', value === 'dark')
-    document.documentElement.classList.toggle('light', value === 'light')
-    document.documentElement.style.colorScheme = value === 'dark' ? 'dark' : 'light'
-  }
-}
-
-const loadTheme = () => {
-  try {
-    const stored = localStorage.getItem('theme')
-    if (stored === 'dark' || stored === 'light') {
-      theme.value = stored
-    }
-  } catch (error) {}
-  applyTheme(theme.value)
-}
-
-const toggleTheme = () => {
-  theme.value = theme.value === 'dark' ? 'light' : 'dark'
-}
-
-watch(theme, value => {
-  try {
-    localStorage.setItem('theme', value)
-  } catch (error) {}
-  applyTheme(value)
-})
-
 const localeBusy = ref(false), localeError = ref('')
 const updateLocale = async value => {
   if (localeBusy.value || value === authUser.value?.preferred_locale) return
@@ -724,7 +729,8 @@ const stopImpersonation = () => {
   router.post(resolveRouteName('settings.impersonate.stop'), {}, { preserveScroll: true })
 }
 
-const logout = () => {
+const logout = async () => {
+  await themeSavePromise
   try {
     localStorage.setItem(SIDEBAR_LOGOUT_REASON_KEY, 'manual')
   } catch (error) {}
@@ -782,11 +788,10 @@ const contentStyle = computed(() => {
 })
 
 onMounted(() => {
-  window.addEventListener('storage', syncAppearance)
+  window.addEventListener('tickora:theme-updated', syncAccountTheme)
   notificationTimer = window.setInterval(refreshNotifications, 30000)
   window.addEventListener('focus', refreshNotifications)
   loadSidebarState()
-  loadTheme()
   initBreakpoint()
   if (isDesktop.value) {
     sidebarOpen.value = sidebarLocked.value
@@ -795,7 +800,8 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('storage', syncAppearance)
+  themeMounted = false
+  window.removeEventListener('tickora:theme-updated', syncAccountTheme)
   window.clearInterval(notificationTimer)
   window.removeEventListener('focus', refreshNotifications)
   cleanupBreakpoint()
@@ -806,6 +812,19 @@ onBeforeUnmount(() => {
 
 watch([announcementKey, announcement], () => {
   syncAnnouncement()
+})
+
+watch(() => authUser.value?.id, () => {
+  savedTheme = normalizeThemePreferences(authUser.value?.theme_preferences)
+  themeBusy.value = false
+  themeError.value = ''
+  themeSavePromise = null
+  if (window.tickoraTheme) {
+    window.tickoraTheme.user_id = authUser.value?.id ?? null
+    window.tickoraTheme.save_url = resolveRouteName('account.theme.update')
+  }
+  headerColor.value = authUser.value?.header_color ?? null
+  renderTheme(savedTheme)
 })
 
 

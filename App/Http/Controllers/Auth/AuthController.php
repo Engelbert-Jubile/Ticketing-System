@@ -71,6 +71,7 @@ class AuthController extends Controller
 
                 Auth::guard('web')->login($user);
                 $request->session()->regenerate();
+                $request->session()->forget(\App\Support\UserTheme::PUBLIC_SESSION_KEY);
 
                 return redirect()
                     ->route('verification.notice', ['locale' => $locale])
@@ -170,6 +171,7 @@ class AuthController extends Controller
 
         Auth::guard('web')->login($user, $request->boolean('remember'));
         $request->session()->regenerate();
+        $request->session()->forget(\App\Support\UserTheme::PUBLIC_SESSION_KEY);
         RateLimiter::clear($throttleKey);
 
         if ($this->shouldRequireEmailVerification($user)) {
@@ -197,9 +199,12 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         $locale = app()->getLocale() ?? config('app.locale', 'en');
+        $publicTheme = \App\Support\UserTheme::forUser($request->user());
         Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+        // Keep only display preferences in the new guest session, without retaining identity.
+        $request->session()->put(\App\Support\UserTheme::PUBLIC_SESSION_KEY, $publicTheme);
 
         if ($request->header('X-Inertia')) {
             return Inertia::location(route('home', ['locale' => $locale]));

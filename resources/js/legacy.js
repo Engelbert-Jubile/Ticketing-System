@@ -5,6 +5,7 @@
 import { initTicketCreate } from './Pages/ticketCreate';
 import { initTaskCreate } from './Pages/taskCreate';
 import { initProjectCreate } from './Pages/projectCreate';
+import { applyThemePreferences, cacheThemePreferences, normalizeThemePreferences } from './utils/appearance';
 
 // ---------------------------------------------------------
 // Alpine coordination helper (gunakan Alpine bawaan Livewire)
@@ -295,7 +296,8 @@ window.layout = function layout() {
         window.addEventListener('pageshow', () => this.applyStoredTheme());
         const prefers = window.matchMedia('(prefers-color-scheme: dark)');
         prefers.addEventListener?.('change', e => {
-          if (!localStorage.getItem('theme')) document.documentElement.classList.toggle('dark', e.matches);
+          // Account preferences are explicit and do not follow another browser setting.
+          this.applyStoredTheme();
         });
         this.$root.addEventListener('toggle-theme', () => this.toggleTheme());
         const themeSync = () => this.applyStoredTheme();
@@ -441,37 +443,29 @@ window.layout = function layout() {
 
     // ---------- Theme ----------
     applyStoredTheme() {
-      try {
-        if (localStorage.getItem('darkMode') !== null && localStorage.getItem('theme') === null) {
-          const legacyDark = localStorage.getItem('darkMode') === 'true';
-          localStorage.setItem('theme', legacyDark ? 'dark' : 'light');
-          localStorage.removeItem('darkMode');
-        }
-      } catch (_) {}
-
-      let stored = null;
-      try {
-        stored = localStorage.getItem('theme');
-      } catch {
-        stored = null;
-      }
-
-      if (stored === null) {
-        try {
-          localStorage.setItem('theme', 'light');
-        } catch (_) {}
-        document.documentElement.classList.remove('dark');
-      } else if (stored === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
+      applyThemePreferences(window.tickoraTheme?.preferences);
     },
-    toggleTheme() {
-      const isDark = document.documentElement.classList.toggle('dark');
+    async toggleTheme() {
+      const context = window.tickoraTheme;
+      if (!context?.user_id || !context.save_url || this.themeBusy) return;
+      this.themeBusy = true;
+      const previous = normalizeThemePreferences(context.preferences);
+      const next = { ...previous, color_mode: previous.color_mode === 'dark' ? 'light' : 'dark' };
+      context.preferences = applyThemePreferences(next);
       try {
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
-      } catch (_) {}
+        const response = await fetch(context.save_url, {
+          method: 'PATCH', credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '' },
+          body: JSON.stringify({ user_id: context.user_id, ...next }),
+        });
+        if (!response.ok) throw new Error('save-failed');
+        const data = await response.json();
+        context.preferences = applyThemePreferences(data.theme_preferences);
+        cacheThemePreferences(context.user_id, context.preferences);
+      } catch (_) {
+        context.preferences = applyThemePreferences(previous);
+        window.alert(document.documentElement.lang === 'id' ? 'Tema belum tersimpan. Silakan coba lagi.' : 'Unable to save your theme. Please try again.');
+      } finally { this.themeBusy = false; }
     },
 
     // ---------- Mobile toggle ----------
@@ -518,7 +512,7 @@ window.topbarMenu = function topbarMenu() {
     },
     syncTheme() {
       try {
-        const stored = localStorage.getItem('theme');
+        const stored = window.tickoraTheme?.preferences?.color_mode;
         this.theme = stored === 'dark' ? 'dark' : 'light';
       } catch (_) {
         this.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';

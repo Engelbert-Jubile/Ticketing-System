@@ -23,25 +23,7 @@
   </script>
 
   {{-- THEME BOOT --}}
-  <script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}">
-    (function() {
-      try {
-        document.documentElement.classList.add('booting');
-        if (localStorage.getItem('darkMode') !== null && localStorage.getItem('theme') === null) {
-          const legacyDark = localStorage.getItem('darkMode') === 'true';
-          localStorage.setItem('theme', legacyDark ? 'dark' : 'light');
-          localStorage.removeItem('darkMode');
-        }
-        let stored = localStorage.getItem('theme');
-        if (!stored) {
-          stored = 'light';
-          localStorage.setItem('theme', 'light');
-        }
-        document.documentElement.classList.toggle('dark', stored === 'dark');
-        document.documentElement.dataset.appearance = localStorage.getItem('tickora:appearance') === 'glassy' ? 'glassy' : 'default';
-      } catch (_) {}
-    })();
-  </script>
+  @include('partials.theme-bootstrap')
 
   {{-- PRE-PAINT --}}
   <script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}">

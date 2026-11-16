@@ -191,7 +191,7 @@
                 <fieldset class="appearance-options">
                   <legend>{{ $t('Interface theme') }}</legend>
                   <label v-for="option in ['default', 'glassy']" :key="option" class="appearance-option" :class="{ 'appearance-option--selected': appearance === option }">
-                    <input type="radio" name="interface-appearance" :value="option" :checked="appearance === option" @change="emit('update-appearance', option)" />
+                    <input type="radio" name="interface-appearance" :value="option" :checked="appearance === option" :disabled="themeBusy" @change="emit('update-appearance', option)" />
                     <span class="appearance-option__preview" :class="`appearance-option__preview--${option}`" aria-hidden="true"><span class="appearance-option__mock-header"></span><span class="appearance-option__mock-sidebar"></span><span class="appearance-option__mock-card"></span><span class="appearance-option__mock-card appearance-option__mock-card--small"></span></span>
                     <span class="appearance-option__label">{{ option === 'default' ? $t('Default') : 'Glassy' }}<span v-if="appearance === option" class="material-icons" aria-hidden="true">check_circle</span></span>
                     <span class="appearance-option__caption">{{ option === 'default' ? $t('Classic and familiar') : $t('Soft, frosted surfaces') }}</span>
@@ -223,6 +223,7 @@
             type="button"
             class="topbar-icon-btn"
             :title="themeToggleTitle"
+            :disabled="themeBusy"
             :aria-label="themeToggleTitle"
             @click="emitToggleTheme"
           >
@@ -262,6 +263,7 @@ import { useI18n } from '../i18n'
 import ProfileAvatar from './ProfileAvatar.vue'
 
 const props = defineProps({
+  themeBusy: { type: Boolean, default: false },
   appearance: { type: String, default: 'default' },
   localeBusy: { type: Boolean, default: false },
   user: {
@@ -395,7 +397,7 @@ const closeAppearance = () => {
 }
 const handleAppearanceFocusOut = () => {
   nextTick(() => {
-    if (colorPickerOpen.value && !colorPickerRef.value?.contains(document.activeElement) && !appearancePanelRef.value?.contains(document.activeElement)) closeColorPicker()
+    if (!props.themeBusy && colorPickerOpen.value && !colorPickerRef.value?.contains(document.activeElement) && !appearancePanelRef.value?.contains(document.activeElement)) closeColorPicker()
   })
 }
 
@@ -536,6 +538,12 @@ watch(colorPickerOpen, async open => {
   if (!open) return
   await nextTick()
   appearancePanelRef.value?.querySelector('input[type="radio"]:checked')?.focus()
+})
+
+watch(() => props.themeBusy, async busy => {
+  if (busy || !colorPickerOpen.value) return
+  await nextTick()
+  if (document.activeElement === document.body) appearancePanelRef.value?.querySelector('input[type="radio"]:checked')?.focus()
 })
 
 defineExpose({

@@ -1,18 +1,21 @@
-export const APPEARANCE_KEY = 'tickora:appearance';
-
 export const normalizeAppearance = value => value === 'glassy' ? 'glassy' : 'default';
-
-export function readAppearance(storage) {
-  try { return normalizeAppearance((storage ?? window.localStorage).getItem(APPEARANCE_KEY)); }
-  catch { return 'default'; }
+export function normalizeThemePreferences(value) {
+  return { appearance: normalizeAppearance(value?.appearance), color_mode: value?.color_mode === 'dark' ? 'dark' : 'light' };
 }
-
-export function applyAppearance(value, root = document.documentElement) {
-  root.dataset.appearance = normalizeAppearance(value);
+export function themeStorageKey(userId) {
+  const id = Number(userId);
+  return Number.isSafeInteger(id) && id > 0 ? `tickora:theme:user:${id}` : null;
 }
-
-export function saveAppearance(value, storage) {
-  const appearance = normalizeAppearance(value);
-  try { (storage ?? window.localStorage).setItem(APPEARANCE_KEY, appearance); } catch { /* The selection still works when storage is unavailable. */ }
-  return appearance;
+export function cacheThemePreferences(userId, preferences, storage) {
+  const key = themeStorageKey(userId);
+  if (!key) return;
+  try { (storage ?? window.localStorage).setItem(key, JSON.stringify(normalizeThemePreferences(preferences))); } catch { /* The database remains the source of truth. */ }
+}
+export function applyThemePreferences(preferences, root = document.documentElement) {
+  const value = normalizeThemePreferences(preferences);
+  root.dataset.appearance = value.appearance;
+  root.classList.toggle('dark', value.color_mode === 'dark');
+  root.classList.toggle('light', value.color_mode === 'light');
+  root.style.colorScheme = value.color_mode;
+  return value;
 }

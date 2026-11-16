@@ -117,6 +117,22 @@ class AccountController extends Controller
         ]);
     }
 
+    public function updateTheme(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'user_id' => ['required', 'integer'],
+            'appearance' => ['required', 'in:default,glassy'],
+            'color_mode' => ['required', 'in:light,dark'],
+        ]);
+
+        // A stale tab/request must never save the previous account's theme to a new login.
+        abort_unless((int) $validated['user_id'] === (int) $request->user()->getKey(), 409);
+        $preferences = \App\Support\UserTheme::normalize($validated);
+        $request->user()->forceFill(['theme_preferences' => $preferences])->save();
+
+        return response()->json(['theme_preferences' => $preferences]);
+    }
+
     /**
      * Tampilkan form ubah password
      */
