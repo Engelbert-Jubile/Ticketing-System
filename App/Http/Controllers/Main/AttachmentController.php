@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
 class AttachmentController extends BaseController
 {
@@ -174,7 +175,10 @@ class AttachmentController extends BaseController
 
         $mime = $attachment->mime ?: 'application/octet-stream';
 
-        return response()->file($fullPath, ['Content-Type' => $mime]);
+        $response = response()->file($fullPath, ['Content-Type' => $mime]);
+        $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_INLINE, $attachment->original_name);
+
+        return $response;
     }
 
     // GET /dashboard/attachments/{attachment}/download

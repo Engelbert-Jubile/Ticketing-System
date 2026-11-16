@@ -1,4 +1,5 @@
 import './bootstrap';
+import './attachmentPreview';
 import '../css/app.css';
 import '../css/header.css';
 import '../css/header-fixes.css';

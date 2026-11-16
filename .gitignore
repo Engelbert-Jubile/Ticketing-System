@@ -89,6 +89,7 @@ html-starter/
 js/
 !resources/js/
 resources/js/*
+!resources/js/attachmentPreview.js
 !resources/js/Components/
 resources/js/Components/*
 !resources/js/Components/WorkflowSelect.vue
@@ -97,12 +98,14 @@ resources/js/Components/*
 !resources/js/Components/WorkflowStatusDialog.vue
 !resources/js/Components/DraftNotice.vue
 !resources/js/Components/TicketCollaboration.vue
+!resources/js/Components/AttachmentPreview.vue
 !resources/js/composables/
 !resources/js/composables/useFormDraft.js
 !resources/js/utils/
 resources/js/utils/*
 !resources/js/utils/workflowStatus.js
 !resources/js/utils/plainText.js
+!resources/js/utils/attachmentPreview.js
 !resources/js/Pages/
 resources/js/Pages/*
 !resources/js/Pages/Workflows/
@@ -131,3 +134,6 @@ docs/workflow-language-update*.md
 /tests/AccountProfileTest*.php
 /tests/CsrfRotationTest*.php
 /tests/UsageMetricsTest*.php
+/tests/attachment-preview*.test.mjs
+/tests/AttachmentPreview*.Test.php
+/tests/AttachmentPreviewTest.php
