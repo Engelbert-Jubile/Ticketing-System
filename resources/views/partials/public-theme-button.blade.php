@@ -34,7 +34,10 @@
       window.setPublicTheme({ appearance: picker.querySelector('input[name="public-appearance"]:checked').value, color_mode: dark.checked ? 'dark' : 'light' });
     });
     picker.addEventListener('keydown', function (event) { if (event.key === 'Escape') close(true); });
-    picker.addEventListener('focusout', function (event) { if (!picker.contains(event.relatedTarget)) close(false); });
+    picker.addEventListener('focusout', function (event) {
+      // Clicking a radio label briefly moves focus to the body before activating its input.
+      if (event.relatedTarget && !picker.contains(event.relatedTarget)) close(false);
+    });
     document.addEventListener('click', function (event) { if (!picker.contains(event.target)) close(false); });
     function sync() {
       var preferences = window.tickoraTheme.preferences;
