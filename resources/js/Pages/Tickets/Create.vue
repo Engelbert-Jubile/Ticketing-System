@@ -76,9 +76,16 @@
           </div>
 
           <div>
-            <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Jenis Ticket") }}</label>
+            <label for="ticket-type" class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Jenis Ticket") }}</label>
             <div class="mt-1 w-full">
-              <FancySelect :aria-label="$t(&quot;Jenis ticket&quot;)" v-model="form.type" :options="typeOptions" :disabled="true" accent="blue" />
+              <input
+                id="ticket-type"
+                :aria-label="$t(&quot;Jenis ticket&quot;)"
+                type="text"
+                value="Task"
+                readonly
+                class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+              />
             </div>
             <p v-if="form.errors.type" class="mt-1 text-xs text-red-500">{{ form.errors.type }}</p>
           </div>
