@@ -83,8 +83,8 @@
                 :aria-label="$t(&quot;Jenis ticket&quot;)"
                 type="text"
                 value="Task"
-                readonly
-                class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                disabled
+                class="w-full cursor-not-allowed select-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-500 shadow-sm dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400"
               />
             </div>
             <p v-if="form.errors.type" class="mt-1 text-xs text-red-500">{{ form.errors.type }}</p>
