@@ -179,7 +179,7 @@ HTML;
         return strtr($html, [
             '__NONCE__' => $nonceAttr,
             '__LOGIN_TITLE__' => e(__('Signing in, please wait...')),
-            '__LOGIN_SUBTITLE__' => e(__('We are preparing your Tickora dashboard.')),
+            '__LOGIN_SUBTITLE__' => e(__('We are preparing your TACTIC dashboard.')),
         ]);
     }
 }

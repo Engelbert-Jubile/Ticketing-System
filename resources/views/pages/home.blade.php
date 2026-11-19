@@ -4,7 +4,7 @@
 
 @section('content')
   <div class="text-center welcome-text">
-    <h1>Welcome to the Ticketing System</h1>
+    <h1>Welcome to the Ticket Integrated Center</h1>
     <p class="lead">This is the homepage of your Laravel project using Bootstrap Materialize template.</p>
 
     @auth

@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const welcomeText = document.querySelector('.welcome-text');
   if (welcomeText) {
     welcomeText.addEventListener('click', () => {
-      alert('Selamat datang di Ticketing System!');
+      alert('Selamat datang di Ticket Integrated Center!');
     });
   }
 

@@ -30,7 +30,7 @@
                       text-gray-900 dark:text-gray-100
                       focus:outline-none focus:ring-2 focus:ring-blue-500" />
         @error('password') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-        <a href="https://wa.me/62895393358741?text={{ urlencode('Halo, saya ingin reset password akun Tickora. Email saya: ' . old('email')) }}"
+        <a href="https://wa.me/62895393358741?text={{ urlencode('Halo, saya ingin reset password akun TACTIC. Email saya: ' . old('email')) }}"
            onclick="return confirm('Anda akan diarahkan ke WhatsApp untuk mengirim permintaan reset password. Lanjutkan?')"
            target="_blank" rel="noopener"
            class="mt-2 block text-right text-sm text-blue-600 hover:underline">

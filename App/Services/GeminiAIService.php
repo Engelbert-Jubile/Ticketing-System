@@ -51,7 +51,7 @@ class GeminiAIService
         }
 
         $systemPrompt = <<<PROMPT
-Kamu adalah "Gemini", asisten AI untuk Ticket Management System internal perusahaan.
+Kamu adalah "Gemini", asisten AI untuk Ticket Integrated Center internal perusahaan.
 Tugasmu:
 - Berikan jawaban ringkas, jelas, dan praktis menggunakan Bahasa Indonesia kecuali user meminta bahasa lain.
 - Jawab pertanyaan seputar tiket, task, project, laporan, analisis sederhana, serta perhitungan umum.

@@ -32,9 +32,9 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>{{ __('Login') }} - Tickora</title>
-  <meta name="application-name" content="Tickora">
-  <meta name="apple-mobile-web-app-title" content="Tickora">
+  <title>{{ config('app.browser_title') }}</title>
+  <meta name="application-name" content="TACTIC">
+  <meta name="apple-mobile-web-app-title" content="TACTIC">
   <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v={{ filemtime(public_path('favicon.svg')) }}">
   <link rel="alternate icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v={{ filemtime(public_path('favicon.ico')) }}">
 
@@ -98,10 +98,10 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
           </div>
 
           <h1 class="text-4xl font-extrabold tracking-tight sm:text-5xl" style="color: var(--brand-blue);">
-            TIC<span class="brand-accent-k" data-letter="K">K</span>ORA
+            TAC<span style="color: var(--brand-orange);">T</span>IC
           </h1>
           <p class="mt-2 text-sm font-medium tracking-wide" style="color: var(--brand-blue);">
-            {{ __('Ticket Management System') }}
+            {{ __('Ticket Integrated Center') }}
           </p>
         </div>
 

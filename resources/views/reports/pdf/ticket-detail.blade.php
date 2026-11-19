@@ -28,6 +28,7 @@
     </style>
 </head>
 <body>
+    <p class="muted">{{ config('app.name') }}</p>
     <h1>{{ $title }}</h1>
 
     <div class="grid">

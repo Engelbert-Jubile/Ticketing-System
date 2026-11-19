@@ -112,7 +112,10 @@ return [
 
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', 'Example'),
+        'name' => match (strtolower(trim((string) env('MAIL_FROM_NAME', '')))) {
+            '', 'tickora', 'tickora - ticket management system' => config('app.name'),
+            default => env('MAIL_FROM_NAME'),
+        },
     ],
 
 ];

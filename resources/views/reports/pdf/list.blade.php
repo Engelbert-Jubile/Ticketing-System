@@ -68,6 +68,7 @@
     </style>
 </head>
 <body>
+    <p class="small">{{ config('app.name') }}</p>
     <h1>{{ $title }}</h1>
 
     <div class="meta">

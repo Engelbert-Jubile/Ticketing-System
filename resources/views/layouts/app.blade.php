@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>@yield('title', 'Tickora')</title>
+  <title>{{ config('app.browser_title') }}</title>
 
   {{-- Custom Header Styles --}}
   <link rel="stylesheet" href="{{ asset('css/header.css') }}">
@@ -453,7 +453,7 @@
           <span class="topbar__logo" aria-hidden="true">
             <i class="material-icons">support</i>
           </span>
-          <span class="topbar__brand-text">Ticketing System</span>
+          <span class="topbar__brand-text">Ticket Integrated Center</span>
         </a>
       </div>
 

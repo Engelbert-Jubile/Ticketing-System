@@ -1,6 +1,6 @@
 <template>
   <div class="profile-page mx-auto max-w-[1440px] space-y-4 px-4 py-5">
-    <header><p class="eyebrow">TICKORA / {{ tr('Akun saya', 'My account') }}</p><h1 class="mt-2 text-3xl font-bold">{{ tr('Profil & preferensi', 'Profile & preferences') }}</h1><p class="mt-2 text-sm text-slate-500">{{ tr('Kelola identitas, foto, dan keamanan akun Anda dalam satu tempat.', 'Manage your identity, photo, and account security in one place.') }}</p></header>
+    <header><p class="eyebrow">TACTIC / {{ tr('Akun saya', 'My account') }}</p><h1 class="mt-2 text-3xl font-bold">{{ tr('Profil & preferensi', 'Profile & preferences') }}</h1><p class="mt-2 text-sm text-slate-500">{{ tr('Kelola identitas, foto, dan keamanan akun Anda dalam satu tempat.', 'Manage your identity, photo, and account security in one place.') }}</p></header>
     <div v-if="flash.success || flash.error" role="status" class="notice text-sm" :class="flash.error ? 'text-rose-600' : 'text-emerald-600'">{{ flash.success || flash.error }}</div>
     <section class="account-summary flex flex-wrap items-center gap-4 rounded-2xl border border-slate-200 bg-white px-5 py-3 dark:border-slate-700 dark:bg-slate-900" :aria-label="tr('Ringkasan akun', 'Account summary')">
       <ProfileAvatar :src="avatar" :template="form.avatar_template" :label="fullName" class="h-12 w-12" />

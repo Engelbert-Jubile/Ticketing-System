@@ -1,11 +1,11 @@
 <template>
   <section class="space-y-12">
-    <Head title="Ticketing System" />
+    <Head title="Ticket Integrated Center" />
 
     <div class="space-y-4 text-center">
       <span class="inline-flex items-center justify-center gap-2 rounded-full border border-indigo-200/70 bg-white/70 px-5 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-indigo-500">
         <span class="material-icons text-base text-indigo-500">confirmation_number</span>
-        Ticketing System
+        Ticket Integrated Center
       </span>
       <h1 class="text-3xl font-bold text-slate-900">{{ $t("Kelola tiket, task, dan project secara terpadu") }}</h1>
       <p class="text-sm text-gray-500">

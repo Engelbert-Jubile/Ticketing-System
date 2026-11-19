@@ -147,3 +147,5 @@ docs/workflow-language-update*.md
 /tests/UserThemePreferencesTest*.php
 /tests/theme-scope*.test.mjs
 /tests/ThemeScopeTest*.php
+/tests/BrandingTest*.php
+/docs/domain-migration*.md

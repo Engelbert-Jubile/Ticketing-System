@@ -106,6 +106,7 @@ class SLAReportController extends Controller
                 return;
             }
 
+            fputcsv($handle, [config('app.name')]);
             fputcsv($handle, $this->csvHeaders($filters['type']));
 
             foreach ($records as $row) {

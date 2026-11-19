@@ -10,16 +10,19 @@ import { createApp, h } from 'vue';
 import { createInertiaApp, router } from '@inertiajs/vue3';
 import { InertiaProgress } from '@inertiajs/progress';
 import { ZiggyVue } from 'ziggy-js/dist/vue.m';
-import { Ziggy } from './ziggy';
+import { Ziggy as generatedZiggy } from './ziggy';
 import AppLayout from './Layouts/AppLayout.vue';
 import { createI18n } from './i18n';
 
 const pages = import.meta.glob('./Pages/**/*.vue');
 
-const formatDocumentTitle = (title) => {
-  const pageTitle = String(title || '').trim().replace(/(?:\s*[-–—|]\s*Tickora)+$/i, '').trim();
-  return pageTitle ? `${pageTitle} - Tickora` : 'Tickora';
+// Use the active application host when the generated route table predates a domain change.
+const Ziggy = {
+  ...generatedZiggy,
+  ...(typeof window !== 'undefined' ? { url: window.location.origin, port: window.location.port || null } : {}),
 };
+
+const formatDocumentTitle = () => 'Ticket Integrated Center - TACTIC';
 
 createInertiaApp({
   title: formatDocumentTitle,

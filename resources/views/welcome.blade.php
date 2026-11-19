@@ -4,7 +4,7 @@
 <head>
     @include('partials.public-theme-bootstrap')
     <meta charset="UTF-8">
-    <title>{{ __('Ticket Management System') }} - Tickora</title>
+    <title>{{ config('app.browser_title') }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -123,7 +123,6 @@
 
 <body class="font-sans antialiased">
     <div class="public-page relative min-h-screen overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-        @include('partials.public-theme-button')
         <div aria-hidden="true" class="public-ambient pointer-events-none absolute inset-0">
             <div class="absolute -top-24 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-blue-200/70 blur-3xl dark:bg-blue-900/30"></div>
             <div class="absolute -bottom-28 -left-28 h-80 w-80 rounded-full bg-amber-200/70 blur-3xl dark:bg-amber-900/25"></div>
@@ -181,8 +180,8 @@
                 <img src="https://img.icons8.com/?size=256&id=5LdqaP8dgiOs&format=png" alt="Ticket icon" class="icon-image" loading="lazy" />
             </div>
             <h1 class="flex flex-col gap-1 tms-title">
-                <span class="tms-title-main text-4xl font-bold tracking-tight sm:text-5xl">TIC<span class="accent-k" data-letter="K">K</span>ORA</span>
-                <span class="tms-subtitle text-xl font-medium tracking-wide sm:text-2xl">{{ __('Ticket Management System') }}</span>
+                <span class="tms-title-main text-4xl font-bold tracking-tight sm:text-5xl">TAC<span class="accent">T</span>IC</span>
+                <span class="tms-subtitle text-xl font-medium tracking-wide sm:text-2xl">{{ __('Ticket Integrated Center') }}</span>
             </h1>
         </div>
 
@@ -192,7 +191,7 @@
             </div>
             <h2 class="text-2xl font-semibold text-slate-900">{{ __('Sign in to your account') }}</h2>
             <p class="mt-2 text-sm text-slate-600">
-                {{ __('Access all Dashboard, Ticket, Task, and Project features.') }}
+                {{ __('Access Dashboard, Ticket, Task.') }}
             </p>
             <div class="mt-6 grid gap-3">
                 <a href="{{ route('login', ['locale' => app()->getLocale() ?? config('app.locale', 'en')]) }}" class="inline-flex items-center justify-center gap-2 rounded-xl border border-blue-600 bg-white px-6 py-3 text-sm font-semibold text-blue-600 transition hover:bg-blue-50">
@@ -223,8 +222,8 @@
                         <span class="material-icons text-xl">workspace_premium</span>
                     </span>
                     <span class="flex flex-col text-slate-900 leading-tight">
-                        <span>{{ __('Team') }}</span>
-                        <span>{{ __('Workspace') }}</span>
+                        <span>{{ __('Ticket') }}</span>
+                        <span>{{ __('Actions') }}</span>
                     </span>
                 </span>
             </div>
@@ -243,8 +242,8 @@
                         <span class="material-icons text-xl">bolt</span>
                     </span>
                     <span class="flex flex-col text-slate-900 leading-tight">
-                        <span>{{ __('Team') }}</span>
-                        <span>{{ __('Operations') }}</span>
+                        <span>{{ __('Task') }}</span>
+                        <span>{{ __('Services') }}</span>
                     </span>
                 </span>
             </div>

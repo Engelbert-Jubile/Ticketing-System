@@ -1,4 +1,4 @@
-Ticketing System (TICKORA)
+TACTIC - Ticket Integrated Center
 
 Ticketing System is a web-based application for managing issue tickets, task assignments, and workflow status within a team or internal organization.
 

@@ -27,6 +27,7 @@
     </style>
 </head>
 <body>
+    <p class="muted">{{ config('app.name') }}</p>
 @php
     $primary = $summary;
     if ($type === 'ticket_work') {

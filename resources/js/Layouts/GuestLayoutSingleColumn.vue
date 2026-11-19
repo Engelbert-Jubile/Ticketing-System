@@ -13,7 +13,7 @@
             <span class="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 text-xl shadow-[0_12px_40px_-20px_rgba(59,130,246,0.8)]">
               <span class="material-icons text-base">confirmation_number</span>
             </span>
-            Ticketing System
+            Ticket Integrated Center
           </Link>
           <h1 class="mt-10 text-4xl font-semibold leading-tight text-white sm:text-[44px] sm:leading-tight">
             {{ $t("Kelola tiket, task, dan project dengan tampilan modern") }}

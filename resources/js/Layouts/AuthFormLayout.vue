@@ -11,7 +11,7 @@
         <span class="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-cyan-400 text-white shadow-lg shadow-indigo-500/35">
           <span class="material-icons text-base">confirmation_number</span>
         </span>
-        Ticketing System
+        Ticket Integrated Center
       </Link>
 
       <div class="public-content relative">

@@ -13,7 +13,12 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Tickora'),
+    'name' => match (strtolower(trim((string) env('APP_NAME', '')))) {
+        '', 'tickora', 'tickora - ticket management system' => 'TACTIC - Ticket Integrated Center',
+        default => env('APP_NAME'),
+    },
+
+    'browser_title' => 'Ticket Integrated Center - TACTIC',
 
     /*
     |--------------------------------------------------------------------------

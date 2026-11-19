@@ -4,7 +4,7 @@
 <head>
     @include('partials.public-theme-bootstrap')
     <meta charset="utf-8">
-    <title>{{ config('app.name', 'Tickora') }}</title>
+    <title>{{ config('app.browser_title') }}</title>
 
     @vite(['resources/css/app.css', 'resources/css/public.css'])
     @livewireStyles

@@ -24,13 +24,13 @@
           <span class="topbar__logo" aria-hidden="true">
             <img
               src="https://img.icons8.com/?size=256&id=5LdqaP8dgiOs&format=png"
-              :alt="$t(&quot;Ikon Ticket Management System&quot;)"
+              :alt="$t(&quot;Ikon Ticket Integrated Center&quot;)"
               class="topbar__logo-img"
               loading="lazy"
               decoding="async"
             />
           </span>
-          <span class="topbar__brand-text">TICKORA</span>
+          <span class="topbar__brand-text">TACTIC</span>
         </Link>
       </div>
 

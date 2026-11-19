@@ -51,7 +51,7 @@ class WorkItemNotification extends Notification implements ShouldQueue
     {
         $senderName = $this->payload['actor'] ?? null;
         $senderUnit = Arr::get($this->payload, 'actor_unit');
-        $signatureName = $senderName ?: 'Ticketing System';
+        $signatureName = $senderName ?: config('app.name');
         $signatureLine = $senderUnit ? $signatureName.' - '.$senderUnit : $signatureName;
 
         $mail = (new MailMessage)
@@ -92,7 +92,7 @@ class WorkItemNotification extends Notification implements ShouldQueue
 
         $mail->line('Best Regards,');
         $mail->line($signatureLine);
-        $mail->line('Ticketing System');
+        $mail->line(config('app.name'));
 
         $mail->line('________________________________');
         $mail->line('Pemberitahuan : E-mail ini (dan lampiran apa pun) dimaksudkan semata-mata untuk penggunaan individu atau entitas yang dituju dan mungkin berisi informasi yang secara hukum memiliki hak istimewa dan/atau rahasia. Jika Anda bukan penerima yang dituju (atau menerima e-mail ini karena kesalahan), harap segera beri tahu pengirim dan hapus e-mail ini. Setiap penggunaan, penyebaran, distribusi, atau penyalinan yang tidak sah dari setiap dan semua bagian dari e-mail ini sangat dilarang. Terima Kasih.');

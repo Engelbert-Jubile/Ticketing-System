@@ -7,8 +7,8 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>@yield('title', 'Error') - Tickora</title>
-  <meta name="application-name" content="Tickora">
+  <title>{{ config('app.browser_title') }}</title>
+  <meta name="application-name" content="TACTIC">
   <style>
     :root {
       --bg-start: #eef2ff;
