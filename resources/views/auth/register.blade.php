@@ -184,8 +184,8 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
     <div class="relative flex min-h-screen items-center justify-center p-4">
       <div class="w-full max-w-xl">
         <div class="mb-7 flex flex-col items-center text-center">
-          <h1 class="w-full max-w-sm">
-            <x-brand-logo />
+          <h1 class="w-full" style="max-width: 320px;">
+            <x-brand-logo :stacked="true" />
           </h1>
         </div>
 

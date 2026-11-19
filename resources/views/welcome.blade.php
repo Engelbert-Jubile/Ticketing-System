@@ -174,8 +174,8 @@
         <div class="relative flex min-h-screen items-center justify-center px-4 py-12">
             <div class="flex w-full max-w-3xl flex-col items-center justify-center gap-8 text-center">
         <div class="flex w-full flex-col items-center gap-6">
-            <h1 class="w-full max-w-md px-2">
-                <x-brand-logo />
+            <h1 class="w-full" style="max-width: 320px;">
+                <x-brand-logo :stacked="true" />
             </h1>
         </div>
 
