@@ -66,47 +66,31 @@
           <p id="ticket-reason-error" role="alert" v-if="form.errors.reason" class="mt-1 text-xs text-red-500">{{ form.errors.reason }}</p>
         </div>
 
-        <div>
-          <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Prioritas") }} <span class="text-red-500">*</span></label>
-          <div class="mt-1 w-full">
-            <FancySelect :aria-label="$t(&quot;Prioritas ticket&quot;)" v-model="form.priority" :options="priorityOptions" accent="subtle" />
+        <div class="grid gap-4 md:col-span-2 md:grid-cols-3">
+          <div>
+            <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Prioritas") }} <span class="text-red-500">*</span></label>
+            <div class="mt-1 w-full">
+              <FancySelect :aria-label="$t(&quot;Prioritas ticket&quot;)" v-model="form.priority" :options="priorityOptions" accent="subtle" />
+            </div>
+            <p v-if="form.errors.priority" class="mt-1 text-xs text-red-500">{{ form.errors.priority }}</p>
           </div>
-          <p v-if="form.errors.priority" class="mt-1 text-xs text-red-500">{{ form.errors.priority }}</p>
-        </div>
 
-        <div>
-          <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Jenis Ticket") }}</label>
-          <div class="mt-1 w-full">
-            <FancySelect :aria-label="$t(&quot;Jenis ticket&quot;)" v-model="form.type" :options="typeOptions" :disabled="true" accent="blue" />
+          <div>
+            <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Jenis Ticket") }}</label>
+            <div class="mt-1 w-full">
+              <FancySelect :aria-label="$t(&quot;Jenis ticket&quot;)" v-model="form.type" :options="typeOptions" :disabled="true" accent="blue" />
+            </div>
+            <p v-if="form.errors.type" class="mt-1 text-xs text-red-500">{{ form.errors.type }}</p>
           </div>
-          <p v-if="form.errors.type" class="mt-1 text-xs text-red-500">{{ form.errors.type }}</p>
-        </div>
 
-        <div>
-          <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Status</label>
-          <div class="relative mt-1 w-full">
-            <FancySelect
-              aria-label="Status ticket" v-model="form.status"
-              :options="statusOptions"
-              :disabled="statusLocked"
-              accent="blue"
-            />
+          <div>
+            <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">SLA</label>
+            <div class="mt-1 w-full">
+              <FancySelect aria-label="SLA ticket" v-model="form.sla" :options="slaSelectOptions" accent="subtle" />
+            </div>
+            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ $t("Pilih SLA yang berlaku atau biarkan kosong bila belum ditentukan.") }}</p>
+            <p v-if="form.errors.sla" class="mt-1 text-xs text-red-500">{{ form.errors.sla }}</p>
           </div>
-          <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ $t("Status awal: New.") }}</p>
-          <div class="mt-1 space-y-0.5 text-xs text-slate-500 dark:text-slate-400">
-            <p>{{ $t("Status: In Progress dan Confirmation hanya diubah oleh Agent.") }}</p>
-            <p>{{ $t("Status: Revision, Done, Cancelled, dan On Hold hanya diubah oleh Requester.") }}</p>
-          </div>
-          <p v-if="form.errors.status" class="mt-1 text-xs text-red-500">{{ form.errors.status }}</p>
-        </div>
-
-        <div>
-          <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">SLA</label>
-          <div class="mt-1 w-full">
-            <FancySelect aria-label="SLA ticket" v-model="form.sla" :options="slaSelectOptions" accent="subtle" />
-          </div>
-          <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ $t("Pilih SLA yang berlaku atau biarkan kosong bila belum ditentukan.") }}</p>
-          <p v-if="form.errors.sla" class="mt-1 text-xs text-red-500">{{ form.errors.sla }}</p>
         </div>
 
         <div>
@@ -400,7 +384,7 @@
         </button>
         <button
           type="submit"
-          class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-70"
+          class="ticket-save-button inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:brightness-105 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-70"
           :disabled="form.processing"
         >
           <span class="material-icons text-base" v-if="form.processing">hourglass_top</span>
@@ -456,7 +440,7 @@ const form = useForm({
   letter_no: '',
   priority: props.defaults.priority ?? null,
   type: props.defaults.type ?? 'task',
-  status: props.defaults.status ?? 'new',
+  status: 'new',
   sla: props.defaults.sla ?? null,
   start_at: props.defaults.start_at ?? props.defaults.due_date ?? null,
   due_date: props.defaults.due_date ?? null,
@@ -508,7 +492,6 @@ const attachmentFilterHint = computed(() => (
 const uploaderRef = ref(null);
 
 const userOptions = computed(() => props.userOptions ?? []);
-const statusLocked = computed(() => Boolean(props.meta?.lockStatus));
 const canSelectRequester = computed(() => Boolean(props.meta?.canSelectRequester));
 const requesterLabel = computed(() => props.meta?.requesterLabel ?? '');
 const minTicketDate = computed(() => props.meta?.minTicketDate ?? new Date().toISOString().slice(0, 10));
@@ -521,9 +504,7 @@ const slaSelectOptions = computed(() => (
 
 watchEffect(() => {
   form.type = 'task';
-  if (statusLocked.value) {
-    form.status = props.defaults?.status ?? 'new';
-  }
+  form.status = 'new';
 });
 const userLookup = computed(() => {
   const map = new Map();
@@ -891,7 +872,7 @@ function resetForm() {
   form.reset();
   form.priority = props.defaults.priority ?? null;
   form.type = 'task';
-  form.status = props.defaults.status ?? 'new';
+  form.status = 'new';
   form.start_at = props.defaults.start_at ?? props.defaults.due_date ?? null;
   form.due_date = props.defaults.due_date ?? null;
   form.due_at = props.defaults.due_at ?? null;
@@ -966,6 +947,7 @@ function prepareSubmission() {
   });
 
   form.type = 'task';
+  form.status = 'new';
   form.agent_id = null;
   form.start_at = normalizeDateValue(form.start_at);
   form.finish_at = normalizeDateValue(form.finish_at);
@@ -1046,6 +1028,15 @@ const formatUserOptionLabel = option => {
 </script>
 
 <style scoped>
+.ticket-save-button {
+  background: var(--app-header-background, linear-gradient(120deg, #2563eb 0%, #4338ca 45%, #1d4ed8 100%));
+  box-shadow: 0 10px 20px -10px color-mix(in srgb, var(--user-accent-color, #4338ca) 70%, transparent);
+}
+
+.ticket-save-button .material-icons {
+  color: #fff !important;
+}
+
 .material-icons {
   font-size: inherit;
 }

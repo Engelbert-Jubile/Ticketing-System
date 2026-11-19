@@ -151,3 +151,5 @@ docs/workflow-language-update*.md
 /tests/BrandingTest*.php
 /docs/domain-migration*.md
 /docs/branding-tickme*.md
+/docs/upload-limits*.md
+/tests/AttachmentUploadTest*.php

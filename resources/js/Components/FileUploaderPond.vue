@@ -1,5 +1,7 @@
 <template>
-  <input ref="inputRef" type="file" />
+  <div class="file-uploader-pond">
+    <input ref="inputRef" type="file" />
+  </div>
 </template>
 
 <script setup>
@@ -136,6 +138,8 @@ onMounted(async () => {
     name: 'file',
     allowMultiple: props.multiple,
     maxFiles: props.multiple ? null : 1,
+    maxFileSize: 10 * 1024 * 1024,
+    fileSizeBase: 1024,
     acceptedFileTypes: props.acceptedFileTypes,
     allowBrowse: !props.disabled,
     allowDrop: !props.disabled,
@@ -232,6 +236,14 @@ watch(
 </script>
 
 <style scoped>
+.file-uploader-pond {
+  padding-bottom: 1.5rem;
+}
+
+.file-uploader-pond :deep(.filepond--root) {
+  margin-bottom: 0;
+}
+
 input[type='file'] {
   display: none;
 }

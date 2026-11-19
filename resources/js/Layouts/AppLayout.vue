@@ -253,6 +253,11 @@ const isDesktop = ref(false)
 let headerColorSaveTimer = null
 const shellStyle = computed(() => ({
   '--user-accent-color': headerColor.value || '#4338ca',
+  '--app-header-background': headerColor.value
+    ? 'linear-gradient(120deg, color-mix(in srgb, var(--user-accent-color) 88%, white) 0%, var(--user-accent-color) 48%, color-mix(in srgb, var(--user-accent-color) 82%, black) 100%)'
+    : theme.value === 'dark'
+      ? 'linear-gradient(120deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.92) 60%, rgba(30, 64, 175, 0.85) 100%)'
+      : 'linear-gradient(120deg, #2563eb 0%, #4338ca 45%, #1d4ed8 100%)',
 }))
 
 const SIDEBAR_LOGOUT_REASON_KEY = 'sidebar:logoutReason'
