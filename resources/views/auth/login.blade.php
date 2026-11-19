@@ -89,7 +89,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
       <div class="w-full max-w-md">
         <div class="mb-7 flex flex-col items-center text-center">
           <h1 class="w-full max-w-sm">
-            <x-brand-logo />
+            <x-brand-logo :single-line="true" />
           </h1>
         </div>
 

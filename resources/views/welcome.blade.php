@@ -175,7 +175,7 @@
             <div class="flex w-full max-w-3xl flex-col items-center justify-center gap-8 text-center">
         <div class="flex w-full flex-col items-center gap-6">
             <h1 class="w-full max-w-md px-2">
-                <x-brand-logo />
+                <x-brand-logo :single-line="true" />
             </h1>
         </div>
 
@@ -217,7 +217,7 @@
                     </span>
                     <span class="flex flex-col text-slate-900 leading-tight">
                         <span>{{ __('Ticket') }}</span>
-                        <span>{{ __('Actions') }}</span>
+                        <span>{{ __('Integration') }}</span>
                     </span>
                 </span>
             </div>
