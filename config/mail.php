@@ -112,10 +112,7 @@ return [
 
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => match (strtolower(trim((string) env('MAIL_FROM_NAME', '')))) {
-            '', 'tickora', 'tickora - ticket management system' => config('app.name'),
-            default => env('MAIL_FROM_NAME'),
-        },
+        'name' => \App\Support\Branding::normalizeName(env('MAIL_FROM_NAME', config('app.name'))),
     ],
 
 ];

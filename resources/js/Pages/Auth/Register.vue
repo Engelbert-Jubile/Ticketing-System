@@ -4,7 +4,7 @@
 
     <div class="space-y-2 text-center">
       <h1 class="text-3xl font-bold text-slate-900">{{ $t("Buat Akun") }}</h1>
-      <p class="text-sm text-gray-500">{{ $t("Lengkapi data berikut untuk mulai menggunakan Ticket Integrated Center.") }}</p>
+      <p class="text-sm text-gray-500">{{ $t("Lengkapi data berikut untuk mulai menggunakan TICKME!.") }}</p>
     </div>
 
     <form @submit.prevent="submit" class="card grid gap-6 rounded-2xl bg-white/95 p-6 shadow-lg shadow-emerald-200/40 ring-1 ring-emerald-100 sm:grid-cols-2 sm:p-8">

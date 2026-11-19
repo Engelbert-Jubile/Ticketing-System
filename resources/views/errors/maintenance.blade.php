@@ -13,9 +13,11 @@
     .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 12px; border: 1px solid #1d4ed8; color: #1d4ed8; font-weight: 700; text-decoration: none; background: #eff6ff; box-shadow: 0 10px 25px -18px rgba(37,99,235,0.8); }
     .btn:hover { background: #dbeafe; }
     </style>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v={{ filemtime(public_path('favicon.svg')) }}">
 </head>
 <body>
     <div class="card">
+        <div style="width: 180px; margin: 0 auto 20px;"><x-brand-logo :tagline="false" /></div>
         <h1>Maintenance</h1>
         <p>The system is temporarily unavailable due to maintenance.</p>
         <p class="muted">Please try again later.</p>

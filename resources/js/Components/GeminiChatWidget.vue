@@ -6,7 +6,7 @@
         <div class="panel-ornament panel-ornament--b"></div>
         <header class="chat-header">
           <div class="chat-meta">
-            <p class="chat-title">TACTIC AI Assistant</p>
+            <p class="chat-title">TICKME! AI Assistant</p>
             <p class="chat-subtitle">{{ $t("Partner untuk Tiket, Task, dan Project kamu") }}</p>
             <div class="chat-status">
               <span class="status-dot" aria-hidden="true"></span>
@@ -54,9 +54,9 @@
       </section>
     </transition>
 
-    <button type="button" class="fab" :aria-expanded="String(isOpen)" :aria-label="$t(&quot;Buka TACTIC AI&quot;)" @click="toggle">
+    <button type="button" class="fab" :aria-expanded="String(isOpen)" :aria-label="$t(&quot;Buka TICKME! AI&quot;)" @click="toggle">
       <span class="material-icons" aria-hidden="true">smart_toy</span>
-      <span class="fab-label">TACTIC</span>
+      <span class="fab-label">TICKME!</span>
     </button>
   </div>
 </template>
@@ -92,7 +92,7 @@ const messages = ref([
   {
     id: nextId(),
     role: 'assistant',
-    text: uiText("Halo! Saya TACTIC AI dan siap membantu pertanyaan seputar Ticket Integrated Center. Apa yang bisa saya bantu?"),
+    text: uiText("Halo! Saya TICKME! AI dan siap membantu pertanyaan seputar TICKME!. Apa yang bisa saya bantu?"),
   },
 ]);
 
@@ -141,7 +141,7 @@ const sendMessage = async () => {
     });
   } catch (err) {
     draft.value = content;
-    error.value = err.response?.status === 429 ? uiText("Batas permintaan tercapai. Tunggu satu menit lalu coba kembali.") : uiText("Tidak dapat terhubung ke TACTIC AI. Pesan Anda dipulihkan untuk dicoba kembali.");
+    error.value = err.response?.status === 429 ? uiText("Batas permintaan tercapai. Tunggu satu menit lalu coba kembali.") : uiText("Tidak dapat terhubung ke TICKME! AI. Pesan Anda dipulihkan untuk dicoba kembali.");
   } finally {
     sending.value = false;
     scrollToBottom();

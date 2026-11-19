@@ -27,7 +27,7 @@
     </style>
 </head>
 <body>
-    <p class="muted">{{ config('app.name') }}</p>
+    @include('reports.pdf.brand')
 @php
     $primary = $summary;
     if ($type === 'ticket_work') {

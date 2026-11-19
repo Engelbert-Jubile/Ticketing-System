@@ -25,7 +25,7 @@ class SettingsService
 
     public function getGroupWithMeta(string $group): array
     {
-        return Cache::remember($this->cacheKey($group), self::CACHE_TTL_SECONDS, function () use ($group) {
+        $data = Cache::remember($this->cacheKey($group), self::CACHE_TTL_SECONDS, function () use ($group) {
             $schema = SettingsSchema::group($group);
             if (! $this->repository->tableAvailable()) {
                 return [
@@ -59,6 +59,12 @@ class SettingsService
                 'meta' => $meta,
             ];
         });
+
+        if ($group === 'general' && array_key_exists('app_name', $data['values'])) {
+            $data['values']['app_name'] = \App\Support\Branding::normalizeName($data['values']['app_name']);
+        }
+
+        return $data;
     }
 
     public function get(string $group, string $key, $default = null)
@@ -92,7 +98,11 @@ class SettingsService
         $setting = $this->repository->getByGroupKey($group, $key);
 
         if ($setting) {
-            return $this->castValue($setting->value, $schema[$key]['type'] ?? 'string');
+            $value = $this->castValue($setting->value, $schema[$key]['type'] ?? 'string');
+
+            return $group === 'general' && $key === 'app_name'
+                ? \App\Support\Branding::normalizeName($value)
+                : $value;
         }
 
         return $schema[$key]['default'] ?? $default;

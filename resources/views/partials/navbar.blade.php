@@ -1,7 +1,7 @@
 {{-- resources/views/partials/navbar.blade.php --}}
 <nav class="bg-blue-600 text-white px-4 py-3 flex justify-between items-center dark:bg-gray-800">
   <div class="text-lg font-bold">
-    <a href="{{ route('dashboard') }}">Ticket Integrated Center</a>
+    <a href="{{ route('dashboard') }}" style="display: inline-block; width: 180px;"><x-brand-logo :tagline="false" /></a>
   </div>
   <div class="flex items-center space-x-4">
     {{-- Dark Mode Toggle --}}

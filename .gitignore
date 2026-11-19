@@ -102,6 +102,7 @@ resources/js/Components/*
 !resources/js/Components/DraftNotice.vue
 !resources/js/Components/TicketCollaboration.vue
 !resources/js/Components/AttachmentPreview.vue
+!resources/js/Components/BrandLogo.vue
 !resources/js/composables/
 !resources/js/composables/useFormDraft.js
 !resources/js/utils/
@@ -149,3 +150,4 @@ docs/workflow-language-update*.md
 /tests/ThemeScopeTest*.php
 /tests/BrandingTest*.php
 /docs/domain-migration*.md
+/docs/branding-tickme*.md

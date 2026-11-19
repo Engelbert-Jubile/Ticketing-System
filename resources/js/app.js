@@ -22,7 +22,8 @@ const Ziggy = {
   ...(typeof window !== 'undefined' ? { url: window.location.origin, port: window.location.port || null } : {}),
 };
 
-const formatDocumentTitle = () => 'Ticket Integrated Center - TACTIC';
+const brandTitle = document.title;
+const formatDocumentTitle = () => brandTitle;
 
 createInertiaApp({
   title: formatDocumentTitle,

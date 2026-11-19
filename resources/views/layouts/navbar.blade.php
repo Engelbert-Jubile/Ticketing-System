@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
   <div class="container-fluid">
-    <a class="navbar-brand" href="{{ route('dashboard') }}">Dashboard</a>
+    <a class="navbar-brand" href="{{ route('dashboard') }}" style="width: 180px;"><x-brand-logo :tagline="false" /></a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown">
       <span class="navbar-toggler-icon"></span>
     </button>

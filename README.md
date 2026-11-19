@@ -1,6 +1,6 @@
-TACTIC - Ticket Integrated Center
+TICKME! — Ticketing, Integration & Collaboration – KFTD Project Management Ecosystem
 
-Ticketing System is a web-based application for managing issue tickets, task assignments, and workflow status within a team or internal organization.
+TICKME! is a web-based application for managing issue tickets, task assignments, and workflow status within a team or internal organization.
 
 Status: In active development
 

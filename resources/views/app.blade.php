@@ -6,10 +6,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @include('partials.theme-bootstrap')
     <title inertia>{{ config('app.browser_title') }}</title>
-    <meta name="application-name" content="TACTIC">
-    <meta name="apple-mobile-web-app-title" content="TACTIC">
+    <meta name="application-name" content="TICKME!">
+    <meta name="apple-mobile-web-app-title" content="TICKME!">
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v={{ filemtime(public_path('favicon.svg')) }}">
-<link rel="alternate icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v={{ filemtime(public_path('favicon.ico')) }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     @routes(nonce: $cspNonce ?? request()->attributes->get('csp_nonce'))

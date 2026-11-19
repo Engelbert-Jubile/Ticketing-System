@@ -8,7 +8,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>{{ config('app.browser_title') }}</title>
-  <meta name="application-name" content="TACTIC">
+  <meta name="application-name" content="TICKME!">
   <style>
     :root {
       --bg-start: #eef2ff;
@@ -171,11 +171,13 @@
       }
     }
   </style>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v={{ filemtime(public_path('favicon.svg')) }}">
 </head>
 <body>
   <main class="wrap">
     <section class="card">
       <div class="content">
+        <div style="width: 180px; margin: 0 auto 16px;"><x-brand-logo :tagline="false" /></div>
         <div class="art"></div>
         <p class="helper">@yield('helper', 'Akses dibatasi')</p>
         <h1 class="code">@yield('code','Error')</h1>

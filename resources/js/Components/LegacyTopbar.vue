@@ -20,17 +20,8 @@
           <span class="material-icons text-[22px]">menu</span>
         </button>
 
-        <Link :href="dashboardUrl" class="topbar__brand">
-          <span class="topbar__logo" aria-hidden="true">
-            <img
-              src="https://img.icons8.com/?size=256&id=5LdqaP8dgiOs&format=png"
-              :alt="$t(&quot;Ikon Ticket Integrated Center&quot;)"
-              class="topbar__logo-img"
-              loading="lazy"
-              decoding="async"
-            />
-          </span>
-          <span class="topbar__brand-text">TACTIC</span>
+        <Link :href="dashboardUrl" class="topbar__brand" :title="$page.props.branding.tagline" :aria-label="$page.props.branding.title">
+          <BrandLogo style="width: clamp(116px, 18vw, 180px);" />
         </Link>
       </div>
 
@@ -255,6 +246,7 @@
 </template>
 
 <script setup>
+import BrandLogo from './BrandLogo.vue'
 import { translateUi as uiText } from '../i18n'
 
 import { Link } from '@inertiajs/vue3'

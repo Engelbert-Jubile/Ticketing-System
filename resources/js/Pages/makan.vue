@@ -1,12 +1,9 @@
 <template>
   <section class="space-y-12">
-    <Head title="Ticket Integrated Center" />
+    <Head title="TICKME!" />
 
     <div class="space-y-4 text-center">
-      <span class="inline-flex items-center justify-center gap-2 rounded-full border border-indigo-200/70 bg-white/70 px-5 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-indigo-500">
-        <span class="material-icons text-base text-indigo-500">confirmation_number</span>
-        Ticket Integrated Center
-      </span>
+      <BrandLogo tagline style="max-width: 360px; color: #123b7a;" />
       <h1 class="text-3xl font-bold text-slate-900">{{ $t("Kelola tiket, task, dan project secara terpadu") }}</h1>
       <p class="text-sm text-gray-500">
         {{ $t("Pantau pekerjaan tim Anda dengan antarmuka modern yang konsisten di seluruh perangkat. Mulai dengan login atau daftar akun baru dalam hitungan detik.") }}
@@ -54,6 +51,7 @@
 </template>
 
 <script setup>
+import BrandLogo from '../Components/BrandLogo.vue'
 import { translateUi as uiText } from '../i18n'
 
 import { Head, Link } from '@inertiajs/vue3'

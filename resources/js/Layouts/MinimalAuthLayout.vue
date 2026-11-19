@@ -10,9 +10,14 @@
 
     <div class="relative flex min-h-screen items-center justify-center px-5 py-14 sm:px-8 lg:px-12">
       <div class="w-full max-w-md">
+        <div class="mb-7 rounded-2xl bg-white p-4 text-slate-700"><BrandLogo tagline /></div>
         <slot />
       </div>
     </div>
   </div>
 </template>
+
+<script setup>
+import BrandLogo from '../Components/BrandLogo.vue'
+</script>
 

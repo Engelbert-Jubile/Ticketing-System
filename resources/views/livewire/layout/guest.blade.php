@@ -7,6 +7,7 @@
 
     @vite(['resources/css/app.css'])
     @livewireStyles
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v={{ filemtime(public_path('favicon.svg')) }}">
 </head>
 <body class="bg-gray-100 text-gray-900 antialiased">
 
@@ -14,7 +15,7 @@
         {{-- Optional: Logo --}}
         <div class="mb-6">
             <a href="/" class="text-xl font-bold text-blue-600">
-                {{ config('app.name', 'MyApp') }}
+                <x-brand-logo />
             </a>
         </div>
 

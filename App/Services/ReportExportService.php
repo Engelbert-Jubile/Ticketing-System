@@ -21,12 +21,16 @@ class ReportExportService
             'meta' => $meta,
         ])->setPaper('a4', 'portrait');
 
+        $pdf->getDomPDF()->addInfo('Creator', config('app.name'));
+
         return $pdf->download($filename);
     }
 
     public function downloadDetailPdf(string $view, array $data, string $filename, string $paper = 'a4', string $orientation = 'portrait'): Response
     {
         $pdf = Pdf::loadView($view, $data)->setPaper($paper, $orientation);
+
+        $pdf->getDomPDF()->addInfo('Creator', config('app.name'));
 
         return $pdf->download($filename);
     }

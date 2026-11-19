@@ -33,10 +33,9 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{{ config('app.browser_title') }}</title>
-  <meta name="application-name" content="TACTIC">
-  <meta name="apple-mobile-web-app-title" content="TACTIC">
+  <meta name="application-name" content="TICKME!">
+  <meta name="apple-mobile-web-app-title" content="TICKME!">
   <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v={{ filemtime(public_path('favicon.svg')) }}">
-  <link rel="alternate icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v={{ filemtime(public_path('favicon.ico')) }}">
 
   <link rel="preconnect" href="https://fonts.bunny.net">
   <link href="https://fonts.bunny.net/css?family=inter:400,500,600&display=swap" rel="stylesheet" />
@@ -89,20 +88,9 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
     <div class="relative flex min-h-screen items-center justify-center p-4">
       <div class="w-full max-w-md">
         <div class="mb-7 flex flex-col items-center text-center">
-          <div class="auth-gpu-safe-surface mb-5 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white/75 ring-1 ring-slate-200/70 shadow-sm shadow-blue-200/50 backdrop-blur dark:bg-slate-900/70 dark:ring-slate-800/70 dark:shadow-none">
-            <svg class="h-9 w-9" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M7 7.5V6.75C7 5.231 8.231 4 9.75 4h4.5C15.769 4 17 5.231 17 6.75V7.5" stroke="var(--brand-blue)" stroke-width="1.8" stroke-linecap="round" />
-              <path d="M6.25 7.5h11.5c.966 0 1.75.784 1.75 1.75v8.25A2.5 2.5 0 0 1 17 20H7a2.5 2.5 0 0 1-2.5-2.5V9.25c0-.966.784-1.75 1.75-1.75Z" stroke="var(--brand-blue)" stroke-width="1.8" />
-              <path d="M8 12h8M8 15h5" stroke="var(--brand-orange)" stroke-width="1.8" stroke-linecap="round" />
-            </svg>
-          </div>
-
-          <h1 class="text-4xl font-extrabold tracking-tight sm:text-5xl" style="color: var(--brand-blue);">
-            TAC<span style="color: var(--brand-orange);">T</span>IC
+          <h1 class="w-full max-w-sm">
+            <x-brand-logo />
           </h1>
-          <p class="mt-2 text-sm font-medium tracking-wide" style="color: var(--brand-blue);">
-            {{ __('Ticket Integrated Center') }}
-          </p>
         </div>
 
         <div class="public-card auth-gpu-safe-surface rounded-3xl bg-white/85 p-8 shadow-xl shadow-blue-200/40 ring-1 ring-slate-200/70 backdrop-blur dark:bg-slate-900/70 dark:ring-slate-800/70 dark:shadow-none sm:p-10">

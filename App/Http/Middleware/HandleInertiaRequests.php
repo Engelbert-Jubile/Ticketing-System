@@ -65,6 +65,7 @@ class HandleInertiaRequests extends Middleware
         }
 
         return array_merge(parent::share($request), [
+            'branding' => \App\Support\Branding::shared(),
             'status' => fn () => $request->session()->get('status'),
             'locale' => $resolvedLocale ?? app()->getLocale(),
             'globalLocale' => \App\Support\UserLocale::globalDefault(),

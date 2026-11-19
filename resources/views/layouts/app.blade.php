@@ -416,6 +416,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}" src="https://cdn.jsdelivr.net/npm/flatpickr" defer></script>
   @stack('styles')
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v={{ filemtime(public_path('favicon.svg')) }}">
 </head>
 
 <body class="flex h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 overflow-x-hidden">
@@ -449,11 +450,8 @@
           <span class="material-icons text-[22px]">menu</span>
         </button>
 
-        <a href="{{ route('dashboard') }}" class="topbar__brand">
-          <span class="topbar__logo" aria-hidden="true">
-            <i class="material-icons">support</i>
-          </span>
-          <span class="topbar__brand-text">Ticket Integrated Center</span>
+        <a href="{{ route('dashboard') }}" class="topbar__brand" style="width: 180px;" title="{{ config('app.tagline') }}">
+          <x-brand-logo :tagline="false" />
         </a>
       </div>
 

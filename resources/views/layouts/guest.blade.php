@@ -8,6 +8,7 @@
 
     @vite(['resources/css/app.css', 'resources/css/public.css'])
     @livewireStyles
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v={{ filemtime(public_path('favicon.svg')) }}">
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 flex items-center justify-center min-h-screen">
 

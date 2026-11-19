@@ -13,12 +13,11 @@ return [
     |
     */
 
-    'name' => match (strtolower(trim((string) env('APP_NAME', '')))) {
-        '', 'tickora', 'tickora - ticket management system' => 'TACTIC - Ticket Integrated Center',
-        default => env('APP_NAME'),
-    },
+    'name' => \App\Support\Branding::normalizeName(env('APP_NAME')),
 
-    'browser_title' => 'Ticket Integrated Center - TACTIC',
+    'tagline' => \App\Support\Branding::TAGLINE,
+
+    'browser_title' => \App\Support\Branding::TITLE,
 
     /*
     |--------------------------------------------------------------------------

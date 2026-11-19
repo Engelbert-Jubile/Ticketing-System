@@ -10,7 +10,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v={{ filemtime(public_path('favicon.svg')) }}">
-    <link rel="alternate icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v={{ filemtime(public_path('favicon.ico')) }}">
 
     @vite(['resources/css/app.css', 'resources/css/public.css'])
     @livewireStyles
@@ -174,14 +173,9 @@
 
         <div class="relative flex min-h-screen items-center justify-center px-4 py-12">
             <div class="flex w-full max-w-3xl flex-col items-center justify-center gap-8 text-center">
-        <div class="flex flex-col items-center gap-6">
-            <div class="icon-wrapper">
-                <span class="icon-glow"></span>
-                <img src="https://img.icons8.com/?size=256&id=5LdqaP8dgiOs&format=png" alt="Ticket icon" class="icon-image" loading="lazy" />
-            </div>
-            <h1 class="flex flex-col gap-1 tms-title">
-                <span class="tms-title-main text-4xl font-bold tracking-tight sm:text-5xl">TAC<span class="accent">T</span>IC</span>
-                <span class="tms-subtitle text-xl font-medium tracking-wide sm:text-2xl">{{ __('Ticket Integrated Center') }}</span>
+        <div class="flex w-full flex-col items-center gap-6">
+            <h1 class="w-full max-w-md px-2">
+                <x-brand-logo />
             </h1>
         </div>
 

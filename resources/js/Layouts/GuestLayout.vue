@@ -9,11 +9,8 @@
     <div class="relative flex min-h-screen items-center justify-center px-5 py-14 sm:px-8 lg:px-12">
       <div v-if="!singleColumn" class="grid w-full max-w-5xl items-center gap-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,1fr)] lg:gap-16">
         <div class="flex flex-col items-center text-center text-slate-100 lg:items-start lg:text-left">
-          <Link :href="homeUrl" class="inline-flex items-center gap-4 rounded-full bg-white/10 px-6 py-3 text-sm font-semibold uppercase tracking-[0.35em] text-white ring-1 ring-white/20 backdrop-blur">
-            <span class="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 text-xl shadow-[0_12px_40px_-20px_rgba(59,130,246,0.8)]">
-              <span class="material-icons text-base">confirmation_number</span>
-            </span>
-            Ticket Integrated Center
+          <Link :href="homeUrl" class="inline-block w-full max-w-sm rounded-2xl bg-white/95 p-4 text-slate-700 shadow-sm">
+            <BrandLogo tagline />
           </Link>
           <h1 class="mt-10 text-4xl font-semibold leading-tight text-white sm:text-[44px] sm:leading-tight">
             {{ $t("Kelola tiket, task, dan project dengan tampilan modern") }}
@@ -46,11 +43,8 @@
 
       <div v-else class="w-full max-w-4xl mx-auto grid gap-10 lg:gap-12">
         <div class="flex flex-col items-center text-center text-slate-100">
-          <Link :href="homeUrl" class="inline-flex items-center gap-4 rounded-full bg-white/10 px-6 py-3 text-sm font-semibold uppercase tracking-[0.35em] text-white ring-1 ring-white/20 backdrop-blur">
-            <span class="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 text-xl shadow-[0_12px_40px_-20px_rgba(59,130,246,0.8)]">
-              <span class="material-icons text-base">confirmation_number</span>
-            </span>
-            Ticket Integrated Center
+          <Link :href="homeUrl" class="inline-block w-full max-w-sm rounded-2xl bg-white/95 p-4 text-slate-700 shadow-sm">
+            <BrandLogo tagline />
           </Link>
           <h1 class="mt-10 text-4xl font-semibold leading-tight text-white sm:text-[44px] sm:leading-tight">
             {{ $t("Kelola tiket, task, dan project dengan tampilan modern") }}
@@ -85,6 +79,7 @@
 </template>
 
 <script setup>
+import BrandLogo from '../Components/BrandLogo.vue'
 import { Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import resolveRoute from '../utils/resolveRoute';

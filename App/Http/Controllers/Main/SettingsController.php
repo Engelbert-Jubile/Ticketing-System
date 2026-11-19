@@ -328,8 +328,8 @@ class SettingsController extends Controller
         ]);
 
         try {
-            Mail::mailer('smtp')->raw('Test email from TACTIC Settings.', function ($message) use ($recipient) {
-                $message->to($recipient)->subject('TACTIC SMTP Test');
+            Mail::mailer('smtp')->raw('Test email from TICKME! Settings.', function ($message) use ($recipient) {
+                $message->to($recipient)->subject('TICKME! SMTP Test');
             });
         } catch (\Throwable $e) {
             return response()->json(['message' => 'SMTP test failed: '.$e->getMessage()], 500);
@@ -541,7 +541,7 @@ class SettingsController extends Controller
 
         return response()->streamDownload(function () use ($columns, $rows) {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, [config('app.name')]);
+            fputcsv($handle, [config('app.name'), config('app.tagline')]);
             fputcsv($handle, array_map(fn ($col) => $col['label'], $columns));
             foreach ($rows as $row) {
                 fputcsv($handle, $row);

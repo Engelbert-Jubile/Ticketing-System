@@ -68,7 +68,7 @@
     </style>
 </head>
 <body>
-    <p class="small">{{ config('app.name') }}</p>
+    @include('reports.pdf.brand')
     <h1>{{ $title }}</h1>
 
     <div class="meta">

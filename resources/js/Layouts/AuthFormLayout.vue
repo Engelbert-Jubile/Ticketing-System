@@ -7,12 +7,9 @@
     </div>
 
     <div class="relative z-10 w-full max-w-md space-y-8 text-center">
-      <Link :href="homeUrl" class="inline-flex items-center gap-3 rounded-full border border-white/60 bg-white/80 px-5 py-3 text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 shadow-sm backdrop-blur dark:border-white/20 dark:bg-slate-900/70 dark:text-slate-200">
-        <span class="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-cyan-400 text-white shadow-lg shadow-indigo-500/35">
-          <span class="material-icons text-base">confirmation_number</span>
-        </span>
-        Ticket Integrated Center
-      </Link>
+      <Link :href="homeUrl" class="inline-block w-full max-w-sm rounded-2xl bg-white/95 p-4 text-slate-700 shadow-sm">
+            <BrandLogo tagline />
+          </Link>
 
       <div class="public-content relative">
         <slot />
@@ -22,6 +19,7 @@
 </template>
 
 <script setup>
+import BrandLogo from '../Components/BrandLogo.vue'
 import { Link } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import resolveRoute from '../utils/resolveRoute'

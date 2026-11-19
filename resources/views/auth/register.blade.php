@@ -57,7 +57,6 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{{ config('app.browser_title') }}</title>
   <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v={{ filemtime(public_path('favicon.svg')) }}">
-  <link rel="alternate icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v={{ filemtime(public_path('favicon.ico')) }}">
 
   <link rel="preconnect" href="https://fonts.bunny.net">
   <link href="https://fonts.bunny.net/css?family=inter:400,500,600&display=swap" rel="stylesheet" />
@@ -185,20 +184,9 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
     <div class="relative flex min-h-screen items-center justify-center p-4">
       <div class="w-full max-w-xl">
         <div class="mb-7 flex flex-col items-center text-center">
-          <div class="auth-gpu-safe-surface mb-5 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white/75 ring-1 ring-slate-200/70 shadow-sm shadow-blue-200/50 backdrop-blur dark:bg-slate-900/70 dark:ring-slate-800/70 dark:shadow-none">
-            <svg class="h-9 w-9" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M12 12a3.25 3.25 0 1 0-3.25-3.25A3.25 3.25 0 0 0 12 12Z" stroke="var(--brand-blue)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-              <path d="M4.5 20a7.5 7.5 0 0 1 15 0" stroke="var(--brand-blue)" stroke-width="1.8" stroke-linecap="round" />
-              <path d="M18 7v6M15 10h6" stroke="var(--brand-orange)" stroke-width="1.8" stroke-linecap="round" />
-            </svg>
-          </div>
-
-          <h1 class="text-4xl font-extrabold tracking-tight sm:text-5xl" style="color: var(--brand-blue);">
-            TAC<span style="color: var(--brand-orange);">T</span>IC
+          <h1 class="w-full max-w-sm">
+            <x-brand-logo />
           </h1>
-          <p class="mt-2 text-sm font-medium tracking-wide" style="color: var(--brand-blue);">
-            {{ __('Ticket Integrated Center') }}
-          </p>
         </div>
 
         <div class="public-card auth-gpu-safe-surface rounded-3xl bg-white/85 p-8 shadow-xl shadow-blue-200/40 ring-1 ring-slate-200/70 backdrop-blur dark:bg-slate-900/70 dark:ring-slate-800/70 dark:shadow-none sm:p-10">

@@ -27,7 +27,7 @@
     </style>
 </head>
 <body>
-    <p class="muted">{{ config('app.name') }}</p>
+    @include('reports.pdf.brand')
     <h1>{{ $title }}</h1>
 
     <div class="grid">
