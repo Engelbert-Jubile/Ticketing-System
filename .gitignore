@@ -104,6 +104,7 @@ resources/js/Components/*
 !resources/js/Components/AttachmentPreview.vue
 !resources/js/Components/BrandLogo.vue
 !resources/js/Components/SaveButton.vue
+!resources/js/Components/FlashNotifications.vue
 !resources/js/composables/
 !resources/js/composables/useFormDraft.js
 !resources/js/utils/

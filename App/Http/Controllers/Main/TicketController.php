@@ -1231,7 +1231,7 @@ class TicketController extends Controller
             $notifier->notifyTicketAssigned($ticket, $assignedDiff, $actor);
         }
 
-        return redirect()->to($backTo)->with('success', 'Ticket updated successfully.');
+        return redirect()->to($backTo)->with('success', __('Ticket updated successfully.'));
     }
 
     public function destroy(Request $request, string $locale, Ticket $ticket)

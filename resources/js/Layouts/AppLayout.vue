@@ -1,5 +1,6 @@
 <template>
   <Head :title="documentTitle" />
+  <FlashNotifications :flash="page.props.flash" />
   <div class="app-shell" :class="{ 'app-shell--dark': theme === 'dark' }" :style="shellStyle">
     <LegacyTopbar
       :user="authUser"
@@ -100,6 +101,7 @@ import axios from 'axios'
 import { computed, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
 import LegacySidebar from '../Components/LegacySidebar.vue'
 import LegacyTopbar from '../Components/LegacyTopbar.vue'
+import FlashNotifications from '../Components/FlashNotifications.vue'
 import resolveRoute from '../utils/resolveRoute'
 import { useI18n } from '../i18n'
 import { applyThemePreferences, cacheThemePreferences, normalizeThemePreferences } from '../utils/appearance'
