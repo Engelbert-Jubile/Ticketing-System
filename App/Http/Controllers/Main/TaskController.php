@@ -2437,7 +2437,7 @@ if ($viewer && \App\Support\UnitVisibility::requiresRestriction($viewer)) {
         $clean = preg_replace('/\s+on\w+\s*=\s*(?:"[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', $clean);
         $clean = preg_replace_callback('/<a\b[^>]*href\s*=\s*("|\')(.*?)\1[^>]*>/i', function ($m) {
             $url = trim($m[2]);
-            if (preg_match('#^(https?://|mailto:|#)#i', $url)) {
+            if (preg_match('~^(https?://|mailto:|#)~i', $url)) {
                 return $m[0];
             }
 
