@@ -8,7 +8,8 @@
       <label class="block text-sm">Email<input v-model="form.email" required type="email" autocomplete="email" class="mt-1 w-full rounded-lg dark:bg-slate-800" /></label>
       <template v-if="token"><label class="block text-sm">{{ $t("Password baru") }}<input v-model="form.password" required type="password" autocomplete="new-password" class="mt-1 w-full rounded-lg dark:bg-slate-800" /></label><label class="block text-sm">{{ $t("Ulangi password") }}<input v-model="form.password_confirmation" required type="password" autocomplete="new-password" class="mt-1 w-full rounded-lg dark:bg-slate-800" /></label></template>
       <p v-for="(message, field) in form.errors" :key="field" role="alert" class="text-sm text-rose-600">{{ message }}</p>
-      <button :disabled="form.processing" class="w-full rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white disabled:opacity-50">{{ form.processing ? $t('Memproses…') : token ? $t("Simpan password") : $t("Kirim tautan") }}</button>
+      <SaveButton v-if="token" class="w-full" :processing="form.processing">{{ form.processing ? $t('Memproses…') : token ? $t("Simpan password") : $t("Kirim tautan") }}</SaveButton>
+      <button v-else :disabled="form.processing" class="w-full rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white disabled:opacity-50">{{ form.processing ? $t('Memproses…') : token ? $t("Simpan password") : $t("Kirim tautan") }}</button>
     </form>
     <a :href="resolveRoute('login')" class="mt-5 inline-block text-sm text-blue-600">{{ $t("Kembali ke login") }}</a>
   </main>

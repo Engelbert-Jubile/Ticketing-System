@@ -832,7 +832,10 @@
             <span class="material-icons">close</span>
             {{ $t("Batal") }}
           </Link>
-          <button type="submit" class="btn-primary" :disabled="form.processing">
+          <SaveButton v-if="isLastStep" type="submit" :processing="form.processing">
+            {{ primaryButtonLabel }}
+          </SaveButton>
+          <button v-else type="submit" class="btn-primary" :disabled="form.processing">
             <span class="material-icons" v-if="form.processing">hourglass_top</span>
             <span class="material-icons" v-else>{{ primaryButtonIcon }}</span>
             {{ primaryButtonLabel }}

@@ -532,7 +532,10 @@
         >
           Reset
         </button>
-        <button
+        <SaveButton v-if="isLastStep" type="submit" :processing="form.processing">
+          {{ primaryButtonLabel }}
+        </SaveButton>
+        <button v-else
           type="submit"
           class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/30 transition hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-70"
           :disabled="form.processing"

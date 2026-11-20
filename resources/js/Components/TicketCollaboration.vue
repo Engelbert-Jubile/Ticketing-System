@@ -31,7 +31,7 @@
         <label class="block text-sm">{{ $t("Penilaian") }}<select v-model.number="feedback.rating" class="ml-3 rounded-lg dark:bg-slate-800"><option v-for="n in 5" :key="n" :value="n">{{ n }} / 5</option></select></label>
         <textarea v-model="feedback.comment" :aria-label="$t(&quot;Komentar penilaian&quot;)" maxlength="2000" :placeholder="$t(&quot;Masukan untuk tim&quot;)" class="w-full rounded-lg dark:bg-slate-800" />
         <label class="flex items-center gap-2 text-sm"><input v-model="feedback.reopen_requested" type="checkbox" />{{ $t("Saya membutuhkan tindak lanjut kembali") }}</label>
-        <button :disabled="busy" class="rounded-lg bg-blue-600 px-4 py-2 text-white">{{ $t("Simpan penilaian") }}</button>
+        <SaveButton :processing="busy">{{ $t("Simpan penilaian") }}</SaveButton>
       </form>
       <p v-else-if="state.feedback" class="text-sm">{{ $t("Penilaian requester:") }} {{ state.feedback.rating }}/5 · {{ state.feedback.comment }}<span v-if="state.feedback.reopen_requested" class="block font-semibold text-amber-700 dark:text-amber-300">{{ $t("Requester meminta tindak lanjut kembali.") }}</span></p>
       <p role="status" class="text-sm text-emerald-700 dark:text-emerald-300">{{ success }}</p>

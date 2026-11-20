@@ -10,7 +10,7 @@
           :aria-label="$t('Status tujuan')" :placeholder="$t('Pilih transisi yang tersedia')"
           required :disabled="busy" class="mt-2" />
         <p v-if="error" role="alert" class="mt-3 text-sm text-rose-600">{{ error }}</p>
-        <div class="mt-6 flex justify-end gap-3"><button type="button" :disabled="busy" class="rounded-lg border px-4 py-2" @click="close">{{ $t('Batal') }}</button><button :disabled="busy || !status" class="rounded-lg bg-cyan-600 px-4 py-2 font-semibold text-white disabled:opacity-50">{{ busy ? $t('Memproses...') : $t('Simpan Perubahan') }}</button></div>
+        <div class="mt-6 flex justify-end gap-3"><button type="button" :disabled="busy" class="rounded-lg border px-4 py-2" @click="close">{{ $t('Batal') }}</button><SaveButton :disabled="busy || !status" :processing="busy">{{ busy ? $t('Memproses...') : $t('Simpan Perubahan') }}</SaveButton></div>
       </form>
     </div>
   </Teleport>

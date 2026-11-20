@@ -96,9 +96,9 @@
             </div>
 
             <div class="mt-6 flex flex-wrap items-center gap-3">
-              <button type="button" class="btn-primary" :disabled="generalForm.processing" @click="saveGeneral">
+              <SaveButton type="button" @click="saveGeneral" :processing="generalForm.processing">
                 {{ t('common.saveChanges') }}
-              </button>
+              </SaveButton>
               <button type="button" class="btn-ghost" :disabled="generalForm.processing" @click="resetGeneral">
                 {{ t('common.cancel') }}
               </button>
@@ -164,9 +164,9 @@
             </div>
 
             <div class="mt-6 flex flex-wrap items-center gap-3">
-              <button type="button" class="btn-primary" :disabled="generalForm.processing" @click="saveGeneral">
+              <SaveButton type="button" @click="saveGeneral" :processing="generalForm.processing">
                 {{ t('common.saveChanges') }}
-              </button>
+              </SaveButton>
               <button type="button" class="btn-ghost" :disabled="generalForm.processing" @click="resetGeneral">
                 {{ t('common.cancel') }}
               </button>
@@ -239,9 +239,9 @@
             </div>
 
             <div class="mt-6 flex flex-wrap items-center gap-3">
-              <button type="button" class="btn-primary" :disabled="securityForm.processing" @click="saveSecurity">
+              <SaveButton type="button" @click="saveSecurity" :processing="securityForm.processing">
                 {{ t('common.saveChanges') }}
-              </button>
+              </SaveButton>
               <button type="button" class="btn-ghost" :disabled="securityForm.processing" @click="resetSecurity">
                 {{ t('common.cancel') }}
               </button>
@@ -306,9 +306,9 @@
             </div>
 
             <div class="mt-6 flex flex-wrap items-center gap-3">
-              <button type="button" class="btn-primary" :disabled="securityForm.processing" @click="saveSecurity">
+              <SaveButton type="button" @click="saveSecurity" :processing="securityForm.processing">
                 {{ $t("Save changes") }}
-              </button>
+              </SaveButton>
               <button type="button" class="btn-ghost" :disabled="securityForm.processing" @click="resetSecurity">
                 {{ $t("Cancel") }}
               </button>
@@ -379,9 +379,9 @@
             </div>
 
             <div class="mt-6 flex flex-wrap items-center gap-3">
-              <button type="button" class="btn-primary" :disabled="notificationsForm.processing" @click="saveNotifications">
+              <SaveButton type="button" @click="saveNotifications" :processing="notificationsForm.processing">
                 {{ $t("Save changes") }}
-              </button>
+              </SaveButton>
               <button type="button" class="btn-ghost" :disabled="notificationsForm.processing" @click="resetNotifications">
                 {{ $t("Cancel") }}
               </button>
@@ -414,9 +414,9 @@
             </div>
 
             <div class="mt-6 flex flex-wrap items-center gap-3">
-              <button type="button" class="btn-primary" :disabled="notificationsForm.processing" @click="saveNotifications">
+              <SaveButton type="button" @click="saveNotifications" :processing="notificationsForm.processing">
                 {{ $t("Save changes") }}
-              </button>
+              </SaveButton>
               <button type="button" class="btn-ghost" :disabled="notificationsForm.processing" @click="resetNotifications">
                 {{ $t("Cancel") }}
               </button>
@@ -494,9 +494,9 @@
             </div>
 
             <div class="mt-6 flex flex-wrap items-center gap-3">
-              <button type="button" class="btn-primary" :disabled="defaultsForm.processing" @click="saveDefaults">
+              <SaveButton type="button" @click="saveDefaults" :processing="defaultsForm.processing">
                 {{ $t("Save changes") }}
-              </button>
+              </SaveButton>
               <button type="button" class="btn-ghost" :disabled="defaultsForm.processing" @click="resetDefaults">
                 {{ $t("Cancel") }}
               </button>
@@ -551,9 +551,9 @@
             </div>
 
             <div class="mt-6 flex flex-wrap items-center gap-3">
-              <button type="button" class="btn-primary" :disabled="rolesSaving" @click="saveRoles">
+              <SaveButton type="button" @click="saveRoles" :processing="rolesSaving">
                 {{ $t("Save changes") }}
-              </button>
+              </SaveButton>
               <button type="button" class="btn-ghost" :disabled="rolesSaving" @click="resetRoles">
                 {{ $t("Cancel") }}
               </button>
@@ -598,9 +598,9 @@
                   </button>
                 </div>
                 <div class="mt-4 flex flex-wrap items-center gap-3">
-                  <button type="button" class="btn-primary" :disabled="securityForm.processing" @click="saveSecurity">
+                  <SaveButton type="button" @click="saveSecurity" :processing="securityForm.processing">
                     Save security settings
-                  </button>
+                  </SaveButton>
                   <button type="button" class="btn-ghost" :disabled="securityForm.processing" @click="resetSecurity">
                     {{ $t("Cancel") }}
                   </button>

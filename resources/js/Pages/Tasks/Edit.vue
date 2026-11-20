@@ -467,15 +467,9 @@
         >
           {{ $t("Batal") }}
         </Link>
-        <button
-          type="submit"
-          class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-70"
-          :disabled="form.processing"
-        >
-          <span class="material-icons text-base" v-if="form.processing">hourglass_top</span>
-          <span class="material-icons text-base" v-else>save</span>
+        <SaveButton type="submit" :processing="form.processing">
           {{ $t("Simpan Perubahan") }}
-        </button>
+        </SaveButton>
       </div>
     </form>
   </div>

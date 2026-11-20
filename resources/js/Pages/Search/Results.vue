@@ -26,7 +26,7 @@
       <div class="flex items-end gap-2"><button type="submit" :disabled="loading" class="rounded-lg bg-blue-600 px-4 py-2 text-white disabled:opacity-50">{{ loading ? $t("Memuat…") : $t("Terapkan") }}</button><button type="button" @click="reset" class="rounded-lg border border-slate-300 px-4 py-2 dark:border-slate-600">Reset</button></div>
     </form>
     <div v-if="personal" class="flex flex-wrap items-center gap-2 text-sm">
-      <button type="button" @click="saveView" class="rounded-lg border border-slate-300 px-3 py-2 dark:border-slate-600">{{ $t("Simpan filter di perangkat ini") }}</button>
+      <SaveButton type="button" @click="saveView">{{ $t("Simpan filter di perangkat ini") }}</SaveButton>
       <button v-if="saved" type="button" @click="restoreView" class="rounded-lg px-3 py-2 text-blue-600 dark:text-blue-400">{{ $t("Gunakan filter tersimpan") }}</button>
       <span role="status">{{ savedMessage }}</span>
     </div>

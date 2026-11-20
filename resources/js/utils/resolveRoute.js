@@ -29,14 +29,24 @@ const withLocale = params => {
   return locale ? { locale, ...params } : params;
 };
 
+const onCurrentHost = value => {
+  if (typeof window === 'undefined' || typeof value !== 'string' || !/^https?:\/\//i.test(value)) return value;
+  const url = new URL(value);
+  return window.location.origin + url.pathname + url.search + url.hash;
+};
+
 const fallback = (name, params, absolute, config) => {
-  const finalConfig = config ? { ...Ziggy, ...config } : Ziggy;
+  const finalConfig = {
+    ...Ziggy,
+    ...config,
+    ...(typeof window !== 'undefined' ? { url: window.location.origin, port: window.location.port || null } : {}),
+  };
   return callRoute(() => ziggyRoute(name, withLocale(params), absolute, finalConfig));
 };
 
 export const resolveRoute = (name, params = {}, absolute, config) => {
   if (typeof window !== 'undefined' && typeof window.route === 'function') {
-    return callRoute(() => window.route(name, withLocale(params), absolute, config));
+    return onCurrentHost(callRoute(() => window.route(name, withLocale(params), absolute, config)));
   }
   return fallback(name, params, absolute, config);
 };

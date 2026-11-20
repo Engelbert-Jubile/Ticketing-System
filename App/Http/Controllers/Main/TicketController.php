@@ -985,10 +985,6 @@ class TicketController extends Controller
         $dueDateProvided = $dueDateInputRaw !== $missingValue;
         $finishDateProvided = $finishDateInputRaw !== $missingValue;
 
-        $assignedRule = $this->hasUserCode()
-            ? ['nullable', 'string', 'max:64', Rule::exists('users', 'code')]
-            : ['nullable', 'integer', 'min:1', Rule::exists('users', 'id')];
-
         $assignmentFallbacks = [
             'agent_id' => $ticket->agent_id ? (int) $ticket->agent_id : null,
             'assigned_id' => $ticket->assigned_id ? (int) $ticket->assigned_id : null,
@@ -1039,7 +1035,7 @@ class TicketController extends Controller
             'status' => ['required', Rule::in($this->statuses())],
             'requester_id' => ['nullable', 'integer', 'min:1', Rule::exists('users', 'id')],
             'agent_id' => ['nullable', 'integer', 'min:1', Rule::exists('users', 'id')],
-            'assigned_id' => $assignedRule,
+            'assigned_id' => ['nullable', 'integer', 'min:1', Rule::exists('users', 'id')],
             'assigned_user_ids' => ['nullable', 'array'],
             'assigned_user_ids.*' => ['integer', 'min:1', 'exists:users,id'],
             'due_date' => ['nullable', 'string'],

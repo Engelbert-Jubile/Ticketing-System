@@ -12,6 +12,7 @@ import { InertiaProgress } from '@inertiajs/progress';
 import { ZiggyVue } from 'ziggy-js/dist/vue.m';
 import { Ziggy as generatedZiggy } from './ziggy';
 import AppLayout from './Layouts/AppLayout.vue';
+import SaveButton from './Components/SaveButton.vue';
 import { createI18n } from './i18n';
 
 const pages = import.meta.glob('./Pages/**/*.vue');
@@ -84,6 +85,7 @@ createInertiaApp({
     };
 
     inertiaApp
+      .component('SaveButton', SaveButton)
       .use(plugin)
       .use(ZiggyVue, Ziggy)
       .use(i18n)

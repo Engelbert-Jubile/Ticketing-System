@@ -484,6 +484,9 @@
         </div>
       </section>
 
+      <p v-if="Object.keys(form.errors).length" role="alert" class="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-200">
+        {{ Object.values(form.errors).flat().join(' ') }}
+      </p>
       <div class="flex flex-wrap items-center justify-end gap-3">
         <Link
           :href="backLink"
@@ -491,15 +494,9 @@
         >
           {{ $t("Batal") }}
         </Link>
-        <button
-          type="submit"
-          class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-70"
-          :disabled="form.processing"
-        >
-          <span class="material-icons text-base" v-if="form.processing">hourglass_top</span>
-          <span v-else class="material-icons text-base">save</span>
+        <SaveButton type="submit" :processing="form.processing">
           {{ $t("Simpan Perubahan") }}
-        </button>
+        </SaveButton>
       </div>
     </form>
   </div>
@@ -510,8 +507,7 @@ import { translateUi as uiText } from '../../i18n'
 
 import { Link, useForm } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, onMounted, ref, watch, watchEffect } from 'vue';
-import { route as ziggyRoute } from 'ziggy-js';
-import { Ziggy } from '@/ziggy';
+import route from '@/utils/resolveRoute';
 import DatePickerFlatpickr from '@/Components/DatePickerFlatpickr.vue';
 import FileUploaderPond from '@/Components/FileUploaderPond.vue';
 import RichTextQuill from '@/Components/RichTextQuill.vue';
@@ -528,21 +524,13 @@ const props = defineProps({
   meta: { type: Object, default: () => ({}) },
 });
 
-const route = (name, params = undefined, absolute = true, config = Ziggy) => {
-  if (typeof window !== 'undefined' && typeof window.route === 'function') {
-    return window.route(name, params, absolute, config);
-  }
-
-  return ziggyRoute(name, params, absolute, config);
-};
-
 const routeWithFrom = (name, params = {}) => {
   const finalParams = { ...params };
   if (props.meta?.from) {
     finalParams.from = props.meta.from;
   }
 
-  return route(name, finalParams);
+  return route(name, finalParams, false);
 };
 
 const toInputDateTime = value => {
@@ -1087,10 +1075,17 @@ function prepareSubmission() {
 }
 
 function submit() {
+  if (form.processing) return;
   uploadError.value = '';
+  form.clearErrors();
   prepareSubmission();
   const fallbackStatus = props.ticket.status ?? 'new';
   const currentStatus = typeof form.status === 'string' && form.status.trim() !== '' ? form.status : fallbackStatus;
+  const updateUrl = routeWithFrom('tickets.update', { ticket: props.ticket.id });
+  if (!updateUrl || updateUrl === '#') {
+    form.setError('_submission', uiText('Unable to save changes. Please reload the page and try again.'));
+    return;
+  }
 
   form
     .transform(data => ({
@@ -1100,7 +1095,7 @@ function submit() {
       due_at: sanitizeDateTime(form.due_at ?? data.due_at),
       finish_at: sanitizeDateTime(form.finish_at ?? data.finish_at),
     }))
-    .put(routeWithFrom('tickets.update', { ticket: props.ticket.id }), {
+    .put(updateUrl, {
       preserveScroll: true,
       onSuccess: () => {
         attachmentIds.value = [];

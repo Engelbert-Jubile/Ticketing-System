@@ -389,15 +389,9 @@
         >
           Reset
         </button>
-        <button
-          type="submit"
-          class="ticket-save-button inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:brightness-105 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-70"
-          :disabled="form.processing"
-        >
-          <span class="material-icons text-base" v-if="form.processing">hourglass_top</span>
-          <span v-else class="material-icons text-base">check_circle</span>
+        <SaveButton type="submit" :processing="form.processing">
           {{ $t("Simpan Ticket") }}
-        </button>
+        </SaveButton>
       </div>
     </form>
   </div>
@@ -1035,15 +1029,6 @@ const formatUserOptionLabel = option => {
 </script>
 
 <style scoped>
-.ticket-save-button {
-  background: var(--app-header-background, linear-gradient(120deg, #2563eb 0%, #4338ca 45%, #1d4ed8 100%));
-  box-shadow: 0 10px 20px -10px color-mix(in srgb, var(--user-accent-color, #4338ca) 70%, transparent);
-}
-
-.ticket-save-button .material-icons {
-  color: #fff !important;
-}
-
 .material-icons {
   font-size: inherit;
 }

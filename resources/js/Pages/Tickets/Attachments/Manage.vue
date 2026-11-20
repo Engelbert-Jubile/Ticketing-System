@@ -72,15 +72,9 @@
         >
           Reset
         </button>
-        <button
-          type="submit"
-          class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-70"
-          :disabled="form.processing || !attachmentIds.length"
-        >
-          <span class="material-icons text-base" v-if="form.processing">hourglass_top</span>
-          <span v-else class="material-icons text-base">upload_file</span>
+        <SaveButton type="submit" :disabled="form.processing || !attachmentIds.length" :processing="form.processing">
           {{ $t("Simpan Lampiran") }}
-        </button>
+        </SaveButton>
       </div>
     </form>
   </div>

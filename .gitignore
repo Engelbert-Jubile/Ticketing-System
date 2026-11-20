@@ -103,6 +103,7 @@ resources/js/Components/*
 !resources/js/Components/TicketCollaboration.vue
 !resources/js/Components/AttachmentPreview.vue
 !resources/js/Components/BrandLogo.vue
+!resources/js/Components/SaveButton.vue
 !resources/js/composables/
 !resources/js/composables/useFormDraft.js
 !resources/js/utils/
@@ -155,3 +156,5 @@ docs/workflow-language-update*.md
 /tests/AttachmentUploadTest*.php
 /tests/Unit/TicketReportTest*.php
 /tests/Unit/TicketStatusConsistencyTest*.php
+/tests/save-buttons.test*.mjs
+/tests/Unit/TicketEditSubmissionTest*.php

@@ -18,7 +18,7 @@
         <label v-if="form.kind === 'template'">{{ $t("PIC yang disarankan") }}<select v-model="form.default_assignee_id" class="mt-1 w-full rounded-lg dark:bg-slate-800"><option :value="null">{{ $t("Dipilih saat membuat ticket") }}</option><option v-for="user in assignees" :key="user.id" :value="user.id">{{ user.first_name }} {{ user.last_name }} · {{ user.unit }}</option></select><span class="mt-1 block text-xs text-slate-500">{{ $t("Template akan mengisi PIC ini. Pembuat ticket tetap dapat mengubah pilihan.") }}</span></label>
         <label class="flex items-center gap-2"><input v-model="form.published" type="checkbox" />{{ $t("Terbitkan untuk unit saya") }}</label>
         <p v-for="(message, field) in form.errors" :key="field" role="alert" class="text-sm text-rose-600">{{ message }}</p>
-        <div class="flex gap-2"><button :disabled="form.processing" class="rounded-xl bg-blue-600 px-4 py-2 text-white">{{ $t("Simpan") }}</button><button type="button" @click="form.reset(); checklistText = ''" class="rounded-xl border px-4 py-2">{{ $t("Baru") }}</button></div>
+        <div class="flex gap-2"><SaveButton :processing="form.processing">{{ $t("Simpan") }}</SaveButton><button type="button" @click="form.reset(); checklistText = ''" class="rounded-xl border px-4 py-2">{{ $t("Baru") }}</button></div>
       </form>
     </details>
     <p class="text-sm text-slate-500">{{ entries.total }} {{ $t("panduan") }}</p>
