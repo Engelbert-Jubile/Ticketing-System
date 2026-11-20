@@ -10,3 +10,11 @@ if (! function_exists('routeLocale')) {
     }
 }
 
+if (! function_exists('portalEntryRoute')) {
+    function portalEntryRoute(): string
+    {
+        // The previous route cache can still be active during a deployment.
+        return \Illuminate\Support\Facades\Route::has('portal') ? 'portal' : 'dashboard';
+    }
+}
+

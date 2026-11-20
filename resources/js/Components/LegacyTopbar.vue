@@ -21,7 +21,7 @@
           <span class="material-icons text-[22px]">menu</span>
         </button>
 
-        <Link :href="brandUrl" class="topbar__brand" :title="t('portal.title')" :aria-label="t('portal.title')">
+        <Link :href="brandUrl" class="topbar__brand" :title="brandLabel" :aria-label="brandLabel">
           <BrandLogo style="width: clamp(116px, 18vw, 180px);" />
         </Link>
       </div>
@@ -284,6 +284,7 @@ const props = defineProps({
     default: false,
   },
   portalMode: { type: Boolean, default: false },
+  brandLabel: { type: String, required: true },
   brandUrl: {
     type: String,
     required: true,

@@ -39,7 +39,7 @@ class VerifyEmailController extends Controller
 
         $sessionUser = $request->user();
         if ($sessionUser && (string) $sessionUser->getKey() === (string) $user->getKey()) {
-            return redirect()->intended(route('portal', ['locale' => $locale], false).'?verified=1');
+            return redirect()->intended(route(portalEntryRoute(), ['locale' => $locale, 'verified' => 1], false));
         }
 
         return redirect()

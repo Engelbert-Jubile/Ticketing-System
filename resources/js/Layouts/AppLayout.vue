@@ -7,7 +7,8 @@
       :notifications="notifications"
       :initial-search="searchQuery"
       :sidebar-open="sidebarOpen"
-      :brand-url="resolveRouteName('portal')"
+      :brand-url="portalUrl || resolveRouteName('dashboard')"
+      :brand-label="t(portalUrl ? 'portal.title' : 'nav.dashboard')"
       :portal-mode="isPortal"
       :account-profile-url="resolveRouteName('account.profile')"
       :account-password-url="resolveRouteName('account.change-password')"
@@ -196,6 +197,7 @@ const currentPath = computed(() => {
   return stripLocalePrefix(url.split('?')[0] || '/')
 })
 const isPortal = computed(() => currentPath.value === '/portal')
+const portalUrl = computed(() => page.props.portalUrl)
 const focusedModule = computed(() => {
   const [, area, module] = currentPath.value.split('/')
   return area === 'dashboard' && (module === 'tasks' || module === 'projects') ? module : null
@@ -286,14 +288,6 @@ const navItems = computed(() => {
   }
 
   let items = [
-    {
-      type: 'link',
-      key: 'portal',
-      label: t('portal.title'),
-      icon: 'apps',
-      href: resolveRouteName('portal'),
-      match: path => path === '/portal',
-    },
     {
       type: 'link',
       key: 'dashboard',
@@ -394,6 +388,17 @@ const navItems = computed(() => {
       match: path => pathStartsWith(path, '/dashboard/projects'),
     },
   ]
+
+  if (portalUrl.value) {
+    items.unshift({
+      type: 'link',
+      key: 'portal',
+      label: t('portal.title'),
+      icon: 'apps',
+      href: portalUrl.value,
+      match: path => path === '/portal',
+    })
+  }
 
   if (focusedModule.value) {
     return items.filter(item => item.key === focusedModule.value || item.key === 'portal')
