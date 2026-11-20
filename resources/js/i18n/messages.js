@@ -1,6 +1,19 @@
 export const messages = {
   en: {
     localeLabel: 'English',
+    portal: {
+      title: 'Workspace portal',
+      greeting: 'Welcome, :name',
+      greetingWithoutName: 'Welcome',
+      prompt: 'Choose a workspace to get started.',
+      open: 'Open :module',
+      ticket: 'Ticket',
+      ticketDescription: 'Submit requests and track their resolution.',
+      task: 'Task',
+      taskDescription: 'Assign work and follow day-to-day progress.',
+      project: 'Project',
+      projectDescription: 'Plan milestones and monitor deliverables.',
+    },
     nav: {
       title: 'Navigation',
       dashboard: 'Dashboard',
@@ -197,6 +210,19 @@ export const messages = {
   },
   id: {
     localeLabel: 'Bahasa Indonesia',
+    portal: {
+      title: 'Portal ruang kerja',
+      greeting: 'Selamat datang, :name',
+      greetingWithoutName: 'Selamat datang',
+      prompt: 'Pilih ruang kerja untuk mulai bekerja.',
+      open: 'Buka :module',
+      ticket: 'Ticket',
+      ticketDescription: 'Ajukan permintaan dan pantau penyelesaiannya.',
+      task: 'Task',
+      taskDescription: 'Bagikan tugas dan ikuti perkembangan pekerjaan harian.',
+      project: 'Project',
+      projectDescription: 'Rencanakan target dan pantau hasil proyek.',
+    },
     nav: {
       title: 'Navigasi',
       dashboard: 'Dasbor',

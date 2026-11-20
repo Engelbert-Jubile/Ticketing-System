@@ -117,7 +117,7 @@ const checkVerification = async () => {
     if (!response.ok) return;
     const data = await response.json();
     if (data?.verified) {
-      router.visit(resolveRoute('dashboard'), { replace: true });
+      router.visit(resolveRoute('portal'), { replace: true });
     }
   } catch (_) {
   } finally {

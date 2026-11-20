@@ -130,7 +130,7 @@ Route::group([
 
 Route::get('/', function (Request $request) use ($publicWelcomeProps) {
     return $request->user()
-        ? redirect()->route('dashboard', ['locale' => $request->route('locale')])
+        ? redirect()->route('portal', ['locale' => $request->route('locale')])
         : view('welcome', $publicWelcomeProps());
 })->name('home');
 
@@ -199,7 +199,7 @@ Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)
 } else {
     Route::get('/email/verify', function (Request $request) {
         return $request->user()
-            ? redirect()->route('dashboard', ['locale' => $request->route('locale')])
+            ? redirect()->route('portal', ['locale' => $request->route('locale')])
             : redirect()->route('login');
     })->name('verification.notice');
 }
@@ -211,6 +211,8 @@ Route::middleware($emailVerificationEnabled
     ? ['auth', 'verified', 'idle.timeout', 'access.restrict']
     : ['auth', 'idle.timeout', 'access.restrict']
 )->group(function () {
+
+    Route::get('/portal', fn () => Inertia::render('Portal'))->name('portal');
 
     /* Ã°Å¸â€œÅ  Dashboard Home */
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

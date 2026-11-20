@@ -7,10 +7,11 @@
     role="banner"
   >
     <div
-      class="topbar__inner mx-auto flex h-auto min-h-16 w-full flex-wrap items-center gap-3 px-4 md:grid md:grid-cols-[auto,minmax(0,1fr),auto] md:items-center md:gap-4 md:px-6 lg:gap-5 lg:px-8">
+      class="topbar__inner mx-auto flex h-auto min-h-16 w-full flex-wrap items-center gap-3 px-4 md:grid md:grid-cols-[auto,minmax(0,1fr),auto] md:items-center md:gap-4 md:px-6 lg:gap-5 lg:px-8"
+      :class="{ 'topbar__inner--portal': portalMode }">
       <div class="topbar__left order-1 flex items-center gap-3 min-w-0">
         <button
-          v-if="!isDesktop"
+          v-if="!portalMode && !isDesktop"
           type="button"
           class="topbar__mobile-menu-btn topbar-icon-btn sb-ripple"
           :aria-label="sidebarOpen ? t('topbar.menuClose') : t('topbar.menuOpen')"
@@ -20,7 +21,7 @@
           <span class="material-icons text-[22px]">menu</span>
         </button>
 
-        <Link :href="dashboardUrl" class="topbar__brand" :title="$page.props.branding.tagline" :aria-label="$page.props.branding.title">
+        <Link :href="brandUrl" class="topbar__brand" :title="t('portal.title')" :aria-label="t('portal.title')">
           <BrandLogo style="width: clamp(116px, 18vw, 180px);" />
         </Link>
       </div>
@@ -226,7 +227,7 @@
         </div>
       </div>
 
-      <div class="topbar__search order-3 flex w-full flex-1 min-w-0 justify-center md:order-2 md:w-auto" role="search">
+      <div v-if="!portalMode" class="topbar__search order-3 flex w-full flex-1 min-w-0 justify-center md:order-2 md:w-auto" role="search">
         <form class="topbar-search max-w-md md:max-w-xl lg:max-w-2xl" role="search" @submit.prevent="submitSearch">
           <span class="material-icons topbar-search__icon">search</span>
           <input
@@ -282,7 +283,8 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  dashboardUrl: {
+  portalMode: { type: Boolean, default: false },
+  brandUrl: {
     type: String,
     required: true,
   },
@@ -689,6 +691,10 @@ defineExpose({
     gap: 1.25rem 2rem;
     padding-inline: 2rem;
   }
+}
+
+.topbar__inner--portal {
+  grid-template-columns: auto minmax(0, 1fr);
 }
 
 .topbar__left,

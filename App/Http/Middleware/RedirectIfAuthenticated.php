@@ -10,9 +10,9 @@ class RedirectIfAuthenticated
 {
     public function handle(Request $request, Closure $next, ...$guards)
     {
-        foreach ($guards as $guard) {
+        foreach ($guards ?: [null] as $guard) {
             if (Auth::guard($guard)->check()) {
-                return redirect('/dashboard');
+                return redirect()->route('portal', ['locale' => app()->getLocale()]);
             }
         }
 

@@ -115,6 +115,7 @@ resources/js/utils/*
 !resources/js/utils/appearance.js
 !resources/js/Pages/
 resources/js/Pages/*
+!resources/js/Pages/Portal.vue
 !resources/js/Pages/Workflows/
 !resources/js/Pages/Workflows/*.vue
 !resources/js/Pages/Knowledge/

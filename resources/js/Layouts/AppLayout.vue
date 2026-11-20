@@ -7,7 +7,8 @@
       :notifications="notifications"
       :initial-search="searchQuery"
       :sidebar-open="sidebarOpen"
-      :dashboard-url="resolveRouteName('dashboard')"
+      :brand-url="resolveRouteName('portal')"
+      :portal-mode="isPortal"
       :account-profile-url="resolveRouteName('account.profile')"
       :account-password-url="resolveRouteName('account.change-password')"
       :is-desktop="isDesktop"
@@ -29,6 +30,7 @@
     />
 
     <LegacySidebar
+      v-if="!isPortal"
       :nav-items="navItems"
       :current-url="currentPath"
       :sidebar-open="sidebarOpen"
@@ -42,10 +44,10 @@
 
     <div
       class="app-content"
-      :class="{ 'with-sidebar': isDesktop }"
+      :class="{ 'with-sidebar': isDesktop && !isPortal }"
       :style="contentStyle"
     >
-      <div v-if="!isDesktop && sidebarOpen" class="overlay" @click="setSidebarOpen(false)"></div>
+      <div v-if="!isPortal && !isDesktop && sidebarOpen" class="overlay" @click="setSidebarOpen(false)"></div>
       <main class="app-main">
         <p v-if="themeError" role="alert" class="mb-4 rounded-xl bg-rose-50 p-3 text-sm text-rose-800 dark:bg-rose-950 dark:text-rose-200">{{ themeError }}</p>
         <p v-if="localeError" role="alert" class="mb-4 rounded-xl bg-rose-50 p-3 text-sm text-rose-800">{{ localeError }}</p>
@@ -122,7 +124,6 @@ const inertiaUrl = computed(() => page.url ?? '/')
 const authUser = computed(() => page.props.auth?.user ?? null)
 const userRoles = computed(() => (authUser.value?.roles ?? []).map(role => String(role).toLowerCase()))
 const isSuperAdmin = computed(() => userRoles.value.includes('superadmin'))
-const showProjectsMenu = true
 const impersonation = computed(() => page.props.impersonation ?? { active: false })
 const impersonationActive = computed(() => Boolean(impersonation.value?.active))
 const isLimitedUser = computed(() => {
@@ -193,6 +194,11 @@ const stripLocalePrefix = path => {
 const currentPath = computed(() => {
   const url = inertiaUrl.value ?? '/'
   return stripLocalePrefix(url.split('?')[0] || '/')
+})
+const isPortal = computed(() => currentPath.value === '/portal')
+const focusedModule = computed(() => {
+  const [, area, module] = currentPath.value.split('/')
+  return area === 'dashboard' && (module === 'tasks' || module === 'projects') ? module : null
 })
 
 const searchQuery = computed(() => {
@@ -282,6 +288,14 @@ const navItems = computed(() => {
   let items = [
     {
       type: 'link',
+      key: 'portal',
+      label: t('portal.title'),
+      icon: 'apps',
+      href: resolveRouteName('portal'),
+      match: path => path === '/portal',
+    },
+    {
+      type: 'link',
       key: 'dashboard',
       label: t('nav.dashboard'),
       icon: 'dashboard',
@@ -350,10 +364,7 @@ const navItems = computed(() => {
       ],
       match: path => pathStartsWith(path, '/dashboard/tasks'),
     },
-  ]
-
-  if (showProjectsMenu) {
-    items.push({
+    {
       type: 'group',
       key: 'projects',
       label: t('nav.projects'),
@@ -381,7 +392,11 @@ const navItems = computed(() => {
         },
       ],
       match: path => pathStartsWith(path, '/dashboard/projects'),
-    })
+    },
+  ]
+
+  if (focusedModule.value) {
+    return items.filter(item => item.key === focusedModule.value || item.key === 'portal')
   }
 
   items.push({
@@ -789,7 +804,7 @@ const sidebarWidth = computed(() => {
 })
 
 const contentStyle = computed(() => {
-  if (!isDesktop.value) {
+  if (isPortal.value || !isDesktop.value) {
     return { marginLeft: '0px' }
   }
   return { marginLeft: sidebarWidth.value }
@@ -820,6 +835,10 @@ onBeforeUnmount(() => {
 
 watch([announcementKey, announcement], () => {
   syncAnnouncement()
+})
+
+watch(isPortal, portal => {
+  if (portal && !isDesktop.value && sidebarOpen.value) setSidebarOpen(false)
 })
 
 watch(() => authUser.value?.id, () => {
