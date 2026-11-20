@@ -96,6 +96,7 @@ const workspaces = [
 .portal-hero h1 {
   max-width: 20ch;
   overflow-wrap: anywhere;
+  color: #fff;
   font-size: clamp(2.125rem, 5vw, 4.25rem);
   font-weight: 750;
   letter-spacing: -0.045em;
@@ -104,7 +105,7 @@ const workspaces = [
 
 .portal-hero__prompt {
   margin-top: 1.1rem;
-  color: #d5e8fc;
+  color: #fff;
   font-size: clamp(0.95rem, 1.6vw, 1.125rem);
 }
 
