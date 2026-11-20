@@ -117,6 +117,12 @@ class Ticket extends Model
 
     protected static function booted(): void
     {
+        static::saving(function (Ticket $ticket) {
+            if (! $ticket->exists || array_key_exists('status', $ticket->getAttributes())) {
+                $ticket->status_id = WorkflowStatus::code($ticket->status);
+            }
+        });
+
         static::creating(function (Ticket $t) {
             if (empty($t->ticket_no)) {
                 $t->ticket_no = static::nextTicketNo();
@@ -291,6 +297,15 @@ class Ticket extends Model
 
                 return ['status' => $normalized];
             }
+        );
+    }
+
+    protected function statusId(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => array_key_exists('status', $this->attributes)
+                ? WorkflowStatus::code($this->status)
+                : $value,
         );
     }
 }

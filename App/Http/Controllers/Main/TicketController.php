@@ -833,7 +833,6 @@ class TicketController extends Controller
         $lockCoreFields = $viewer
             && ! RoleHelpers::userIsSuperAdmin($viewer)
             && ($ticket->isRequester($viewer) || $ticket->isAgent($viewer));
-        $statusLabelMap = $this->statusMap();
         $normalizedStatus = WorkflowStatus::normalize($ticket->status ?? WorkflowStatus::NEW);
         $users = $this->usersList($viewer);
         $userOptions = $this->formatUserOptions($users);
@@ -852,7 +851,7 @@ class TicketController extends Controller
             'type' => $ticket->type,
             'status' => $normalizedStatus,
             'status_id' => $ticket->status_id,
-            'status_id_label' => $ticket->status_id ? ($statusLabelMap[$ticket->status_id] ?? null) : null,
+            'status_id_label' => WorkflowStatus::label($normalizedStatus),
             'due_at' => $this->toInputDateTime($ticket->due_at ?: $ticket->due_date),
             'finish_at' => $this->toInputDateTime($ticket->finish_at ?: $ticket->finish_date),
             'sla' => $ticket->sla,
@@ -1556,7 +1555,6 @@ class TicketController extends Controller
     {
         $status = WorkflowStatus::normalize($ticket->status ?? WorkflowStatus::NEW);
         $tz = config('app.timezone');
-        $statusLabelMap = $this->statusMap();
 
         $requesterName = $this->userDisplayName($ticket->requester);
         $agentName = $this->userDisplayName($ticket->agent);
@@ -1632,7 +1630,7 @@ class TicketController extends Controller
             'status_label' => WorkflowStatus::label($status),
             'status_badge' => WorkflowStatus::badgeClass($status),
             'status_id' => $ticket->status_id,
-            'status_id_label' => $ticket->status_id ? ($statusLabelMap[$ticket->status_id] ?? null) : null,
+            'status_id_label' => WorkflowStatus::label($status),
             'reason' => $ticket->reason,
             'letter_no' => $ticket->letter_no,
             'due_display' => $this->formatDate($ticket->due_at ?? $ticket->due_date, 'd M Y H:i', $tz),
@@ -1916,7 +1914,7 @@ class TicketController extends Controller
             'status' => $status,
             'status_label' => $statusLabel,
             'status_id' => $ticket->status_id,
-            'status_id_label' => $ticket->status_id ? ($statusLabelMap[$ticket->status_id] ?? null) : null,
+            'status_id_label' => $statusLabel,
             'due_at' => $this->toIsoString($ticket->due_at ?: $ticket->due_date),
             'updated_at' => $this->toIsoString($ticket->updated_at),
             'requester' => $requesterName ? [
@@ -2005,7 +2003,6 @@ class TicketController extends Controller
 
     private function transformTicketDetail(Ticket $ticket, string $backUrl): array
     {
-        $statusLabelMap = $this->statusMap();
         $normalizedStatus = WorkflowStatus::normalize($ticket->status ?? WorkflowStatus::NEW);
         $statusLabel = WorkflowStatus::label($normalizedStatus);
 
@@ -2040,7 +2037,7 @@ class TicketController extends Controller
             'status' => $normalizedStatus,
             'status_label' => $statusLabel,
             'status_id' => $ticket->status_id,
-            'status_id_label' => $statusLabelMap[$ticket->status_id] ?? null,
+            'status_id_label' => $statusLabel,
             'sla' => $ticket->sla,
             'reason' => $ticket->reason,
             'letter_no' => $ticket->letter_no,

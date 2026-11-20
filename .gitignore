@@ -154,3 +154,4 @@ docs/workflow-language-update*.md
 /docs/upload-limits*.md
 /tests/AttachmentUploadTest*.php
 /tests/Unit/TicketReportTest*.php
+/tests/Unit/TicketStatusConsistencyTest*.php
