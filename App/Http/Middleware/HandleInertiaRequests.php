@@ -68,7 +68,7 @@ class HandleInertiaRequests extends Middleware
             'branding' => \App\Support\Branding::shared(),
             'status' => fn () => $request->session()->get('status'),
             'locale' => $resolvedLocale ?? app()->getLocale(),
-            'portalUrl' => fn () => portalEntryRoute() === 'portal' ? route('portal', ['locale' => app()->getLocale()], false) : null,
+            'portalUrl' => fn () => portalEntryUrl($resolvedLocale ?? app()->getLocale(), absolute: false),
             'globalLocale' => \App\Support\UserLocale::globalDefault(),
             'announcement' => $announcement,
             'maintenance' => $maintenance,

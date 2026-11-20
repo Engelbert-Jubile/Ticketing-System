@@ -170,9 +170,10 @@ class AuthController extends Controller
 
         Auth::guard('web')->login($user, $request->boolean('remember'));
         $request->session()->regenerate();
+        $request->session()->forget('url.intended');
         RateLimiter::clear($throttleKey);
 
-        $destination = route(portalEntryRoute(), ['locale' => $locale]);
+        $destination = portalEntryUrl($locale);
 
         if ($this->shouldRequireEmailVerification($user)) {
             $sessionKey = 'email_verification_notice_sent_'.$user->getKey();
@@ -188,11 +189,11 @@ class AuthController extends Controller
             }
 
             return redirect()
-                ->intended($destination)
+                ->to($destination)
                 ->with('warning', __('Akun ini belum terverifikasi. Link verifikasi dikirim satu kali di sesi login ini. Silakan cek email Anda.'));
         }
 
-        return redirect()->intended($destination);
+        return redirect()->to($destination);
     }
 
     /* Logout */

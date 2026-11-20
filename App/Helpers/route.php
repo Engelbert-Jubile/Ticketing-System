@@ -10,11 +10,17 @@ if (! function_exists('routeLocale')) {
     }
 }
 
-if (! function_exists('portalEntryRoute')) {
-    function portalEntryRoute(): string
+if (! function_exists('portalEntryUrl')) {
+    function portalEntryUrl(string $locale, array $params = [], bool $absolute = true): string
     {
-        // The previous route cache can still be active during a deployment.
-        return \Illuminate\Support\Facades\Route::has('portal') ? 'portal' : 'dashboard';
+        $params['locale'] = $locale;
+
+        if (\Illuminate\Support\Facades\Route::has('portal')) {
+            return route('portal', $params, $absolute);
+        }
+
+        // Serve the portal through the existing dashboard route during a deployment.
+        return route('dashboard', ['view' => 'portal', ...$params], $absolute);
     }
 }
 

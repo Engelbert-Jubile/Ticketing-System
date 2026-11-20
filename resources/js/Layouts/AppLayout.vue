@@ -196,7 +196,7 @@ const currentPath = computed(() => {
   const url = inertiaUrl.value ?? '/'
   return stripLocalePrefix(url.split('?')[0] || '/')
 })
-const isPortal = computed(() => currentPath.value === '/portal')
+const isPortal = computed(() => page.component === 'Portal')
 const portalUrl = computed(() => page.props.portalUrl)
 const focusedModule = computed(() => {
   const [, area, module] = currentPath.value.split('/')
@@ -396,7 +396,7 @@ const navItems = computed(() => {
       label: t('portal.title'),
       icon: 'apps',
       href: portalUrl.value,
-      match: path => path === '/portal',
+      match: () => isPortal.value,
     })
   }
 
@@ -530,6 +530,8 @@ const navItems = computed(() => {
 
 
 const documentTitle = computed(() => {
+  if (isPortal.value) return t('portal.title')
+
   const path = currentPath.value
 
   const flatten = items => (items || []).flatMap(item => {

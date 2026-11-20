@@ -48,7 +48,10 @@ class DashboardController extends Controller
 
     public function index(Request $request): Response
     {
-     
+        if ($request->query('view') === 'portal') {
+            return Inertia::render('Portal');
+        }
+
         $viewerId = (int) ($request->user()?->id ?? 0);
         $isSuperAdmin = RoleHelpers::userIsSuperAdmin($request->user());
         $usersCount = User::count();

@@ -25,15 +25,9 @@ class Login extends Component
         $email = strtolower(trim($this->email));
         if (Auth::attempt(['email' => $email, 'password' => $this->password], remember: true)) {
             request()->session()->regenerate();
+            request()->session()->forget('url.intended');
 
-            // ✅ Livewire v3: redirect SPA-friendly
-            return $this->redirectIntended(
-                default: route('dashboard', ['locale' => app()->getLocale() ?? config('app.locale', 'en')]),
-                navigate: true
-            );
-
-            // ATAU (pilih salah satu):
-            // return redirect()->intended(route('dashboard'));
+            return $this->redirect(portalEntryUrl(app()->getLocale()));
         }
 
         $this->addError('email', 'Email atau password salah.');

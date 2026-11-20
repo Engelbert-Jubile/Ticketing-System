@@ -12,7 +12,7 @@ class RedirectIfAuthenticated
     {
         foreach ($guards ?: [null] as $guard) {
             if (Auth::guard($guard)->check()) {
-                return redirect()->route(portalEntryRoute(), ['locale' => app()->getLocale()]);
+                return redirect()->to(portalEntryUrl(app()->getLocale()));
             }
         }
 
