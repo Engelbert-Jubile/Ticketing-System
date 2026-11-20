@@ -1,177 +1,122 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $title }} — {{ config('app.name') }}</title>
+    <title>{{ $title }} - {{ \App\Support\Branding::normalizeName(config('app.name')) }}</title>
     <style>
         @page { margin: 24px 28px; }
-        body { font-family: DejaVu Sans, sans-serif; font-size: 12px; color: #0f172a; }
-        h1 { font-size: 22px; margin: 0 0 16px 0; color: #1e3a8a; }
-        h2 { font-size: 15px; margin: 18px 0 10px 0; color: #1e293b; letter-spacing: 0.02em; text-transform: uppercase; }
-        p { margin: 0 0 8px 0; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px 18px; margin-bottom: 12px; }
-        .card { border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; background: #f8fafc; }
-        .label { font-size: 11px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
-        .value { font-size: 12px; color: #0f172a; }
-        table { width: 100%; border-collapse: collapse; margin-top: 6px; }
-        th, td { border: 1px solid #cbd5f5; padding: 8px 10px; text-align: left; vertical-align: top; }
-        thead { background: #e2e8f0; }
-        th { font-size: 11px; color: #1e293b; text-transform: uppercase; letter-spacing: 0.03em; }
+        body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #0f172a; }
+        h1 { font-size: 20px; margin: 0 0 16px; color: #1e3a8a; }
+        h2 { font-size: 14px; margin: 18px 0 10px; color: #1e293b; text-transform: uppercase; page-break-after: avoid; }
+        p { margin: 0 0 6px; }
+        .label { font-size: 10px; font-weight: bold; color: #475569; margin-bottom: 4px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 6px; table-layout: fixed; }
+        th, td { border: 1px solid #cbd5f5; padding: 8px; text-align: left; vertical-align: top; overflow-wrap: break-word; }
+        thead { display: table-header-group; background: #e2e8f0; }
+        tr { page-break-inside: avoid; }
+        th { font-size: 10px; color: #1e293b; text-transform: uppercase; }
         tbody tr:nth-child(odd) { background: #f8fafc; }
-        .muted { color: #64748b; font-size: 11px; }
-        .badge { display: inline-block; padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; background: #dbeafe; color: #1d4ed8; text-transform: uppercase; letter-spacing: 0.05em; }
-        .section { margin-top: 20px; }
-        .description { border: 1px solid #cbd5f5; border-radius: 10px; padding: 14px 16px; background: #fff; line-height: 1.5; }
+        .summary td { width: 50%; background: #f8fafc; }
+        .muted { color: #64748b; font-size: 10px; }
+        .badge { display: inline-block; padding: 3px 7px; background: #dbeafe; color: #1d4ed8; }
+        .description { border: 1px solid #cbd5f5; padding: 12px; line-height: 1.5; overflow-wrap: break-word; }
+        .description img { max-width: 100%; height: auto; }
         ul { margin: 4px 0 10px 18px; padding: 0; }
-        li { margin: 0 0 6px 0; }
+        li { margin: 0 0 6px; }
     </style>
 </head>
 <body>
     @include('reports.pdf.brand')
     <h1>{{ $title }}</h1>
 
-    <div class="grid">
-        <div class="card">
-            <p class="label">Nomor Ticket</p>
-            <p class="value">{{ $ticket['ticket_no'] ?? '—' }}</p>
-        </div>
-        <div class="card">
-            <p class="label">Status</p>
-            <p class="value"><span class="badge">{{ $ticket['status_label'] ?? 'Tidak diketahui' }}</span></p>
-        </div>
-        <div class="card">
-            <p class="label">Prioritas</p>
-            <p class="value">{{ ucfirst($ticket['priority'] ?? '—') }}</p>
-        </div>
-        <div class="card">
-            <p class="label">Jenis</p>
-            <p class="value">{{ ucfirst($ticket['type'] ?? '—') }}</p>
-        </div>
-    </div>
+    <table class="summary">
+        <tr>
+            <td><p class="label">{{ __('ticket_report.number') }}</p>{{ $ticket['ticket_no'] ?? '—' }}</td>
+            <td><p class="label">{{ __('ticket_report.status') }}</p><span class="badge">{{ $ticket['status_label'] ?? '—' }}</span></td>
+        </tr>
+        <tr>
+            <td><p class="label">{{ __('ticket_report.priority') }}</p>{{ $labels['priority'] ?? '—' }}</td>
+            <td><p class="label">{{ __('ticket_report.type') }}</p>{{ $labels['type'] ?? '—' }}</td>
+        </tr>
+        <tr>
+            <td>
+                <p class="label">{{ __('ticket_report.requester') }}</p>{{ $ticket['requester']['name'] ?? '—' }}
+                @if(!empty($ticket['requester']['email']))<p class="muted">{{ $ticket['requester']['email'] }}</p>@endif
+            </td>
+            <td><p class="label">SLA</p>{{ $labels['sla'] ?? '—' }}</td>
+        </tr>
+        <tr>
+            <td><p class="label">{{ __('ticket_report.created') }}</p>{{ $timeline['created_at'] ?? '—' }}</td>
+            <td><p class="label">{{ __('ticket_report.updated') }}</p>{{ $timeline['updated_at'] ?? '—' }}</td>
+        </tr>
+        <tr>
+            <td colspan="2"><p class="label">{{ __('ticket_report.due') }}</p>{{ $timeline['due_at'] ?? __('ticket_report.not_specified') }}</td>
+        </tr>
+        @if(($ticket['status'] ?? null) === 'done')
+            <tr><td colspan="2"><p class="label">{{ __('ticket_report.completed') }}</p>{{ $timeline['finish_at'] ?? __('ticket_report.not_specified') }}</td></tr>
+        @endif
+    </table>
 
-    <div class="grid">
-        <div class="card">
-            <p class="label">Requester</p>
-            <p class="value">{{ $ticket['requester']['name'] ?? '—' }}</p>
-            @if(!empty($ticket['requester']['email']))
-                <p class="muted">{{ $ticket['requester']['email'] }}</p>
-            @endif
-        </div>
-        <div class="card">
-            <p class="label">Agent</p>
-            <p class="value">{{ $ticket['agent']['name'] ?? '—' }}</p>
-            @if(!empty($ticket['agent']['email']))
-                <p class="muted">{{ $ticket['agent']['email'] }}</p>
-            @endif
-        </div>
-        <div class="card">
-            <p class="label">SLA</p>
-            <p class="value">{{ ucfirst($ticket['sla'] ?? '—') }}</p>
-        </div>
-        <div class="card">
-            <p class="label">Terakhir Diperbarui</p>
-            <p class="value">{{ $timeline['updated_at'] ?? '—' }}</p>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="grid" style="margin-bottom: 0;">
-            <div>
-                <p class="label">Dibuat</p>
-                <p class="value">{{ $timeline['created_at'] ?? '—' }}</p>
-            </div>
-            <div>
-                <p class="label">Batas Waktu</p>
-                <p class="value">{{ $timeline['due_at'] ?? '—' }}</p>
-            </div>
-            <div>
-                <p class="label">Selesai</p>
-                <p class="value">{{ $timeline['finish_at'] ?? '—' }}</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="section">
-        <h2>Deskripsi</h2>
-        <div class="description">{!! $description !!}</div>
-    </div>
+    <h2>{{ __('ticket_report.description') }}</h2>
+    <div class="description">{!! $description !!}</div>
 
     @if(!empty($assignedUsers))
-        <div class="section">
-            <h2>Tim yang Ditugaskan</h2>
-            <ul>
-                @foreach($assignedUsers as $user)
-                    <li>{{ $user['name'] ?? '—' }} @if(!empty($user['email']))<span class="muted">({{ $user['email'] }})</span>@endif</li>
-                @endforeach
-            </ul>
-        </div>
+        <h2>{{ __('ticket_report.assigned_team') }}</h2>
+        <ul>
+            @foreach($assignedUsers as $user)
+                <li>{{ $user['name'] ?? '—' }} @if(!empty($user['email']))<span class="muted">({{ $user['email'] }})</span>@endif</li>
+            @endforeach
+        </ul>
     @endif
 
     @if(!empty($project))
-        <div class="section">
-            <h2>Project Terkait</h2>
-            <div class="card">
-                <p class="label">Judul Project</p>
-                <p class="value">{{ $project['title'] ?? '—' }}</p>
-                <p class="label">Nomor Project</p>
-                <p class="value">{{ $project['project_no'] ?? '—' }}</p>
-                <p class="label">Status</p>
-                <p class="value">{{ $project['status'] ?? '—' }}</p>
-                <p class="label">Timeline</p>
-                <p class="value">{{ $project['timeline'] ?? '—' }}</p>
-            </div>
-        </div>
+        <h2>{{ __('ticket_report.project') }}</h2>
+        <table class="summary">
+            <tr>
+                <td><p class="label">{{ __('ticket_report.project_title') }}</p>{{ $project['title'] ?? '—' }}</td>
+                <td><p class="label">{{ __('ticket_report.project_number') }}</p>{{ $project['project_no'] ?? '—' }}</td>
+            </tr>
+            <tr>
+                <td><p class="label">{{ __('ticket_report.status') }}</p>{{ $project['status'] ?? '—' }}</td>
+                <td><p class="label">{{ __('ticket_report.timeline') }}</p>{{ $project['timeline'] ?: __('ticket_report.not_specified') }}</td>
+            </tr>
+        </table>
     @endif
 
     @if(!empty($tasks))
-        <div class="section">
-            <h2>Daftar Task</h2>
-            <table>
-                <thead>
+        <h2>{{ __('ticket_report.tasks') }}</h2>
+        <table>
+            <thead><tr>
+                <th style="width: 34%;">{{ __('ticket_report.task_title') }}</th>
+                <th style="width: 16%;">{{ __('ticket_report.status') }}</th>
+                <th style="width: 28%;">{{ __('ticket_report.assignee') }}</th>
+                <th style="width: 22%;">{{ __('ticket_report.due') }}</th>
+            </tr></thead>
+            <tbody>
+                @foreach($tasks as $item)
                     <tr>
-                        <th>Judul</th>
-                        <th>Status</th>
-                        <th>Penanggung Jawab</th>
-                        <th>Due</th>
+                        <td>{{ $item['title'] ?? '—' }}</td>
+                        <td>{{ $item['status_label'] ?? '—' }}</td>
+                        <td>{{ $item['assignee'] ?? __('ticket_report.unassigned') }}</td>
+                        <td>{{ $item['due_at'] ?? __('ticket_report.not_specified') }}</td>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach($tasks as $item)
-                        <tr>
-                            <td>{{ $item['title'] ?? '—' }}</td>
-                            <td>{{ $item['status_label'] ?? '—' }}</td>
-                            <td>{{ $item['assignee'] ?? '—' }}</td>
-                            <td>{{ $item['due_at'] ?? '—' }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+                @endforeach
+            </tbody>
+        </table>
     @endif
 
     @if(!empty($attachments))
-        <div class="section">
-            <h2>Lampiran</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Nama File</th>
-                        <th>Ukuran</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($attachments as $attachment)
-                        <tr>
-                            <td>{{ $attachment['name'] ?? '—' }}</td>
-                            <td>{{ $attachment['size'] ?? '—' }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+        <h2>{{ __('ticket_report.attachments') }}</h2>
+        <table>
+            <thead><tr><th style="width: 78%;">{{ __('ticket_report.file_name') }}</th><th style="width: 22%;">{{ __('ticket_report.size') }}</th></tr></thead>
+            <tbody>
+                @foreach($attachments as $attachment)
+                    <tr><td>{{ $attachment['name'] ?? '—' }}</td><td>{{ $attachment['size'] ?? '—' }}</td></tr>
+                @endforeach
+            </tbody>
+        </table>
     @endif
 
-    <p class="muted" style="margin-top: 22px;">Dokumen ini dibuat otomatis pada {{ now()->timezone(config('app.timezone'))->format('d M Y H:i') }}.</p>
+    <p class="muted" style="margin-top: 22px;">{{ __('ticket_report.generated', ['date' => now()->timezone(config('app.timezone'))->locale(app()->getLocale())->translatedFormat('d M Y H:i')]) }}</p>
 </body>
 </html>

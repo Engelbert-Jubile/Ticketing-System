@@ -1769,23 +1769,22 @@ class TicketController extends Controller
             'agent',
             'assignedUsers',
             'project',
+            'assignee',
             'tasks.assignee',
         ]);
 
         $detail = $this->transformTicketDetail($ticket, route('tickets.index', ['locale' => app()->getLocale()]));
 
-        $tz = config('app.timezone');
-
         $timeline = [
-            'created_at' => $this->formatDate($ticket->created_at, 'd M Y H:i', $tz),
-            'updated_at' => $this->formatDate($ticket->updated_at, 'd M Y H:i', $tz),
-            'due_at' => $this->formatDate($ticket->due_at ?: $ticket->due_date, 'd M Y H:i', $tz),
-            'finish_at' => $this->formatDate($ticket->finish_at ?: $ticket->finish_date, 'd M Y H:i', $tz),
+            'created_at' => $this->formatReportDate($detail['timeline']['created_at']),
+            'updated_at' => $this->formatReportDate($detail['timeline']['updated_at']),
+            'due_at' => $this->formatReportDate($detail['timeline']['due_at']),
+            'finish_at' => $this->formatReportDate($detail['timeline']['finish_at']),
         ];
 
         $description = $this->sanitizeDescription((string) ($detail['description'] ?? ''));
         if (trim(strip_tags($description)) === '') {
-            $description = __('<p>Tidak ada deskripsi.</p>');
+            $description = '<p>'.e(__('ticket_report.no_description')).'</p>';
         }
 
         $assignedUsers = $detail['assigned_users'] ?? [];
@@ -1800,26 +1799,29 @@ class TicketController extends Controller
                 'title' => $ticket->project->title,
                 'project_no' => $ticket->project->project_no,
                 'status' => $projectStatus,
-                'timeline' => $this->buildRangeLabel($projectStart, $projectEnd),
+                'timeline' => implode(' - ', array_filter([
+                    $this->formatReportDate($projectStart),
+                    $this->formatReportDate($projectEnd),
+                ])),
             ];
         }
 
-        $tasks = $ticket->relationLoaded('tasks') ? $ticket->tasks->map(function (Task $task) use ($tz) {
+        $tasks = $ticket->relationLoaded('tasks') ? $ticket->tasks->map(function (Task $task) use ($ticket) {
             $status = WorkflowStatus::normalize($task->status ?? null);
-            $assignee = $task->assignee ? ($task->assignee->display_name ?? $task->assignee->email) : null;
+            $assignee = $this->reportTaskAssignees($task, $ticket);
 
             return [
                 'title' => $task->title,
                 'status_label' => WorkflowStatus::label($status),
                 'assignee' => $assignee,
-                'due_at' => $this->formatDate($task->due_at ?: $task->due_date, 'd M Y H:i', $tz),
+                'due_at' => $this->formatReportDate($ticket->due_at ?: $ticket->due_date ?: $task->due_at ?: $task->due_date),
             ];
         })->values()->all() : [];
 
         $attachments = collect($detail['attachments'] ?? [])->map(function (array $attachment) {
             return [
-                'name' => $attachment['name'] ?? 'â€”',
-                'size' => $this->formatFileSize($attachment['size'] ?? null),
+                'name' => $attachment['name'] ?? null,
+                'size' => isset($attachment['size']) ? $this->formatFileSize($attachment['size']) : null,
             ];
         })->values()->all();
 
@@ -1829,8 +1831,13 @@ class TicketController extends Controller
         );
 
         return $this->reportExport->downloadDetailPdf('reports.pdf.ticket-detail', [
-            'title' => $detail['title'] ?? 'Detail Ticket',
+            'title' => $detail['title'] ?? __('ticket_report.title'),
             'ticket' => $detail,
+            'labels' => [
+                'priority' => $this->reportValueLabel($ticket->priority),
+                'type' => $this->reportValueLabel($ticket->type),
+                'sla' => $this->reportValueLabel($ticket->sla),
+            ],
             'timeline' => $timeline,
             'description' => $description,
             'assignedUsers' => $assignedUsers,
@@ -1838,6 +1845,57 @@ class TicketController extends Controller
             'tasks' => $tasks,
             'attachments' => $attachments,
         ], $filename);
+    }
+
+    private function formatReportDate($value): ?string
+    {
+        return $value
+            ? Carbon::parse($value)->timezone(config('app.timezone'))->locale(app()->getLocale())->translatedFormat('d M Y H:i')
+            : null;
+    }
+
+    private function reportValueLabel(?string $value): string
+    {
+        if (! $value) {
+            return '—';
+        }
+
+        $key = $value === 'project' ? 'project_type' : $value;
+
+        return in_array($key, ['high', 'medium', 'low', 'task', 'project_type', 'ontime', 'late'], true)
+            ? __('ticket_report.'.$key)
+            : __(ucfirst($value));
+    }
+
+    private function reportTaskAssignees(Task $task, Ticket $ticket): ?string
+    {
+        // Tasks linked to a ticket inherit its assignment, as on the task detail page.
+        $users = $ticket->assignedUsers->collect();
+        foreach ([$ticket->agent, $ticket->assignee] as $user) {
+            if ($user) {
+                $users->push($user);
+            }
+        }
+
+        $names = collect();
+        if ($users->isEmpty()) {
+            $raw = $task->assigned_to;
+            $assigned = is_array($raw) ? $raw : json_decode((string) $raw, true);
+            if (is_array($assigned)) {
+                $ids = array_values(array_filter($assigned, fn ($id) => is_numeric($id) && (int) $id > 0));
+                $users = User::whereIn('id', $ids)->get()->collect();
+            } elseif (is_string($raw) && trim($raw) !== '') {
+                $names = collect(explode(',', $raw))->map(fn ($name) => trim($name))->filter();
+            }
+            if ($task->assignee) {
+                $users->push($task->assignee);
+            }
+        }
+
+        $label = $users->unique('id')->map(fn (User $user) => $this->userDisplayName($user))
+            ->merge($names)->filter()->unique()->implode(', ');
+
+        return $label !== '' ? $label : null;
     }
 
     private function transformTicketSummary(Ticket $ticket, string $origin, array $statusLabelMap): array
@@ -1990,7 +2048,9 @@ class TicketController extends Controller
                 'created_at' => $this->toIsoString($ticket->created_at),
                 'updated_at' => $this->toIsoString($ticket->updated_at),
                 'due_at' => $this->toIsoString($ticket->due_at ?: $ticket->due_date),
-                'finish_at' => $this->toIsoString($ticket->finish_at ?: $ticket->finish_date),
+                'finish_at' => $normalizedStatus === WorkflowStatus::DONE
+                    ? $this->toIsoString($ticket->finish_at ?: $ticket->finish_date)
+                    : null,
             ],
             'requester' => $ticket->requester ? [
                 'id' => $ticket->requester->id,

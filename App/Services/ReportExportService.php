@@ -21,7 +21,7 @@ class ReportExportService
             'meta' => $meta,
         ])->setPaper('a4', 'portrait');
 
-        $pdf->getDomPDF()->addInfo('Creator', config('app.name'));
+        $pdf->getDomPDF()->addInfo('Creator', \App\Support\Branding::normalizeName(config('app.name')));
 
         return $pdf->download($filename);
     }
@@ -30,7 +30,9 @@ class ReportExportService
     {
         $pdf = Pdf::loadView($view, $data)->setPaper($paper, $orientation);
 
-        $pdf->getDomPDF()->addInfo('Creator', config('app.name'));
+        $brand = \App\Support\Branding::normalizeName(config('app.name'));
+        $pdf->getDomPDF()->addInfo('Creator', $brand);
+        $pdf->getDomPDF()->addInfo('Title', ($data['title'] ?? $brand).' - '.$brand);
 
         return $pdf->download($filename);
     }

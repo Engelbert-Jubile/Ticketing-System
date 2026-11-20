@@ -50,7 +50,7 @@
           <dt class="font-semibold text-slate-500 dark:text-slate-400">{{ $t("Diperbarui") }}</dt>
           <dd>{{ formatDate(ticket.timeline?.updated_at, true) }}</dd>
         </div>
-        <div>
+        <div v-if="ticket.status === 'done'">
           <dt class="font-semibold text-slate-500 dark:text-slate-400">{{ $t("Selesai") }}</dt>
           <dd>{{ formatDate(ticket.timeline?.finish_at, true) }}</dd>
         </div>
@@ -64,10 +64,6 @@
           <div>
             <dt class="font-medium text-slate-500 dark:text-slate-400">Requester</dt>
             <dd>{{ ticket.requester?.name ?? '—' }}</dd>
-          </div>
-          <div>
-            <dt class="font-medium text-slate-500 dark:text-slate-400">Agent</dt>
-            <dd>{{ ticket.agent?.name ?? '—' }}</dd>
           </div>
           <div>
             <dt class="font-medium text-slate-500 dark:text-slate-400">Assigned Users</dt>
