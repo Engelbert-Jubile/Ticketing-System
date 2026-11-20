@@ -160,3 +160,4 @@ docs/workflow-language-update*.md
 /tests/save-buttons.test*.mjs
 /tests/Unit/TicketEditSubmissionTest*.php
 /tests/Unit/EditorDescriptionTest*.php
+/tests/Unit/WorkflowStatusConstraintMigrationTest*.php
