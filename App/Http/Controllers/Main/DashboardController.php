@@ -278,9 +278,18 @@ class DashboardController extends Controller
     public function portal(): Response
     {
         $labels = __('server_room.portal');
-        $serverRoom = Route::has('server-room.index') && is_array($labels)
-            ? [...$labels, 'href' => routeLocale('server-room.index', absolute: false)]
-            : null;
+        $locale = request()->route('locale') ?? app()->getLocale();
+        $labels = is_array($labels) ? $labels : [];
+        $serverRoom = [
+            'title' => $labels['title'] ?? ($locale === 'id' ? 'Suhu Ruang Server' : 'Server Room Temp'),
+            'description' => $labels['description'] ?? ($locale === 'id'
+                ? 'Catat suhu harian beserta foto bukti pengecekan.'
+                : 'Log daily temperature checks with photo evidence.'),
+            'open' => $labels['open'] ?? ($locale === 'id' ? 'Buka laporan' : 'Open report'),
+            'href' => Route::has('server-room.index')
+                ? routeLocale('server-room.index', absolute: false)
+                : '/'.$locale.'/dashboard/server-room',
+        ];
 
         return Inertia::render('Portal', ['serverRoom' => $serverRoom]);
     }
