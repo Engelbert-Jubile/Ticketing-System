@@ -13,6 +13,7 @@ use App\Http\Controllers\Main\DashboardController;
 use App\Http\Controllers\Main\ProfileController;
 use App\Http\Controllers\Main\ProjectController;
 use App\Http\Controllers\Main\ReportController;
+use App\Http\Controllers\Main\ServerRoomTemperatureController;
 use App\Http\Controllers\Main\SettingsController;
 use App\Http\Controllers\Main\SLAReportController;
 use App\Http\Controllers\Main\TaskController;
@@ -212,7 +213,14 @@ Route::middleware($emailVerificationEnabled
     : ['auth', 'idle.timeout', 'access.restrict']
 )->group(function () {
 
-    Route::get('/portal', fn () => Inertia::render('Portal'))->name('portal');
+    Route::get('/portal', [DashboardController::class, 'portal'])->name('portal');
+
+    Route::prefix('dashboard/server-room')->name('server-room.')->group(function () {
+        Route::get('/', [ServerRoomTemperatureController::class, 'index'])->name('index');
+        Route::post('/', [ServerRoomTemperatureController::class, 'store'])->name('store');
+        Route::get('/{id}/evidence', [ServerRoomTemperatureController::class, 'evidence'])
+            ->whereNumber('id')->name('evidence');
+    });
 
     /* Ã°Å¸â€œÅ  Dashboard Home */
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

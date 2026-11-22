@@ -116,6 +116,7 @@ resources/js/utils/*
 !resources/js/Pages/
 resources/js/Pages/*
 !resources/js/Pages/Portal.vue
+!resources/js/Pages/ServerRoomTemperature.vue
 !resources/js/Pages/Workflows/
 !resources/js/Pages/Workflows/*.vue
 !resources/js/Pages/Knowledge/
@@ -162,3 +163,4 @@ docs/workflow-language-update*.md
 /tests/Unit/TicketEditSubmissionTest*.php
 /tests/Unit/EditorDescriptionTest*.php
 /tests/Unit/WorkflowStatusConstraintMigrationTest*.php
+/tests/Feature/ServerRoomTemperatureTest*.php

@@ -49,7 +49,7 @@ class DashboardController extends Controller
     public function index(Request $request): Response
     {
         if ($request->query('view') === 'portal') {
-            return Inertia::render('Portal');
+            return $this->portal();
         }
 
         $viewerId = (int) ($request->user()?->id ?? 0);
@@ -271,6 +271,16 @@ class DashboardController extends Controller
             'projReportProgressCounts' => $projReportProgressCounts,
             'tasksPeriod' => $tasksPeriod,
             'projectsPeriod' => $projectsPeriod,
+        ]);
+    }
+
+    public function portal(): Response
+    {
+        return Inertia::render('Portal', [
+            'serverRoom' => [
+                ...__('server_room.portal'),
+                'href' => routeLocale('server-room.index', absolute: false),
+            ],
         ]);
     }
 

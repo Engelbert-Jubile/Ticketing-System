@@ -16,9 +16,9 @@
 
     <nav class="portal-grid" :aria-label="t('portal.title')">
       <Link
-        v-for="workspace in workspaces"
+        v-for="workspace in cards"
         :key="workspace.key"
-        :href="resolveRoute(workspace.route, { locale: page.props.locale })"
+        :href="workspace.href"
         class="portal-card"
         :class="`portal-card--${workspace.key}`"
       >
@@ -30,11 +30,11 @@
           </span>
         </div>
         <div class="portal-card__body">
-          <h2>{{ t(`portal.${workspace.key}`) }}</h2>
-          <p>{{ t(`portal.${workspace.key}Description`) }}</p>
+          <h2>{{ workspace.title }}</h2>
+          <p>{{ workspace.description }}</p>
           <span class="portal-card__action">
-            {{ t('portal.open', { module: t(`portal.${workspace.key}`) }) }}
-            <span class="material-icons" aria-hidden="true">arrow_forward</span>
+            {{ workspace.open }}
+            <span v-if="workspace.key !== 'server-room'" class="material-icons" aria-hidden="true">arrow_forward</span>
           </span>
         </div>
       </Link>
@@ -49,6 +49,7 @@ import { useI18n } from '../i18n'
 import resolveRoute from '../utils/resolveRoute'
 
 const page = usePage()
+const props = defineProps({ serverRoom: Object })
 const { t } = useI18n()
 const greeting = computed(() => {
   const user = page.props.auth?.user
@@ -61,6 +62,21 @@ const workspaces = [
   { key: 'task', route: 'tasks.report', icon: 'task_alt' },
   { key: 'project', route: 'projects.report', icon: 'folder' },
 ]
+
+const cards = computed(() => {
+  const cards = workspaces.map(workspace => {
+    const title = t(`portal.${workspace.key}`)
+    return {
+      ...workspace,
+      title,
+      description: t(`portal.${workspace.key}Description`),
+      open: t('portal.open', { module: title }),
+      href: resolveRoute(workspace.route, { locale: page.props.locale }),
+    }
+  })
+  if (props.serverRoom) cards.push({ ...props.serverRoom, key: 'server-room', icon: 'thermostat' })
+  return cards
+})
 </script>
 
 <style scoped>
@@ -145,7 +161,7 @@ const workspaces = [
 .portal-grid {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: clamp(0.85rem, 2vw, 1.4rem);
   margin: -2.5rem clamp(0.75rem, 3vw, 2rem) 0;
 }
@@ -181,6 +197,13 @@ const workspaces = [
   --accent: #cd662a;
   --wash: #fff0e2;
   --delay: 150ms;
+}
+
+.portal-card--server-room {
+  --ink: #61339a;
+  --accent: #8456c7;
+  --wash: #f1e9ff;
+  --delay: 225ms;
 }
 
 .portal-card:is(:hover, :focus-visible) {
@@ -272,6 +295,10 @@ const workspaces = [
 @keyframes portal-arrive {
   from { opacity: 0; transform: translateY(0.75rem); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 1023px) {
+  .portal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 639px) {
