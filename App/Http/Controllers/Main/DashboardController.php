@@ -13,6 +13,7 @@ use App\Support\WorkflowStatus;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -276,12 +277,12 @@ class DashboardController extends Controller
 
     public function portal(): Response
     {
-        return Inertia::render('Portal', [
-            'serverRoom' => [
-                ...__('server_room.portal'),
-                'href' => routeLocale('server-room.index', absolute: false),
-            ],
-        ]);
+        $labels = __('server_room.portal');
+        $serverRoom = Route::has('server-room.index') && is_array($labels)
+            ? [...$labels, 'href' => routeLocale('server-room.index', absolute: false)]
+            : null;
+
+        return Inertia::render('Portal', ['serverRoom' => $serverRoom]);
     }
 
     private function orWhereJsonAssignmentContains(Builder $builder, string $column, int $userId): void
