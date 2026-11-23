@@ -22,7 +22,7 @@
       {{ flash.error || submitError }}
     </section>
 
-    <form class="mt-4 space-y-6 rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/70" @submit.prevent="submit">
+    <form class="mt-4 space-y-8 rounded-3xl border border-slate-200 bg-white/90 p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/70 sm:p-7" @submit.prevent="submit">
       <section class="grid gap-4 md:grid-cols-2">
         <div>
           <label for="ticket-title" class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Judul") }} <span class="text-red-500">*</span></label>
@@ -39,7 +39,7 @@
         </div>
 
         <div>
-          <label for="ticket-letter_no" class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Nomor Surat") }}</label>
+          <label for="ticket-letter_no" class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Nomor Referensi Dokumen/Memo") }}</label>
           <input
             id="ticket-letter_no"
             :aria-invalid="Boolean(form.errors.letter_no)"
@@ -66,7 +66,7 @@
           <p id="ticket-reason-error" role="alert" v-if="form.errors.reason" class="mt-1 text-xs text-red-500">{{ form.errors.reason }}</p>
         </div>
 
-        <div class="grid gap-4 md:col-span-2 md:grid-cols-2">
+        <div class="grid gap-4 md:col-span-2 md:grid-cols-3">
           <div>
             <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Prioritas") }} <span class="text-red-500">*</span></label>
             <div class="mt-1 w-full">
@@ -75,28 +75,27 @@
             <p v-if="form.errors.priority" class="mt-1 text-xs text-red-500">{{ form.errors.priority }}</p>
           </div>
 
-        </div>
+          <div>
+            <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Mulai") }}</label>
+            <DatePickerFlatpickr
+              :aria-label="$t(&quot;Tanggal mulai ticket&quot;)" class="mt-1"
+              v-model="form.start_at"
+              :config="startDateConfig"
+              :placeholder="$t(&quot;Pilih tanggal&quot;)"
+            />
+            <p v-if="form.errors.start_at || form.errors.due_date" class="mt-1 text-xs text-red-500">{{ form.errors.start_at || form.errors.due_date }}</p>
+          </div>
 
-        <div>
-          <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Mulai") }}</label>
-          <DatePickerFlatpickr
-            :aria-label="$t(&quot;Tanggal mulai ticket&quot;)" class="mt-1"
-            v-model="form.start_at"
-            :config="startDateConfig"
-            :placeholder="$t(&quot;Pilih tanggal&quot;)"
-          />
-          <p v-if="form.errors.start_at || form.errors.due_date" class="mt-1 text-xs text-red-500">{{ form.errors.start_at || form.errors.due_date }}</p>
-        </div>
-
-        <div>
-          <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Due Date") }}</label>
-          <DatePickerFlatpickr
-            :aria-label="$t(&quot;Due date ticket&quot;)" class="mt-1"
-            v-model="form.due_at"
-            :config="dueDateConfig"
-            :placeholder="$t(&quot;Pilih tanggal&quot;)"
-          />
-          <p v-if="form.errors.due_at" class="mt-1 text-xs text-red-500">{{ form.errors.due_at }}</p>
+          <div>
+            <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Tanggal Jatuh Tempo") }}</label>
+            <DatePickerFlatpickr
+              :aria-label="$t(&quot;Tanggal jatuh tempo ticket&quot;)" class="mt-1"
+              v-model="form.due_at"
+              :config="dueDateConfig"
+              :placeholder="$t(&quot;Pilih tanggal&quot;)"
+            />
+            <p v-if="form.errors.due_at" class="mt-1 text-xs text-red-500">{{ form.errors.due_at }}</p>
+          </div>
         </div>
       </section>
 
@@ -326,7 +325,7 @@
           <div class="w-full">
             <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t("Jenis File") }}</label>
             <div class="mt-1 w-full">
-              <FancySelect v-model="selectedAttachmentFilter" :options="attachmentFilterChoices" accent="emerald" />
+              <FancySelect v-model="selectedAttachmentFilter" :options="attachmentFilterChoices" accent="emerald" clear-on-reselect />
             </div>
             <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ attachmentFilterHint }}</p>
           </div>
@@ -446,10 +445,7 @@ const isDateBefore = (left, right) => Boolean(left && right && left < right);
 
 const uploadError = ref('');
 const attachmentIds = ref([]);
-const attachmentFilterChoices = [
-  { value: '', label: uiText("Batalkan pilihan jenis file") },
-  ...attachmentFilterOptions,
-];
+const attachmentFilterChoices = attachmentFilterOptions;
 const selectedAttachmentFilter = ref('');
 const activeAttachmentFilter = computed(
   () => attachmentFilterChoices.find(option => option.value === selectedAttachmentFilter.value) ?? null

@@ -70,6 +70,7 @@ const props = defineProps({
   disabled: { type: Boolean, default: false },
   accent: { type: String, default: 'indigo' },
   ariaLabel: { type: String, default: () => uiText("Pilih opsi") },
+  clearOnReselect: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -149,7 +150,8 @@ function close() {
 
 function select(option) {
   if (option.disabled) return;
-  emit('update:modelValue', option.value);
+  const isReselect = String(option.value) === String(props.modelValue);
+  emit('update:modelValue', props.clearOnReselect && isReselect ? '' : option.value);
   close();
 }
 
