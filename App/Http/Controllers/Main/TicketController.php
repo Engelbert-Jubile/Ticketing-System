@@ -423,7 +423,7 @@ class TicketController extends Controller
             $payload['start_date'] = $t->due_date;
         }
         if (Schema::hasColumn('tasks', 'end_date')) {
-            $payload['end_date'] = $t->finish_date;
+            $payload['end_date'] = $t->due_at?->toDateString() ?? $t->finish_date;
         }
         if (Schema::hasColumn('tasks', 'created_by')) {
             $payload['created_by'] = Auth::id();
@@ -522,18 +522,6 @@ class TicketController extends Controller
 
     public function store(Request $request)
     {
-        if ($request->filled('due_at')) {
-            try {
-                $due = Carbon::parse($request->input('due_at'));
-                $request->merge([
-                    'due_date' => $due->format('Y-m-d'),
-                    'due_time' => $due->format('H:i'),
-                ]);
-            } catch (\Throwable $e) {
-                // ignore parse error; validation will catch
-            }
-        }
-
         $currentStatus = WorkflowStatus::default();
         $today = now(config('app.timezone'))->startOfDay()->toDateString();
         $statusProvided = $request->has('status');
@@ -604,7 +592,7 @@ class TicketController extends Controller
             'assigned_user_ids.*' => ['integer', 'min:1', 'exists:users,id'],
             'due_date' => ['nullable', 'date', 'after_or_equal:'.$today],
             'finish_date' => ['nullable', 'date', 'after_or_equal:due_date', 'after_or_equal:'.$today],
-            'due_at' => ['nullable', 'date', 'after_or_equal:'.$today],
+            'due_at' => ['nullable', 'date', 'after_or_equal:due_date', 'after_or_equal:'.$today],
             'finish_at' => ['nullable', 'date', 'after_or_equal:due_at', 'after_or_equal:'.$today],
             'sla' => ['nullable', Rule::in($this->slas())],
             'attachments' => ['nullable', 'array'],
@@ -638,13 +626,9 @@ class TicketController extends Controller
         $data['due_date'] = $this->parseDateOrNull($data['due_date'] ?? null);
         $data['finish_date'] = $this->parseDateOrNull($data['finish_date'] ?? null);
 
-        $data['due_at'] = $this->normalizeDateTimeInput($data['due_at'] ?? $this->composeDateTime($request->input('due_date'), $request->input('due_time')));
+        $data['due_at'] = $this->normalizeDateTimeInput($data['due_at'] ?? null);
         $data['finish_at'] = $this->normalizeDateTimeInput($data['finish_at'] ?? $this->composeDateTime($request->input('finish_date'), $request->input('finish_time')));
 
-
-        if (empty($data['due_date']) && $data['due_at']) {
-            $data['due_date'] = Carbon::parse($data['due_at'])->toDateString();
-        }
 
         if (empty($data['finish_date']) && $data['finish_at']) {
             $data['finish_date'] = Carbon::parse($data['finish_at'])->toDateString();

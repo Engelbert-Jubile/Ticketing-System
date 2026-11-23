@@ -66,7 +66,7 @@
           <p id="ticket-reason-error" role="alert" v-if="form.errors.reason" class="mt-1 text-xs text-red-500">{{ form.errors.reason }}</p>
         </div>
 
-        <div class="grid gap-4 md:col-span-2 md:grid-cols-3">
+        <div class="grid gap-4 md:col-span-2 md:grid-cols-2">
           <div>
             <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Prioritas") }} <span class="text-red-500">*</span></label>
             <div class="mt-1 w-full">
@@ -75,29 +75,6 @@
             <p v-if="form.errors.priority" class="mt-1 text-xs text-red-500">{{ form.errors.priority }}</p>
           </div>
 
-          <div>
-            <label for="ticket-type" class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Jenis Ticket") }}</label>
-            <div class="mt-1 w-full">
-              <input
-                id="ticket-type"
-                :aria-label="$t(&quot;Jenis ticket&quot;)"
-                type="text"
-                value="Task"
-                disabled
-                class="w-full cursor-not-allowed select-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-500 shadow-sm dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400"
-              />
-            </div>
-            <p v-if="form.errors.type" class="mt-1 text-xs text-red-500">{{ form.errors.type }}</p>
-          </div>
-
-          <div>
-            <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">SLA</label>
-            <div class="mt-1 w-full">
-              <FancySelect aria-label="SLA ticket" v-model="form.sla" :options="slaSelectOptions" accent="subtle" />
-            </div>
-            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ $t("Pilih SLA yang berlaku atau biarkan kosong bila belum ditentukan.") }}</p>
-            <p v-if="form.errors.sla" class="mt-1 text-xs text-red-500">{{ form.errors.sla }}</p>
-          </div>
         </div>
 
         <div>
@@ -112,14 +89,14 @@
         </div>
 
         <div>
-          <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Selesai") }}</label>
+          <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Due Date") }}</label>
           <DatePickerFlatpickr
-            :aria-label="$t(&quot;Tanggal selesai ticket&quot;)" class="mt-1"
-            v-model="form.finish_at"
-            :config="finishDateConfig"
+            :aria-label="$t(&quot;Due date ticket&quot;)" class="mt-1"
+            v-model="form.due_at"
+            :config="dueDateConfig"
             :placeholder="$t(&quot;Pilih tanggal&quot;)"
           />
-          <p v-if="form.errors.finish_at || form.errors.finish_date" class="mt-1 text-xs text-red-500">{{ form.errors.finish_at || form.errors.finish_date }}</p>
+          <p v-if="form.errors.due_at" class="mt-1 text-xs text-red-500">{{ form.errors.due_at }}</p>
         </div>
       </section>
 
@@ -415,8 +392,6 @@ const props = defineProps({
   defaults: { type: Object, default: () => ({}) },
   statusOptions: { type: Array, default: () => [] },
   priorityOptions: { type: Array, default: () => [] },
-  typeOptions: { type: Array, default: () => [] },
-  slaOptions: { type: Array, default: () => [] },
   userOptions: { type: Array, default: () => [] },
   meta: { type: Object, default: () => ({}) },
 });
@@ -442,12 +417,9 @@ const form = useForm({
   priority: props.defaults.priority ?? null,
   type: props.defaults.type ?? 'task',
   status: 'new',
-  sla: props.defaults.sla ?? null,
   start_at: props.defaults.start_at ?? props.defaults.due_date ?? null,
   due_date: props.defaults.due_date ?? null,
   due_at: props.defaults.due_at ?? null,
-  finish_date: props.defaults.finish_date ?? null,
-  finish_at: props.defaults.finish_at ?? props.defaults.finish_date ?? null,
   requester_id: props.defaults.requester_id ?? null,
   agent_id: null,
   assigned_id: null,
@@ -455,7 +427,7 @@ const form = useForm({
   attachments: [],
   submission_token: createSubmissionToken(),
 });
-const draft = useFormDraft(form, 'ticket', ["title","description","reason","letter_no","priority","sla","start_at","due_at","due_date","finish_date","finish_at"], true);
+const draft = useFormDraft(form, 'ticket', ["title","description","reason","letter_no","priority","start_at","due_at","due_date"], true);
 
 
 const toDateOnly = value => {
@@ -472,14 +444,12 @@ const normalizeDateValue = value => {
 
 const isDateBefore = (left, right) => Boolean(left && right && left < right);
 
-const formatSla = sla => {
-  if (!sla) return '';
-  return sla.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
-};
-
 const uploadError = ref('');
 const attachmentIds = ref([]);
-const attachmentFilterChoices = attachmentFilterOptions;
+const attachmentFilterChoices = [
+  { value: '', label: uiText("Batalkan pilihan jenis file") },
+  ...attachmentFilterOptions,
+];
 const selectedAttachmentFilter = ref('');
 const activeAttachmentFilter = computed(
   () => attachmentFilterChoices.find(option => option.value === selectedAttachmentFilter.value) ?? null
@@ -496,13 +466,6 @@ const userOptions = computed(() => props.userOptions ?? []);
 const canSelectRequester = computed(() => Boolean(props.meta?.canSelectRequester));
 const requesterLabel = computed(() => props.meta?.requesterLabel ?? '');
 const minTicketDate = computed(() => props.meta?.minTicketDate ?? new Date().toISOString().slice(0, 10));
-const slaSelectOptions = computed(() => (
-  (Array.isArray(props.slaOptions) ? props.slaOptions : []).map(option => ({
-    value: option,
-    label: formatSla(option),
-  }))
-));
-
 watchEffect(() => {
   form.type = 'task';
   form.status = 'new';
@@ -660,19 +623,14 @@ watch(() => form.start_at, value => {
     return;
   }
   form.due_date = normalized;
-  if (normalized && form.finish_at && isDateBefore(form.finish_at, normalized)) {
-    form.finish_at = null;
-    form.finish_date = null;
-  }
 }, { immediate: true });
 
-watch(() => form.finish_at, value => {
+watch(() => form.due_at, value => {
   const normalized = normalizeDateValue(value);
   if (normalized !== value) {
-    form.finish_at = normalized;
+    form.due_at = normalized;
     return;
   }
-  form.finish_date = normalized;
 }, { immediate: true });
 
 watch(requesterDropdownOpen, open => {
@@ -821,7 +779,7 @@ const startDateConfig = computed(() => ({
   ...baseDateConfig.value,
 }));
 
-const finishDateConfig = computed(() => ({
+const dueDateConfig = computed(() => ({
   ...baseDateConfig.value,
   minDate: form.start_at || minTicketDate.value,
 }));
@@ -877,8 +835,6 @@ function resetForm() {
   form.start_at = props.defaults.start_at ?? props.defaults.due_date ?? null;
   form.due_date = props.defaults.due_date ?? null;
   form.due_at = props.defaults.due_at ?? null;
-  form.finish_date = props.defaults.finish_date ?? null;
-  form.finish_at = props.defaults.finish_at ?? props.defaults.finish_date ?? null;
   form.agent_id = null;
   form.assigned_id = null;
   form.assigned_user_ids = [];
@@ -908,12 +864,12 @@ const normalizeNumber = value => {
 
 function validateForm() {
   if (typeof form.clearErrors === 'function') {
-    form.clearErrors('title', 'priority', 'due_date', 'finish_date', 'start_at', 'finish_at');
+    form.clearErrors('title', 'priority', 'due_date', 'due_at', 'start_at');
   }
 
   const errors = {};
   const startDate = normalizeDateValue(form.start_at);
-  const finishDate = normalizeDateValue(form.finish_at);
+  const dueDate = normalizeDateValue(form.due_at);
 
   if (!String(form.title ?? '').trim()) {
     errors.title = uiText("Judul ticket wajib diisi.");
@@ -924,11 +880,11 @@ function validateForm() {
   if (startDate && isDateBefore(startDate, minTicketDate.value)) {
     errors.due_date = uiText("Tanggal mulai tidak boleh sebelum hari ini.");
   }
-  if (finishDate && isDateBefore(finishDate, minTicketDate.value)) {
-    errors.finish_date = uiText("Tanggal selesai tidak boleh sebelum hari ini.");
+  if (dueDate && isDateBefore(dueDate, minTicketDate.value)) {
+    errors.due_at = uiText("Due date tidak boleh sebelum hari ini.");
   }
-  if (startDate && finishDate && isDateBefore(finishDate, startDate)) {
-    errors.finish_date = uiText("Tanggal selesai tidak boleh lebih awal dari tanggal mulai.");
+  if (startDate && dueDate && isDateBefore(dueDate, startDate)) {
+    errors.due_at = uiText("Due date tidak boleh lebih awal dari tanggal mulai.");
   }
 
   if (Object.keys(errors).length) {
@@ -951,11 +907,8 @@ function prepareSubmission() {
   form.status = 'new';
   form.agent_id = null;
   form.start_at = normalizeDateValue(form.start_at);
-  form.finish_at = normalizeDateValue(form.finish_at);
   form.due_date = form.start_at || null;
-  form.finish_date = form.finish_at || null;
-  form.due_at = form.start_at || null;
-  form.finish_at = form.finish_date || null;
+  form.due_at = normalizeDateValue(form.due_at);
 
   const normalizedAssignees = Array.isArray(form.assigned_user_ids)
     ? Array.from(
