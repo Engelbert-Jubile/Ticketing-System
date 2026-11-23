@@ -656,7 +656,7 @@ class TicketController extends Controller
         try {
             $existingTicketId = Cache::get($idempotencyKey);
             if ($existingTicketId && ($existingTicket = Ticket::find($existingTicketId))) {
-                return redirect()->route('tickets.report.detail.view', ['locale' => app()->getLocale(), 'ticket' => $existingTicket->ticket_no])
+                return redirect()->route('tickets.create', ['locale' => app()->getLocale()])
                     ->with('success', __('Ticket sudah tersimpan.'));
             }
 
@@ -741,7 +741,7 @@ class TicketController extends Controller
             $notifier->notifyTicketCreated($ticket, $actor);
         }
 
-        return redirect()->route('tickets.report.detail.view', ['locale' => app()->getLocale(), 'ticket' => $ticket->ticket_no])
+        return redirect()->route('tickets.create', ['locale' => app()->getLocale()])
             ->with('success', 'Ticket created successfully.');
     }
 

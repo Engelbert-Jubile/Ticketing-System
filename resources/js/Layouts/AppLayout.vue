@@ -90,6 +90,25 @@
             </button>
           </div>
         </div>
+        <nav
+          v-if="showTicketWorkspaceTabs"
+          class="mb-5 flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-white/80 p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900/60"
+          :aria-label="t('ticketWorkspace.navigation')"
+        >
+          <Link
+            v-for="tab in ticketWorkspaceTabs"
+            :key="tab.key"
+            :href="resolveRouteName(tab.route)"
+            :aria-current="ticketWorkspaceActiveTab === tab.key ? 'page' : undefined"
+            class="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition"
+            :class="ticketWorkspaceActiveTab === tab.key
+              ? 'bg-teal-500 text-white shadow-sm'
+              : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'"
+          >
+            <span class="material-icons text-[19px]" aria-hidden="true">{{ tab.icon }}</span>
+            <span>{{ t(tab.label) }}</span>
+          </Link>
+        </nav>
         <slot />
       </main>
     </div>
@@ -99,7 +118,7 @@
 <script setup>
 import { translateUi as uiText } from '../i18n'
 
-import { Head, router, usePage } from '@inertiajs/vue3'
+import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 import { computed, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
 import LegacySidebar from '../Components/LegacySidebar.vue'
@@ -196,6 +215,18 @@ const currentPath = computed(() => {
   const url = inertiaUrl.value ?? '/'
   return stripLocalePrefix(url.split('?')[0] || '/')
 })
+const ticketWorkspaceTabs = [
+  { key: 'new-ticket', label: 'ticketWorkspace.newTicket', icon: 'confirmation_number', route: 'tickets.create' },
+  { key: 'workflows', label: 'nav.workflows', icon: 'account_tree', route: 'workflows.index' },
+  { key: 'sla-reports', label: 'nav.slaReports', icon: 'schedule', route: 'dashboard.sla' },
+]
+const ticketWorkspaceActiveTab = computed(() => {
+  if (currentPath.value === '/dashboard/tickets/create') return 'new-ticket'
+  if (currentPath.value.startsWith('/dashboard/workflows')) return 'workflows'
+  if (currentPath.value.startsWith('/dashboard/sla')) return 'sla-reports'
+  return ''
+})
+const showTicketWorkspaceTabs = computed(() => Boolean(ticketWorkspaceActiveTab.value))
 const isPortal = computed(() => page.component === 'Portal')
 const portalUrl = computed(() => page.props.portalUrl)
 const focusedModule = computed(() => {
@@ -404,27 +435,9 @@ const navItems = computed(() => {
     return items.filter(item => item.key === focusedModule.value || item.key === 'portal')
   }
 
-  items.push({
-    type: 'link',
-    key: 'workflows',
-    label: uiText("Alur & Riwayat"),
-    icon: 'account_tree',
-    href: resolveRouteName('workflows.index'),
-    match: path => pathStartsWith(path, '/dashboard/workflows'),
-  })
-
   const unit = String(authUser.value?.unit ?? '').trim()
 
   if (isSuperAdmin.value) {
-    items.push({
-      type: 'link',
-      key: 'sla',
-      label: t('nav.slaReports'),
-      icon: 'schedule',
-      href: resolveRouteName('dashboard.sla'),
-      match: path => pathStartsWith(path, '/dashboard/sla'),
-    })
-
     items.push({
       type: 'link',
       key: 'unit-reports',
@@ -452,15 +465,6 @@ const navItems = computed(() => {
       match: path => pathStartsWith(path, '/dashboard/settings'),
     })
   } else {
-    items.push({
-      type: 'link',
-      key: 'sla',
-      label: t('nav.slaReports'),
-      icon: 'schedule',
-      href: resolveRouteName('dashboard.sla'),
-      match: path => pathStartsWith(path, '/dashboard/sla'),
-    })
-
     if (unit !== '') {
       items.push({
         type: 'link',

@@ -613,8 +613,6 @@
       'projects.edit'
     );
 
-    $slaReportActive = request()->routeIs('dashboard.sla');
-
     $isSuperAdmin = \App\Support\RoleHelpers::userIsSuperAdmin(auth()->user());
     @endphp
 
@@ -875,17 +873,6 @@
             :class="sel === '{{ $unitReports }}' ? '{{ $linkActive }} is-active' : ''">
             <span class="material-icons text-current">stacked_line_chart</span>
             <span class="nav-label" x-show="sidebarOpen" x-transition.opacity>Unit Reports</span>
-          </a>
-        </li>
-
-        {{-- SLA Reports --}}
-        <li class="nav-li">
-          <a href="{{ routeLocale('dashboard.sla') }}"
-            @click.prevent="clearActives(); setSel('route:dashboard.sla'); navTo('{{ routeLocale('dashboard.sla') }}', $event, 'pulse', 280)"
-            class="{{ $linkBase }} {{ $linkHover }} flex items-center gap-2 {{ $slaReportActive ? $linkActive.' is-active' : '' }}"
-            :class="sel === 'route:dashboard.sla' ? '{{ $linkActive }} is-active' : ''">
-            <span class="material-icons text-current">schedule</span>
-            <span class="nav-label" x-show="sidebarOpen" x-transition.opacity>SLA Reports</span>
           </a>
         </li>
 

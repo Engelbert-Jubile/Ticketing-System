@@ -30,6 +30,7 @@ export const messages = {
       projectsInProgress: 'In Progress',
       projectsReport: 'Report',
       slaReports: 'SLA Reports',
+      workflows: 'Workflows',
       unitReports: 'Unit Reports',
       performanceReports: 'Performance Reports',
       settings: 'Settings',
@@ -53,6 +54,10 @@ export const messages = {
       none: 'none',
       on: 'on',
       off: 'off',
+    },
+    ticketWorkspace: {
+      navigation: 'Ticket workspace navigation',
+      newTicket: 'New Ticket',
     },
     settings: {
       title: 'Settings',
@@ -239,6 +244,7 @@ export const messages = {
       projectsInProgress: 'Sedang Berjalan',
       projectsReport: 'Laporan',
       slaReports: 'Laporan SLA',
+      workflows: 'Workflow',
       unitReports: 'Laporan Unit',
       performanceReports: 'Laporan Performa',
       settings: 'Pengaturan',
@@ -262,6 +268,10 @@ export const messages = {
       none: 'tidak ada',
       on: 'aktif',
       off: 'mati',
+    },
+    ticketWorkspace: {
+      navigation: 'Navigasi ticket',
+      newTicket: 'Tiket Baru',
     },
     settings: {
       title: 'Pengaturan',
