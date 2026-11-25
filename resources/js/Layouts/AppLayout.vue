@@ -100,10 +100,10 @@
             :key="tab.key"
             :href="resolveRouteName(tab.route)"
             :aria-current="ticketWorkspaceActiveTab === tab.key ? 'page' : undefined"
-            class="inline-flex min-h-10 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-teal-600 sm:px-3 dark:focus-visible:outline-teal-300"
+            class="ticket-workspace-link inline-flex min-h-10 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-teal-600 sm:px-3 dark:focus-visible:outline-teal-300"
             :class="ticketWorkspaceActiveTab === tab.key
-              ? 'bg-teal-700 text-white'
-              : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'"
+              ? 'bg-teal-700'
+              : 'text-slate-700 dark:text-slate-300'"
           >
             <span class="material-icons !text-[17px]" aria-hidden="true">{{ tab.icon }}</span>
             <span>{{ t(tab.label) }}</span>
@@ -911,6 +911,20 @@ watch(
   padding: 1.5rem;
   max-width: 100%;
   overflow-x: clip;
+}
+
+.ticket-workspace-link:hover,
+.ticket-workspace-link:focus-visible {
+  background-color: color-mix(in srgb, var(--user-accent-color) 18%, transparent);
+}
+
+.ticket-workspace-link[aria-current='page']:is(:hover, :focus-visible) {
+  background-color: color-mix(in srgb, var(--user-accent-color) 18%, #115e59);
+}
+
+.ticket-workspace-link[aria-current='page'],
+.ticket-workspace-link[aria-current='page'] > span {
+  color: #fff;
 }
 
 .overlay {
