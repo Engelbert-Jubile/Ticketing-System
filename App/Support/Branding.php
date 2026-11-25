@@ -32,8 +32,15 @@ final class Branding
             'name' => config('app.name'),
             'tagline' => self::TAGLINE,
             'title' => self::TITLE,
-            'logo' => asset(self::LOGO),
-            'stacked_logo' => asset(self::STACKED_LOGO),
+            'logo' => self::logoUrl(),
+            'stacked_logo' => self::logoUrl(stacked: true),
         ];
+    }
+
+    public static function logoUrl(bool $stacked = false): string
+    {
+        $path = $stacked ? self::STACKED_LOGO : self::LOGO;
+
+        return asset($path).'?v='.filemtime(public_path($path));
     }
 }

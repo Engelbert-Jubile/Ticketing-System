@@ -101,9 +101,7 @@
             :href="resolveRouteName(tab.route)"
             :aria-current="ticketWorkspaceActiveTab === tab.key ? 'page' : undefined"
             class="ticket-workspace-link inline-flex min-h-10 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-teal-600 sm:px-3 dark:focus-visible:outline-teal-300"
-            :class="ticketWorkspaceActiveTab === tab.key
-              ? 'bg-teal-700'
-              : 'text-slate-700 dark:text-slate-300'"
+            :class="{ 'text-slate-700 dark:text-slate-300': ticketWorkspaceActiveTab !== tab.key }"
           >
             <span class="material-icons !text-[17px]" aria-hidden="true">{{ tab.icon }}</span>
             <span>{{ t(tab.label) }}</span>
@@ -111,7 +109,7 @@
               v-if="tab.key === 'in-progress' && ticketsInProgressBadge"
               class="ticket-workspace-badge rounded-full px-1.5 text-xs leading-5"
               :class="ticketWorkspaceActiveTab === tab.key
-                ? 'bg-teal-800'
+                ? 'bg-black/40'
                 : 'bg-teal-100 text-teal-900 dark:bg-teal-400/15 dark:text-teal-200'"
             >{{ ticketsInProgressBadge }}</span>
           </Link>
@@ -913,7 +911,7 @@ watch(
   overflow-x: clip;
 }
 
-.ticket-workspace-link:is(:hover, :focus-visible) {
+.ticket-workspace-link:is([aria-current='page'], :hover, :focus-visible) {
   background-color: var(--user-accent-color);
 }
 
