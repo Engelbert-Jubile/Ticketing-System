@@ -10,11 +10,11 @@ final class Branding
 
     public const TITLE = self::NAME.' - '.self::TAGLINE;
 
-    public const LOGO = 'branding/tickme-horizontal.svg';
+    public const LOGO = 'branding/tickme-horizontal.png';
 
-    public const PRINT_LOGO = 'branding/tickme-horizontal.jpg';
+    private const PRINT_LOGO_FALLBACK = 'branding/tickme-horizontal.jpg';
 
-    public const STACKED_LOGO = 'branding/tickme-stacked.jpg';
+    public const STACKED_LOGO = 'branding/tickme-stacked.png';
 
     public static function normalizeName(mixed $name): string
     {
@@ -42,5 +42,14 @@ final class Branding
         $path = $stacked ? self::STACKED_LOGO : self::LOGO;
 
         return asset($path).'?v='.filemtime(public_path($path));
+    }
+
+    public static function printLogoDataUri(): string
+    {
+        $supportsPng = function_exists('imagecreatefrompng');
+        $path = $supportsPng ? self::LOGO : self::PRINT_LOGO_FALLBACK;
+        $mime = $supportsPng ? 'image/png' : 'image/jpeg';
+
+        return 'data:'.$mime.';base64,'.base64_encode(file_get_contents(public_path($path)));
     }
 }
