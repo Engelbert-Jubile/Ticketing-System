@@ -109,7 +109,7 @@
             <span>{{ t(tab.label) }}</span>
             <span
               v-if="tab.key === 'in-progress' && ticketsInProgressBadge"
-              class="rounded-full px-1.5 text-xs leading-5"
+              class="ticket-workspace-badge rounded-full px-1.5 text-xs leading-5"
               :class="ticketWorkspaceActiveTab === tab.key
                 ? 'bg-teal-800'
                 : 'bg-teal-100 text-teal-900 dark:bg-teal-400/15 dark:text-teal-200'"
@@ -913,17 +913,13 @@ watch(
   overflow-x: clip;
 }
 
-.ticket-workspace-link:hover,
-.ticket-workspace-link:focus-visible {
-  background-color: color-mix(in srgb, var(--user-accent-color) 18%, transparent);
-}
-
-.ticket-workspace-link[aria-current='page']:is(:hover, :focus-visible) {
-  background-color: color-mix(in srgb, var(--user-accent-color) 18%, #115e59);
+.ticket-workspace-link:is(:hover, :focus-visible) {
+  background-color: var(--user-accent-color);
 }
 
 .ticket-workspace-link[aria-current='page'],
-.ticket-workspace-link[aria-current='page'] > span {
+.ticket-workspace-link[aria-current='page'] > span,
+.ticket-workspace-link:is(:hover, :focus-visible) > span:not(.ticket-workspace-badge) {
   color: #fff;
 }
 
