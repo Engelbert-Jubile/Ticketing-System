@@ -92,7 +92,7 @@
         </div>
         <nav
           v-if="ticketWorkspaceActiveTab"
-          class="mb-4 flex w-fit max-w-full flex-wrap gap-1 rounded-xl border border-slate-200 bg-white/80 p-1 shadow-sm dark:border-slate-700 dark:bg-slate-900/60"
+          class="mx-auto mb-4 flex w-fit max-w-full flex-wrap justify-center gap-1 rounded-xl border border-slate-200 bg-white/80 p-1 shadow-sm dark:border-slate-700 dark:bg-slate-900/60"
           :aria-label="t('ticketWorkspace.navigation')"
         >
           <Link
@@ -102,14 +102,17 @@
             :aria-current="ticketWorkspaceActiveTab === tab.key ? 'page' : undefined"
             class="inline-flex min-h-10 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-teal-600 sm:px-3 dark:focus-visible:outline-teal-300"
             :class="ticketWorkspaceActiveTab === tab.key
-              ? 'bg-teal-100 text-teal-900 dark:bg-teal-400/15 dark:text-teal-200'
+              ? 'bg-teal-700 text-white'
               : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'"
           >
             <span class="material-icons !text-[17px]" aria-hidden="true">{{ tab.icon }}</span>
             <span>{{ t(tab.label) }}</span>
             <span
               v-if="tab.key === 'in-progress' && ticketsInProgressBadge"
-              class="rounded-full bg-teal-100 px-1.5 text-xs leading-5 text-teal-900 dark:bg-teal-400/15 dark:text-teal-200"
+              class="rounded-full px-1.5 text-xs leading-5"
+              :class="ticketWorkspaceActiveTab === tab.key
+                ? 'bg-teal-800'
+                : 'bg-teal-100 text-teal-900 dark:bg-teal-400/15 dark:text-teal-200'"
             >{{ ticketsInProgressBadge }}</span>
           </Link>
         </nav>
