@@ -7,7 +7,7 @@
 
     @vite(['resources/css/app.css'])
     @livewireStyles
-    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v={{ filemtime(public_path('favicon.svg')) }}">
+    @include('partials.browser-icons')
 </head>
 <body class="bg-gray-100 text-gray-900 antialiased">
 

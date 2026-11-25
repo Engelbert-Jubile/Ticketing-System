@@ -171,7 +171,7 @@
       }
     }
   </style>
-    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v={{ filemtime(public_path('favicon.svg')) }}">
+    @include('partials.browser-icons')
 </head>
 <body>
   <main class="wrap">

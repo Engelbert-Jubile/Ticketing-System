@@ -416,7 +416,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <script nonce="{{ $cspNonce ?? request()->attributes->get('csp_nonce') }}" src="https://cdn.jsdelivr.net/npm/flatpickr" defer></script>
   @stack('styles')
-    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v={{ filemtime(public_path('favicon.svg')) }}">
+    @include('partials.browser-icons')
 </head>
 
 <body class="flex h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 overflow-x-hidden">

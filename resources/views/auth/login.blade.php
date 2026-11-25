@@ -35,7 +35,7 @@ $nonce = $cspNonce ?? request()->attributes->get('csp_nonce');
   <title>{{ config('app.browser_title') }}</title>
   <meta name="application-name" content="TICKME!">
   <meta name="apple-mobile-web-app-title" content="TICKME!">
-  <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}?v={{ filemtime(public_path('favicon.svg')) }}">
+  @include('partials.browser-icons')
 
   <link rel="preconnect" href="https://fonts.bunny.net">
   <link href="https://fonts.bunny.net/css?family=inter:400,500,600&display=swap" rel="stylesheet" />
