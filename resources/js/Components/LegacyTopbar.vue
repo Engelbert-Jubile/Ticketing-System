@@ -199,6 +199,7 @@
                   type="color"
                   class="header-color-picker__input"
                   @input="changeHeaderColor"
+                  @change="changeHeaderColor"
                 />
                 <div class="header-color-picker__value">{{ pickerColor }}</div>
                 </div>
@@ -390,10 +391,13 @@ const closeAppearance = () => {
   closeColorPicker()
   appearanceButtonRef.value?.focus()
 }
-const handleAppearanceFocusOut = () => {
-  nextTick(() => {
-    if (!props.themeBusy && colorPickerOpen.value && !colorPickerRef.value?.contains(document.activeElement) && !appearancePanelRef.value?.contains(document.activeElement)) closeColorPicker()
-  })
+const handleAppearanceFocusOut = ({ relatedTarget }) => {
+  // The native colour picker can take focus without a destination in the document.
+  if (!relatedTarget || relatedTarget === document.body || props.themeBusy) return
+
+  if (!colorPickerRef.value?.contains(relatedTarget) && !appearancePanelRef.value?.contains(relatedTarget)) {
+    closeColorPicker()
+  }
 }
 
 const toggleColorPicker = () => {
