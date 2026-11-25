@@ -18,7 +18,7 @@ export const messages = {
       title: 'Navigation',
       dashboard: 'Dashboard',
       tickets: 'Tickets',
-      createTicket: 'Create Ticket',
+      ticketPortal: 'Ticket Portal',
       ticketsInProgress: 'In Progress',
       ticketsReport: 'Report',
       tasks: 'Tasks',
@@ -56,7 +56,7 @@ export const messages = {
       off: 'off',
     },
     ticketWorkspace: {
-      navigation: 'Ticket workspace navigation',
+      navigation: 'Ticket Portal navigation',
       newTicket: 'New Ticket',
     },
     settings: {
@@ -232,7 +232,7 @@ export const messages = {
       title: 'Navigasi',
       dashboard: 'Dasbor',
       tickets: 'Tiket',
-      createTicket: 'Buat Tiket',
+      ticketPortal: 'Ticket Portal',
       ticketsInProgress: 'Sedang Berjalan',
       ticketsReport: 'Laporan',
       tasks: 'Tugas',
@@ -270,7 +270,7 @@ export const messages = {
       off: 'mati',
     },
     ticketWorkspace: {
-      navigation: 'Navigasi ticket',
+      navigation: 'Navigasi Ticket Portal',
       newTicket: 'Tiket Baru',
     },
     settings: {

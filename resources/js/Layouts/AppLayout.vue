@@ -91,8 +91,8 @@
           </div>
         </div>
         <nav
-          v-if="showTicketWorkspaceTabs"
-          class="mb-5 flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-white/80 p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900/60"
+          v-if="ticketWorkspaceActiveTab"
+          class="mb-4 flex w-fit max-w-full flex-wrap gap-1 rounded-xl border border-slate-200 bg-white/80 p-1 shadow-sm dark:border-slate-700 dark:bg-slate-900/60"
           :aria-label="t('ticketWorkspace.navigation')"
         >
           <Link
@@ -100,13 +100,17 @@
             :key="tab.key"
             :href="resolveRouteName(tab.route)"
             :aria-current="ticketWorkspaceActiveTab === tab.key ? 'page' : undefined"
-            class="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition"
+            class="inline-flex min-h-10 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-teal-600 sm:px-3 dark:focus-visible:outline-teal-300"
             :class="ticketWorkspaceActiveTab === tab.key
-              ? 'bg-teal-500 text-white shadow-sm'
-              : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'"
+              ? 'bg-teal-100 text-teal-900 dark:bg-teal-400/15 dark:text-teal-200'
+              : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'"
           >
-            <span class="material-icons text-[19px]" aria-hidden="true">{{ tab.icon }}</span>
+            <span class="material-icons !text-[17px]" aria-hidden="true">{{ tab.icon }}</span>
             <span>{{ t(tab.label) }}</span>
+            <span
+              v-if="tab.key === 'in-progress' && ticketsInProgressBadge"
+              class="rounded-full bg-teal-100 px-1.5 text-xs leading-5 text-teal-900 dark:bg-teal-400/15 dark:text-teal-200"
+            >{{ ticketsInProgressBadge }}</span>
           </Link>
         </nav>
         <slot />
@@ -170,6 +174,11 @@ const sidebarMetrics = computed(() => page.props.sidebarMetrics ?? {
   projects_in_progress_count: 0,
   can_manage_users: false,
 })
+const badgeValue = value => {
+  if (typeof value !== 'number' || value <= 0) return undefined
+  return value > 99 ? '99+' : String(value)
+}
+const ticketsInProgressBadge = computed(() => badgeValue(sidebarMetrics.value.tickets_in_progress_count))
 
 const announcement = computed(() => {
   const raw = page.props.announcement ?? null
@@ -217,16 +226,20 @@ const currentPath = computed(() => {
 })
 const ticketWorkspaceTabs = [
   { key: 'new-ticket', label: 'ticketWorkspace.newTicket', icon: 'confirmation_number', route: 'tickets.create' },
+  { key: 'in-progress', label: 'nav.ticketsInProgress', icon: 'pending_actions', route: 'tickets.on-progress' },
+  { key: 'report', label: 'nav.ticketsReport', icon: 'bar_chart', route: 'tickets.report' },
   { key: 'workflows', label: 'nav.workflows', icon: 'account_tree', route: 'workflows.index' },
   { key: 'sla-reports', label: 'nav.slaReports', icon: 'schedule', route: 'dashboard.sla' },
 ]
 const ticketWorkspaceActiveTab = computed(() => {
-  if (currentPath.value === '/dashboard/tickets/create') return 'new-ticket'
-  if (currentPath.value.startsWith('/dashboard/workflows')) return 'workflows'
-  if (currentPath.value.startsWith('/dashboard/sla')) return 'sla-reports'
+  const path = currentPath.value
+  if (path === '/dashboard/tickets/create') return 'new-ticket'
+  if (path === '/dashboard/tickets/on-progress') return 'in-progress'
+  if (path === '/dashboard/tickets' || path.startsWith('/dashboard/tickets/')) return 'report'
+  if (path === '/dashboard/workflows' || path.startsWith('/dashboard/workflows/')) return 'workflows'
+  if (path === '/dashboard/sla' || path.startsWith('/dashboard/sla/')) return 'sla-reports'
   return ''
 })
-const showTicketWorkspaceTabs = computed(() => Boolean(ticketWorkspaceActiveTab.value))
 const isPortal = computed(() => page.component === 'Portal')
 const portalUrl = computed(() => page.props.portalUrl)
 const focusedModule = computed(() => {
@@ -313,10 +326,6 @@ const pathStartsWith = (path, prefix) => path.startsWith(prefix)
 
 const navItems = computed(() => {
   const metrics = sidebarMetrics.value ?? {}
-  const badgeValue = value => {
-    if (typeof value !== 'number' || value <= 0) return undefined
-    return value > 99 ? '99+' : String(value)
-  }
 
   let items = [
     {
@@ -336,29 +345,16 @@ const navItems = computed(() => {
       key: 'tickets',
       label: t('nav.tickets'),
       icon: 'confirmation_number',
-      indicator: metrics.tickets_in_progress_count > 0 ? { type: 'dot', variant: 'danger' } : null,
+      indicator: ticketsInProgressBadge.value ? { type: 'dot', variant: 'danger' } : null,
       children: [
         {
           key: 'tickets.create',
-          label: t('nav.createTicket'),
+          label: t('nav.ticketPortal'),
           href: resolveRouteName('tickets.create'),
-          match: path => path === '/dashboard/tickets/create',
-        },
-        {
-          key: 'tickets.on-progress',
-          label: t('nav.ticketsInProgress'),
-          href: resolveRouteName('tickets.on-progress'),
-          badge: badgeValue(metrics.tickets_in_progress_count),
-          match: path => path === '/dashboard/tickets/on-progress',
-        },
-        {
-          key: 'tickets.report',
-          label: t('nav.ticketsReport'),
-          href: resolveRouteName('tickets.report'),
-          match: path => pathStartsWith(path, '/dashboard/tickets') && !path.includes('/create') && !path.includes('/on-progress'),
+          match: () => Boolean(ticketWorkspaceActiveTab.value),
         },
       ],
-      match: path => pathStartsWith(path, '/dashboard/tickets'),
+      match: () => Boolean(ticketWorkspaceActiveTab.value),
     },
     {
       type: 'group',
@@ -535,6 +531,9 @@ const navItems = computed(() => {
 
 const documentTitle = computed(() => {
   if (isPortal.value) return t('portal.title')
+
+  const ticketTab = ticketWorkspaceTabs.find(tab => tab.key === ticketWorkspaceActiveTab.value)
+  if (ticketTab) return t(ticketTab.label)
 
   const path = currentPath.value
 
