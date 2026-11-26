@@ -43,15 +43,13 @@ class TicketController extends Controller
 
     private function ticketReportDetailUrl(Ticket $ticket): string
     {
+        $locale = request()->route('locale') ?? app()->getLocale();
         $ticketNo = is_string($ticket->ticket_no ?? null) ? trim((string) $ticket->ticket_no) : '';
         if ($ticketNo !== '') {
-            return route('tickets.report.detail.view', ['locale' => request()->route('locale'), 'ticket' => $ticketNo]);
+            return route('tickets.report.detail.view', ['locale' => $locale, 'ticket' => $ticketNo]);
         }
 
-        return route('tickets.edit', [
-            'locale' => request()->route('locale') ?? app()->getLocale(),
-            'ticket' => $ticket->id,
-        ]);
+        return route('tickets.edit', ['locale' => $locale, 'ticket' => $ticket->id]);
     }
 
     private function priorities(): array
@@ -547,16 +545,9 @@ class TicketController extends Controller
     private function renderTicketDetailPage(Request $request, Ticket $ticket): Response
     {
         UnitVisibility::ensureTicketAccess($request->user(), $ticket);
-        $ticket->load([
-            'attachments' => fn ($query) => $query->whereNull('ticket_confirmation_id')
-                ->select('id', 'attachable_id', 'attachable_type', 'original_name', 'size'),
-            'requester',
-            'agent',
-            'assignedUsers',
-        ]);
+        $this->loadTicketDetailRelations($ticket);
 
         $backUrl = $this->resolveBackUrl($request, routeLocale('tickets.index'));
-        $ticket->loadMissing(['confirmations' => fn ($query) => $query->with('evidence')->latest('id')]);
         $detail = $this->transformTicketDetail($ticket, $backUrl);
 
         return Inertia::render('Tickets/Show', [
@@ -950,34 +941,7 @@ class TicketController extends Controller
 
     private function buildTicketReportQuery(array $filters, bool $withRelations = false, ?User $viewer = null): Builder
     {
-        /** @var Builder $query */
-        $query = Ticket::query()
-            ->select([
-                'id',
-                'ticket_no',
-                'title',
-                'description',
-                'reason',
-                'letter_no',
-                'priority',
-                'status',
-                'status_id',
-                'requester_id',
-                'agent_id',
-                'assigned_id',
-                'due_date',
-                'due_at',
-                'finish_date',
-                'finish_at',
-                'worked_on_at',
-                'completed_at',
-                'created_at',
-                'updated_at',
-            ])
-;
-
-        /** @var Builder $query */
-        $query = UnitVisibility::scopeTickets($query, $viewer);
+        $query = UnitVisibility::scopeTickets(Ticket::query(), $viewer);
 
         if ($withRelations) {
             $userColumns = $this->userRelationColumns();
@@ -986,10 +950,8 @@ class TicketController extends Controller
                 'agent:'.$userColumns,
                 'assignee:'.$userColumns,
                 'assignedUsers:'.$userColumns,
-                'tasks.assignee:'.$userColumns,
                 'attachments:id,attachable_id,attachable_type,original_name,size',
             ]);
-
         }
 
         if ($filters['q'] !== '') {
@@ -1020,7 +982,6 @@ class TicketController extends Controller
                     ->orWhere(fn (Builder $legacy) => $legacy->whereNull('due_at')->whereDate('due_date', '<=', $to));
             });
         }
-
 
         return $query->orderByDesc('created_at')->orderByDesc('id');
     }
@@ -1168,16 +1129,7 @@ class TicketController extends Controller
     public function downloadDetail(Request $request, string $locale, Ticket $ticket)
     {
         UnitVisibility::ensureTicketAccess($request->user(), $ticket);
-        $ticket->load([
-            'attachments' => fn ($query) => $query->whereNull('ticket_confirmation_id')
-                ->select('id', 'attachable_id', 'attachable_type', 'original_name', 'size'),
-            'requester',
-            'agent',
-            'assignedUsers',
-            'assignee',
-        ]);
-
-        $ticket->loadMissing(['confirmations' => fn ($query) => $query->with('evidence')->latest('id')]);
+        $this->loadTicketDetailRelations($ticket);
         $detail = $this->transformTicketDetail($ticket, route('tickets.index', ['locale' => app()->getLocale()]));
 
         $timeline = [
@@ -1226,6 +1178,17 @@ class TicketController extends Controller
         return $value
             ? Carbon::parse($value)->timezone(config('app.timezone'))->locale(app()->getLocale())->translatedFormat('d M Y H:i')
             : null;
+    }
+
+    private function loadTicketDetailRelations(Ticket $ticket): void
+    {
+        $ticket->load(['attachments', 'requester', 'agent', 'assignedUsers']);
+
+        if (! $ticket->relationLoaded('confirmations')
+            && Schema::hasTable('ticket_confirmations')
+            && Schema::hasColumn('attachments', 'ticket_confirmation_id')) {
+            $ticket->load(['confirmations' => fn ($query) => $query->with('evidence')->latest('id')]);
+        }
     }
 
     private function reportValueLabel(?string $value): string
@@ -1386,7 +1349,7 @@ class TicketController extends Controller
                 'name' => $this->userDisplayName($user),
                 'email' => $user->email,
             ])->values()->all(),
-            'attachments' => $ticket->attachments->map(fn ($attachment) => [
+            'attachments' => $ticket->attachments->whereNull('ticket_confirmation_id')->map(fn ($attachment) => [
                 'id' => $attachment->id,
                 'name' => $attachment->original_name,
                 'size' => $attachment->size,
