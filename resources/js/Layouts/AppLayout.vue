@@ -234,12 +234,15 @@ const ticketWorkspaceTabs = [
 ]
 const ticketWorkspaceActiveTab = computed(() => {
   const path = currentPath.value
-  if (path === '/dashboard/tickets/create') return 'new-ticket'
-  if (path === '/dashboard/tickets/on-progress') return 'in-progress'
-  if (path === '/dashboard/tickets' || path.startsWith('/dashboard/tickets/')) return 'report'
-  if (path === '/dashboard/workflows' || path.startsWith('/dashboard/workflows/')) return 'workflows'
-  if (path === '/dashboard/sla' || path.startsWith('/dashboard/sla/')) return 'sla-reports'
-  return ''
+  const matchesRoute = name => {
+    const target = resolveRoute(name, { locale: activeLocale.value }, false)
+    if (!target.startsWith('/')) return false
+    const routePath = stripLocalePrefix(target)
+    return path === routePath || path.startsWith(`${routePath}/`)
+  }
+
+  return ticketWorkspaceTabs.find(tab => matchesRoute(tab.route))?.key
+    ?? (matchesRoute('tickets.index') ? 'report' : '')
 })
 const isPortal = computed(() => page.component === 'Portal')
 const portalUrl = computed(() => page.props.portalUrl)

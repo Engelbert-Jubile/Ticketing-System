@@ -172,3 +172,4 @@ docs/workflow-language-update*.md
 /tests/Unit/TicketEditSubmissionTest*.php
 /tests/Unit/TicketReportTest*.php
 /tests/Unit/TicketStatusConsistencyTest*.php
+/tests/Unit/TicketPortalRoutesTest*.php

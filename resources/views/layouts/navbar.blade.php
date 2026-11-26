@@ -12,9 +12,9 @@
         <li class="nav-item dropdown {{ Request::is('dashboard/ticket*') ? 'active' : '' }}">
           <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Ticket</a>
           <ul class="dropdown-menu">
-            <li><a class="dropdown-item {{ Request::is('dashboard/tickets/create') ? 'active' : '' }}" href="{{ route('tickets.create') }}">Create</a></li>
-            <li><a class="dropdown-item {{ Request::is('dashboard/tickets/on-progress') ? 'active' : '' }}" href="{{ route('tickets.on-progress') }}">In Progress</a></li>
-            <li><a class="dropdown-item {{ Request::is('dashboard/tickets/report') ? 'active' : '' }}" href="{{ route('tickets.report') }}">Report</a></li>
+            <li><a class="dropdown-item {{ request()->routeIs('tickets.create') ? 'active' : '' }}" href="{{ route('tickets.create') }}">Create</a></li>
+            <li><a class="dropdown-item {{ request()->routeIs('tickets.on-progress') ? 'active' : '' }}" href="{{ route('tickets.on-progress') }}">In Progress</a></li>
+            <li><a class="dropdown-item {{ request()->routeIs('tickets.report*') ? 'active' : '' }}" href="{{ route('tickets.report') }}">Report</a></li>
           </ul>
         </li>
 

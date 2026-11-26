@@ -173,7 +173,7 @@ import { translateUi as uiText } from '../../i18n'
 
 import { computed, onMounted, ref, watch } from 'vue';
 import { Link, router, useForm } from '@inertiajs/vue3';
-import { route } from 'ziggy-js';
+import resolveRoute from '@/utils/resolveRoute';
 import DatePickerFlatpickr from '@/Components/DatePickerFlatpickr.vue';
 import StatusPill from '@/Components/StatusPill.vue';
 import FancySelect from '@/Components/FancySelect.vue';
@@ -324,24 +324,8 @@ const currentParams = computed(() => ({
   per_page: form.per_page,
 }));
 
-function localePrefix() {
-  if (typeof window === 'undefined') return '';
-  const match = window.location.pathname.match(/^\/(en|id)\b/);
-  return match ? `/${match[1]}` : '';
-}
-
-function safeRoute(name, params = {}, absolute = false, fallback = '/') {
-  if (typeof route === 'function') {
-    try {
-      return route(name, params, absolute);
-    } catch (error) {
-    }
-  }
-  return fallback;
-}
-
 function applyFilters() {
-  const url = safeRoute('dashboard.sla', {}, false, `${localePrefix()}/dashboard/sla`);
+  const url = resolveRoute('dashboard.sla', {}, false);
   form.get(url, {
     preserveScroll: true,
     replace: true,
@@ -379,7 +363,7 @@ function loadRecords(extra = {}) {
     params.page = extra.page;
   }
 
-  const url = safeRoute('dashboard.sla', {}, false, `${localePrefix()}/dashboard/sla`);
+  const url = resolveRoute('dashboard.sla', {}, false);
   router.get(url, params, {
     only: ['records'],
     preserveState: true,
@@ -511,20 +495,7 @@ function downloadUrl(format) {
     Object.entries(payload).filter(([, value]) => value !== undefined && value !== null && value !== '')
   );
 
-  try {
-    if (typeof route === 'function') {
-      const ziggy = route();
-      if (ziggy?.has?.('sla.download')) {
-        return route('sla.download', filtered, false);
-      }
-    }
-  } catch (error) {
-    // ignore and fall back to manual URL construction
-  }
-
-  const query = new URLSearchParams(filtered).toString();
-  const prefix = localePrefix();
-  return `${prefix}/dashboard/sla/download${query ? `?${query}` : ''}`;
+  return resolveRoute('sla.download', filtered, false);
 }
 
 onMounted(() => {

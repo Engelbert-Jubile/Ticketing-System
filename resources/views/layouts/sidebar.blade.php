@@ -592,6 +592,7 @@
     $ticketsReportActive = request()->routeIs(
       'tickets.index',
       'tickets.report',
+      'tickets.report.detail.view',
       'tickets.show',
       'tickets.edit',
       'tickets.status.change',
@@ -667,8 +668,8 @@
 
       {{-- Tickets --}}
       @php
-      $uid='sb-tickets'; $ticketsBase=url('/dashboard/tickets');
-      $ticketsCreate=routeLocale('tickets.create'); $ticketsProg=routeLocale('tickets.on-progress'); $ticketsReport=routeLocale('tickets.index');
+      $uid='sb-tickets'; $ticketsBase=routeLocale('tickets.index');
+      $ticketsCreate=routeLocale('tickets.create'); $ticketsProg=routeLocale('tickets.on-progress'); $ticketsReport=routeLocale('tickets.report');
       @endphp
       <li
         x-data="{ key:'menu.tickets', active: {{ request()->routeIs('tickets.*') ? 'true' : 'false' }}, defaultSel:'group:menu.tickets', forceOpen: {{ $ticketsReportActive ? 'true' : 'false' }} }"
@@ -680,7 +681,7 @@
           });
         "
         class="nav-li"
-        :class="(sel===defaultSel || sel.startsWith('{{ $ticketsBase }}')) ? 'allow-hover' : ''"
+        :class="(sel===defaultSel || sel==='{{ $ticketsCreate }}' || sel.startsWith('{{ $ticketsBase }}/')) ? 'allow-hover' : ''"
         x-bind:data-open="($store.sb.openKey===key || forceOpen)">
         <button type="button"
           data-sb-key="menu.tickets"
@@ -688,7 +689,7 @@
           :aria-expanded="($store.sb.openKey===key || forceOpen).toString()"
           aria-controls="{{ $uid }}"
           class="{{ $btnBase }} {{ $btnHover }} sb-ripple"
-          :class="(sel===defaultSel || sel.startsWith('{{ $ticketsBase }}')) ? '{{ $btnActive }} is-active' : ''">
+          :class="(sel===defaultSel || sel==='{{ $ticketsCreate }}' || sel.startsWith('{{ $ticketsBase }}/')) ? '{{ $btnActive }} is-active' : ''">
           <span class="flex items-center">
             <span class="material-icons text-current">confirmation_number</span>
             <span class="nav-label" x-show="sidebarOpen" x-transition.opacity>Tickets</span>

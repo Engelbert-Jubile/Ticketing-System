@@ -22,6 +22,7 @@ use App\Http\Controllers\Main\UnitReportsController;
 use App\Http\Controllers\Main\UserController;
 use App\Http\Controllers\Main\WorkflowController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\TicketCollaborationController;
 use App\Support\UserUnitOptions;
 use App\Models\Task;
 use App\Services\SettingsService;
@@ -241,15 +242,29 @@ Route::middleware($emailVerificationEnabled
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     /* Ã°Å¸Å½Â« Tickets */
-    Route::prefix('dashboard/tickets')->name('tickets.')->group(function () {
-        Route::get('/{ticket}/collaboration', [\App\Http\Controllers\TicketCollaborationController::class, 'index'])->name('collaboration');
-        Route::post('/{ticket}/messages', [\App\Http\Controllers\TicketCollaborationController::class, 'message'])->middleware('throttle:30,1')->name('messages.store');
-        Route::post('/{ticket}/checklist', [\App\Http\Controllers\TicketCollaborationController::class, 'checklist'])->name('checklist.store');
-        Route::post('/{ticket}/feedback', [\App\Http\Controllers\TicketCollaborationController::class, 'feedback'])->name('feedback.store');
+    $ticketPortal = 'tickets/ticket-portal';
+    Route::get('/dashboard/tickets/ticket-portal/new-ticket', [TicketController::class, 'create'])->name('tickets.create');
+
+    Route::prefix($ticketPortal.'/workflows')->name('workflows.')->middleware('permission:view workflows')->group(function () {
+        Route::get('/', [WorkflowController::class, 'index'])->name('index');
+        Route::get('/instances/{instance}', [WorkflowController::class, 'showInstance'])->name('instances.show');
+        Route::patch('/instances/{instance}/status', [WorkflowController::class, 'updateInstanceStatus'])->name('instances.status');
+    });
+
+    Route::prefix($ticketPortal.'/sla-reports')->group(function () {
+        Route::get('/', [SLAReportController::class, 'index'])->name('dashboard.sla');
+        Route::get('/download', [SLAReportController::class, 'download'])->name('sla.download');
+        Route::get('/{type}/{id}/pdf', [SLAReportController::class, 'downloadDetail'])->name('sla.detail.download');
+    });
+
+    Route::prefix($ticketPortal)->name('tickets.')->group(function () {
+        Route::get('/{ticket}/collaboration', [TicketCollaborationController::class, 'index'])->name('collaboration');
+        Route::post('/{ticket}/messages', [TicketCollaborationController::class, 'message'])->middleware('throttle:30,1')->name('messages.store');
+        Route::post('/{ticket}/checklist', [TicketCollaborationController::class, 'checklist'])->name('checklist.store');
+        Route::post('/{ticket}/feedback', [TicketCollaborationController::class, 'feedback'])->name('feedback.store');
         Route::get('/', [TicketController::class, 'index'])->name('index');
-        Route::get('/create', [TicketController::class, 'create'])->name('create');
         Route::post('/', [TicketController::class, 'store'])->name('store');
-        Route::get('/on-progress', [TicketController::class, 'onProgress'])->name('on-progress');
+        Route::get('/in-progress', [TicketController::class, 'onProgress'])->name('on-progress');
         Route::get('/report', [TicketController::class, 'report'])->name('report');
         Route::get('/report/download', [TicketController::class, 'downloadReport'])->name('report.download');
         Route::get('/report/detail/{ticket:ticket_no}', [TicketController::class, 'reportDetailView'])->name('report.detail.view');
@@ -264,6 +279,41 @@ Route::middleware($emailVerificationEnabled
         // Manage attachments standalone (reattach)
         Route::get('/{ticket}/attachments', [TicketController::class, 'manageAttachments'])->name('attachments.manage');
         Route::put('/{ticket}/attachments', [TicketController::class, 'updateAttachments'])->name('attachments.update');
+    });
+
+    // Keep bookmarks and requests from open tabs working after moving the portal.
+    $redirectPortalRoute = static function (Request $request, string $name) {
+        $target = route($name, $request->route()->parameters());
+        $query = $request->server('QUERY_STRING');
+
+        return redirect()->to($target.($query ? '?'.$query : ''));
+    };
+
+    Route::prefix('dashboard/tickets')->group(function () use ($redirectPortalRoute) {
+        foreach ([
+            '/' => 'tickets.report',
+            '/create' => 'tickets.create',
+            '/on-progress' => 'tickets.on-progress',
+            '/report' => 'tickets.report',
+            '/report/detail/{ticket}' => 'tickets.report.detail.view',
+            '/{ticket}/edit' => 'tickets.edit',
+            '/{ticket}/attachments' => 'tickets.attachments.manage',
+            '/{ticket}' => 'tickets.show',
+        ] as $path => $name) {
+            Route::get($path, fn (Request $request) => $redirectPortalRoute($request, $name));
+        }
+
+        Route::get('/report/download', [TicketController::class, 'downloadReport']);
+        Route::get('/{ticket}/report/pdf', [TicketController::class, 'downloadDetail']);
+        Route::get('/{ticket}/collaboration', [TicketCollaborationController::class, 'index']);
+        Route::post('/{ticket}/messages', [TicketCollaborationController::class, 'message'])->middleware('throttle:30,1');
+        Route::post('/{ticket}/checklist', [TicketCollaborationController::class, 'checklist']);
+        Route::post('/{ticket}/feedback', [TicketCollaborationController::class, 'feedback']);
+        Route::post('/', [TicketController::class, 'store']);
+        Route::put('/{ticket}', [TicketController::class, 'update']);
+        Route::delete('/{ticket}', [TicketController::class, 'destroy']);
+        Route::put('/{ticket}/attachments', [TicketController::class, 'updateAttachments']);
+        Route::patch('/{ticket}/status/{status}', [TicketController::class, 'changeStatus']);
     });
 
     // Ã°Å¸â€â€ Notifications
@@ -325,11 +375,8 @@ Route::middleware($emailVerificationEnabled
 
     /* Workflow Management */
     Route::prefix('dashboard/workflows')->name('workflows.')->group(function () {
-        Route::get('/', [WorkflowController::class, 'index'])->middleware('permission:view workflows')->name('index');
         Route::get('/create', [WorkflowController::class, 'create'])->middleware('permission:create workflows')->name('create');
         Route::post('/', [WorkflowController::class, 'store'])->middleware('permission:create workflows')->name('store');
-        Route::get('/instances/{instance}', [WorkflowController::class, 'showInstance'])->middleware('permission:view workflows')->name('instances.show');
-        Route::patch('/instances/{instance}/status', [WorkflowController::class, 'updateInstanceStatus'])->middleware('permission:view workflows')->name('instances.status');
         Route::prefix('definitions')->group(function () {
             Route::get('/{workflow}', [WorkflowController::class, 'show'])->middleware('permission:view workflows')->name('show');
             Route::get('/{workflow}/edit', [WorkflowController::class, 'edit'])->middleware('permission:update workflows')->name('edit');
@@ -344,11 +391,16 @@ Route::middleware($emailVerificationEnabled
         Route::get('/{workflow}', [WorkflowController::class, 'legacyWorkflow'])->middleware('permission:view workflows')->name('legacy.show');
     });
 
-    /* Ã¢ÂÂ± SLA Reports */
-    Route::prefix('dashboard/sla')->group(function () {
-        Route::get('/', [SLAReportController::class, 'index'])->name('dashboard.sla');
-        Route::get('/download', [SLAReportController::class, 'download'])->name('sla.download');
-        Route::get('/{type}/{id}/pdf', [SLAReportController::class, 'downloadDetail'])->name('sla.detail.download');
+    Route::prefix('dashboard/workflows')->middleware('permission:view workflows')->group(function () use ($redirectPortalRoute) {
+        Route::get('/', fn (Request $request) => $redirectPortalRoute($request, 'workflows.index'));
+        Route::get('/instances/{instance}', fn (Request $request) => $redirectPortalRoute($request, 'workflows.instances.show'));
+        Route::patch('/instances/{instance}/status', [WorkflowController::class, 'updateInstanceStatus']);
+    });
+
+    Route::prefix('dashboard/sla')->group(function () use ($redirectPortalRoute) {
+        Route::get('/', fn (Request $request) => $redirectPortalRoute($request, 'dashboard.sla'));
+        Route::get('/download', [SLAReportController::class, 'download']);
+        Route::get('/{type}/{id}/pdf', [SLAReportController::class, 'downloadDetail']);
     });
 
     /* Ã¢Å¡â„¢Ã¯Â¸Â Settings */

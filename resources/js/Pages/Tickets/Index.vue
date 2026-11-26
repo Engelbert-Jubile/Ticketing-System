@@ -129,6 +129,7 @@ import { uiLocale } from '../../i18n'
 import { Link, router } from '@inertiajs/vue3';
 import { computed, reactive, ref } from 'vue';
 import StatusPill from '@/Components/StatusPill.vue';
+import resolveRoute from '@/utils/resolveRoute';
 
 const props = defineProps({
   tickets: { type: Object, required: true },
@@ -150,18 +151,11 @@ const downloadParams = computed(() => {
   return params;
 });
 
-const localePrefix = () => {
-  if (typeof window === 'undefined') return '';
-  const match = window.location.pathname.match(/^\/(en|id)\b/);
-  return match ? `/${match[1]}` : '';
-};
-
-const indexUrl = `${localePrefix()}/dashboard/tickets`;
-const createUrl = `${localePrefix()}/dashboard/tickets/create`;
-const downloadUrl = computed(() => buildDownloadUrl(`${localePrefix()}/dashboard/tickets/report/download`, downloadParams.value));
+const createUrl = computed(() => resolveRoute('tickets.create'));
+const downloadUrl = computed(() => resolveRoute('tickets.report.download', downloadParams.value));
 
 function applyFilter(params) {
-  router.get(indexUrl, params, {
+  router.get(resolveRoute('tickets.report'), params, {
     preserveState: true,
     replace: true,
   });
@@ -187,14 +181,6 @@ function go(url) {
     preserveScroll: true,
     replace: true,
   });
-}
-
-function buildDownloadUrl(base, params) {
-  const payload = Object.fromEntries(
-    Object.entries(params || {}).filter(([, value]) => value !== undefined && value !== null && value !== '')
-  );
-  const query = new URLSearchParams(payload).toString();
-  return query ? `${base}?${query}` : base;
 }
 
 function destroyTicket(ticket) {

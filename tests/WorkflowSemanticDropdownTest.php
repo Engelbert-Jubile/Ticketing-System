@@ -28,7 +28,8 @@ test('workflow routes declare semantic definitions and public runtime identifier
         ->toContain("name('instances.show')")
         ->toContain("name('legacy.show')")
         ->and($controller)
-        ->toContain("'instance' => \$number")
+        ->toContain("\$identifier = \$isTicket ? \$subject->ticket_no : \$subject->task_no;")
+        ->toContain("'instance' => \$identifier ?: \$instance?->id")
         ->toContain('resolveInstance(string $identifier)')
         ->toContain("where('ticket_no', \$identifier)")
         ->toContain("where('task_no', \$identifier)");
