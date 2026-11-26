@@ -243,7 +243,6 @@ Route::middleware($emailVerificationEnabled
 
     /* Ã°Å¸Å½Â« Tickets */
     $ticketPortal = 'tickets/ticket-portal';
-    Route::get('/dashboard/tickets/ticket-portal/new-ticket', [TicketController::class, 'create'])->name('tickets.create');
 
     Route::prefix($ticketPortal.'/workflows')->name('workflows.')->middleware('permission:view workflows')->group(function () {
         Route::get('/', [WorkflowController::class, 'index'])->name('index');
@@ -258,6 +257,7 @@ Route::middleware($emailVerificationEnabled
     });
 
     Route::prefix($ticketPortal)->name('tickets.')->group(function () {
+        Route::get('/new-ticket', [TicketController::class, 'create'])->name('create');
         Route::get('/{ticket}/collaboration', [TicketCollaborationController::class, 'index'])->name('collaboration');
         Route::post('/{ticket}/messages', [TicketCollaborationController::class, 'message'])->middleware('throttle:30,1')->name('messages.store');
         Route::post('/{ticket}/checklist', [TicketCollaborationController::class, 'checklist'])->name('checklist.store');
@@ -293,6 +293,7 @@ Route::middleware($emailVerificationEnabled
         foreach ([
             '/' => 'tickets.report',
             '/create' => 'tickets.create',
+            '/ticket-portal/new-ticket' => 'tickets.create',
             '/on-progress' => 'tickets.on-progress',
             '/report' => 'tickets.report',
             '/report/detail/{ticket}' => 'tickets.report.detail.view',
