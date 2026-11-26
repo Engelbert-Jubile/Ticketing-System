@@ -14,7 +14,7 @@
     <section class="card !p-0">
       <div class="px-5 pt-5"><h2 class="font-semibold text-slate-900 dark:text-white">{{ $t("Telusuri alur pekerjaan") }}</h2><p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ $t("Buka alur untuk melihat catatan perpindahan tahap dan tindakan yang tersedia sesuai izin Anda.") }}</p></div>
       <div class="grid gap-3 border-b border-slate-200 p-4 md:grid-cols-[1fr_170px_190px_auto] dark:border-slate-700">
-        <label class="relative"><span class="material-icons pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-lg text-slate-400">search</span><input v-model="search" :aria-label="$t(&quot;Cari alur berdasarkan nomor, judul, requester, atau PIC&quot;)" type="search" :placeholder="$t(&quot;Cari nomor, judul, requester, atau PIC...&quot;)" class="input !pl-12" @keyup.enter="applyFilters" /></label>
+        <label class="relative"><span class="material-icons pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-lg text-slate-400">search</span><input v-model="search" :aria-label="searchLabel" type="search" :placeholder="searchLabel" class="input !pl-12" @keyup.enter="applyFilters" /></label>
         <WorkflowSelect v-model="type" :options="typeOptions" accent="blue" :aria-label="$t(&quot;Filter tipe item&quot;)" />
         <WorkflowSelect v-model="status" :options="statusOptions" accent="blue" :aria-label="$t(&quot;Filter tahap item&quot;)" />
         <button type="button" class="secondary" @click="applyFilters">{{ $t("Terapkan") }}</button>
@@ -27,11 +27,12 @@
             <div class="min-w-0">
               <p class="font-mono text-xs font-semibold text-cyan-700 dark:text-cyan-300">{{ item.number }} · {{ item.type }}</p>
               <h3 class="mt-1 break-words text-lg font-semibold text-slate-900 dark:text-white">{{ item.title }}</h3>
-              <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ item.workflow_name }}<span v-if="!item.workflow_active" class="ml-2 font-semibold text-amber-700 dark:text-amber-300">{{ $t("Definisi nonaktif") }}</span></p>
+              <p v-if="item.workflow_name" class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ item.workflow_name }}<span v-if="!item.workflow_active" class="ml-2 font-semibold text-amber-700 dark:text-amber-300">{{ $t("Definisi nonaktif") }}</span></p>
             </div>
             <div class="flex shrink-0 flex-wrap items-center gap-2">
               <button v-if="item.can_update_status" type="button" class="primary" @click="openStatus(item)"><span class="material-icons text-lg" aria-hidden="true">published_with_changes</span>{{ $t('Update Status') }}</button>
-              <Link :href="item.detail_url" :aria-label="$t(&quot;Lihat alur dan riwayat: &quot;) + item.title" class="secondary"><span class="material-icons text-lg" aria-hidden="true">route</span>{{ $t("Lihat alur & riwayat") }}</Link>
+              <Link v-if="item.detail_url" :href="item.detail_url" :aria-label="$t(&quot;Lihat alur dan riwayat: &quot;) + item.title" class="secondary"><span class="material-icons text-lg" aria-hidden="true">route</span>{{ $t("Lihat alur & riwayat") }}</Link>
+              <Link v-else :href="item.related_url" class="secondary">{{ $t("Lihat Ticket") }}</Link>
               <button v-if="item.can_reject" type="button" class="secondary !text-rose-700 dark:!text-rose-300"
                 @click="openStatus(item, true)">{{ $t('Tolak') }}</button>
             </div>
@@ -42,7 +43,7 @@
             <div><dt class="text-xs text-slate-500 dark:text-slate-400">Requester</dt><dd class="mt-1 break-words text-slate-700 dark:text-slate-200">{{ item.requester }}</dd></div>
             <div><dt class="text-xs text-slate-500 dark:text-slate-400">{{ $t("Masuk tahap ini") }}</dt><dd class="mt-1 text-slate-700 dark:text-slate-200">{{ formatDate(item.stage_started_at) }}</dd></div>
           </dl>
-          <div>
+          <div v-if="item.process_stages.length">
             <p class="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">{{ $t("Tahap dalam definisi alur · tahap saat ini ditandai") }}</p>
             <ol :aria-label="$t(&quot;Tahap proses &quot;) + item.number" class="flex flex-wrap gap-2">
               <li v-for="stage in item.process_stages" :key="stage.id" :aria-current="stage.is_current ? 'step' : undefined" class="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs" :class="stage.is_current ? 'border-cyan-500 bg-cyan-50 font-bold text-cyan-900 dark:bg-cyan-950 dark:text-cyan-100' : 'border-slate-200 text-slate-500 dark:border-slate-700 dark:text-slate-400'">
@@ -79,13 +80,22 @@ function openStatus(item, reject = false) {
 }
 const statusSaved = message => { statusItem.value = null; notice.value = { type: 'success', message }; router.reload({ only: ['items', 'summary'], preserveScroll: true }) }
 const page = usePage(); const notice = ref(null); const loading = ref(false)
-const metrics = computed(() => [{ label: uiText("Proses terpantau"), value: props.summary.total, icon: 'inventory_2', status: 'new' }, { label: uiText("Proses berjalan"), value: props.summary.in_progress, icon: 'pending_actions', status: 'in_progress' }, { label: uiText("Proses selesai"), value: props.summary.completed, icon: 'task_alt', status: 'done' }])
-const typeOptions = [{ value: '', label: uiText("Semua tipe") }, { value: 'ticket', label: 'Ticket' }, { value: 'task', label: 'Task' }]
-const statusOptions = [{ value: '', label: uiText("Semua tahap") }, ...['new','in_progress','confirmation','revision','done','on_hold','cancelled'].map(value => ({ value, label: value.replaceAll('_',' ').replace(/\b\w/g, c => c.toUpperCase()) }))]
-const search = ref(props.filters.search || ''); const type = ref(props.filters.type || ''); const status = ref(props.filters.status || '')
+const isTicketView = computed(() => props.filters.type !== 'task')
+const metrics = computed(() => [
+  { label: uiText(isTicketView.value ? 'Total Data' : 'Proses terpantau'), value: props.summary.total, icon: 'inventory_2', status: 'new' },
+  { label: uiText(isTicketView.value ? 'In Progress' : 'Proses berjalan'), value: props.summary.in_progress, icon: 'pending_actions', status: 'in_progress' },
+  { label: uiText(isTicketView.value ? 'Done' : 'Proses selesai'), value: props.summary.completed, icon: 'task_alt', status: 'done' },
+])
+const typeOptions = [{ value: 'ticket', label: 'Ticket' }, { value: 'task', label: 'Task' }]
+const statusOptions = computed(() => [
+  { value: '', label: uiText('Semua tahap') },
+  ...props.summary.stages.map(stage => ({ value: stage.status_key, label: stage.label })),
+])
+const search = ref(props.filters.search || ''); const type = ref(props.filters.type || 'ticket'); const status = ref(props.filters.status || '')
+const searchLabel = computed(() => uiText(type.value === 'ticket' ? 'Judul, deskripsi, atau nomor ticket' : 'Cari nomor, judul, requester, atau PIC...'))
 watch(() => [page.props.flash?.success, page.props.flash?.error], ([success, error]) => { const message = error || success; if (!message) return; notice.value = { type: error ? 'error' : 'success', message }; setTimeout(() => { notice.value = null }, 3500) }, { immediate: true })
 const applyFilters = () => { loading.value = true; router.get(resolveRoute('workflows.index'), { search: search.value || undefined, type: type.value || undefined, status: status.value || undefined }, { preserveState: true, replace: true, onFinish: () => { loading.value = false } }) }
-watch(() => props.filters, value => { search.value = value.search || ''; type.value = value.type || ''; status.value = value.status || '' })
+watch(() => props.filters, value => { search.value = value.search || ''; type.value = value.type || 'ticket'; status.value = value.status || '' })
 const filterStage = value => { status.value = status.value === value ? '' : value; applyFilters() }
 const formatDate = (value, time = true) => value ? new Intl.DateTimeFormat(uiLocale.value, time ? { dateStyle: 'medium', timeStyle: 'short' } : { dateStyle: 'medium' }).format(new Date(value)) : '—'
 </script>

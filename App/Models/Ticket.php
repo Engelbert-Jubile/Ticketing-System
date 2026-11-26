@@ -8,6 +8,7 @@ use App\Support\SlaClock;
 use Illuminate\Support\Carbon;
 use App\Support\TicketStatusSync;
 use App\Support\WorkflowStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
@@ -216,6 +218,23 @@ class Ticket extends Model
     public function workflowInstances(): MorphMany
     {
         return $this->morphMany(WorkflowInstance::class, 'subject');
+    }
+
+    public function workflowInstance(): MorphOne
+    {
+        return $this->workflowInstances()->one()->oldestOfMany();
+    }
+
+    public function scopeSearchReport(Builder $query, string $keyword): Builder
+    {
+        if ($keyword === '') {
+            return $query;
+        }
+
+        return $query->where(fn (Builder $rows) => $rows
+            ->where('title', 'like', "%{$keyword}%")
+            ->orWhere('ticket_no', 'like', "%{$keyword}%")
+            ->orWhere('description', 'like', "%{$keyword}%"));
     }
 
     public function statusRelation(): BelongsTo

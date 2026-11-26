@@ -12,12 +12,14 @@ use App\Models\WorkflowStage;
 use App\Services\WorkflowRuntimeService;
 use App\Support\RoleHelpers;
 use App\Support\UnitVisibility;
+use App\Support\WorkflowDisplay;
 use App\Support\WorkflowStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -32,33 +34,18 @@ class WorkflowController extends Controller
         $this->authorize('viewAny', Workflow::class);
         $filters = [
             'search' => trim($request->string('search')->toString()),
-            'type' => $request->string('type')->toString(),
+            'type' => $request->string('type')->toString() === 'task' ? 'task' : 'ticket',
             'status' => $request->string('status')->toString(),
         ];
-        $filters['type'] = in_array($filters['type'], ['ticket', 'task'], true) ? $filters['type'] : '';
-        $filters['status'] = in_array($filters['status'], WorkflowStatus::all(), true) ? $filters['status'] : '';
+        if ($filters['type'] === 'ticket' && $filters['status'] !== '') {
+            $filters['status'] = WorkflowStatus::normalize($filters['status']);
+        } elseif (! in_array($filters['status'], WorkflowStatus::all(), true)) {
+            $filters['status'] = '';
+        }
 
-        $scopedItems = $this->scopedItemsQuery($request->user());
-        $this->applyItemFilters($scopedItems, $filters, false);
-        $summary = $this->itemSummary(clone $scopedItems);
-        $this->applyItemStatusFilter($scopedItems, $filters['status']);
-
-        $items = $this->withItemRelations($scopedItems)
-            ->orderByRaw('COALESCE(
-                (SELECT created_at FROM tickets WHERE tickets.id = workflow_instances.subject_id AND workflow_instances.subject_type = ?),
-                (SELECT created_at FROM tasks WHERE tasks.id = workflow_instances.subject_id AND workflow_instances.subject_type = ?)
-            ) DESC', [Ticket::class, Task::class])
-            ->orderByDesc('workflow_instances.id')
-            ->paginate(min(50, max(5, $request->integer('per_page', 10))))
-            ->withQueryString();
-        $taskAssignees = User::query()
-            ->whereIn('id', $this->taskAssigneeIds($items->getCollection()))
-            ->get()
-            ->keyBy('id');
-        $locale = (string) $request->route('locale');
-        $items->through(
-            fn (WorkflowInstance $instance) => $this->instancePayload($instance, $locale, $taskAssignees, $request->user())
-        );
+        [$items, $summary] = $filters['type'] === 'task'
+            ? $this->taskIndexData($request, $filters)
+            : $this->ticketIndexData($request, $filters);
 
         return Inertia::render('Workflows/Index', [
             'items' => $items,
@@ -71,6 +58,67 @@ class WorkflowController extends Controller
                 'delete' => $request->user()->can('delete workflows'),
             ],
         ]);
+    }
+
+    private function ticketIndexData(Request $request, array $filters): array
+    {
+        $viewer = $request->user();
+        $locale = (string) $request->route('locale');
+        $perPage = min(50, max(5, $request->integer('per_page', 15)));
+        $query = UnitVisibility::scopeTickets(Ticket::query(), $viewer)->searchReport($filters['search']);
+        $counts = WorkflowStatus::countStatuses($query);
+        $filteredCounts = $counts;
+        if ($filters['status'] !== '') {
+            $status = $filters['status'];
+            WorkflowStatus::filterStatus($query, $status);
+            $filteredCounts = [$status => $counts[$status]];
+        }
+
+        $items = $query->with(['requester', 'agent', 'assignee', 'assignedUsers', 'workflowInstance.workflow.stages', 'workflowInstance.currentStage'])
+            ->latest('created_at')->orderByDesc('id')
+            ->paginate($perPage)->withQueryString()
+            ->through(function (Ticket $ticket) use ($viewer, $locale): array {
+                $canViewHistory = RoleHelpers::userIsSuperAdmin($viewer) || $ticket->isRequester($viewer) || $ticket->isAgent($viewer);
+
+                return $this->itemPayload($ticket, $canViewHistory ? $ticket->workflowInstance : null, $locale, $viewer);
+            });
+
+        return [$items, [
+            'total' => array_sum($filteredCounts),
+            'in_progress' => $filteredCounts[WorkflowStatus::IN_PROGRESS] ?? 0,
+            'completed' => $filteredCounts[WorkflowStatus::DONE] ?? 0,
+            'stages' => $this->stageCounts($filteredCounts),
+        ]];
+    }
+
+    private function taskIndexData(Request $request, array $filters): array
+    {
+        $viewer = $request->user();
+        $locale = (string) $request->route('locale');
+        $query = WorkflowInstance::query()
+            ->whereHasMorph('subject', [Task::class], function (Builder $tasks) use ($filters, $viewer): void {
+                UnitVisibility::scopeWorkflowTasks($tasks, $viewer);
+                if ($filters['search'] !== '') {
+                    $search = '%'.$filters['search'].'%';
+                    $tasks->where(fn (Builder $rows) => $rows->where('title', 'like', $search)
+                        ->orWhere('task_no', 'like', $search)
+                        ->orWhereHas('requester', fn (Builder $user) => $this->searchUser($user, $search))
+                        ->orWhereHas('assignee', fn (Builder $user) => $this->searchUser($user, $search)));
+                }
+            });
+        $summary = $this->itemSummary($query);
+        if ($filters['status'] !== '') {
+            $query->whereHas('currentStage', fn (Builder $stage) => $stage->where('status_key', $filters['status']));
+        }
+
+        $items = $this->withItemRelations($query)
+            ->orderByDesc(Task::query()->select('created_at')->whereColumn('tasks.id', 'workflow_instances.subject_id'))
+            ->orderByDesc('workflow_instances.id')
+            ->paginate(min(50, max(5, $request->integer('per_page', 10))))->withQueryString();
+        $assignees = User::query()->whereIn('id', $this->taskAssigneeIds($items->getCollection()))->get()->keyBy('id');
+        $items->through(fn (WorkflowInstance $instance) => $this->itemPayload($instance->subject, $instance, $locale, $viewer, $assignees));
+
+        return [$items, $summary];
     }
 
     public function create(): Response
@@ -100,8 +148,8 @@ class WorkflowController extends Controller
         $legacyIdentifier = ctype_digit($instance);
         $instance = $this->resolveInstance($instance);
         abort_unless($this->scopedItemsQuery($request->user())->whereKey($instance->id)->exists(), 403);
-        if ($legacyIdentifier) {
-            return redirect()->route('workflows.instances.show', ['locale' => $locale, 'instance' => $this->instancePublicIdentifier($instance)]);
+        if ($legacyIdentifier && ($publicIdentifier = $this->instancePublicIdentifier($instance)) !== (string) $instance->id) {
+            return redirect()->route('workflows.instances.show', ['locale' => $locale, 'instance' => $publicIdentifier]);
         }
         $instance->load([
             'workflow.stages.responsibleUser',
@@ -121,15 +169,16 @@ class WorkflowController extends Controller
             ->whereIn('id', $this->taskAssigneeIds(collect([$instance])))
             ->get()
             ->keyBy('id');
-        $item = $this->instancePayload($instance, $locale, $taskAssignees, $request->user());
         $subject = $instance->subject;
+        $item = $this->itemPayload($subject, $instance, $locale, $request->user(), $taskAssignees);
         $isTicket = $subject instanceof Ticket;
         $targetDate = $isTicket ? $subject->deadline() : ($subject->due_at ?? $subject->end_date);
         $finishedAt = $subject->completed_at;
         $finishedAt = $finishedAt ? \Illuminate\Support\Carbon::parse($finishedAt) : null;
         $sla = $isTicket ? $subject->sla : null;
         $historyByStatus = $instance->histories->groupBy('to_status');
-        $currentPosition = (int) ($instance->currentStage?->position ?? 0);
+        $currentStageId = $item['process_stages']->firstWhere('is_current', true)['id'] ?? null;
+        $currentPosition = (int) ($instance->workflow->stages->firstWhere('id', $currentStageId)?->position ?? 0);
 
         $item['description'] = $subject->description;
         $item['sla'] = [
@@ -137,13 +186,15 @@ class WorkflowController extends Controller
             'started_at' => $subject->created_at?->toIso8601String(),
             'target_at' => $targetDate?->toIso8601String(),
             'finished_at' => $finishedAt?->toIso8601String(),
-            'state' => $instance->status === 'completed'
-                ? 'completed'
-                : ($instance->status === 'cancelled' ? 'cancelled' : ($targetDate?->isPast() ? 'overdue' : ($targetDate ? 'on_track' : 'not_set'))),
+            'state' => match ($item['status']) {
+                WorkflowStatus::DONE => 'completed',
+                WorkflowStatus::CANCELLED => 'cancelled',
+                default => $targetDate?->isPast() ? 'overdue' : ($targetDate ? 'on_track' : 'not_set'),
+            },
         ];
-        $item['timeline'] = $instance->workflow->stages->map(function (WorkflowStage $stage) use ($instance, $historyByStatus, $currentPosition): array {
+        $item['timeline'] = $instance->workflow->stages->map(function (WorkflowStage $stage) use ($instance, $item, $historyByStatus, $currentStageId, $currentPosition): array {
             $entries = $historyByStatus->get($stage->status_key, collect())->sortBy('created_at');
-            $active = (int) $instance->current_stage_id === (int) $stage->id;
+            $active = (int) $currentStageId === (int) $stage->id;
             $reached = $active || $entries->isNotEmpty() || $stage->position < $currentPosition;
             $leftAt = $instance->histories->first(fn ($history) => $history->from_status === $stage->status_key)?->created_at;
 
@@ -159,7 +210,9 @@ class WorkflowController extends Controller
                 'notes' => $stage->instructions,
                 'action_label' => \App\Support\WorkflowDisplay::text($instance->workflow, $stage->action_label),
                 'state' => $active ? 'active' : ($reached ? 'completed' : 'pending'),
-                'entered_at' => ($active ? ($instance->stage_started_at ?? $entries->first()?->created_at ?? $instance->started_at) : $entries->first()?->created_at)?->toIso8601String(),
+                'entered_at' => $active
+                    ? ($item['stage_started_at'] ?? $entries->last()?->created_at?->toIso8601String())
+                    : $entries->first()?->created_at?->toIso8601String(),
                 'completed_at' => $leftAt?->toIso8601String(),
             ];
         })->values();
@@ -228,7 +281,7 @@ class WorkflowController extends Controller
             ->get()
             ->keyBy('id');
         $instances->through(
-            fn (WorkflowInstance $instance) => $this->instancePayload($instance, $locale, $taskAssignees, $request->user())
+            fn (WorkflowInstance $instance) => $this->itemPayload($instance->subject, $instance, $locale, $request->user(), $taskAssignees)
         );
 
         return Inertia::render('Workflows/Show', [
@@ -748,7 +801,7 @@ class WorkflowController extends Controller
         return $query->where(function (Builder $builder) use ($identifier): void {
             $builder->whereHasMorph('subject', [Ticket::class], fn (Builder $subject) => $subject->where('ticket_no', $identifier))
                 ->orWhereHasMorph('subject', [Task::class], fn (Builder $subject) => $subject->where('task_no', $identifier));
-        })->firstOrFail();
+        })->oldest('id')->firstOrFail();
     }
 
     private function instancePublicIdentifier(WorkflowInstance $instance): string
@@ -780,49 +833,6 @@ class WorkflowController extends Controller
         });
     }
 
-    private function applyItemFilters(Builder $query, array $filters, bool $includeStatus = true): void
-    {
-        if ($filters['type'] !== '') {
-            $query->where('subject_type', $filters['type'] === 'ticket' ? Ticket::class : Task::class);
-        }
-
-        if ($filters['search'] !== '') {
-            $search = '%'.$filters['search'].'%';
-            $query->where(function (Builder $searchQuery) use ($search) {
-                $searchQuery
-                    ->whereHasMorph('subject', [Ticket::class], function (Builder $ticketQuery) use ($search) {
-                        $ticketQuery->where(function (Builder $subjectQuery) use ($search) {
-                            $subjectQuery->where('title', 'like', $search)
-                                ->orWhere('ticket_no', 'like', $search)
-                                ->orWhereHas('requester', fn (Builder $userQuery) => $this->searchUser($userQuery, $search))
-                                ->orWhereHas('agent', fn (Builder $userQuery) => $this->searchUser($userQuery, $search))
-                                ->orWhereHas('assignee', fn (Builder $userQuery) => $this->searchUser($userQuery, $search))
-                                ->orWhereHas('assignedUsers', fn (Builder $userQuery) => $this->searchUser($userQuery, $search));
-                        });
-                    })
-                    ->orWhereHasMorph('subject', [Task::class], function (Builder $taskQuery) use ($search) {
-                        $taskQuery->where(function (Builder $subjectQuery) use ($search) {
-                            $subjectQuery->where('title', 'like', $search)
-                                ->orWhere('task_no', 'like', $search)
-                                ->orWhereHas('requester', fn (Builder $userQuery) => $this->searchUser($userQuery, $search))
-                                ->orWhereHas('assignee', fn (Builder $userQuery) => $this->searchUser($userQuery, $search));
-                        });
-                    });
-            });
-        }
-
-        if ($includeStatus) {
-            $this->applyItemStatusFilter($query, $filters['status']);
-        }
-    }
-
-    private function applyItemStatusFilter(Builder $query, string $status): void
-    {
-        if ($status !== '') {
-            $query->whereHas('currentStage', fn (Builder $stageQuery) => $stageQuery->where('status_key', $status));
-        }
-    }
-
     private function searchUser(Builder $query, string $search): Builder
     {
         return $query->where(function (Builder $userQuery) use ($search) {
@@ -845,12 +855,17 @@ class WorkflowController extends Controller
             'total' => (clone $query)->count(),
             'in_progress' => (clone $query)->where('workflow_instances.status', 'running')->count(),
             'completed' => (clone $query)->where('workflow_instances.status', 'completed')->count(),
-            'stages' => collect(WorkflowStatus::all())->map(fn (string $status) => [
-                'status_key' => $status,
-                'label' => WorkflowStatus::label($status),
-                'count' => (int) ($stageRows[$status] ?? 0),
-            ])->values(),
+            'stages' => $this->stageCounts($stageRows->all()),
         ];
+    }
+
+    private function stageCounts(array $counts): Collection
+    {
+        return collect(WorkflowStatus::all())->map(fn (string $status) => [
+            'status_key' => $status,
+            'label' => WorkflowStatus::label($status),
+            'count' => (int) ($counts[$status] ?? 0),
+        ]);
     }
 
     private function withItemRelations(Builder $query): Builder
@@ -888,9 +903,8 @@ class WorkflowController extends Controller
             ->all();
     }
 
-    private function instancePayload(WorkflowInstance $instance, string $locale, $taskAssignees, User $viewer): array
+    private function itemPayload(Ticket|Task $subject, ?WorkflowInstance $instance, string $locale, User $viewer, ?Collection $taskAssignees = null): array
     {
-        $subject = $instance->subject;
         $isTicket = $subject instanceof Ticket;
         $requester = $subject->requester?->display_name ?? '—';
 
@@ -916,18 +930,28 @@ class WorkflowController extends Controller
         }
 
         $status = WorkflowStatus::normalize($subject->status);
+        $statusLabel = WorkflowStatus::label($status);
+        $workflow = $instance?->workflow;
+        $stages = $workflow?->stages ?? collect();
+        $currentStage = $isTicket
+            ? $stages->first(fn (WorkflowStage $stage) => WorkflowStatus::normalize($stage->status_key) === $status)
+            : $instance?->currentStage;
+        $stageStartedAt = $currentStage?->is($instance?->currentStage) ? ($instance->stage_started_at ?? $instance->started_at) : null;
+        $identifier = $isTicket ? $subject->ticket_no : $subject->task_no;
+        $instanceParams = ['locale' => $locale, 'instance' => $identifier ?: $instance?->id];
         $statusOptions = collect(WorkflowStatus::allowedTransitions($status))
-            ->filter(fn (string $candidate) => $instance->workflow?->is_active && $subject->canUserSetStatus($viewer, $candidate))
-            ->filter(fn (string $candidate) => $instance->workflow?->stages->contains('status_key', $candidate))
+            ->filter(fn (string $candidate) => $workflow?->is_active
+                && $subject->canUserSetStatus($viewer, $candidate)
+                && $stages->contains('status_key', $candidate))
             ->map(fn (string $candidate) => ['value' => $candidate, 'label' => WorkflowStatus::label($candidate)])
             ->values();
 
         return [
-            'id' => $instance->id,
-            'workflow_uuid' => $instance->workflow?->uuid,
-            'workflow_slug' => $instance->workflow?->slug,
-            'workflow_name' => $instance->workflow?->name,
-            'workflow_active' => (bool) $instance->workflow?->is_active,
+            'id' => $instance?->id ?? 'ticket-'.$subject->id,
+            'workflow_uuid' => $workflow?->uuid,
+            'workflow_slug' => $workflow?->slug,
+            'workflow_name' => $workflow?->name,
+            'workflow_active' => (bool) $workflow?->is_active,
             'number' => $number,
             'title' => $subject->title,
             'type' => $isTicket ? 'ticket' : 'task',
@@ -937,33 +961,33 @@ class WorkflowController extends Controller
             'priority' => $subject->priority ?: '-',
             'target_date' => $targetDate?->toIso8601String(),
             'status' => $status,
-            'status_label' => WorkflowStatus::label($status),
-            'stage_name' => \App\Support\WorkflowDisplay::text($instance->workflow, $instance->currentStage?->name) ?? WorkflowStatus::label($status),
-            'process_stages' => $instance->workflow->stages->map(fn (WorkflowStage $stage) => [
+            'status_label' => $statusLabel,
+            'stage_name' => $isTicket ? $statusLabel : (WorkflowDisplay::text($workflow, $currentStage?->name) ?? $statusLabel),
+            'process_stages' => $stages->map(fn (WorkflowStage $stage) => [
                 'id' => $stage->id,
-                'name' => \App\Support\WorkflowDisplay::text($instance->workflow, $stage->name),
-                'is_current' => (int) $stage->id === (int) $instance->current_stage_id,
+                'name' => $isTicket ? WorkflowStatus::label($stage->status_key) : WorkflowDisplay::text($workflow, $stage->name),
+                'is_current' => $stage->is($currentStage),
             ])->values(),
             'created_at' => $subject->created_at?->toIso8601String(),
             'updated_at' => $subject->updated_at?->toIso8601String(),
             'date' => $subject->updated_at?->toIso8601String(),
-            'stage_started_at' => $instance->stage_started_at?->toIso8601String(),
-            'detail_url' => route('workflows.instances.show', ['locale' => $locale, 'instance' => $number]),
+            'stage_started_at' => $stageStartedAt?->toIso8601String(),
+            'detail_url' => $instance ? route('workflows.instances.show', $instanceParams) : null,
             'related_url' => $detailUrl,
             'edit_url' => $editUrl,
             'status_options' => $statusOptions,
-            'status_update_url' => route('workflows.instances.status', ['locale' => $locale, 'instance' => $number]),
-            'can_view_workflow' => $viewer->can('view', $instance->workflow),
+            'status_update_url' => $instance ? route('workflows.instances.status', $instanceParams) : null,
+            'can_view_workflow' => $workflow && $viewer->can('view', $workflow),
             'can_edit' => $viewer->can($isTicket ? 'update tickets' : 'update tasks'),
             'can_update_status' => $statusOptions->isNotEmpty(),
-            'can_reject' => $this->rejectionStatus($instance, $subject, $viewer) !== null,
-            'can_update_workflow' => $viewer->can('update', $instance->workflow),
-            'can_toggle_workflow' => $viewer->can('toggle', $instance->workflow),
-            'can_delete_workflow' => $viewer->can('delete', $instance->workflow) && ! $instance->workflow->instances()->exists(),
-            'workflow_toggle_url' => route('workflows.toggle', ['locale' => $locale, 'workflow' => $instance->workflow]),
-            'workflow_delete_url' => route('workflows.destroy', ['locale' => $locale, 'workflow' => $instance->workflow]),
-            'workflow_url' => route('workflows.show', ['locale' => $locale, 'workflow' => $instance->workflow]),
-            'workflow_edit_url' => route('workflows.edit', ['locale' => $locale, 'workflow' => $instance->workflow]),
+            'can_reject' => $instance && $this->rejectionStatus($instance, $subject, $viewer) !== null,
+            'can_update_workflow' => $workflow && $viewer->can('update', $workflow),
+            'can_toggle_workflow' => $workflow && $viewer->can('toggle', $workflow),
+            'can_delete_workflow' => false,
+            'workflow_toggle_url' => $workflow ? route('workflows.toggle', ['locale' => $locale, 'workflow' => $workflow]) : null,
+            'workflow_delete_url' => $workflow ? route('workflows.destroy', ['locale' => $locale, 'workflow' => $workflow]) : null,
+            'workflow_url' => $workflow ? route('workflows.show', ['locale' => $locale, 'workflow' => $workflow]) : null,
+            'workflow_edit_url' => $workflow ? route('workflows.edit', ['locale' => $locale, 'workflow' => $workflow]) : null,
         ];
     }
 }

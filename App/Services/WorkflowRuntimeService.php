@@ -25,7 +25,7 @@ class WorkflowRuntimeService
 
         $instance = WorkflowInstance::query()
             ->where('subject_type', $subject::class)->where('subject_id', $subject->getKey())
-            ->with('workflow.stages')->first();
+            ->with('workflow.stages')->oldest('id')->first();
 
         if (! $instance) {
             $workflow = $this->resolveWorkflow($type, $subject);

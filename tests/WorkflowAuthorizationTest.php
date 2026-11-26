@@ -18,6 +18,7 @@ beforeEach(function () {
         '--path' => [
             'database/migrations/0001_01_01_000000_create_users_table.php',
             'database/migrations/2025_07_23_023014_create_permission_tables.php',
+            'database/migrations/2025_08_26_000007_create_attachments_tables.php',
             'database/migrations/2025_11_19_000001_add_unit_to_users_table.php',
             'database/migrations/2026_07_13_000000_create_workflow_management_tables.php',
             'database/migrations/2026_07_13_000001_add_workflow_permissions.php',
@@ -82,9 +83,9 @@ beforeEach(function () {
     });
 });
 
-function workflowUserWithRole(string $role): User
+function workflowUserWithRole(string $role, array $attributes = []): User
 {
-    $user = User::factory()->create();
+    $user = User::factory()->create($attributes);
     $user->assignRole($role);
 
     return $user;
@@ -171,9 +172,9 @@ test('workflow seeder creates ticket and task defaults idempotently', function (
 });
 
 test('sync existing command backfills legacy statuses idempotently with scoped counts', function () {
-    $user = workflowUserWithRole('user');
+    $user = workflowUserWithRole('user', ['unit' => 'Unit A']);
     $superadmin = workflowUserWithRole('superadmin');
-    $other = User::factory()->create();
+    $other = User::factory()->create(['unit' => 'Unit B']);
     $now = now();
 
     DB::table('tickets')->insert([
@@ -216,18 +217,18 @@ test('sync existing command backfills legacy statuses idempotently with scoped c
     $this->actingAs($user)->withHeaders(workflowInertiaHeaders())
         ->get(route('workflows.index', ['locale' => 'id']))
         ->assertOk()
-        ->assertJsonPath('props.summary.total', 3)
-        ->assertJsonPath('props.summary.completed', 2)
-        ->assertJsonCount(3, 'props.items.data');
+        ->assertJsonPath('props.summary.total', 2)
+        ->assertJsonPath('props.summary.completed', 1)
+        ->assertJsonCount(2, 'props.items.data');
 
     $this->actingAs($superadmin)->withHeaders(workflowInertiaHeaders())
         ->get(route('workflows.index', ['locale' => 'id']))
         ->assertOk()
-        ->assertJsonPath('props.summary.total', 6)
-        ->assertJsonPath('props.summary.completed', 2)
-        ->assertJsonCount(6, 'props.items.data')
-        ->assertJsonFragment(['status_key' => 'in_progress', 'label' => 'In Progress', 'count' => 2])
-        ->assertJsonFragment(['status_key' => 'confirmation', 'label' => 'Confirmation', 'count' => 1]);
+        ->assertJsonPath('props.summary.total', 3)
+        ->assertJsonPath('props.summary.completed', 1)
+        ->assertJsonCount(3, 'props.items.data')
+        ->assertJsonFragment(['status_key' => 'in_progress', 'label' => 'In Progress', 'count' => 1])
+        ->assertJsonFragment(['status_key' => 'confirmation', 'label' => 'Confirmation', 'count' => 0]);
 });
 
 test('existing tickets and tasks use default workflows and follow status changes', function () {
@@ -271,15 +272,20 @@ test('existing tickets and tasks use default workflows and follow status changes
     $this->actingAs($viewer)->withHeaders(workflowInertiaHeaders())
         ->get(route('workflows.index', ['locale' => 'id']))
         ->assertOk()
-        ->assertJsonPath('props.summary.total', 2)
+        ->assertJsonPath('props.summary.total', 1)
         ->assertJsonPath('props.summary.in_progress', 1)
-        ->assertJsonPath('props.summary.completed', 1)
-        ->assertJsonCount(2, 'props.items.data')
+        ->assertJsonPath('props.summary.completed', 0)
+        ->assertJsonCount(1, 'props.items.data')
         ->assertJsonFragment([
             'number' => 'TCK-REAL-001',
             'title' => 'Ticket production existing',
             'type' => 'ticket',
-        ])
+        ]);
+    $this->get(route('workflows.index', ['locale' => 'id', 'type' => 'task']))
+        ->assertOk()
+        ->assertJsonPath('props.summary.total', 1)
+        ->assertJsonPath('props.summary.completed', 1)
+        ->assertJsonCount(1, 'props.items.data')
         ->assertJsonFragment([
             'number' => 'TSK-REAL-001',
             'title' => 'Task production existing',
@@ -308,8 +314,8 @@ test('existing tickets and tasks use default workflows and follow status changes
 });
 
 test('workflow index applies search type status pagination and permissions', function () {
-    $user = workflowUserWithRole('user');
-    $admin = workflowUserWithRole('admin');
+    $user = workflowUserWithRole('user', ['unit' => 'Unit A']);
+    $admin = workflowUserWithRole('admin', ['unit' => 'Unit B']);
     $superadmin = workflowUserWithRole('superadmin');
     $unrelated = User::factory()->create();
     Artisan::call('db:seed', ['--class' => WorkflowSeeder::class, '--force' => true]);
@@ -342,8 +348,8 @@ test('workflow index applies search type status pagination and permissions', fun
     $this->actingAs($user)->withHeaders(workflowInertiaHeaders())
         ->get(route('workflows.index', ['locale' => 'id']))
         ->assertOk()
-        ->assertJsonPath('props.summary.total', 2)
-        ->assertJsonCount(2, 'props.items.data')
+        ->assertJsonPath('props.summary.total', 1)
+        ->assertJsonCount(1, 'props.items.data')
         ->assertJsonMissing(['number' => 'TCK-ADMIN-001'])
         ->assertJsonMissing(['number' => 'TSK-OTHER-001'])
         ->assertJsonPath('props.can.create', false)
@@ -375,8 +381,8 @@ test('workflow index applies search type status pagination and permissions', fun
     $this->actingAs($superadmin)->withHeaders(workflowInertiaHeaders())
         ->get(route('workflows.index', ['locale' => 'id']))
         ->assertOk()
-        ->assertJsonPath('props.summary.total', 4)
-        ->assertJsonCount(4, 'props.items.data')
+        ->assertJsonPath('props.summary.total', 2)
+        ->assertJsonCount(2, 'props.items.data')
         ->assertJsonPath('props.can.delete', true);
 
     $ticketWorkflow = Workflow::query()->where('code', 'TICKET_DEFAULT')->firstOrFail();
@@ -402,11 +408,56 @@ test('workflow index applies search type status pagination and permissions', fun
     }
 
     $this->actingAs($user)->withHeaders(workflowInertiaHeaders())
-        ->get(route('workflows.index', ['locale' => 'id', 'search' => 'Page']))
+        ->get(route('workflows.index', ['locale' => 'id', 'search' => 'Page', 'per_page' => 10]))
         ->assertOk()
         ->assertJsonCount(10, 'props.items.data')
         ->assertJsonPath('props.items.total', 11)
         ->assertJsonPath('props.items.last_page', 2);
+});
+
+test('ticket workflows match report totals, statuses and ordering even with missing or stale instances', function () {
+    Artisan::call('db:seed', ['--class' => WorkflowSeeder::class, '--force' => true]);
+    $viewer = workflowUserWithRole('user', ['unit' => 'Unit A']);
+    $colleague = User::factory()->create(['unit' => 'Unit A']);
+    $outsider = User::factory()->create(['unit' => 'Unit B']);
+
+    foreach ([
+        'TCK-CONF' => ['confirmation', $colleague->id],
+        'TCK-MISSING' => ['done', $viewer->id],
+        'TCK-STALE' => ['new', $viewer->id],
+        'TCK-CANCEL' => ['cancelled', $viewer->id],
+        'TCK-HIDDEN' => ['new', $outsider->id],
+    ] as $number => [$status, $requesterId]) {
+        Ticket::create(['ticket_no' => $number, 'title' => 'Shared report terms', 'status' => $status, 'requester_id' => $requesterId]);
+    }
+    $stale = Ticket::where('ticket_no', 'TCK-STALE')->sole();
+    DB::table('tickets')->where('id', $stale->id)->update(['status' => 'CLOSED']);
+    Ticket::where('ticket_no', 'TCK-MISSING')->sole()->workflowInstances()->delete();
+    Task::create(['task_no' => 'TSK-UNRELATED', 'title' => 'Shared report terms', 'status' => 'new', 'created_by' => $viewer->id]);
+
+    $this->actingAs($viewer)->withHeaders(workflowInertiaHeaders());
+    foreach ([[], ['status' => 'done']] as $filter) {
+        $report = $this->get(route('tickets.report', ['locale' => 'en', 'q' => 'Shared report', ...$filter]))->assertOk()->json('props');
+        $workflows = $this->get(route('workflows.index', ['locale' => 'en', 'search' => 'Shared report', ...$filter]))->assertOk()->json('props');
+
+        expect($workflows['summary']['total'])->toBe($filter ? 2 : 4)
+            ->and($workflows['summary']['total'])->toBe($report['summary']['total'])
+            ->and($workflows['summary']['in_progress'])->toBe($report['summary']['in_progress'])
+            ->and($workflows['summary']['completed'])->toBe($report['summary']['done'])
+            ->and(array_sum(array_column($workflows['summary']['stages'], 'count')))->toBe($report['summary']['total'])
+            ->and(array_column($workflows['items']['data'], 'number'))->toBe(array_column($report['items']['data'], 'ticket_no'))
+            ->and(array_column($workflows['items']['data'], 'status'))->toBe(array_column($report['items']['data'], 'status'));
+    }
+
+    $items = collect($workflows['items']['data'])->keyBy('number');
+    expect($items['TCK-MISSING']['detail_url'])->toBeNull()
+        ->and($items['TCK-STALE']['stage_name'])->toBe($items['TCK-STALE']['status_label']);
+    $this->get(route('workflows.instances.show', ['locale' => 'en', 'instance' => 'TCK-STALE']))
+        ->assertOk()
+        ->assertJsonPath('props.item.status', 'done')
+        ->assertJsonPath('props.item.timeline.4.state', 'active');
+    $this->get(route('workflows.instances.show', ['locale' => 'en', 'instance' => 'TCK-CONF']))
+        ->assertForbidden();
 });
 
 test('user cannot create update toggle or delete workflows', function () {

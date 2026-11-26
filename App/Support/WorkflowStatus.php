@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use Illuminate\Database\Eloquent\Builder;
+
 final class WorkflowStatus
 {
     /**
@@ -127,6 +129,36 @@ final class WorkflowStatus
         ];
 
         return $map[$normalized] ?? [$normalized];
+    }
+
+    public static function filterStatus(Builder $query, string $status): Builder
+    {
+        $status = self::normalize($status);
+        $column = $query->qualifyColumn('status');
+        $grammar = $query->getQuery()->getGrammar();
+        $value = $query->getConnection()->raw('LOWER('.$grammar->wrap($column).')');
+
+        if ($status === self::NEW) {
+            $known = array_diff([...self::all(), ...array_keys(self::ALIASES)], [self::NEW, ...array_keys(self::ALIASES, self::NEW, true)]);
+
+            return $query->where(fn (Builder $rows) => $rows->whereNotIn($value, $known)->orWhereNull($column));
+        }
+
+        return $query->whereIn($value, [$status, ...array_keys(self::ALIASES, $status, true)]);
+    }
+
+    /** @return array<string,int> */
+    public static function countStatuses(Builder $query): array
+    {
+        $column = $query->qualifyColumn('status');
+        $rows = (clone $query)->toBase()->reorder()->select($column)
+            ->selectRaw('COUNT(*) as aggregate')->groupBy($column)->get();
+        $counts = array_fill_keys(self::all(), 0);
+        foreach ($rows as $row) {
+            $counts[self::normalize($row->status)] += (int) $row->aggregate;
+        }
+
+        return $counts;
     }
 
     /** Mendapatkan kelas badge standar untuk status tertentu */

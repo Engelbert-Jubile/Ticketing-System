@@ -908,16 +908,12 @@ class TicketController extends Controller
 
     private function ticketReportSummary(array $filters, ?User $viewer = null): array
     {
-        $query = $this->buildTicketReportQuery($filters, false, $viewer);
-
-        $total = (clone $query)->count();
-        $inProgress = (clone $query)->whereIn('status', WorkflowStatus::equivalents(WorkflowStatus::IN_PROGRESS))->count();
-        $done = (clone $query)->whereIn('status', WorkflowStatus::equivalents(WorkflowStatus::DONE))->count();
+        $counts = WorkflowStatus::countStatuses($this->buildTicketReportQuery($filters, false, $viewer));
 
         return [
-            'total' => $total,
-            'in_progress' => $inProgress,
-            'done' => $done,
+            'total' => array_sum($counts),
+            'in_progress' => $counts[WorkflowStatus::IN_PROGRESS],
+            'done' => $counts[WorkflowStatus::DONE],
         ];
     }
 
@@ -941,7 +937,7 @@ class TicketController extends Controller
 
     private function buildTicketReportQuery(array $filters, bool $withRelations = false, ?User $viewer = null): Builder
     {
-        $query = UnitVisibility::scopeTickets(Ticket::query(), $viewer);
+        $query = UnitVisibility::scopeTickets(Ticket::query(), $viewer)->searchReport($filters['q']);
 
         if ($withRelations) {
             $userColumns = $this->userRelationColumns();
@@ -954,17 +950,8 @@ class TicketController extends Controller
             ]);
         }
 
-        if ($filters['q'] !== '') {
-            $search = $filters['q'];
-            $query->where(function ($inner) use ($search) {
-                $inner->where('title', 'like', "%{$search}%")
-                    ->orWhere('ticket_no', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%");
-            });
-        }
-
         if ($filters['normalized_status']) {
-            $query->whereIn('status', WorkflowStatus::equivalents($filters['normalized_status']));
+            WorkflowStatus::filterStatus($query, $filters['normalized_status']);
         }
 
         if ($filters['from_date']) {
