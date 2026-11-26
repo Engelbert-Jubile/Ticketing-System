@@ -101,6 +101,7 @@ resources/js/Components/*
 !resources/js/Components/WorkflowStatusDialog.vue
 !resources/js/Components/DraftNotice.vue
 !resources/js/Components/TicketCollaboration.vue
+!resources/js/Components/TicketConfirmationFields.vue
 !resources/js/Components/AttachmentPreview.vue
 !resources/js/Components/BrandLogo.vue
 !resources/js/Components/SaveButton.vue
@@ -116,6 +117,7 @@ resources/js/utils/*
 !resources/js/Pages/
 resources/js/Pages/*
 !resources/js/Pages/Portal.vue
+!resources/js/Pages/WorkItemReport.vue
 !resources/js/Pages/ServerRoomTemperature.vue
 !resources/js/Pages/Workflows/
 !resources/js/Pages/Workflows/*.vue
@@ -161,6 +163,12 @@ docs/workflow-language-update*.md
 /tests/Unit/TicketStatusConsistencyTest*.php
 /tests/save-buttons.test*.mjs
 /tests/Unit/TicketEditSubmissionTest*.php
+!/tests/Unit/TicketEditSubmissionTest.php
+!/tests/Unit/TicketReportTest.php
+!/tests/Unit/TicketStatusConsistencyTest.php
 /tests/Unit/EditorDescriptionTest*.php
 /tests/Unit/WorkflowStatusConstraintMigrationTest*.php
 /tests/Feature/ServerRoomTemperatureTest*.php
+/tests/Unit/TicketEditSubmissionTest*.php
+/tests/Unit/TicketReportTest*.php
+/tests/Unit/TicketStatusConsistencyTest*.php

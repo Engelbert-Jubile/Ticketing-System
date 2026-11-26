@@ -194,16 +194,14 @@ class SLAReportController extends Controller
             'ticket' => 'Tickets',
             'task' => 'Tasks',
             'project' => 'Projects',
-            'ticket_work' => 'Ticket + Task/Project',
         ];
     }
 
     protected function csvHeaders(string $type): array
     {
         return match ($type) {
-            'task' => ['Task No', 'Title', 'Status', 'Assignee', 'Ticket', 'Project', 'Deadline', 'Completed', 'SLA Status', 'SLA Detail'],
-            'project' => ['Project No', 'Title', 'Status', 'Owner', 'Ticket', 'Deadline', 'Completed', 'SLA Status', 'SLA Detail'],
-            'ticket_work' => ['Ticket No', 'Title', 'Status', 'Assignee', 'Deadline', 'Completed', 'SLA Status', 'Tasks (total/done)', 'Project SLA'],
+            'task' => ['Task No', 'Title', 'Status', 'Assignee', 'Deadline', 'Completed', 'SLA Status', 'SLA Detail'],
+            'project' => ['Project No', 'Title', 'Status', 'Owner', 'Deadline', 'Completed', 'SLA Status', 'SLA Detail'],
             default => ['Ticket No', 'Title', 'Status', 'Priority', 'Assignee', 'Deadline', 'Completed', 'SLA Status', 'SLA Detail'],
         };
     }
@@ -216,8 +214,6 @@ class SLAReportController extends Controller
                 $row['title'] ?? null,
                 $row['status'] ?? null,
                 $row['assignee'] ?? null,
-                $row['ticket_no'] ?? null,
-                $row['project_no'] ?? null,
                 $row['deadline']['display'] ?? null,
                 $row['completed_at']['display'] ?? null,
                 $row['sla']['label'] ?? null,
@@ -228,22 +224,10 @@ class SLAReportController extends Controller
                 $row['title'] ?? null,
                 $row['status'] ?? null,
                 $row['owner'] ?? null,
-                $row['ticket_no'] ?? null,
                 $row['deadline']['display'] ?? null,
                 $row['completed_at']['display'] ?? null,
                 $row['sla']['label'] ?? null,
                 $row['sla']['delta_human'] ?? null,
-            ],
-            'ticket_work' => [
-                $row['ticket']['number'] ?? null,
-                $row['ticket']['title'] ?? null,
-                $row['ticket']['status'] ?? null,
-                $row['ticket']['assignee'] ?? null,
-                $row['ticket']['deadline']['display'] ?? null,
-                $row['ticket']['completed_at']['display'] ?? null,
-                $row['ticket']['sla']['label'] ?? null,
-                sprintf('%d/%d', ($row['tasks']['stats']['total'] ?? 0) - ($row['tasks']['stats']['missing'] ?? 0), $row['tasks']['stats']['total'] ?? 0),
-                $row['project']['sla']['label'] ?? '—',
             ],
             default => [
                 $row['number'] ?? null,

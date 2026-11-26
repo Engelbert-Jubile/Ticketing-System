@@ -40,7 +40,7 @@
             </div>
             <div>
               <h2>{{ $t("Informasi Utama") }}</h2>
-              <p>{{ $t("Identitas project dan relasi ticket.") }}</p>
+              <p>{{ $t("Identitas project.") }}</p>
             </div>
           </div>
           <div class="panel-grid">
@@ -64,101 +64,6 @@
                 <li>{{ statusGuide.requester }}</li>
                 <li>{{ statusGuide.admin }}</li>
               </ul>
-            </div>
-            <div class="panel-field panel-field--full ticket-linker" ref="ticketCardRef">
-              <label>{{ $t("Ticket Terkait") }}</label>
-              <div class="relative ticket-card rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                <div class="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">{{ $t("Hubungkan ke Ticket Aktif") }}</p>
-                    <p class="text-xs text-slate-400">{{ $t("Pilih ticket sesuai unit.") }}</p>
-                  </div>
-                  <div class="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                    <span>{{ selectedTicketOption ? '1 ticket terpilih' : $t("Belum ada pilihan") }}</span>
-                    <button
-                      v-if="selectedTicketOption"
-                      type="button"
-                      class="rounded-full border border-rose-200 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-rose-600 transition hover:bg-rose-50 dark:border-rose-500/40 dark:text-rose-200 dark:hover:bg-rose-500/10"
-                      @click="clearTicketSelection"
-                    >
-                      {{ $t("Hapus") }}
-                    </button>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  class="mt-3 flex w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50/90 px-4 py-3 text-left text-sm font-semibold text-slate-700 transition hover:border-blue-400 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-100"
-                  @click="toggleTicketDropdown"
-                >
-                  <div class="flex flex-1 flex-wrap gap-1.5">
-                    <span
-                      v-if="selectedTicketOption"
-                      class="inline-flex items-center gap-2 rounded-lg border border-indigo-200/70 bg-white px-3 py-1 text-xs font-medium text-indigo-700 dark:border-indigo-500/40 dark:bg-slate-900/70 dark:text-indigo-200"
-                    >
-                      <span class="font-semibold">{{ selectedTicketOption.ticket_no }}</span>
-                      <span class="max-w-[160px] truncate text-[11px] text-slate-400">{{ selectedTicketOption.title || $t('Tanpa judul') }}</span>
-                      <span class="rounded-full border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-[10px] uppercase tracking-wide text-indigo-600 dark:border-indigo-400/40 dark:bg-transparent">{{ selectedTicketOption.unit || ticketUnitPlaceholder }}</span>
-                    </span>
-                    <span v-else class="text-xs font-normal text-slate-400">{{ $t("Pilih ticket aktif sesuai unit Anda") }}</span>
-                  </div>
-                  <span class="material-icons text-base text-slate-400 transition duration-200" :class="ticketDropdownOpen ? 'rotate-180 text-blue-500' : ''">expand_more</span>
-                </button>
-                <div v-if="ticketRequester" class="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-200">
-                  <p class="font-semibold text-slate-700 dark:text-slate-100">Requester Ticket</p>
-                  <p>{{ ticketRequester.name || 'Requester' }}</p>
-                  <p v-if="ticketRequester.email" class="text-[11px] text-slate-500">{{ ticketRequester.email }}</p>
-                </div>
-                <transition name="fade-scale">
-                  <div
-                    v-if="ticketDropdownOpen"
-                    class="mt-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-slate-700 dark:bg-slate-900"
-                  >
-                    <div class="unit-chips flex flex-wrap gap-2 border-b border-slate-100 pb-3 dark:border-slate-800">
-                      <button
-                        v-for="unit in ticketUnits"
-                        :key="`ticket-unit-${unit}`"
-                        type="button"
-                        class="rounded-full border px-3 py-1 text-xs font-semibold transition"
-                        :class="activeTicketUnit === unit ? 'border-indigo-500 bg-indigo-50 text-indigo-700 dark:border-indigo-400 dark:bg-indigo-500/10 dark:text-indigo-200' : 'border-slate-200 text-slate-500 hover:border-indigo-300 hover:text-indigo-600 dark:border-slate-700 dark:text-slate-300'"
-                        @click="activeTicketUnit = unit"
-                      >
-                        {{ unit }}
-                      </button>
-                    </div>
-                    <div class="mt-3 max-h-72 space-y-2 overflow-y-auto pr-1">
-                      <label
-                        v-for="ticket in activeTicketList"
-                        :key="`ticket-option-${ticket.id}`"
-                        class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 px-3 py-2 text-sm shadow-sm transition hover:border-indigo-400 dark:border-slate-700"
-                        :class="normalizeSelectionId(ticket.id) === normalizeSelectionId(selectedTicketId) ? 'border-indigo-500 bg-indigo-50/70 dark:border-indigo-400/60 dark:bg-indigo-500/10' : 'border-slate-200 dark:border-slate-700'"
-                      >
-                        <div class="flex items-start gap-3">
-                          <input
-                            type="radio"
-                            class="mt-1 h-4 w-4 border-indigo-300 text-indigo-600 focus:ring-indigo-500"
-                            :value="ticket.id"
-                            :checked="normalizeSelectionId(ticket.id) === normalizeSelectionId(selectedTicketId)"
-                            @change="selectTicket(ticket.id)"
-                          />
-                          <div class="min-w-0">
-                            <p class="font-semibold text-slate-700 dark:text-slate-100">{{ ticket.ticket_no }}</p>
-                            <p class="truncate text-xs text-slate-400">{{ ticket.title || $t('Tanpa judul') }}</p>
-                            <p class="text-[11px] text-slate-400">{{ ticket.unit || ticketUnitPlaceholder }}</p>
-                          </div>
-                    </div>
-                    <StatusPill :status="ticket.status || ticket.status_badge" :label="ticket.status_label || $t(&quot;Aktif&quot;)" size="sm" />
-                  </label>
-                    <p v-if="!activeTicketList.length" class="text-sm text-slate-400">{{ $t("Tidak ada ticket pada unit ini.") }}</p>
-                  </div>
-                    <div class="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
-                      <span>{{ $t("Hanya menampilkan ticket yang belum berstatus Done / Cancelled.") }}</span>
-                      <button type="button" class="text-indigo-500 hover:underline" @click="clearTicketSelection">{{ $t("Tanpa ticket") }}</button>
-                    </div>
-                  </div>
-                </transition>
-                <p class="mt-2 text-xs text-slate-400">{{ $t("Jika tidak ada ticket yang relevan, biarkan kosong untuk project mandiri.") }}</p>
-                <p v-if="form.errors.ticket_id" class="field-error">{{ form.errors.ticket_id }}</p>
-              </div>
             </div>
           </div>
         </section>
@@ -762,14 +667,6 @@
             </label>
           </div>
 
-          <div v-if="showTicketAttachmentsSection" class="mt-3 space-y-2">
-            <p class="text-xs font-medium text-slate-600 dark:text-slate-300">
-              {{ $t("Lampiran dari ticket terkait:") }}
-              <span v-if="ticketAttachmentList.length">{{ ticketAttachmentList.length }} file.</span>
-              <span v-else>{{ $t("Belum ada lampiran ticket.") }}</span>
-            </p>
-            <TicketAttachmentList :attachments="ticketAttachmentList" />
-          </div>
 
           <transition name="fade">
             <div v-show="showUploader" class="attachment-uploader space-y-3">
@@ -856,9 +753,7 @@ import { Link, router, useForm } from '@inertiajs/vue3';
 import DatePickerFlatpickr from '@/Components/DatePickerFlatpickr.vue';
 import FileUploaderPond from '@/Components/FileUploaderPond.vue';
 import FancySelect from '@/Components/FancySelect.vue';
-import StatusPill from '@/Components/StatusPill.vue';
 import RichTextQuill from '@/Components/RichTextQuill.vue';
-import TicketAttachmentList from '@/Components/TicketAttachmentList.vue';
 import { attachmentFilterOptions } from '@/utils/attachmentFilters';
 
 const props = defineProps({
@@ -876,7 +771,7 @@ const steps = [
 ];
 
 const stepFieldPrefixes = {
-  overview: ['title', 'project_no', 'status', 'ticket_id'],
+  overview: ['title', 'project_no', 'status'],
   timeline: ['description', 'start_date', 'end_date'],
   team: ['project_pics', 'project_actions'],
   budget: ['project_costs', 'project_risks'],
@@ -1003,63 +898,6 @@ const subtitleLabel = computed(() => (
     : uiText('Perbarui informasi project tanpa meninggalkan tampilan Inertia.')
 ));
 const submitButtonLabel = computed(() => (isCreate.value ? uiText("Simpan Project") : uiText("Simpan Perubahan")));
-const ticketPlaceholder = computed(() => (isCreate.value ? '— Tanpa Ticket —' : uiText("— Tidak diubah —")));
-const ticketOptions = computed(() => props.options?.tickets || []);
-const metaTicketUnits = computed(() => {
-  const raw = props.meta?.ticketUnits;
-  if (Array.isArray(raw)) {
-    return raw.filter(unit => typeof unit === 'string' && unit.trim() !== '');
-  }
-  return [];
-});
-const ticketLookup = computed(() => {
-  const map = new Map();
-  ticketOptions.value.forEach(option => {
-    if (option?.id !== undefined && option?.id !== null) {
-      map.set(String(option.id), option);
-    }
-  });
-  return map;
-});
-const ticketUnitPlaceholder = uiText("Unit Tidak Tercatat");
-const ticketUnits = computed(() => {
-  const set = new Set();
-  // unit dari user/agent (allUnits sudah mencakup metaUnitOptions + userOptions) — ikuti urutan create task
-  allUnits.value.forEach(unit => {
-    if (typeof unit === 'string' && unit.trim() !== '') {
-      set.add(unit.trim());
-    }
-  });
-  // unit dari meta (server)
-  metaTicketUnits.value.forEach(unit => {
-    if (typeof unit === 'string' && unit.trim() !== '') {
-      set.add(unit.trim());
-    }
-  });
-  // unit dari ticket options
-  ticketOptions.value.forEach(option => {
-    const unit = typeof option?.unit === 'string' && option.unit.trim() !== '' ? option.unit.trim() : ticketUnitPlaceholder;
-    set.add(unit);
-  });
-  if (!set.size) {
-    set.add(ticketUnitPlaceholder);
-  }
-  return Array.from(set);
-});
-const ticketsByUnit = computed(() => {
-  const map = {};
-  ticketUnits.value.forEach(unit => {
-    map[unit] = [];
-  });
-  ticketOptions.value.forEach(option => {
-    const unit = typeof option?.unit === 'string' && option.unit.trim() !== '' ? option.unit.trim() : ticketUnitPlaceholder;
-    if (!map[unit]) {
-      map[unit] = [];
-    }
-    map[unit].push(option);
-  });
-  return map;
-});
 const primaryButtonLabel = computed(() => (isLastStep.value ? submitButtonLabel.value : uiText('Lanjut')));
 const primaryButtonIcon = computed(() => (isLastStep.value ? 'save' : 'arrow_forward'));
 const statusGuide = computed(() => props.meta?.statusGuide ?? null);
@@ -1094,42 +932,6 @@ function createMember(role = ROLE_PIC) {
     role_type: normalizeRole(role),
     is_primary: false,
   };
-}
-
-function buildMembersFromTicket() {
-  const members = [];
-  const ticket = props.project.ticket ?? null;
-  if (!ticket) return members;
-
-  const agentId = normalizeSelectionId(ticket.agent_id) || normalizeSelectionId(ticket.assigned_id);
-  if (agentId) {
-    members.push({
-      ...createMember(ROLE_AGENT),
-      user_id: agentId,
-      is_primary: true,
-    });
-  }
-
-  // Gunakan assigned_ids dari ticket (assignedUsers) untuk mengisi PIC awal.
-  // Jika tidak ada assigned_ids, coba gunakan assigned_id sebagai fallback.
-  const assignedIds = Array.isArray(ticket.assigned_ids)
-    ? ticket.assigned_ids.map(normalizeSelectionId).filter(Boolean)
-    : [];
-  if (!assignedIds.length && normalizeSelectionId(ticket.assigned_id)) {
-    assignedIds.push(normalizeSelectionId(ticket.assigned_id));
-  }
-
-  assignedIds.forEach(id => {
-    if (id) {
-      members.push({
-        ...createMember(ROLE_PIC),
-        user_id: id,
-        is_primary: false,
-      });
-    }
-  });
-
-  return members;
 }
 
 function normalizeMember(item) {
@@ -1171,7 +973,7 @@ function enforcePrimary(list, role) {
 
 const initialTeamMembers = props.project.pics?.length
   ? props.project.pics.map(item => normalizeMember(item))
-  : buildMembersFromTicket();
+  : [];
 
 enforcePrimary(initialTeamMembers, ROLE_AGENT);
 enforcePrimary(initialTeamMembers, ROLE_PIC);
@@ -1180,7 +982,6 @@ const form = useForm({
   title: props.project.title ?? '',
   project_no: props.project.project_no ?? '',
   status: props.project.status ?? workflowStatusOptions.value[0]?.id ?? 'new',
-  ticket_id: props.project.ticket_id ?? null,
   description: props.project.description ?? '',
   start_date: props.project.start_date ?? null,
   end_date: props.project.end_date ?? null,
@@ -1340,33 +1141,6 @@ const activeAgentUnit = ref('');
 const activePicUnit = ref('');
 const activeAgentList = computed(() => usersByUnit.value[activeAgentUnit.value] ?? []);
 const activePicList = computed(() => usersByUnit.value[activePicUnit.value] ?? []);
-const ticketCardRef = ref(null);
-const ticketDropdownOpen = ref(false);
-const activeTicketUnit = ref('');
-const selectedTicketId = ref(form.ticket_id ?? null);
-const activeTicketList = computed(() => ticketsByUnit.value[activeTicketUnit.value] ?? []);
-const selectedTicketOption = computed(() => {
-  const normalized = normalizeSelectionId(selectedTicketId.value);
-  if (!normalized) return null;
-  return ticketLookup.value.get(String(normalized)) ?? null;
-});
-const ticketRequester = computed(() => props.project.ticket?.requester || null);
-const initialTicketAttachments = computed(
-  () => props.project.ticket_attachments ?? props.project.ticket?.attachments ?? []
-);
-const ticketAttachmentList = computed(() => {
-  const option = selectedTicketOption.value;
-  if (Array.isArray(option?.attachments) && option.attachments.length) {
-    return option.attachments;
-  }
-  if (Array.isArray(option?.ticket_attachments)) {
-    return option.ticket_attachments;
-  }
-  return initialTicketAttachments.value;
-});
-const showTicketAttachmentsSection = computed(
-  () => Boolean(form.ticket_id ?? selectedTicketId.value ?? initialTicketAttachments.value.length)
-);
 
 const teamInitialized = ref(false);
 let stopUnitsWatch = null;
@@ -1387,51 +1161,11 @@ function initTeamSideEffects() {
     if (!units.includes(activePicUnit.value)) {
       activePicUnit.value = '';
     }
-    if (!ticketUnits.value.includes(activeTicketUnit.value)) {
-      activeTicketUnit.value = '';
-    }
   }, { immediate: true });
 
 document.addEventListener('mousedown', handleTeamClickOutside);
   document.addEventListener('keydown', handleTeamKeydown, true);
 }
-
-watch(ticketUnits, units => {
-  // Jangan otomatis memilih unit; biarkan user memilih sendiri
-  if (!units.includes(activeTicketUnit.value)) {
-    activeTicketUnit.value = '';
-  }
-}, { immediate: true });
-
-watch(() => form.ticket_id, value => {
-  const normalized = normalizeSelectionId(value);
-  if (normalizeSelectionId(selectedTicketId.value) !== normalized) {
-    selectedTicketId.value = normalized;
-  }
-});
-
-watch(selectedTicketId, value => {
-  const normalized = normalizeSelectionId(value);
-  if (normalized && !ticketLookup.value.has(String(normalized))) {
-    selectedTicketId.value = null;
-    form.ticket_id = null;
-    return;
-  }
-  form.ticket_id = normalized ?? null;
-});
-
-watch(ticketOptions, () => {
-  const normalized = normalizeSelectionId(selectedTicketId.value);
-  if (normalized && !ticketLookup.value.has(String(normalized))) {
-    selectedTicketId.value = null;
-  }
-});
-
-watch(selectedTicketOption, option => {
-  if (option?.unit && typeof option.unit === 'string') {
-    activeTicketUnit.value = option.unit;
-  }
-});
 
 watch(
   () => mountedSteps.value.team,
@@ -1442,10 +1176,6 @@ watch(
   },
   { immediate: true }
 );
-
-onMounted(() => {
-  window.addEventListener('click', handleTicketOutsideClick, true);
-});
 
 const agentMembers = computed(() => form.project_pics.filter(member => normalizeRole(member.role_type) === ROLE_AGENT));
 const picMembers = computed(() => form.project_pics.filter(member => normalizeRole(member.role_type) === ROLE_PIC));
@@ -1487,24 +1217,6 @@ function toggleAgentDropdown() {
   }
 }
 
-function toggleTicketDropdown() {
-  ticketDropdownOpen.value = !ticketDropdownOpen.value;
-  if (ticketDropdownOpen.value) {
-    agentDropdownOpen.value = false;
-    picDropdownOpen.value = false;
-  }
-}
-
-function selectTicket(id) {
-  selectedTicketId.value = normalizeSelectionId(id);
-  ticketDropdownOpen.value = false;
-}
-
-function clearTicketSelection() {
-  selectedTicketId.value = null;
-  ticketDropdownOpen.value = false;
-}
-
 function togglePicDropdown() {
   picDropdownOpen.value = !picDropdownOpen.value;
   if (picDropdownOpen.value) {
@@ -1520,27 +1232,16 @@ function closeTeamDropdowns() {
 function handleTeamClickOutside(event) {
   if (
     (agentDropdownOpen.value && agentCardRef.value && agentCardRef.value.contains(event.target)) ||
-    (picDropdownOpen.value && picCardRef.value && picCardRef.value.contains(event.target)) ||
-    (ticketDropdownOpen.value && ticketCardRef.value && ticketCardRef.value.contains(event.target))
+    (picDropdownOpen.value && picCardRef.value && picCardRef.value.contains(event.target))
   ) {
     return;
   }
   closeTeamDropdowns();
-  ticketDropdownOpen.value = false;
 }
 
 function handleTeamKeydown(event) {
   if (event.key !== 'Escape') return;
   closeTeamDropdowns();
-  ticketDropdownOpen.value = false;
-}
-
-function handleTicketOutsideClick(event) {
-  if (!ticketDropdownOpen.value) return;
-  if (ticketCardRef.value && ticketCardRef.value.contains(event.target)) {
-    return;
-  }
-  ticketDropdownOpen.value = false;
 }
 
 onBeforeUnmount(() => {
@@ -1550,7 +1251,6 @@ onBeforeUnmount(() => {
   }
   document.removeEventListener('mousedown', handleTeamClickOutside);
   document.removeEventListener('keydown', handleTeamKeydown, true);
-  window.removeEventListener('click', handleTicketOutsideClick, true);
 });
 
 function findMemberIndexByRole(role, userId) {
@@ -1916,17 +1616,13 @@ function resetFormState() {
   uploaderRef.value?.reset();
   agentDropdownOpen.value = false;
   picDropdownOpen.value = false;
-  ticketDropdownOpen.value = false;
   activeAgentUnit.value = '';
   activePicUnit.value = '';
-  activeTicketUnit.value = '';
-  selectedTicketId.value = null;
 }
 
 function submitForm() {
   sanitizeArrays();
 
-  form.ticket_id = form.ticket_id || null;
   form.attachments = [...attachmentIds.value];
 
   const options = {

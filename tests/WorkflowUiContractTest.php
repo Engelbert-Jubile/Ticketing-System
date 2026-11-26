@@ -1,19 +1,15 @@
 <?php
 
-test('workflow modals teleport above application chrome and lock background scroll', function () {
-    foreach ([
-        resource_path('js/Pages/Workflows/Index.vue'),
-        resource_path('js/Pages/Workflows/Show.vue'),
-        resource_path('js/Pages/Workflows/InstanceShow.vue'),
-    ] as $path) {
-        $source = file_get_contents($path);
+uses(Tests\TestCase::class);
 
-        expect($source)
-            ->toContain('<Teleport to="body">')
-            ->toContain('position:fixed;inset:0;z-index:2147483000')
-            ->toContain('workflow-modal-open')
-            ->toContain('overflow:hidden!important');
-    }
+test('workflow modals teleport above application chrome and lock background scroll', function () {
+    $source = file_get_contents(resource_path('js/Components/WorkflowStatusDialog.vue'));
+
+    expect($source)
+        ->toContain('<Teleport to="body">')
+        ->toContain('z-[2147483000]')
+        ->toContain("document.body.style.overflow = 'hidden'")
+        ->toContain('document.body.style.overflow = previousOverflow');
 });
 
 test('workflow runtime detail keeps required information and responsive timeline controls', function () {
@@ -32,5 +28,7 @@ test('workflow runtime detail keeps required information and responsive timeline
         ->toContain('sm:grid-cols-2')
         ->toContain('xl:grid-cols-4')
         ->toContain('item.can_update_status')
-        ->toContain('item.can_update_workflow');
+        ->toContain('item.can_reject')
+        ->toContain('history.reason')
+        ->not->toContain('item.workflow_edit_url');
 });

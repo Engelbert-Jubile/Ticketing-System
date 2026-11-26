@@ -36,21 +36,21 @@
         </tr>
         <tr>
             <td><p class="label">{{ __('ticket_report.priority') }}</p>{{ $labels['priority'] ?? '—' }}</td>
-            <td><p class="label">{{ __('ticket_report.type') }}</p>{{ $labels['type'] ?? '—' }}</td>
+            <td><p class="label">SLA</p>{{ $labels['sla'] ?? '-' }}</td>
         </tr>
         <tr>
             <td>
                 <p class="label">{{ __('ticket_report.requester') }}</p>{{ $ticket['requester']['name'] ?? '—' }}
                 @if(!empty($ticket['requester']['email']))<p class="muted">{{ $ticket['requester']['email'] }}</p>@endif
             </td>
-            <td><p class="label">SLA</p>{{ $labels['sla'] ?? '—' }}</td>
+            <td><p class="label">{{ __('Mulai dikerjakan') }}</p>{{ $timeline['worked_on_at'] ?? '—' }}</td>
         </tr>
         <tr>
             <td><p class="label">{{ __('ticket_report.created') }}</p>{{ $timeline['created_at'] ?? '—' }}</td>
             <td><p class="label">{{ __('ticket_report.updated') }}</p>{{ $timeline['updated_at'] ?? '—' }}</td>
         </tr>
         <tr>
-            <td colspan="2"><p class="label">{{ __('ticket_report.due') }}</p>{{ $timeline['due_at'] ?? __('ticket_report.not_specified') }}</td>
+            <td colspan="2"><p class="label">{{ __('Deadline') }}</p>{{ $timeline['due_at'] ?? __('ticket_report.not_specified') }}</td>
         </tr>
         @if(($ticket['status'] ?? null) === 'done')
             <tr><td colspan="2"><p class="label">{{ __('ticket_report.completed') }}</p>{{ $timeline['finish_at'] ?? __('ticket_report.not_specified') }}</td></tr>
@@ -69,40 +69,18 @@
         </ul>
     @endif
 
-    @if(!empty($project))
-        <h2>{{ __('ticket_report.project') }}</h2>
-        <table class="summary">
-            <tr>
-                <td><p class="label">{{ __('ticket_report.project_title') }}</p>{{ $project['title'] ?? '—' }}</td>
-                <td><p class="label">{{ __('ticket_report.project_number') }}</p>{{ $project['project_no'] ?? '—' }}</td>
-            </tr>
-            <tr>
-                <td><p class="label">{{ __('ticket_report.status') }}</p>{{ $project['status'] ?? '—' }}</td>
-                <td><p class="label">{{ __('ticket_report.timeline') }}</p>{{ $project['timeline'] ?: __('ticket_report.not_specified') }}</td>
-            </tr>
-        </table>
-    @endif
-
-    @if(!empty($tasks))
-        <h2>{{ __('ticket_report.tasks') }}</h2>
-        <table>
-            <thead><tr>
-                <th style="width: 34%;">{{ __('ticket_report.task_title') }}</th>
-                <th style="width: 16%;">{{ __('ticket_report.status') }}</th>
-                <th style="width: 28%;">{{ __('ticket_report.assignee') }}</th>
-                <th style="width: 22%;">{{ __('ticket_report.due') }}</th>
-            </tr></thead>
-            <tbody>
-                @foreach($tasks as $item)
-                    <tr>
-                        <td>{{ $item['title'] ?? '—' }}</td>
-                        <td>{{ $item['status_label'] ?? '—' }}</td>
-                        <td>{{ $item['assignee'] ?? __('ticket_report.unassigned') }}</td>
-                        <td>{{ $item['due_at'] ?? __('ticket_report.not_specified') }}</td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
+    @if(!empty($ticket['confirmations']))
+        <h2>{{ __('Bukti konfirmasi') }}</h2>
+        @foreach($ticket['confirmations'] as $confirmation)
+            <div class="description">
+                <p>{{ $confirmation['note'] }}</p>
+                <ul>
+                    @foreach($confirmation['evidence'] as $file)
+                        <li><a href="{{ url($file['download_url']) }}">{{ $file['name'] }}</a></li>
+                    @endforeach
+                </ul>
+            </div>
+        @endforeach
     @endif
 
     @if(!empty($attachments))

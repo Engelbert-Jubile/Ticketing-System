@@ -50,13 +50,7 @@ class UnitVisibility
                 $r->where("requester_id", $userId)
                   ->orWhere("agent_id", $userId)
                   ->orWhere("assigned_id", $userId)
-                  ->orWhereHas("assignedUsers", fn (Builder $sub) => $sub->where("users.id", $userId))
-                  ->orWhereHas("tasks", function (Builder $taskQuery) use ($userId) {
-                      $taskQuery->where("assignee_id", $userId)
-                          ->orWhere(function (Builder $subQuery) use ($userId) {
-                              self::orWhereJsonAssignmentContains($subQuery, "assigned_to", $userId);
-                          });
-                  });
+                  ->orWhereHas("assignedUsers", fn (Builder $sub) => $sub->where("users.id", $userId));
             });
 
         // The report must show every ticket from the viewer's unit. The
@@ -81,6 +75,7 @@ class UnitVisibility
 
     return $query->where(function (Builder $q) use ($userId) {
         $q->where('assignee_id', $userId)
+          ->orWhere('created_by', $userId)
           ->orWhere(function (Builder $inner) use ($userId) {
               self::orWhereJsonAssignmentContains($inner, 'assigned_to', $userId);
           });
@@ -99,14 +94,7 @@ class UnitVisibility
             $ticketQuery->where('requester_id', $userId)
                 ->orWhere('agent_id', $userId)
                 ->orWhere('assigned_id', $userId)
-                ->orWhereHas('assignedUsers', fn (Builder $assignedQuery) => $assignedQuery->where('users.id', $userId))
-                ->orWhereHas('tasks', function (Builder $taskQuery) use ($userId) {
-                    $taskQuery->where('created_by', $userId)
-                        ->orWhere('assignee_id', $userId)
-                        ->orWhere(function (Builder $assignedQuery) use ($userId) {
-                            self::orWhereJsonAssignmentContains($assignedQuery, 'assigned_to', $userId);
-                        });
-                });
+                ->orWhereHas('assignedUsers', fn (Builder $assignedQuery) => $assignedQuery->where('users.id', $userId));
         });
     }
 
@@ -123,12 +111,6 @@ class UnitVisibility
                 ->orWhere('assignee_id', $userId)
                 ->orWhere(function (Builder $assignedQuery) use ($userId) {
                     self::orWhereJsonAssignmentContains($assignedQuery, 'assigned_to', $userId);
-                })
-                ->orWhereHas('ticket', function (Builder $ticketQuery) use ($userId) {
-                    $ticketQuery->where('requester_id', $userId)
-                        ->orWhere('agent_id', $userId)
-                        ->orWhere('assigned_id', $userId)
-                        ->orWhereHas('assignedUsers', fn (Builder $assignedQuery) => $assignedQuery->where('users.id', $userId));
                 });
         });
     }
@@ -154,14 +136,10 @@ class UnitVisibility
 
             $builder->where(function (Builder $r) use ($userId, $projectsHasAgent, $projectsHasAssigned) {
                 $r->where('created_by', $userId)
+                  ->orWhere('requester_id', $userId)
                   ->when($projectsHasAgent, fn (Builder $q) => $q->orWhere('agent_id', $userId))
                   ->when($projectsHasAssigned, fn (Builder $q) => $q->orWhere('assigned_id', $userId))
-                  ->orWhereHas('pics', fn (Builder $sub) => $sub->where('user_id', $userId))
-                  ->orWhereHas('ticket', function (Builder $tq) use ($userId) {
-                      $tq->where('agent_id', $userId)
-                         ->orWhere('assigned_id', $userId)
-                         ->orWhereHas('assignedUsers', fn (Builder $sub) => $sub->where('users.id', $userId));
-                  });
+                  ->orWhereHas('pics', fn (Builder $sub) => $sub->where('user_id', $userId));
             });
         });
     }
@@ -189,15 +167,10 @@ class UnitVisibility
             return;
         }
 
-        $task->loadMissing('requester', 'assignee', 'ticket.assignedUsers', 'ticket.requester', 'ticket.agent');
+        $task->loadMissing('requester', 'assignee');
 
         $unitMatches = ($task->requester?->unit) === $user->unit;
-        $belongsToTicket = $task->ticket && (
-            ($task->ticket->requester?->unit) === $user->unit
-            || self::userRelatesToTicket($user, $task->ticket)
-        );
-
-        if ($unitMatches || $belongsToTicket || self::userRelatesToTask($user, $task)) {
+        if ($unitMatches || self::userRelatesToTask($user, $task)) {
             return;
         }
 
@@ -214,15 +187,11 @@ class UnitVisibility
             'requester',
             'user',
             'pics.user',
-            'ticket.requester',
-            'ticket.assignedUsers',
-            'ticket.agent',
         ]);
 
         $unitMatches = (
             ($project->requester?->unit) === $user->unit
             || ($project->user?->unit) === $user->unit
-            || ($project->ticket?->requester?->unit) === $user->unit
         );
 
         $userIsPic = $project->pics->contains(fn ($pic) => (int) $pic->user_id === (int) ($user->id ?? 0));
@@ -231,11 +200,7 @@ class UnitVisibility
         $userAgent = (int) ($project->agent_id ?? 0) === (int) ($user->id ?? 0);
         $userAssigned = (int) ($project->assigned_id ?? 0) === (int) ($user->id ?? 0);
 
-        $viaTicket = $project->ticket && (
-            self::userRelatesToTicket($user, $project->ticket)
-        );
-
-        if ($unitMatches || $userIsPic || $userCreated || $userRequested || $userAgent || $userAssigned || $viaTicket) {
+        if ($unitMatches || $userIsPic || $userCreated || $userRequested || $userAgent || $userAssigned) {
             return;
         }
 
@@ -275,42 +240,7 @@ class UnitVisibility
             }
         }
 
-        return self::userRelatesToTicketTasks($ticket, $userId);
-    }
-
-    private static function userRelatesToTicketTasks(Ticket $ticket, int $userId): bool
-    {
-        if ($userId <= 0) {
-            return false;
-        }
-
-        if ($ticket->relationLoaded('tasks')) {
-            foreach ($ticket->tasks as $task) {
-                if ((int) ($task->assignee_id ?? 0) === $userId) {
-                    return true;
-                }
-
-                if ((int) ($task->created_by ?? 0) === $userId) {
-                    return true;
-                }
-
-                if (self::taskAssignedCollectionContains($task, $userId)) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        return Task::where('ticket_id', $ticket->id)
-            ->where(function (Builder $query) use ($userId) {
-                $query->where('assignee_id', $userId)
-                    ->orWhere('created_by', $userId)
-                    ->orWhere(function (Builder $sub) use ($userId) {
-                        self::orWhereJsonAssignmentContains($sub, 'assigned_to', $userId);
-                    });
-            })
-            ->exists();
+        return false;
     }
 
     private static function userRelatesToTask(?User $user, Task $task): bool
@@ -334,10 +264,6 @@ class UnitVisibility
 
         if (self::taskAssignedCollectionContains($task, $userId)) {
             return true;
-        }
-
-        if ($task->ticket) {
-            return self::userRelatesToTicket($user, $task->ticket);
         }
 
         return false;

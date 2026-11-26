@@ -12,7 +12,6 @@ class ProjectData
 
     public ?string $status;
 
-    public ?int $ticket_id;
 
     public ?string $status_id;
 
@@ -26,7 +25,6 @@ class ProjectData
         string $title,
         ?string $description = null,
         ?string $status = null,
-        ?int $ticket_id = null,
         ?string $status_id = null,
         ?string $start_date = null,
         ?string $end_date = null,
@@ -35,7 +33,6 @@ class ProjectData
         $this->title = $title;
         $this->description = $description;
         $this->status = $status;
-        $this->ticket_id = $ticket_id;
         $this->status_id = $status_id;
         $this->start_date = $start_date;
         $this->end_date = $end_date;
@@ -48,7 +45,6 @@ class ProjectData
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'status' => ['nullable', 'string', 'max:50'],
-            'ticket_id' => ['nullable', 'integer', 'exists:tickets,id'],
             'status_id' => ['nullable', 'string', 'max:64'],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date'],
@@ -59,7 +55,6 @@ class ProjectData
             $validated['title'],
             $validated['description'] ?? null,
             $validated['status'] ?? null,
-            $validated['ticket_id'] ?? null,
             $validated['status_id'] ?? null,
             $validated['start_date'] ?? null,
             $validated['end_date'] ?? null,

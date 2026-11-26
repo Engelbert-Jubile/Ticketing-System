@@ -283,7 +283,6 @@ Route::middleware($emailVerificationEnabled
         Route::get('/on-progress', [TaskController::class, 'onProgress'])->name('on-progress');
         Route::get('/report', [TaskController::class, 'report'])->name('report');
         Route::get('/report/download', [TaskController::class, 'downloadReport'])->name('report.download');
-        Route::get('/report/detail/{ticket:ticket_no}', [TaskController::class, 'reportTicketDetail'])->name('report.ticket');
         Route::get('/{task}/report/pdf', [TaskController::class, 'downloadDetail'])->name('report.detail');
 
         Route::get('/report/detail/task/{taskSlug}', [TaskController::class, 'showBySlug'])->name('show');
@@ -295,7 +294,6 @@ Route::middleware($emailVerificationEnabled
         })->name('edit.legacy');
         Route::put('/{task}', [TaskController::class, 'update'])->name('update');
         Route::delete('/{task}', [TaskController::class, 'destroy'])->name('destroy');
-        Route::post('/{task}/promote', [TaskController::class, 'promoteToProject'])->name('promote');
     });
 
     /* Ã°Å¸â€”â€š Projects */

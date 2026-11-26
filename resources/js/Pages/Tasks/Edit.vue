@@ -39,101 +39,6 @@
             <FancySelect v-model="form.priority" :options="priorityOptions" />
             <p v-if="form.errors.priority" class="field-error">{{ form.errors.priority }}</p>
           </div>
-          <div class="panel-field panel-field--full ticket-linker overflow-visible" ref="ticketCardRef">
-            <label class="field-label">{{ $t("Ticket Terkait") }}</label>
-            <div class="relative z-30 ticket-card overflow-visible rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-              <div class="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">{{ $t("Hubungkan ke Ticket Aktif") }}</p>
-                  <p class="text-xs text-slate-400">{{ $t("Pilih ticket sesuai unit.") }}</p>
-                </div>
-                <div class="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                  <span>{{ selectedTicketOption ? '1 ticket terpilih' : $t("Belum ada pilihan") }}</span>
-                  <button
-                    v-if="selectedTicketOption"
-                    type="button"
-                    class="rounded-full border border-rose-200 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-rose-600 transition hover:bg-rose-50 dark:border-rose-500/40 dark:text-rose-200 dark:hover:bg-rose-500/10"
-                    @click="clearTicketSelection"
-                  >
-                    {{ $t("Hapus") }}
-                  </button>
-                </div>
-              </div>
-              <div class="relative mt-3 w-full overflow-visible">
-                <button
-                  type="button"
-                  class="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50/90 px-4 py-3 text-left text-sm font-semibold text-slate-700 transition hover:border-blue-400 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-100"
-                  :class="ticketDropdownOpen ? 'rounded-b-none border-blue-400' : ''"
-                  @click="toggleTicketDropdown"
-                >
-                  <div class="flex flex-1 flex-wrap gap-1.5">
-                    <span
-                      v-if="selectedTicketOption"
-                      class="inline-flex items-center gap-2 rounded-lg border border-indigo-200/70 bg-white px-3 py-1 text-xs font-medium text-indigo-700 dark:border-indigo-500/40 dark:bg-slate-900/70 dark:text-indigo-200"
-                    >
-                      <span class="font-semibold">{{ selectedTicketOption.ticket_no }}</span>
-                      <span class="max-w-[160px] truncate text-[11px] text-slate-400">{{ selectedTicketOption.title || $t('Tanpa judul') }}</span>
-                      <span class="rounded-full border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-[10px] uppercase tracking-wide text-indigo-600 dark:border-indigo-400/40 dark:bg-transparent">{{ selectedTicketOption.unit || ticketUnitPlaceholder }}</span>
-                    </span>
-                    <span v-else class="text-xs font-normal text-slate-400">{{ $t("Pilih ticket aktif sesuai unit Anda") }}</span>
-                  </div>
-                  <span class="material-icons text-base text-slate-400 transition duration-200" :class="ticketDropdownOpen ? 'rotate-180 text-blue-500' : ''">expand_more</span>
-                </button>
-                <transition name="fade-scale">
-                  <div
-                    v-if="ticketDropdownOpen"
-                    class="absolute left-0 right-0 top-full z-[9999] w-full rounded-xl rounded-t-none border border-slate-200 bg-white p-3 shadow-2xl md:p-4 dark:border-slate-700 dark:bg-slate-900 mt-2"
-                    :class="ticketDropdownOpen ? 'border-blue-400' : ''"
-                    style="box-shadow: 0 28px 50px rgba(15,23,42,0.28), 0 10px 24px rgba(59,130,246,0.16);"
-                  >
-                    <div class="unit-chips flex flex-wrap gap-1 border-b border-slate-100 pb-2 dark:border-slate-800">
-                      <button
-                        v-for="unit in ticketUnits"
-                        :key="`ticket-unit-${unit}`"
-                        type="button"
-                        class="rounded-full border px-3 py-1.5 text-xs font-semibold transition"
-                        :class="activeTicketUnit === unit ? 'border-indigo-500 bg-indigo-50 text-indigo-700 dark:border-indigo-400 dark:bg-indigo-500/10 dark:text-indigo-200' : 'border-slate-200 text-slate-500 hover:border-indigo-300 hover:text-indigo-600 dark:border-slate-700 dark:text-slate-300'"
-                        @click="activeTicketUnit = unit"
-                      >
-                        {{ unit }}
-                      </button>
-                    </div>
-                    <div class="mt-2 space-y-1.5 overflow-y-auto pr-1" style="height: 10rem; max-height: 10rem; scrollbar-gutter: stable;">
-                      <label
-                        v-for="ticket in activeTicketList"
-                        :key="`ticket-option-${ticket.id}`"
-                        class="flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-[12px] shadow-sm transition hover:bg-indigo-50 dark:hover:bg-indigo-500/10"
-                        :class="normalizeSelectionId(ticket.id) === normalizeSelectionId(selectedTicketId) ? 'border border-indigo-500 bg-indigo-50/70 dark:border-indigo-400/60 dark:bg-indigo-500/10' : 'border border-slate-200 hover:border-indigo-300 dark:border-slate-700'"
-                      >
-                        <div class="flex items-start gap-3">
-                          <input
-                            type="radio"
-                            class="mt-1 h-4 w-4 border-indigo-300 text-indigo-600 focus:ring-indigo-500"
-                            :value="ticket.id"
-                            :checked="normalizeSelectionId(ticket.id) === normalizeSelectionId(selectedTicketId)"
-                            @change="selectTicket(ticket.id)"
-                          />
-                          <div class="min-w-0">
-                            <p class="font-semibold text-slate-700 dark:text-slate-100">{{ ticket.ticket_no }}</p>
-                            <p class="truncate text-[11px] text-slate-400">{{ ticket.title || $t('Tanpa judul') }}</p>
-                            <p class="text-[10px] text-slate-400">{{ ticket.unit || ticketUnitPlaceholder }}</p>
-                          </div>
-                        </div>
-                        <StatusPill :status="ticket.status || ticket.status_badge" :label="ticket.status_label || $t(&quot;Aktif&quot;)" size="sm" />
-                      </label>
-                      <p v-if="!activeTicketList.length" class="px-1 text-sm text-slate-400">{{ $t("Tidak ada ticket pada unit ini.") }}</p>
-                    </div>
-                    <div class="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400">
-                      <span>{{ $t("Hanya menampilkan ticket yang belum berstatus Done / Cancelled.") }}</span>
-                      <button type="button" class="text-indigo-500 hover:underline" @click="clearTicketSelection">{{ $t("Tanpa ticket") }}</button>
-                    </div>
-                  </div>
-                </transition>
-              </div>
-              <p class="mt-2 text-xs text-slate-400">{{ $t("Jika tidak ada ticket yang relevan, biarkan kosong untuk task mandiri.") }}</p>
-              <p v-if="form.errors.ticket_id" class="field-error">{{ form.errors.ticket_id }}</p>
-            </div>
-          </div>
         </div>
 
         <div class="mt-4 relative z-0">
@@ -360,10 +265,6 @@
             <DatePickerFlatpickr v-model="form.due_at" :config="dateConfig" :placeholder="$t(&quot;Pilih tanggal & waktu&quot;)" />
             <p v-if="form.errors.due_at || form.errors.due_date" class="field-error">{{ form.errors.due_at || form.errors.due_date }}</p>
           </div>
-          <div>
-            <label class="field-label">Output</label>
-            <FancySelect v-model="form.output_type" :options="outputOptions" />
-          </div>
         </div>
 
         <div class="mt-4 grid gap-4 md:grid-cols-2">
@@ -379,33 +280,11 @@
           </div>
         </div>
 
-        <div v-if="form.output_type === 'task_project'" class="mt-4 grid gap-4 md:grid-cols-3">
-          <div>
-            <label class="field-label">{{ $t("Judul Project") }}</label>
-            <input v-model="form.project_title" type="text" class="field-input" />
-          </div>
-          <div>
-            <label class="field-label">{{ $t("Mulai") }}</label>
-            <input v-model="form.project_start" type="date" class="field-input" />
-          </div>
-          <div>
-            <label class="field-label">{{ $t("Selesai") }}</label>
-            <input v-model="form.project_end" type="date" class="field-input" />
-          </div>
-        </div>
       </section>
 
       <section class="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/80">
         <h2 class="section-title">{{ $t("Lampiran") }}</h2>
         <p class="text-xs text-slate-500 dark:text-slate-400">{{ $t("Unggah lampiran baru atau kelola lampiran yang sudah ada.") }}</p>
-        <div v-if="selectedTicketOption || initialTicketAttachments.length" class="mt-1 space-y-2">
-          <p class="text-xs font-medium text-slate-600 dark:text-slate-300">
-            {{ $t("Lampiran dari ticket terkait:") }}
-            <span v-if="ticketAttachmentCount">{{ ticketAttachmentCount }} file.</span>
-            <span v-else>{{ $t("Belum ada lampiran ticket.") }}</span>
-          </p>
-          <TicketAttachmentList :attachments="ticketAttachmentList" />
-        </div>
         <div v-if="existingAttachments.length" class="mt-3 space-y-2">
           <div
             v-for="attachment in existingAttachments"
@@ -485,15 +364,12 @@ import DatePickerFlatpickr from '@/Components/DatePickerFlatpickr.vue';
 import FileUploaderPond from '@/Components/FileUploaderPond.vue';
 import RichTextQuill from '@/Components/RichTextQuill.vue';
 import FancySelect from '@/Components/FancySelect.vue';
-import StatusPill from '@/Components/StatusPill.vue';
-import TicketAttachmentList from '@/Components/TicketAttachmentList.vue';
 import { attachmentFilterOptions } from '@/utils/attachmentFilters';
 
 const props = defineProps({
   task: { type: Object, required: true },
   statusOptions: { type: Array, default: () => [] },
   priorityOptions: { type: Array, default: () => [] },
-  ticketOptions: { type: Array, default: () => [] },
   userOptions: { type: Array, default: () => [] },
   meta: { type: Object, default: () => ({}) },
 });
@@ -530,7 +406,6 @@ const form = useForm({
   description: props.task.description ?? '',
   status: props.task.status ?? 'new',
   priority: props.task.priority ?? 'normal',
-  ticket_id: props.task.ticket_id ?? null,
   assignees: props.task.assignees ?? [],
   assignee_id: props.task.assignee_id ?? null,
   assigned_to: props.task.assignees ?? [],
@@ -538,10 +413,6 @@ const form = useForm({
   due_at: props.task.due_at ?? null,
   start_date: props.task.start_date ?? null,
   end_date: props.task.end_date ?? null,
-  output_type: props.task.output_type ?? 'task',
-  project_title: props.task.project_title ?? '',
-  project_start: props.task.project_start ?? null,
-  project_end: props.task.project_end ?? null,
   attachments: [],
 });
 
@@ -551,7 +422,6 @@ const statusGuide = computed(() => props.meta?.statusGuide ?? null);
 const statusDefaultLabel = computed(() => props.meta?.statusDefault ?? uiText("New"));
 const canSelectRequester = computed(() => Boolean(props.meta?.canSelectRequester));
 const requesterLabel = computed(() => props.meta?.requesterLabel ?? '');
-const ticketOptionsList = computed(() => props.ticketOptions ?? []);
 
 const uploadError = ref('');
 const attachmentIds = ref([]);
@@ -574,9 +444,6 @@ const requesterDropdownOpen = ref(false);
 const activeAgentUnit = ref('');
 const activePicUnit = ref('');
 const activeRequesterUnit = ref(null);
-const ticketDropdownOpen = ref(false);
-const activeTicketUnit = ref('');
-const ticketCardRef = ref(null);
 const agentCardRef = ref(null);
 const picCardRef = ref(null);
 const requesterCardRef = ref(null);
@@ -657,10 +524,6 @@ const statusDropdownOptions = computed(() => (
     disabled: option.disabled,
   }))
 ));
-const outputOptions = [
-  { value: 'task', label: uiText('Tetap sebagai Task') },
-  { value: 'task_project', label: uiText("Buat sebagai Project") },
-];
 
 const userLookup = computed(() => {
   const map = new Map();
@@ -753,84 +616,6 @@ const activeRequesterList = computed(() => {
   return requesterOptions.value.filter(option => normalizeUnitValue(option.unit) === activeRequesterUnit.value);
 });
 
-const ticketLookup = computed(() => {
-  const map = new Map();
-  ticketOptionsList.value.forEach(option => {
-    if (option?.id !== undefined && option?.id !== null) {
-      map.set(Number(option.id), option);
-    }
-  });
-  return map;
-});
-const ticketUnitPlaceholder = unitPlaceholderLabel;
-const ticketUnits = computed(() => {
-  const set = new Set();
-  // unit dari user/agent
-  (props.meta?.unitOptions ?? []).forEach(unit => {
-    if (typeof unit === 'string' && unit.trim() !== '') {
-      set.add(unit.trim());
-    }
-  });
-  // unit dari meta ticketUnits
-  (props.meta?.ticketUnits ?? []).forEach(unit => {
-    if (typeof unit === 'string' && unit.trim() !== '') {
-      set.add(unit.trim());
-    }
-  });
-  // unit dari ticket options
-  ticketOptionsList.value.forEach(option => {
-    const unit = typeof option?.unit === 'string' && option.unit.trim() !== '' ? option.unit.trim() : ticketUnitPlaceholder;
-    set.add(unit);
-  });
-  if (!set.size) set.add(ticketUnitPlaceholder);
-  return Array.from(set);
-});
-const selectedTicketId = computed(() => (form.ticket_id ? Number(form.ticket_id) : null));
-const selectedTicketOption = computed(() => {
-  const id = selectedTicketId.value;
-  if (!id && id !== 0) return null;
-  const option = ticketLookup.value.get(id) ?? null;
-  if (option && !activeTicketUnit.value && option.unit) {
-    activeTicketUnit.value = option.unit;
-  }
-  return option;
-});
-const activeTicketList = computed(() => {
-  const unitRaw = (activeTicketUnit.value || '').trim();
-  if (!unitRaw) {
-    return ticketOptionsList.value;
-  }
-  const unit = unitRaw || ticketUnitPlaceholder;
-  return ticketOptionsList.value.filter(option => {
-    const u = typeof option?.unit === 'string' && option.unit.trim() !== '' ? option.unit.trim() : ticketUnitPlaceholder;
-    return u === unit;
-  });
-});
-const initialTicketAttachments = computed(() => props.task.ticket_attachments ?? []);
-const ticketAttachmentList = computed(() => {
-  const option = selectedTicketOption.value;
-  if (Array.isArray(option?.attachments) && option.attachments.length) {
-    return option.attachments;
-  }
-  if (Array.isArray(option?.ticket_attachments)) {
-    return option.ticket_attachments;
-  }
-  return initialTicketAttachments.value;
-});
-const ticketAttachmentCount = computed(() => {
-  if (ticketAttachmentList.value.length) {
-    return ticketAttachmentList.value.length;
-  }
-  const option = selectedTicketOption.value;
-  const count = option?.attachments_count
-    ?? option?.attachment_count
-    ?? option?.attachmentsCount
-    ?? option?.attachmentCount
-    ?? props.task.ticket_attachment_count
-    ?? initialTicketAttachments.value.length;
-  const numeric = Number(count);
-  return Number.isFinite(numeric) ? numeric : 0;
-});
 
 function ensureCoreFields() {
   const trimmedTitle = (form.title ?? '').toString().trim();
@@ -859,11 +644,6 @@ function formatSize(size) {
   return `${mb.toFixed(1)} MB`;
 }
 
-function onTicketChange(event) {
-  const value = event.target.value;
-  form.ticket_id = value ? Number(value) : null;
-}
-
 function onAssigneeChange(event) {
   const value = event.target.value;
   form.assignee_id = value ? Number(value) : null;
@@ -879,19 +659,9 @@ function onAssigneesMultiChange(event) {
   syncAssignedArray();
 }
 
-function toggleTicketDropdown() {
-  ticketDropdownOpen.value = !ticketDropdownOpen.value;
-  if (ticketDropdownOpen.value) {
-    agentDropdownOpen.value = false;
-    picDropdownOpen.value = false;
-    requesterDropdownOpen.value = false;
-  }
-}
-
 function toggleAgentDropdown() {
   agentDropdownOpen.value = !agentDropdownOpen.value;
   if (agentDropdownOpen.value) {
-    ticketDropdownOpen.value = false;
     picDropdownOpen.value = false;
     requesterDropdownOpen.value = false;
   }
@@ -901,7 +671,6 @@ function togglePicDropdown() {
   picDropdownOpen.value = !picDropdownOpen.value;
   if (picDropdownOpen.value) {
     agentDropdownOpen.value = false;
-    ticketDropdownOpen.value = false;
     requesterDropdownOpen.value = false;
   }
 }
@@ -909,7 +678,6 @@ function togglePicDropdown() {
 function toggleRequesterDropdown() {
   requesterDropdownOpen.value = !requesterDropdownOpen.value;
   if (requesterDropdownOpen.value) {
-    ticketDropdownOpen.value = false;
     agentDropdownOpen.value = false;
     picDropdownOpen.value = false;
   }
@@ -954,16 +722,6 @@ function removePic(userId) {
   syncAssignedArray();
 }
 
-function selectTicket(id) {
-  form.ticket_id = id ? Number(id) : null;
-  ticketDropdownOpen.value = false;
-}
-
-function clearTicketSelection() {
-  form.ticket_id = null;
-  ticketDropdownOpen.value = false;
-}
-
 function normalizeSelectionId(value) {
   if (typeof value === 'number' && Number.isFinite(value)) return value;
   if (typeof value === 'string' && value.trim() !== '' && !Number.isNaN(Number(value))) return Number(value);
@@ -972,9 +730,6 @@ function normalizeSelectionId(value) {
 
 function handleOutsideClick(event) {
   const target = event.target;
-  if (ticketDropdownOpen.value && ticketCardRef.value && !ticketCardRef.value.contains(target)) {
-    ticketDropdownOpen.value = false;
-  }
   if (agentDropdownOpen.value && agentCardRef.value && !agentCardRef.value.contains(target)) {
     agentDropdownOpen.value = false;
   }
@@ -988,7 +743,6 @@ function handleOutsideClick(event) {
 
 function handleEscapeKey(event) {
   if (event.key !== 'Escape') return;
-  ticketDropdownOpen.value = false;
   agentDropdownOpen.value = false;
   picDropdownOpen.value = false;
   requesterDropdownOpen.value = false;

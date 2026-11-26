@@ -22,7 +22,6 @@ final class ProjectRepository implements ProjectRepositoryInterface
             'title' => $data->title,
             'description' => $data->description,
             'status' => $data->status ?? 'in_progress',
-            'ticket_id' => $data->ticket_id,
             'status_id' => $data->status_id,
             'start_date' => $data->start_date,
             'end_date' => $data->end_date,
@@ -45,7 +44,6 @@ final class ProjectRepository implements ProjectRepositoryInterface
             'start_date' => $data->start_date ?? $project->start_date,
             'end_date' => $data->end_date ?? $project->end_date,
             // biasanya tidak diubah; tetap disinkron bila DTO mengirim
-            'ticket_id' => $data->ticket_id ?? $project->ticket_id,
         ];
 
         $project->update($payload);

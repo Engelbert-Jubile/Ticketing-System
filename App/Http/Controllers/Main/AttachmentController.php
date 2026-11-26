@@ -132,24 +132,11 @@ class AttachmentController extends BaseController
             }
         }
 
-        if ($attachable instanceof Task || $attachable instanceof Project) {
-            $ticketId = null;
-            try {
-                $ticketId = $attachable->ticket_id ?? null;
-            } catch (\Throwable) {
-            }
-            if ($ticketId) {
-                $t = Ticket::find($ticketId);
-                if ($t) {
-                    if ($t->isRequester($user) || $t->isAgent($user)) {
-                        return true;
-                    }
-                    try {
-                        return $t->assignedUsers()->where('users.id', $user->id)->exists();
-                    } catch (\Throwable) {
-                    }
-                }
-            }
+        if ($attachable instanceof Task) {
+            return $attachable->isRequester($user) || $attachable->isAssignee($user);
+        }
+        if ($attachable instanceof Project) {
+            return $attachable->isRequester($user) || $attachable->isAgent($user);
         }
 
         return false;
@@ -205,6 +192,7 @@ class AttachmentController extends BaseController
     // DELETE /dashboard/attachments/{attachment}
     public function destroy(string $locale, Request $request, Attachment $attachment)
     {
+        abort_if($attachment->ticket_confirmation_id, 403);
         if (! $this->canAccess($attachment)) {
             abort(403);
         }

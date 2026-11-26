@@ -113,85 +113,6 @@
         </span>
       </header>
 
-      <template v-if="form.type === 'ticket_work'">
-        <div v-if="!loadingRecords && !workEntries.length" class="px-5 py-10 text-center text-sm text-slate-500 dark:text-slate-300">
-          {{ $t("Tidak ada data SLA untuk filter saat ini.") }}
-        </div>
-        <div v-else class="space-y-5 px-5 py-5">
-          <article
-            v-for="entry in workEntries"
-            :key="entry.id"
-            class="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 shadow-sm transition dark:border-slate-700 dark:bg-slate-900/40"
-          >
-            <div class="flex flex-wrap items-start justify-between gap-3">
-              <div class="min-w-[240px] space-y-2">
-                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Ticket</p>
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                  <span>{{ entry.ticket.number ?? '—' }}</span>
-                  <span v-if="entry.ticket.title" class="text-slate-500 dark:text-slate-300"> · {{ entry.ticket.title }}</span>
-                </h3>
-                <div class="mt-2 flex flex-wrap gap-2 text-xs text-slate-600 dark:text-slate-300">
-                  <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 dark:bg-slate-800">Status: {{ entry.ticket.status ?? '—' }}</span>
-                  <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 dark:bg-slate-800">Assignee: {{ entry.ticket.assignee ?? '—' }}</span>
-                  <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 dark:bg-slate-800">Deadline: {{ displayDate(entry.ticket.deadline) }}</span>
-                </div>
-              </div>
-              <div class="flex flex-col items-end gap-2 text-right">
-                <StatusPill variant="sla" size="sm" :status="entry.ticket.sla?.status" :label="entry.ticket.sla?.label || '-'" />
-                <span class="text-xs text-slate-500 dark:text-slate-300">{{ entry.ticket.sla?.delta_human ?? '—' }}</span>
-                <div class="flex gap-2 text-xs">
-                  <a
-                    v-if="entry.detail_pdf_url || entry.ticket.links?.pdf"
-                    :href="entry.detail_pdf_url || entry.ticket.links?.pdf"
-                    target="_blank"
-                    rel="noopener"
-                    class="action-btn action-btn--pdf"
-                  >PDF</a>
-                  <Link v-if="entry.ticket.links?.view" :href="entry.ticket.links.view" class="action-btn action-btn--view">{{ $t("View") }}</Link>
-                  <Link v-if="entry.ticket.links?.edit" :href="entry.ticket.links.edit" class="action-btn action-btn--edit">Edit</Link>
-                </div>
-              </div>
-            </div>
-
-            <details v-if="entry.tasks.length" class="mt-4 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900/60">
-              <summary class="cursor-pointer text-sm font-semibold text-slate-700 dark:text-slate-100">
-                {{ $t("Task terkait (") }}{{ entry.tasks.length }})
-              </summary>
-              <div class="mt-3 overflow-x-auto">
-                <table class="min-w-full text-sm">
-                  <thead>
-                    <tr class="text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">
-                      <th class="px-2 py-1">Task</th>
-                      <th class="px-2 py-1">Assignee</th>
-                      <th class="px-2 py-1">Status</th>
-                      <th class="px-2 py-1">{{ $t("Deadline") }}</th>
-                      <th class="px-2 py-1">SLA</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr
-                      v-for="task in entry.tasks"
-                      :key="task.id ?? task.number"
-                      class="border-t border-slate-200 text-slate-700 dark:border-slate-700 dark:text-slate-200"
-                    >
-                      <td class="px-2 py-1 font-semibold">{{ task.number ?? '—' }}</td>
-                      <td class="px-2 py-1">{{ task.assignee ?? '—' }}</td>
-                      <td class="px-2 py-1">{{ task.status ?? '—' }}</td>
-                      <td class="px-2 py-1">{{ displayDate(task.deadline) }}</td>
-                      <td class="px-2 py-1">
-                        <StatusPill variant="sla" size="sm" :status="task.sla?.status" :label="task.sla?.label || '-'" />
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </details>
-
-          </article>
-        </div>
-      </template>
-
-      <template v-else>
         <div v-if="!loadingRecords && !rows.length" class="px-5 py-10 text-center text-sm text-slate-500 dark:text-slate-300">
           {{ $t("Tidak ada data SLA untuk filter saat ini.") }}
         </div>
@@ -226,7 +147,6 @@
             </tbody>
           </table>
         </div>
-      </template>
 
       <footer v-if="records?.links?.length > 3" class="flex flex-wrap items-center justify-end gap-2 border-t border-slate-200 bg-white px-5 py-3 dark:border-slate-700 dark:bg-slate-900">
         <button
@@ -258,7 +178,6 @@ import DatePickerFlatpickr from '@/Components/DatePickerFlatpickr.vue';
 import StatusPill from '@/Components/StatusPill.vue';
 import FancySelect from '@/Components/FancySelect.vue';
 
-const showProjectSla = false
 
 const props = defineProps({
   type: { type: String, default: 'ticket' },
@@ -336,7 +255,7 @@ watch(
   }
 );
 
-const typeOptions = computed(() => showProjectSla ? (props.availableTypes ?? []) : (props.availableTypes ?? []).filter(option => !['project', 'ticket_work'].includes(option?.value)));
+const typeOptions = computed(() => props.availableTypes ?? []);
 const stats = computed(() => props.stats ?? {});
 
 const records = ref(props.records || null);
@@ -360,7 +279,6 @@ const columns = computed(() => {
         { key: 'title', label: uiText("Judul") },
         { key: 'status', label: 'Status' },
         { key: 'assignee', label: 'Assignee' },
-        { key: 'ticket_no', label: 'Ticket' },
         { key: 'deadline', label: uiText("Deadline") },
         { key: 'completed_at', label: uiText("Selesai") },
         { key: 'sla_label', label: 'SLA' },
@@ -372,20 +290,10 @@ const columns = computed(() => {
         { key: 'title', label: uiText("Judul") },
         { key: 'status', label: 'Status' },
         { key: 'owner', label: uiText("Owner") },
-        { key: 'ticket_no', label: 'Ticket' },
         { key: 'deadline', label: uiText("Deadline") },
         { key: 'completed_at', label: uiText("Selesai") },
         { key: 'sla_label', label: 'SLA' },
         { key: 'sla_delta', label: 'Delta' },
-      ];
-    case 'ticket_work':
-      return [
-        { key: 'ticket', label: 'Ticket' },
-        { key: 'status', label: 'Status' },
-        { key: 'assignee', label: 'Assignee' },
-        { key: 'deadline', label: uiText("Deadline") },
-        { key: 'sla_label', label: 'SLA Ticket' },
-        { key: 'tasks_summary', label: uiText("Ringkasan Task") },
       ];
     default:
       return [
@@ -405,27 +313,6 @@ const columns = computed(() => {
 const rows = computed(() => {
   const data = records.value?.data ?? [];
   return data.map(item => buildRow(item));
-});
-
-const workEntries = computed(() => {
-  if (form.type !== 'ticket_work') {
-    return [];
-  }
-
-  const data = records.value?.data ?? [];
-  return data.map((item, index) => {
-    const ticket = item.ticket ?? {};
-    const tasks = Array.isArray(item.tasks?.items) ? item.tasks.items : [];
-    const project = item.project ?? null;
-
-    return {
-      id: ticket.id ?? ticket.number ?? `ticket-${index}`,
-      ticket,
-      tasks,
-      project,
-      detail_pdf_url: item.detail_pdf_url ?? ticket.detail_pdf_url ?? null,
-    };
-  });
 });
 
 const currentParams = computed(() => ({
@@ -556,8 +443,6 @@ function buildRow(item) {
         title: item.title,
         status: statusLabel,
         assignee: item.assignee ?? '—',
-        ticket_no: item.ticket_no ?? '—',
-        project_no: item.project_no ?? '—',
         deadline: displayDate(item.deadline),
         completed_at: displayDate(item.completed_at),
         sla_label: item.sla?.label ?? '—',
@@ -582,7 +467,6 @@ function buildRow(item) {
         title: item.title,
         status: statusLabel,
         owner: item.owner ?? '—',
-        ticket_no: item.ticket_no ?? '—',
         deadline: displayDate(item.deadline),
         completed_at: displayDate(item.completed_at),
         sla_label: item.sla?.label ?? '—',
@@ -595,36 +479,6 @@ function buildRow(item) {
         sla_label: slaPill(item.sla?.status),
       },
       links: defaultLinks,
-    };
-  }
-
-  if (form.type === 'ticket_work') {
-    const ticket = item.ticket ?? {};
-    const tasksStats = item.tasks?.stats ?? {};
-    const project = item.project ?? null;
-    const ticketLinks = ticket.links ?? { view: null, edit: null };
-    const statusLabel = formatStatusLabel(ticket.status);
-    if (!ticketLinks.pdf && (item.detail_pdf_url || ticket.detail_pdf_url)) {
-      ticketLinks.pdf = item.detail_pdf_url || ticket.detail_pdf_url;
-    }
-    return {
-      id: ticket.id ?? ticket.number,
-      values: {
-        ticket: ticket.number ? `${ticket.number} · ${ticket.title}` : ticket.title ?? '—',
-        status: statusLabel,
-        assignee: ticket.assignee ?? '—',
-        deadline: displayDate(ticket.deadline),
-        sla_label: ticket.sla?.label ?? '—',
-        tasks_summary: `Met ${tasksStats.met ?? 0} / Total ${tasksStats.total ?? 0}`,
-        project_sla: project?.sla?.label ?? '—',
-      },
-      render: {
-        sla_label: StatusPill,
-      },
-      renderProps: {
-        sla_label: slaPill(ticket.sla?.status),
-      },
-      links: ticketLinks,
     };
   }
 

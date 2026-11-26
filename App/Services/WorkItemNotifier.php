@@ -36,37 +36,6 @@ class WorkItemNotifier
         $this->dispatch($recipients, 'created', $payload, $actor);
     }
 
-    public function notifyTicketWorkItemRouted(Ticket $ticket, ?Task $task = null, ?Project $project = null, ?User $actor = null): void
-    {
-        $ticket->loadMissing('assignedUsers:id,first_name,last_name,username,email', 'requester:id,first_name,last_name,username,email', 'agent:id,first_name,last_name,username,email');
-
-        if ($task) {
-$task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:id,title,ticket_no,status,due_at,due_date', 'project:id,public_slug,title,project_no,status,start_date,end_date');
-        }
-
-        if ($project) {
-            $project->loadMissing(
-                'pics.user:id,first_name,last_name,username,email',
-                'ticket.assignedUsers:id,first_name,last_name,username,email',
-                'ticket.requester:id,first_name,last_name,username,email',
-                'requester:id,first_name,last_name,username,email'
-            );
-        }
-
-        $recipients = $this->mergeRecipients(
-            $this->collectTicketRecipients($ticket, $actor),
-            $task ? $this->collectTaskRecipients($task) : collect(),
-            $project ? $this->collectProjectRecipients($project) : collect()
-        );
-
-        if ($recipients->isEmpty()) {
-            return;
-        }
-
-        $payload = $this->buildTicketRoutedPayloadV2($ticket, $task, $project);
-        $this->dispatch($recipients, 'ticket_routed', $payload, $actor);
-    }
-
     public function notifyTicketReminder(Ticket $ticket, Collection $recipients, ?User $actor = null): void
     {
         if ($recipients->isEmpty()) {
@@ -83,31 +52,9 @@ $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:i
             'assignedUsers:id,first_name,last_name,username,email',
             'requester:id,first_name,last_name,username,email',
             'agent:id,first_name,last_name,username,email',
-            'projects.pics.user:id,first_name,last_name,username,email',
-            'tasks'
         );
 
-        $ticketRecipients = $this->collectTicketRecipients($ticket, $actor);
-        $projectRecipients = collect();
-        $taskRecipients = collect();
-
-        if (($ticket->type ?? null) === 'project' && $ticket->projects) {
-            foreach ($ticket->projects as $project) {
-                if ($project instanceof Project) {
-                    $projectRecipients = $projectRecipients->merge($this->collectProjectRecipients($project, $actor));
-                }
-            }
-        }
-
-        if (($ticket->type ?? null) === 'task' && $ticket->tasks) {
-            foreach ($ticket->tasks as $task) {
-                if ($task instanceof Task) {
-                    $taskRecipients = $taskRecipients->merge($this->collectTaskRecipients($task, [], $actor));
-                }
-            }
-        }
-
-        $recipients = $this->mergeRecipients($ticketRecipients, $projectRecipients, $taskRecipients);
+        $recipients = $this->collectTicketRecipients($ticket, $actor);
         if ($recipients->isEmpty()) {
             return;
         }
@@ -136,9 +83,6 @@ $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:i
     {
         $task->loadMissing(
             'requester:id,first_name,last_name,username,email',
-            'ticket:id,title,ticket_no,status,due_at,due_date',
-            'project:id,public_slug,title,project_no,status,start_date,end_date',
-            'project.pics.user:id,first_name,last_name,username,email'
         );
 
         $recipients = $this->collectTaskRecipients($task, $assigneeIds, $actor);
@@ -162,9 +106,6 @@ $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:i
         }
 
         $task->loadMissing(
-            'ticket:id,title,ticket_no,status,due_at,due_date',
-            'project:id,public_slug,title,project_no,status,start_date,end_date',
-            'project.pics.user:id,first_name,last_name,username,email'
         );
         $payload = $this->buildTaskPayload($task, 'assigned', $actor);
         $this->dispatch($users, 'assigned', $payload, $actor);
@@ -184,9 +125,6 @@ $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:i
     {
         $task->loadMissing(
             'requester:id,first_name,last_name,username,email',
-            'ticket:id,title,ticket_no,status,due_at,due_date',
-            'project:id,public_slug,title,project_no,status,start_date,end_date',
-            'project.pics.user:id,first_name,last_name,username,email'
         );
 
         $recipients = $this->collectTaskRecipients($task, [], $actor);
@@ -202,8 +140,6 @@ $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:i
     {
         $project->loadMissing(
             'pics.user:id,first_name,last_name,username,email',
-            'ticket.assignedUsers:id,first_name,last_name,username,email',
-            'ticket.requester:id,first_name,last_name,username,email',
             'requester:id,first_name,last_name,username,email'
         );
 
@@ -230,8 +166,6 @@ $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:i
     {
         $project->loadMissing(
             'pics.user:id,first_name,last_name,username,email',
-            'ticket.assignedUsers:id,first_name,last_name,username,email',
-            'ticket.requester:id,first_name,last_name,username,email',
             'requester:id,first_name,last_name,username,email'
         );
 
@@ -380,9 +314,6 @@ $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:i
             $ids[] = $task->requester->id;
         }
 
-        if ($task->ticket && $task->ticket->requester) {
-            $ids[] = $task->ticket->requester->id;
-        }
 
         if ($actor && $actor->id) {
             $ids[] = (int) $actor->id;
@@ -414,14 +345,6 @@ $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:i
             $ids[] = (int) $project->requester->id;
         }
 
-        if ($project->ticket) {
-            foreach ($project->ticket->assignedUsers ?? [] as $user) {
-                $ids[] = $user->id;
-            }
-            if ($project->ticket->requester) {
-                $ids[] = $project->ticket->requester->id;
-            }
-        }
 
         if ($actor && $actor->id) {
             $ids[] = (int) $actor->id;
@@ -567,14 +490,6 @@ $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:i
             }
         }
 
-        if ($task->project?->pics) {
-            foreach ($task->project->pics as $pic) {
-                $label = $pic->user?->display_name;
-                if ($label) {
-                    $picNames->push($label);
-                }
-            }
-        }
 
         if ($picNames->isEmpty() && $task->assignee) {
             $picNames->push($task->assignee->display_name ?? $task->assignee->email);
@@ -591,12 +506,6 @@ $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:i
         $details['PIC'] = ! empty($picList) ? implode(', ', $picList) : '-';
 
         $related = [];
-        if ($task->ticket) {
-            $related['Ticket'] = ($task->ticket->ticket_no ? '#' . $task->ticket->ticket_no . ' - ' : '') . $task->ticket->title;
-        }
-        if ($task->project) {
-            $related['Project'] = ($task->project->project_no ? '#' . $task->project->project_no . ' - ' : '') . $task->project->title;
-        }
 
         $intro = match ($event) {
             'assigned' => 'Anda baru saja ditetapkan sebagai penanggung jawab task berikut.',
@@ -664,9 +573,6 @@ $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:i
         ];
 
         $related = [];
-        if ($project->ticket) {
-            $related['Ticket'] = ($project->ticket->ticket_no ? '#' . $project->ticket->ticket_no . ' - ' : '') . $project->ticket->title;
-        }
         $projectPics = collect($project->pics ?? []);
         $agentName = $projectPics
             ->first(fn($pic) => strtolower((string) ($pic->role_type ?? '')) === 'agent')
@@ -763,114 +669,6 @@ $task->loadMissing('requester:id,first_name,last_name,username,email', 'ticket:i
             'mail_remark' => 'Jika Anda tidak melakukan perubahan ini, segera hubungi administrator.',
             'details' => $details,
             'related' => [],
-        ];
-    }
-
-    private function buildTicketRoutedPayload(Ticket $ticket, ?Task $task = null, ?Project $project = null): array
-    {
-        $type = $task ? 'Task' : 'Project';
-        $workItem = $task ?? $project;
-        $workNumber = $task?->task_no ?? $project?->project_no ?? null;
-        $workUrl = $task
-            ? route('tasks.show', ['locale' => app()->getLocale(), 'taskSlug' => $task->public_slug ?? 'task-tsk'.base_convert((string) $task->id, 10, 36)])
-            : ($project ? route('projects.show', ['locale' => app()->getLocale(), 'project' => $project->public_slug]) : route('tickets.show', $ticket));
-        $deadline = $this->formatDateTime($task?->due_at ?? $ticket->due_at ?? $ticket->due_date ?? $project?->end_date);
-
-        $details = [
-            'Ticket' => $ticket->title,
-            'Nomor Ticket' => $ticket->ticket_no ?? '—',
-            'Tipe Rujukan' => $type,
-            'Nomor ' . $type => $workNumber ? '#' . $workNumber : '—',
-            'Status Ticket' => WorkflowStatus::label(WorkflowStatus::normalize($ticket->status ?? WorkflowStatus::NEW)),
-            'Deadline' => $deadline,
-        ];
-
-        $related = [];
-        if ($workItem) {
-            $related[$type] = ($workNumber ? '#' . $workNumber . ' - ' : '') . ($workItem->title ?? $ticket->title);
-        }
-
-        return [
-            'type_label' => 'Ticket',
-            'title' => $ticket->title,
-            'url' => route('tickets.show', ['locale' => app()->getLocale(), 'ticket' => $ticket->id]),
-            'icon' => 'sync_alt',
-            'db_title' => 'Ticket Routed to ' . $type,
-            'db_message' => 'Ticket "' . $ticket->title . '" diarahkan menjadi ' . $type . '.',
-            'subject_type' => 'ticket',
-            'subject_id' => $ticket->id,
-            'mail_subject' => 'Ticket Tipe ' . $type . ' Baru: ' . $ticket->title,
-            'mail_intro' => 'Ticket tipe ' . $type . ' berikut telah dibuat dan memerlukan perhatian Anda.',
-            'mail_remark' => 'Email ini berisi ticket dan ' . $type,
-            'details' => $details,
-            'related' => $related,
-        ];
-    }
-
-    private function buildTicketRoutedPayloadV2(Ticket $ticket, ?Task $task = null, ?Project $project = null): array
-    {
-        $hasTask = $task !== null;
-        $hasProject = $project !== null;
-
-        $typeLabel = match (true) {
-            $hasTask && $hasProject => 'Task & Project',
-            $hasTask => 'Task',
-            $hasProject => 'Project',
-            default => 'Work Item',
-        };
-
-        $workItems = collect();
-        if ($task) {
-            $workItems->push([
-                'type' => 'Task',
-                'number' => $task->task_no ?? null,
-                'title' => $task->title ?? $ticket->title,
-                'url' => route('tasks.show', ['locale' => app()->getLocale(), 'taskSlug' => $task->public_slug ?? 'task-tsk'.base_convert((string) $task->id, 10, 36)]),
-                'deadline' => $this->formatDateTime($task->due_at ?? $ticket->due_at ?? $ticket->due_date),
-            ]);
-        }
-        if ($project) {
-            $workItems->push([
-                'type' => 'Project',
-                'number' => $project->project_no ?? null,
-                'title' => $project->title ?? $ticket->title,
-                'url' => route('projects.show', ['locale' => app()->getLocale(), 'project' => $project->public_slug]),
-                'deadline' => $this->formatDateTime($project->end_date ?? $ticket->due_at ?? $ticket->due_date),
-            ]);
-        }
-
-        $details = [
-            'Ticket' => $ticket->title,
-            'Nomor Ticket' => $ticket->ticket_no ?? '-',
-            'Status Ticket' => WorkflowStatus::label(WorkflowStatus::normalize($ticket->status ?? WorkflowStatus::NEW)),
-        ];
-
-        foreach ($workItems as $item) {
-            $details[$item['type']] = trim(($item['number'] ? '#'.$item['number'].' - ' : '').($item['title'] ?? ''));
-            if (! empty($item['deadline'])) {
-                $details['Deadline '.$item['type']] = $item['deadline'];
-            }
-        }
-
-        $related = $workItems->mapWithKeys(function ($item) {
-            $label = trim(($item['number'] ? '#'.$item['number'].' - ' : '').($item['title'] ?? ''));
-            return [$item['type'] => $label];
-        })->all();
-
-        return [
-            'type_label' => 'Ticket',
-            'title' => $ticket->title,
-            'url' => route('tickets.show', ['locale' => app()->getLocale(), 'ticket' => $ticket->id]),
-            'icon' => 'sync_alt',
-            'db_title' => 'Ticket berisi '.$typeLabel,
-            'db_message' => 'Ticket "'.$ticket->title.'" memuat '.$typeLabel.'.',
-            'subject_type' => 'ticket',
-            'subject_id' => $ticket->id,
-            'mail_subject' => 'Ticket '.$typeLabel.': '.$ticket->title,
-            'mail_intro' => 'Ticket ini memuat '.$typeLabel.' yang memerlukan perhatian Anda.',
-            'mail_remark' => 'Notifikasi ini mencakup ticket beserta konten '.$typeLabel,
-            'details' => $details,
-            'related' => $related,
         ];
     }
 

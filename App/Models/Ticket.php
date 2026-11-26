@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Domains\Project\Models\Status;
 use App\Support\RoleHelpers;
+use App\Support\SlaClock;
+use Illuminate\Support\Carbon;
 use App\Support\TicketStatusSync;
 use App\Support\WorkflowStatus;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -12,7 +14,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -26,7 +27,6 @@ use Illuminate\Support\Str;
  * @property string|null $reason
  * @property string|null $letter_no
  * @property string $priority
- * @property string $type
  * @property string $status
  * @property string|null $status_id
  * @property int|null $requester_id
@@ -67,12 +67,10 @@ use Illuminate\Support\Str;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Ticket wherePriority($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Ticket whereReason($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Ticket whereRequesterId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Ticket whereSla($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Ticket whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Ticket whereStatusId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Ticket whereTicketNo($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Ticket whereTitle($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Ticket whereType($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Ticket whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Ticket whereUuid($value)
  *
@@ -92,7 +90,6 @@ class Ticket extends Model
         'reason',
         'letter_no',
         'priority',
-        'type',
         'status_id',
         'status',
         'priority_id',
@@ -101,7 +98,6 @@ class Ticket extends Model
         'assigned_id',
         'due_date',
         'finish_date',
-        'sla',
         'due_at',
         'finish_at',
     ];
@@ -111,6 +107,9 @@ class Ticket extends Model
         'finish_date' => 'date',
         'due_at' => 'datetime',
         'finish_at' => 'datetime',
+        'worked_on_at' => 'datetime',
+        'confirmation_at' => 'datetime',
+        'completed_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -120,6 +119,16 @@ class Ticket extends Model
         static::saving(function (Ticket $ticket) {
             if (! $ticket->exists || array_key_exists('status', $ticket->getAttributes())) {
                 $ticket->status_id = WorkflowStatus::code($ticket->status);
+            }
+
+            if ($ticket->isDirty('status') || ! $ticket->exists) {
+                if ($ticket->status === WorkflowStatus::IN_PROGRESS && ! $ticket->worked_on_at) {
+                    $ticket->worked_on_at = now();
+                }
+                $ticket->confirmation_at = $ticket->status === WorkflowStatus::CONFIRMATION ? now() : null;
+                $ticket->completed_at = $ticket->status === WorkflowStatus::DONE
+                    ? ($ticket->isDirty('completed_at') ? $ticket->completed_at : now())
+                    : null;
             }
         });
 
@@ -156,21 +165,6 @@ class Ticket extends Model
     }
 
     // ========= Relasi =========
-    public function project(): HasOne
-    {
-        return $this->hasOne(\App\Models\Project::class, 'ticket_id')->latestOfMany();
-    }
-
-    public function projects(): HasMany
-    {
-        return $this->hasMany(\App\Models\Project::class, 'ticket_id');
-    }
-
-    public function tasks(): HasMany
-    {
-        return $this->hasMany(Task::class, 'ticket_id');
-    }
-
     public function requester(): BelongsTo
     {
         return $this->belongsTo(User::class, 'requester_id');
@@ -190,6 +184,28 @@ class Ticket extends Model
     public function assignee(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_id');
+    }
+
+    public function deadline(): ?Carbon
+    {
+        return $this->due_at ?? $this->due_date?->copy()->endOfDay()->setMicrosecond(0);
+    }
+
+    protected function sla(): Attribute
+    {
+        return Attribute::get(function (): ?string {
+            if ($this->status === WorkflowStatus::CANCELLED) {
+                return null;
+            }
+            [$deadline, $completed] = SlaClock::dates($this, 'ticket');
+
+            return $deadline ? (($completed ?? now())->lte($deadline) ? 'ontime' : 'late') : null;
+        });
+    }
+
+    public function confirmations(): HasMany
+    {
+        return $this->hasMany(TicketConfirmation::class);
     }
 
     public function attachments(): MorphMany

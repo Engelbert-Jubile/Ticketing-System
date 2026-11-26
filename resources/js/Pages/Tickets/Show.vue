@@ -21,7 +21,6 @@
           <div class="flex flex-wrap gap-2">
             <StatusPill :status="ticket.status" :label="ticket.status_label" size="sm" />
             <StatusPill :status="ticket.priority" :label="ticket.priority ?? $t(&quot;Priority&quot;)" variant="priority" size="sm" />
-            <StatusPill :status="ticket.type" :label="ticket.type ?? $t(&quot;Type&quot;)" size="sm" />
           </div>
         </div>
       </div>
@@ -35,8 +34,12 @@
           </dd>
         </div>
         <div>
-          <dt class="font-semibold text-slate-500 dark:text-slate-400">{{ $t("Target Selesai") }}</dt>
-          <dd>{{ formatDate(ticket.timeline?.due_at) }}</dd>
+          <dt class="font-semibold text-slate-500 dark:text-slate-400">{{ $t("Deadline") }}</dt>
+          <dd>{{ formatDate(ticket.timeline?.due_at, true) }}</dd>
+        </div>
+        <div>
+          <dt class="font-semibold text-slate-500 dark:text-slate-400">{{ $t("Mulai dikerjakan") }}</dt>
+          <dd>{{ formatDate(ticket.timeline?.worked_on_at, true) }}</dd>
         </div>
         <div>
           <dt class="font-semibold text-slate-500 dark:text-slate-400">SLA</dt>
@@ -102,38 +105,6 @@
       <div class="prose prose-sm max-w-none text-slate-700 dark:text-slate-200 dark:prose-invert" v-html="ticket.description || '<p>—</p>'"></div>
     </article>
 
-    <article v-if="ticket.projects?.length" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
-      <div class="flex items-center justify-between gap-2">
-        <div>
-          <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t("Project Terkait") }}</h2>
-          <p class="text-xs text-slate-500 dark:text-slate-300">{{ $t("Semua project yang ditautkan ke ticket ini.") }}</p>
-        </div>
-      </div>
-      <div class="mt-4 grid gap-3">
-        <div
-          v-for="project in ticket.projects"
-          :key="project.id"
-          class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-blue-200 dark:border-slate-700 dark:bg-slate-900/70 dark:hover:border-blue-500/40"
-        >
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <p class="font-semibold text-slate-900 dark:text-slate-100">{{ project.title }}</p>
-              <p class="text-xs text-slate-500 dark:text-slate-300">No: {{ project.project_no || '—' }}</p>
-            </div>
-            <StatusPill :status="project.status" :label="project.status_label" size="sm" />
-          </div>
-          <div class="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-300">
-            <span>{{ $t("Due:") }} {{ project.due_display || '—' }}</span>
-            <span>Update: {{ project.updated_display || '—' }}</span>
-          </div>
-          <div class="mt-3 flex flex-wrap items-center gap-3 text-sm">
-            <a v-if="project.links?.show" :href="project.links.show" class="text-blue-600 hover:underline dark:text-blue-300">Detail</a>
-            <a v-if="project.links?.edit" :href="project.links.edit" class="text-blue-600 hover:underline dark:text-blue-300">Edit</a>
-          </div>
-        </div>
-      </div>
-    </article>
-
     <article v-if="ticket.attachments?.length" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
       <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t("Lampiran") }}</h2>
       <ul class="space-y-2 text-sm text-slate-600 dark:text-slate-300">
@@ -146,6 +117,19 @@
         </li>
       </ul>
     </article>
+    <section v-if="ticket.confirmations?.length" class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
+      <h2 class="font-semibold">{{ $t("Bukti konfirmasi") }}</h2>
+      <article v-for="entry in ticket.confirmations" :key="entry.id" class="mt-3 space-y-2 border-t pt-3 dark:border-slate-700">
+        <time class="text-xs text-slate-500">{{ formatDate(entry.created_at, true) }}</time>
+        <p class="whitespace-pre-wrap break-words text-sm">{{ entry.note }}</p>
+        <ul class="space-y-1">
+          <li v-for="file in entry.evidence" :key="file.id">
+            <a :href="file.download_url" class="text-sm font-medium text-indigo-700 hover:underline dark:text-indigo-300">{{ file.name }}</a>
+          </li>
+        </ul>
+      </article>
+    </section>
+
     <TicketCollaboration :ticket-id="ticket.id" />
   </div>
 </template>
@@ -173,8 +157,7 @@ function formatDate(value, withTime = false) {
 }
 
 function formatSla(value) {
-  if (!value) return '—';
-  return value.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+  return { ontime: 'On Time', late: 'Late' }[value] ?? '-';
 }
 
 function formatSize(size) {

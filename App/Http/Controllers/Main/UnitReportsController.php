@@ -120,8 +120,7 @@ if ($isSuperadmin) {
         $tasksBase = Task::query();
         if ($unit !== '') {
             $tasksBase->where(function (Builder $builder) use ($unit) {
-                $builder->whereHas('ticket.requester', fn (Builder $sub) => $sub->when($unit !== "", fn ($q) => $q->where("unit", $unit)))
-                    ->orWhereHas('requester', fn (Builder $sub) => $sub->when($unit !== "", fn ($q) => $q->where("unit", $unit)));
+                $builder->whereHas('requester', fn (Builder $sub) => $sub->when($unit !== "", fn ($q) => $q->where("unit", $unit)));
             });
         }
 
@@ -156,8 +155,7 @@ if ($isSuperadmin) {
         $projectsBase = Project::query();
         if ($unit !== '') {
             $projectsBase->where(function (Builder $builder) use ($unit) {
-                $builder->whereHas('ticket.requester', fn (Builder $sub) => $sub->when($unit !== "", fn ($q) => $q->where("unit", $unit)))
-                    ->orWhereHas('requester', fn (Builder $sub) => $sub->when($unit !== "", fn ($q) => $q->where("unit", $unit)));
+                $builder->whereHas('requester', fn (Builder $sub) => $sub->when($unit !== "", fn ($q) => $q->where("unit", $unit)));
             });
         }
 
@@ -285,17 +283,13 @@ if ($isSuperadmin) {
 
                 $tasks = Task::query()->where(function (Builder $b) use ($u) {
 
-                    $b->whereHas("ticket.requester", fn (Builder $q) => $q->where("unit", $u))
-
-                      ->orWhereHas("requester", fn (Builder $q) => $q->where("unit", $u));
+                $b->whereHas("requester", fn (Builder $q) => $q->where("unit", $u));
 
                 })->count();
 
                 $projects = Project::query()->where(function (Builder $b) use ($u) {
 
-                    $b->whereHas("ticket.requester", fn (Builder $q) => $q->where("unit", $u))
-
-                      ->orWhereHas("requester", fn (Builder $q) => $q->where("unit", $u));
+                $b->whereHas("requester", fn (Builder $q) => $q->where("unit", $u));
 
                 })->count();
 
@@ -389,39 +383,25 @@ if ($isSuperadmin) {
 
             $tasksCount = Task::query()
                 ->where(function (Builder $builder) use ($unit) {
-                    $builder->whereHas('ticket.requester', fn (Builder $sub) => $sub->when($unit !== "", fn ($q) => $q->where("unit", $unit)))
-                        ->orWhereHas('requester', fn (Builder $sub) => $sub->when($unit !== "", fn ($q) => $q->where("unit", $unit)));
+                $builder->whereHas('requester', fn (Builder $sub) => $sub->when($unit !== "", fn ($q) => $q->where("unit", $unit)));
                 })
                 ->where(function (Builder $builder) use ($userId) {
                     $builder->where('assignee_id', $userId)
-                        ->orWhere('created_by', $userId)
-                        ->orWhereHas('ticket', function (Builder $ticket) use ($userId) {
-                            $ticket->where('requester_id', $userId)
-                                ->orWhere('agent_id', $userId)
-                                ->orWhere('assigned_id', $userId)
-                                ->orWhereHas('assignedUsers', fn (Builder $sub) => $sub->where('users.id', $userId));
-                        });
+                        ->orWhere('created_by', $userId);
                     $this->orWhereJsonAssignmentContains($builder, 'assigned_to', $userId);
                 })
                 ->count();
 
             $projectsCount = Project::query()
                 ->where(function (Builder $builder) use ($unit) {
-                    $builder->whereHas('ticket.requester', fn (Builder $sub) => $sub->when($unit !== "", fn ($q) => $q->where("unit", $unit)))
-                        ->orWhereHas('requester', fn (Builder $sub) => $sub->when($unit !== "", fn ($q) => $q->where("unit", $unit)));
+                $builder->whereHas('requester', fn (Builder $sub) => $sub->when($unit !== "", fn ($q) => $q->where("unit", $unit)));
                 })
                 ->where(function (Builder $builder) use ($userId) {
                     $builder->where('requester_id', $userId)
                         ->orWhere('agent_id', $userId)
                         ->orWhere('assigned_id', $userId)
                         ->orWhere('created_by', $userId)
-                        ->orWhereHas('pics', fn (Builder $sub) => $sub->where('user_id', $userId))
-                        ->orWhereHas('ticket', function (Builder $ticketQuery) use ($userId) {
-                            $ticketQuery->where('requester_id', $userId)
-                                ->orWhere('agent_id', $userId)
-                                ->orWhere('assigned_id', $userId)
-                                ->orWhereHas('assignedUsers', fn (Builder $sub) => $sub->where('users.id', $userId));
-                        });
+                        ->orWhereHas('pics', fn (Builder $sub) => $sub->where('user_id', $userId));
                 })
                 ->count();
 

@@ -14,12 +14,12 @@ final class SlaClock
         $target = match ($type) {
             'project' => $dayEnd($item->end_date),
             'task' => $item->due_at ? Carbon::parse($item->due_at) : null,
-            default => $item->due_at ? Carbon::parse($item->due_at) : $dayEnd($item->due_date),
+            default => $item->deadline(),
         };
         $actual = null;
         if (WorkflowStatus::normalize((string) $item->status) === WorkflowStatus::DONE) {
             $actual = match ($type) {
-                'ticket' => $item->finish_at ?: ($dayEnd($item->finish_date) ?: $item->updated_at),
+                'ticket' => $item->completed_at ?? $item->updated_at,
                 'task' => $item->completed_at ?: $item->updated_at,
                 default => $item->updated_at,
             };
@@ -41,13 +41,15 @@ final class SlaClock
             default => "COALESCE({$table}.due_at, ".$end('due_date').')',
         };
         $finish = match ($type) {
-            'ticket' => "COALESCE({$table}.finish_at, ".$end('finish_date').", {$table}.updated_at)",
+            'ticket' => "COALESCE({$table}.completed_at, {$table}.updated_at)",
             'task' => "COALESCE({$table}.completed_at, {$table}.updated_at)",
             default => "{$table}.updated_at",
         };
         $done = "LOWER({$table}.status) IN ('done', 'completed', 'complete', 'closed')";
 
-        return "CASE WHEN {$target} IS NULL THEN 'missing' "
+        $cancelled = $type === 'ticket' ? "LOWER({$table}.status) IN ('cancelled', 'cancel', 'canc') OR " : '';
+
+        return "CASE WHEN {$cancelled}{$target} IS NULL THEN 'missing' "
             ."WHEN {$done} AND {$finish} IS NOT NULL THEN CASE WHEN {$finish} <= {$target} THEN 'met' ELSE 'breached' END "
             ."WHEN {$target} < ? THEN 'breached' ELSE 'pending' END";
     }

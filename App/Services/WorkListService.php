@@ -16,7 +16,6 @@ class WorkListService
     public function fetch(User $viewer, array $filters, bool $personal = false)
     {
         $queries = [];
-        $listedTickets = null;
         foreach (['ticket', 'task', 'project'] as $type) {
             if (($filters['type'] ?? '') && $filters['type'] !== $type) {
                 continue;
@@ -29,25 +28,14 @@ class WorkListService
                 'project' => UnitVisibility::scopeProjects(Project::query(), $viewer),
             };
             $id = $viewer->id;
-            $statusExpression = 'status';
-            $statusBindings = [];
-            if ($type === 'task') {
-                $ticketStatus = UnitVisibility::scopeTickets(Ticket::query(), $viewer)
-                    ->whereColumn('tickets.id', 'tasks.ticket_id')
-                    ->select('tickets.status')->limit(1)->toBase();
-                $statusExpression = 'COALESCE(('.$ticketStatus->toSql().'), tasks.status)';
-                $statusBindings = $ticketStatus->getBindings();
-            }
-            $filterStatuses = function (array $statuses, bool $exclude = false) use ($query, $statusExpression, $statusBindings) {
-                $placeholders = implode(',', array_fill(0, count($statuses), '?'));
-                $operator = $exclude ? 'NOT IN' : 'IN';
-                $query->whereRaw("{$statusExpression} {$operator} ({$placeholders})", array_merge($statusBindings, $statuses));
+            $filterStatuses = function (array $statuses, bool $exclude = false) use ($query) {
+                $exclude ? $query->whereNotIn('status', $statuses) : $query->whereIn('status', $statuses);
             };
             if ($personal) {
                 if ($type === 'ticket') {
                     $query->where(fn ($q) => $q->where('requester_id', $id)->orWhere('agent_id', $id)->orWhere('assigned_id', $id)->orWhereHas('assignedUsers', fn ($u) => $u->where('users.id', $id)));
                 } elseif ($type === 'task') {
-                    $query->where(fn ($q) => $q->where('created_by', $id)->orWhere('assignee_id', $id)->orWhere(fn ($a) => $a->whereRaw('JSON_VALID(assigned_to)')->whereJsonContains('assigned_to', (int) $id))->orWhereHas('ticket', fn ($t) => $t->where('requester_id', $id)));
+                    $query->where(fn ($q) => $q->where('created_by', $id)->orWhere('assignee_id', $id)->orWhere(fn ($a) => $a->whereRaw('JSON_VALID(assigned_to)')->whereJsonContains('assigned_to', (int) $id)));
                 } else {
                     $query->where(fn ($q) => $q->where('created_by', $id)->orWhere('requester_id', $id)->orWhere('agent_id', $id)->orWhere('assigned_id', $id)->orWhereHas('pics', fn ($p) => $p->where('user_id', $id)));
                 }
@@ -72,9 +60,6 @@ class WorkListService
                     if ($type === 'project') {
                         $b->orWhere('requester_id', $id);
                     }
-                    if ($type !== 'ticket') {
-                        $b->orWhereHas('ticket', fn ($t) => $t->where('requester_id', $id));
-                    }
                 });
             }
             $day = fn ($column) => $query->getConnection()->getDriverName() === 'sqlite'
@@ -87,34 +72,20 @@ class WorkListService
             };
             $dueBindings = [];
             if ($type === 'task') {
-                $ticketDue = UnitVisibility::scopeTickets(Ticket::query(), $viewer)
-                    ->whereColumn('tickets.id', 'tasks.ticket_id')
-                    ->selectRaw('COALESCE(tickets.due_at, '.$day('tickets.due_date').')')
-                    ->limit(1)->toBase();
                 $taskDates = ['tasks.due_at'];
                 if (Schema::hasColumn('tasks', 'due_date')) {
                     $taskDates[] = $day('tasks.due_date');
                 }
                 $taskDates[] = $day('tasks.end_date');
-                $taskDates[] = '('.$ticketDue->toSql().')';
                 $due = 'COALESCE('.implode(', ', $taskDates).')';
-                $dueBindings = $ticketDue->getBindings();
             }
             if ($personal && in_array($view, ['due', 'overdue'], true)) {
                 $query->whereRaw($view === 'overdue' ? "{$due} < ?" : "{$due} BETWEEN ? AND ?",
                     array_merge($dueBindings, $view === 'overdue' ? [now()->toDateTimeString()] : [now()->toDateTimeString(), now()->addDay()->toDateTimeString()]));
             }
-            if ($type === 'ticket') {
-                $listedTickets = (clone $query)->select('tickets.id')->toBase();
-            } elseif ($type === 'task' && $listedTickets !== null) {
-                // A linked task represents the same work as its ticket. Keep it
-                // only when that ticket is absent from the filtered, visible list.
-                $query->where(fn ($q) => $q->whereNull('tasks.ticket_id')
-                    ->orWhereNotIn('tasks.ticket_id', $listedTickets));
-            }
             $slug = $type === 'ticket' ? 'NULL' : 'public_slug';
             $priority = $type === 'project' ? 'NULL' : 'priority';
-            $queries[] = $query->selectRaw("id, '{$type}' AS type, {$number} AS number, title, {$statusExpression} AS status, {$priority} AS priority, {$due} AS due_at, updated_at, {$slug} AS slug", array_merge($statusBindings, $dueBindings))->toBase();
+            $queries[] = $query->selectRaw("id, '{$type}' AS type, {$number} AS number, title, status, {$priority} AS priority, {$due} AS due_at, updated_at, {$slug} AS slug", $dueBindings)->toBase();
         }
         $union = array_shift($queries);
         foreach ($queries as $query) {

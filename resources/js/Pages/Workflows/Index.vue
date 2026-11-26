@@ -4,13 +4,8 @@
     <Transition name="fade"><div v-if="notice" :class="notice.type === 'error' ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'" class="fixed right-5 top-20 z-[70] max-w-sm rounded-xl border px-4 py-3 text-sm font-semibold shadow-lg">{{ notice.message }}</div></Transition>
     <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div><p class="text-xs font-bold uppercase tracking-[0.2em] text-cyan-600">{{ $t("Pemantauan proses") }}</p><h1 class="mt-1 text-3xl font-bold text-slate-900 dark:text-white">{{ $t("Alur & Riwayat") }}</h1><p class="mt-1 text-sm text-slate-500 dark:text-slate-300">{{ $t("Lihat tahap aktif, PIC, dan riwayat perpindahan status setiap ticket atau task.") }}</p></div>
-      <Link v-if="can.create" :href="resolveRoute('workflows.create')" class="primary"><span class="material-icons text-lg">add</span> {{ $t("Buat definisi alur") }}</Link>
     </header>
 
-    <aside class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-cyan-100 bg-cyan-50 p-4 text-sm text-cyan-950 dark:border-cyan-900 dark:bg-cyan-950 dark:text-cyan-100">
-      <p><strong>{{ $t("Gunakan menu ini untuk menelusuri proses.") }}</strong><br />{{ $t("Untuk memilih pekerjaan dan mengejar deadline harian, buka Pekerjaan Saya.") }}</p>
-      <Link :href="resolveRoute('work.index')" class="inline-flex items-center gap-1 rounded-lg px-3 py-2 font-semibold underline underline-offset-4 focus-visible:outline focus-visible:outline-2">{{ $t("Ke Pekerjaan Saya") }} <span aria-hidden="true">→</span></Link>
-    </aside>
     <section class="grid gap-4 sm:grid-cols-3">
       <article v-for="metric in metrics" :key="metric.label" class="summary-card"><span class="material-icons border" :class="workflowStatusClass(metric.status, 'iconTone')">{{ metric.icon }}</span><div><p>{{ metric.label }}</p><strong>{{ metric.value }}</strong></div></article>
     </section>
@@ -35,18 +30,10 @@
               <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ item.workflow_name }}<span v-if="!item.workflow_active" class="ml-2 font-semibold text-amber-700 dark:text-amber-300">{{ $t("Definisi nonaktif") }}</span></p>
             </div>
             <div class="flex shrink-0 flex-wrap items-center gap-2">
-              <button v-if="item.can_update_status" type="button" class="primary" @click="statusItem = item"><span class="material-icons text-lg" aria-hidden="true">published_with_changes</span>{{ $t('Update Status') }}</button>
+              <button v-if="item.can_update_status" type="button" class="primary" @click="openStatus(item)"><span class="material-icons text-lg" aria-hidden="true">published_with_changes</span>{{ $t('Update Status') }}</button>
               <Link :href="item.detail_url" :aria-label="$t(&quot;Lihat alur dan riwayat: &quot;) + item.title" class="secondary"><span class="material-icons text-lg" aria-hidden="true">route</span>{{ $t("Lihat alur & riwayat") }}</Link>
-              <Dropdown v-if="item.can_view_workflow || item.can_update_workflow || item.can_toggle_workflow || item.can_delete_workflow" width-class="w-60" teleport>
-                <template #trigger><span class="material-icons text-xl" aria-hidden="true">more_horiz</span><span class="sr-only">{{ $t("Pengaturan definisi") }} {{ item.workflow_name }}</span></template>
-                <div class="py-1 text-left">
-                  <p class="px-3 py-2 text-xs font-semibold text-slate-500">{{ $t("Definisi alur yang digunakan") }}</p>
-                  <Link v-if="item.can_view_workflow" :href="item.workflow_url" class="menu"><span class="material-icons" aria-hidden="true">account_tree</span>{{ $t("Lihat definisi alur") }}</Link>
-                  <Link v-if="item.can_update_workflow" :href="item.workflow_edit_url" class="menu"><span class="material-icons" aria-hidden="true">schema</span>{{ $t("Edit aturan & tahap") }}</Link>
-                  <button v-if="item.can_toggle_workflow" type="button" class="menu w-full" @click="confirmToggle(item)"><span class="material-icons" aria-hidden="true">power_settings_new</span>{{ item.workflow_active ? $t("Nonaktifkan definisi") : $t("Aktifkan definisi") }}</button>
-                  <button v-if="item.can_delete_workflow" type="button" class="menu danger w-full" @click="confirmDelete(item)"><span class="material-icons" aria-hidden="true">delete</span>{{ $t("Hapus definisi") }}</button>
-                </div>
-              </Dropdown>
+              <button v-if="item.can_reject" type="button" class="secondary !text-rose-700 dark:!text-rose-300"
+                @click="openStatus(item, true)">{{ $t('Tolak') }}</button>
             </div>
           </div>
           <dl class="grid gap-3 rounded-xl bg-slate-50 p-4 text-sm dark:bg-slate-800/60 sm:grid-cols-2 lg:grid-cols-4">
@@ -68,10 +55,7 @@
       <div v-if="items.links?.length > 3" class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-5 py-4 dark:border-slate-700"><p class="text-xs text-slate-500">{{ $t("Menampilkan") }} {{ items.from }}–{{ items.to }} {{ $t("dari") }} {{ items.total }}</p><nav class="flex gap-1"><template v-for="link in items.links" :key="link.label"><Link v-if="link.url" :href="link.url" preserve-scroll v-html="link.label" class="pager" :class="link.active ? 'border-cyan-600 bg-cyan-600 text-white' : 'border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300'" /><span v-else v-html="link.label" class="pager cursor-not-allowed border-slate-100 text-slate-300"></span></template></nav></div>
     </section>
 
-    <WorkflowStatusDialog v-if="statusItem" :item="statusItem" @close="statusItem = null" @saved="statusSaved" />
-    <Teleport to="body">
-    <div v-if="confirmation" class="modal-backdrop" @click.self="confirmation = null"><div class="modal"><div class="flex h-12 w-12 items-center justify-center rounded-xl bg-rose-50 text-rose-600"><span class="material-icons">warning</span></div><h3 class="mt-4 text-xl font-bold dark:text-white">{{ confirmation.title }}</h3><p class="mt-2 text-sm text-slate-500">{{ confirmation.message }}</p><div class="modal-actions"><button type="button" class="secondary" @click="confirmation = null">{{ $t("Batal") }}</button><button type="button" :disabled="processing" class="rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white" @click="runConfirmation">{{ processing ? $t("Memproses...") : $t("Ya, lanjutkan") }}</button></div></div></div>
-    </Teleport>
+    <WorkflowStatusDialog v-if="statusItem" :item="statusItem" :rejecting="rejecting" @close="statusItem = null" @saved="statusSaved" />
   </div>
 </template>
 
@@ -79,21 +63,22 @@
 import { translateUi as uiText, uiLocale } from '../../i18n'
 
 import { Head, Link, router, usePage } from '@inertiajs/vue3'
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import WorkflowStatusDialog from '../../Components/WorkflowStatusDialog.vue'
-import Dropdown from '../../Components/Dropdown.vue'
 import WorkflowSelect from '../../Components/WorkflowSelect.vue'
 import AppLayout from '../../Layouts/AppLayout.vue'
 import resolveRoute from '../../utils/resolveRoute'
 import { workflowStatusClass, workflowStatusStyle } from '../../utils/workflowStatus'
 defineOptions({ layout: AppLayout })
-const props = defineProps({ items: { type: Object, required: true }, summary: { type: Object, required: true }, filters: { type: Object, default: () => ({}) }, can: { type: Object, default: () => ({}) } })
+const props = defineProps({ items: { type: Object, required: true }, summary: { type: Object, required: true }, filters: { type: Object, default: () => ({}) } })
 const statusItem = ref(null)
+const rejecting = ref(false)
+function openStatus(item, reject = false) {
+  rejecting.value = reject
+  statusItem.value = item
+}
 const statusSaved = message => { statusItem.value = null; notice.value = { type: 'success', message }; router.reload({ only: ['items', 'summary'], preserveScroll: true }) }
-const page = usePage(); const notice = ref(null); const loading = ref(false); const processing = ref(false); const confirmation = ref(null)
-const modalOpen = computed(() => Boolean(confirmation.value))
-watch(modalOpen, value => { if (typeof document === 'undefined') return; document.documentElement.classList.toggle('workflow-modal-open', value); document.body.classList.toggle('workflow-modal-open', value) }, { immediate: true })
-onBeforeUnmount(() => { if (typeof document === 'undefined') return; document.documentElement.classList.remove('workflow-modal-open'); document.body.classList.remove('workflow-modal-open') })
+const page = usePage(); const notice = ref(null); const loading = ref(false)
 const metrics = computed(() => [{ label: uiText("Proses terpantau"), value: props.summary.total, icon: 'inventory_2', status: 'new' }, { label: uiText("Proses berjalan"), value: props.summary.in_progress, icon: 'pending_actions', status: 'in_progress' }, { label: uiText("Proses selesai"), value: props.summary.completed, icon: 'task_alt', status: 'done' }])
 const typeOptions = [{ value: '', label: uiText("Semua tipe") }, { value: 'ticket', label: 'Ticket' }, { value: 'task', label: 'Task' }]
 const statusOptions = [{ value: '', label: uiText("Semua tahap") }, ...['new','in_progress','confirmation','revision','done','on_hold','cancelled'].map(value => ({ value, label: value.replaceAll('_',' ').replace(/\b\w/g, c => c.toUpperCase()) }))]
@@ -102,9 +87,6 @@ watch(() => [page.props.flash?.success, page.props.flash?.error], ([success, err
 const applyFilters = () => { loading.value = true; router.get(resolveRoute('workflows.index'), { search: search.value || undefined, type: type.value || undefined, status: status.value || undefined }, { preserveState: true, replace: true, onFinish: () => { loading.value = false } }) }
 watch(() => props.filters, value => { search.value = value.search || ''; type.value = value.type || ''; status.value = value.status || '' })
 const filterStage = value => { status.value = status.value === value ? '' : value; applyFilters() }
-const confirmToggle = item => { confirmation.value = { title: item.workflow_active ? uiText("Nonaktifkan workflow?") : uiText("Aktifkan workflow?"), message: (uiText("Perubahan berlaku pada definisi ") + (item.workflow_name) + uiText(" tanpa menghapus Ticket atau Task terkait.")), method: 'patch', url: item.workflow_toggle_url } }
-const confirmDelete = item => { confirmation.value = { title: uiText("Hapus workflow?"), message: uiText("Workflow hanya dapat dihapus jika belum pernah digunakan. Data Ticket atau Task tidak akan dihapus."), method: 'delete', url: item.workflow_delete_url } }
-const runConfirmation = () => { processing.value = true; const options = { preserveScroll: true, onSuccess: () => { confirmation.value = null }, onFinish: () => { processing.value = false } }; confirmation.value.method === 'delete' ? router.delete(confirmation.value.url, options) : router.patch(confirmation.value.url, {}, options) }
 const formatDate = (value, time = true) => value ? new Intl.DateTimeFormat(uiLocale.value, time ? { dateStyle: 'medium', timeStyle: 'short' } : { dateStyle: 'medium' }).format(new Date(value)) : '—'
 </script>
 

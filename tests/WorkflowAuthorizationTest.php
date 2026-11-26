@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\PermissionRegistrar;
 
+uses(Tests\TestCase::class);
+
 beforeEach(function () {
     Artisan::call('migrate:fresh', [
         '--path' => [
@@ -41,6 +43,9 @@ beforeEach(function () {
         $table->string('sla')->nullable();
         $table->timestamp('due_at')->nullable();
         $table->timestamp('finish_at')->nullable();
+        $table->timestamp('worked_on_at')->nullable();
+        $table->timestamp('confirmation_at')->nullable();
+        $table->timestamp('completed_at')->nullable();
         $table->string('type')->default('incident');
         $table->string('status_id')->nullable();
         $table->string('status')->default('new');
@@ -496,6 +501,33 @@ test('related runtime actions enforce transitions scope and audit history', func
     ]), ['status' => 'confirmation'])->assertForbidden();
 });
 
+test('workflow rejection sends confirmation to revision and records the requester reason', function () {
+    Artisan::call('db:seed', ['--class' => WorkflowSeeder::class, '--force' => true]);
+    $requester = workflowUserWithRole('user');
+    $pic = workflowUserWithRole('user');
+    $ticket = Ticket::create([
+        'ticket_no' => 'TCK-REJECT',
+        'title' => 'Confirmation to review',
+        'status' => 'confirmation',
+        'requester_id' => $requester->id,
+        'assigned_id' => $pic->id,
+    ]);
+    $params = ['locale' => 'id', 'instance' => $ticket->ticket_no];
+    $statusUrl = route('workflows.instances.status', $params);
+
+    $this->actingAs($pic)->patchJson($statusUrl, ['rejection_reason' => 'Percobaan penolakan'])
+        ->assertForbidden();
+    $this->actingAs($requester)->patchJson($statusUrl, ['rejection_reason' => 'Perlu menghubungi unit lain.'])
+        ->assertOk();
+
+    expect($ticket->fresh()->status)->toBe('revision');
+    $history = $ticket->workflowInstances()->sole()->histories()->where('event', 'rejected')->sole();
+    expect($history->user_id)->toBe($requester->id)
+        ->and($history->metadata['reason'])->toBe('Perlu menghubungi unit lain.');
+    $this->withHeaders(workflowInertiaHeaders())->get(route('workflows.instances.show', $params))
+        ->assertOk()->assertJsonFragment(['reason' => 'Perlu menghubungi unit lain.']);
+});
+
 test('admin manages stages safely while users remain forbidden', function () {
     $admin = workflowUserWithRole('admin');
     $user = workflowUserWithRole('user');
@@ -741,7 +773,6 @@ test('workflow instance detail is accurate responsive data and role scoped', fun
         'description' => 'Detailed workflow runtime information.',
         'status' => 'new',
         'priority' => 'high',
-        'sla' => '1_day',
         'due_at' => $target,
         'requester_id' => $user->id,
         'assigned_id' => $user->id,
@@ -755,7 +786,7 @@ test('workflow instance detail is accurate responsive data and role scoped', fun
         ->assertJsonPath('props.item.number', 'TCK-DETAIL-001')
         ->assertJsonPath('props.item.title', 'Workflow detail accuracy')
         ->assertJsonPath('props.item.priority', 'high')
-        ->assertJsonPath('props.item.sla.label', '1_day')
+        ->assertJsonPath('props.item.sla.label', __('On Time'))
         ->assertJsonPath('props.item.sla.state', 'on_track')
         ->assertJsonPath('props.item.timeline.0.state', 'active')
         ->assertJsonPath('props.item.history.0.event', 'started')

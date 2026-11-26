@@ -8,7 +8,6 @@ use App\Models\Project as BaseProject;
  * @property int $id
  * @property string|null $uuid
  * @property string|null $project_no
- * @property int|null $ticket_id
  * @property string|null $status_id
  * @property string $title
  * @property string|null $description
@@ -32,7 +31,6 @@ use App\Models\Project as BaseProject;
  * @property-read int|null $pics_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ProjectRiskAnalysis> $risks
  * @property-read int|null $risks_count
- * @property-read \App\Models\Ticket|null $ticket
  * @property-read \App\Models\User|null $user
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Project newModelQuery()
@@ -49,7 +47,6 @@ use App\Models\Project as BaseProject;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Project whereStartDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Project whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Project whereStatusId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Project whereTicketId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Project whereTitle($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Project whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Project whereUuid($value)

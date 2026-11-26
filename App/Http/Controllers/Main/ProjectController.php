@@ -11,7 +11,6 @@ use App\Models\ProjectDeliverable;
 use App\Models\ProjectPic;
 use App\Models\ProjectRiskAnalysis;
 use App\Models\ProjectSubAction;
-use App\Models\Ticket;
 use App\Models\User;
 use App\Services\AttachmentService;
 use App\Services\ReportExportService;
@@ -63,15 +62,11 @@ class ProjectController extends Controller
 
         $projectsQuery = Project::query()
             ->select(['id', 'title', 'status', 'status_id', 'project_no', 'end_date', 'updated_at'])
-            ->with(['ticket:id,ticket_no,status'])
             ->whereIn('status', $statusScope);
 
         $projectsQuery = UnitVisibility::scopeProjects($projectsQuery, $actor);
 
-        $projects = $projectsQuery
-            ->orderByRaw("(SUBSTRING_INDEX(title,' ', -1) REGEXP '^[0-9]+$') DESC")
-            ->orderByRaw("CAST(SUBSTRING_INDEX(title,' ', -1) AS UNSIGNED) ASC")
-            ->orderBy('title')
+        $projects = $this->sortProjectList($projectsQuery)
             ->paginate($perPage)
             ->appends(['per_page' => $perPage])
             ->through(fn (Project $project) => $this->transformProjectSummary($project));
@@ -84,7 +79,6 @@ class ProjectController extends Controller
         ]);
     }
 
-    /** Report - Tampilkan project dengan pembedaan dari ticket vs mandiri */
     public function report(Request $request): Response
     {
         $rawStatus = $request->query('status');
@@ -109,8 +103,7 @@ class ProjectController extends Controller
 
         $actor = $request->user();
 
-        $ticketSummary = $this->projectReportSummary($queryFilters, true, $actor);
-        $standaloneSummary = $this->projectReportSummary($queryFilters, false, $actor);
+        $standaloneSummary = $this->projectReportSummary($queryFilters, $actor);
 
         $statusOptions = collect(WorkflowStatus::all())
             ->map(fn (string $status) => [
@@ -119,53 +112,12 @@ class ProjectController extends Controller
                 'badge' => WorkflowStatus::badgeClass($status),
             ])->values();
 
-        $projectsWithTicket = $this->projectReportPaginator($queryFilters, true, $request, $actor);
-        $projectsStandalone = $this->projectReportPaginator($queryFilters, false, $request, $actor);
-
-        if ($request->wantsJson()) {
-            return Inertia::render('Projects/Report', [
-                'filters' => [
-                    'q' => $formFilters['q'],
-                    'status' => $formFilters['status'],
-                    'from' => $formFilters['from'],
-                    'to' => $formFilters['to'],
-                ],
-                'statusOptions' => $statusOptions,
-                'ticketSummary' => $ticketSummary,
-                'standaloneSummary' => $standaloneSummary,
-                'ticketProjects' => $projectsWithTicket,
-                'standaloneProjects' => $projectsStandalone,
-            ]);
-        }
-
-        if ($request->inertia()) {
-            return Inertia::render('Projects/Report', [
-                'filters' => [
-                    'q' => $formFilters['q'],
-                    'status' => $formFilters['status'],
-                    'from' => $formFilters['from'],
-                    'to' => $formFilters['to'],
-                ],
-                'statusOptions' => $statusOptions,
-                'ticketSummary' => $ticketSummary,
-                'standaloneSummary' => $standaloneSummary,
-                'ticketProjects' => $projectsWithTicket,
-                'standaloneProjects' => $projectsStandalone,
-            ]);
-        }
-
-        return Inertia::render('Projects/Report', [
-            'filters' => [
-                'q' => $formFilters['q'],
-                'status' => $formFilters['status'],
-                'from' => $formFilters['from'],
-                'to' => $formFilters['to'],
-            ],
+        return Inertia::render('WorkItemReport', [
+            'kind' => 'project',
+            'filters' => $formFilters,
             'statusOptions' => $statusOptions,
-            'ticketSummary' => $ticketSummary,
-            'standaloneSummary' => $standaloneSummary,
-            'ticketProjects' => $projectsWithTicket,
-            'standaloneProjects' => $projectsStandalone,
+            'summary' => $standaloneSummary,
+            'items' => $this->projectReportPaginator($queryFilters, $request, $actor),
         ]);
     }
 
@@ -195,22 +147,14 @@ class ProjectController extends Controller
         ];
         $actor = $request->user();
 
-        $ticketProjects = $this->buildProjectReportQuery($queryFilters, true, true, $actor)->get();
-        $standaloneProjects = $this->buildProjectReportQuery($queryFilters, false, true, $actor)->get();
-
         $tz = config('app.timezone');
-        $rows = $ticketProjects
-            ->map(fn (Project $project) => $this->mapProjectForPdf($project, true, $tz))
-            ->merge($standaloneProjects->map(fn (Project $project) => $this->mapProjectForPdf($project, false, $tz)))
-            ->values()
-            ->toArray();
+        $rows = $this->buildProjectReportQuery($queryFilters, true, $actor)->get()
+            ->map(fn (Project $project) => $this->mapProjectForPdf($project, $tz))->all();
 
         $columns = [
             ['label' => 'Project No'],
             ['label' => __('Judul')],
             ['label' => 'Status'],
-            ['label' => __('Kategori')],
-            ['label' => 'Ticket No'],
             ['label' => __('Mulai')],
             ['label' => __('Selesai')],
             ['label' => __('Diperbarui')],
@@ -234,11 +178,6 @@ class ProjectController extends Controller
     {
         UnitVisibility::ensureProjectAccess($request->user(), $project);
         $project->load([
-            'ticket:id,ticket_no,title,status,due_at,due_date,assignee_id,requester_id',
-            'ticket.assignee:id,first_name,last_name,username,email',
-            'ticket.requester:id,first_name,last_name,username,email',
-            'ticket.assignedUsers:id,first_name,last_name,username,email',
-            'ticket.attachments:id,attachable_id,attachable_type,original_name,size',
             'pics.user:id,first_name,last_name,username,email',
             'actions.subactions',
             'costs',
@@ -252,12 +191,6 @@ class ProjectController extends Controller
         $description = strip_tags((string) ($detail['description'] ?? ''), '<p><br><strong><em><ul><ol><li><b><i><u>');
         if (trim(strip_tags($description)) === '') {
             $description = __('<p>Tidak ada deskripsi.</p>');
-        }
-
-        $ticket = $detail['ticket'] ?? null;
-        if ($ticket) {
-            $status = $ticket['status'] ?? null;
-            $ticket['status_label'] = $status ? WorkflowStatus::label($status) : null;
         }
 
         $actions = collect($detail['actions'] ?? [])->map(function (array $action) {
@@ -311,7 +244,6 @@ class ProjectController extends Controller
             'title' => $detail['title'] ?? 'Detail Project',
             'project' => $detail,
             'description' => $description,
-            'ticket' => $ticket,
             'timeline' => $detail['timeline'] ?? [],
             'pics' => $detail['pics'] ?? [],
             'actions' => $actions,
@@ -340,11 +272,6 @@ class ProjectController extends Controller
     {
         UnitVisibility::ensureProjectAccess($request->user(), $project);
         $project->load([
-            'ticket:id,ticket_no,title,due_at,due_date,status,agent_id,assigned_id',
-            'ticket.attachments:id,attachable_id,attachable_type,original_name,size,path',
-            'ticket.requester:id,first_name,last_name,username,email',
-            'ticket.assignee:id,first_name,last_name,username,email',
-            'ticket.assignedUsers:id,first_name,last_name,username,email',
             'pics.user:id,first_name,last_name,username,email',
             'actions.subactions',
             'costs',
@@ -368,8 +295,6 @@ class ProjectController extends Controller
     public function create(Request $request): Response
     {
         $viewer = $request->user();
-        $ticketCollection = $this->linkableTicketsForUser($viewer);
-        [$ticketOptions, $ticketUnits] = $this->prepareTicketOptions($ticketCollection);
 
         $users = $this->getUserOptions();
         $unitOptions = $this->unitOptionsForUser($users, $viewer);
@@ -393,7 +318,6 @@ class ProjectController extends Controller
             'status' => $defaultStatus,
             'status_label' => WorkflowStatus::label($defaultStatus),
             'status_id' => $defaultStatusId,
-            'ticket_id' => null,
             'description' => null,
             'start_date' => null,
             'end_date' => null,
@@ -418,7 +342,6 @@ class ProjectController extends Controller
         return Inertia::render('Projects/Create', [
             'project' => $projectPayload,
             'options' => [
-                'tickets' => $ticketOptions,
                 'users' => $users->map(fn ($user) => [
                     'id' => $user->id,
                     'label' => $user->label,
@@ -442,14 +365,12 @@ class ProjectController extends Controller
             'meta' => [
                 'mode' => 'create',
                 'backUrl' => $this->resolveBackUrl($request, routeLocale('projects.report')),
-                'canManageTicket' => $this->userCanManageTicket($viewer),
                 'submitUrl' => routeLocale('projects.store'),
                 'submitMethod' => 'post',
                 'statusGuide' => $this->statusGuidance(),
                 'lockStatus' => $statusLock,
                 'allowedStatuses' => $allowedStatuses,
                 'unitOptions' => $unitOptions,
-                'ticketUnits' => $ticketUnits,
             ],
         ]);
     }
@@ -487,7 +408,6 @@ class ProjectController extends Controller
 
         $projectStatusId = WorkflowStatus::code($workflowStatus);
 
-        $ticketId = $request->integer('ticket_id') ?: null;
 
         $projectData = [
             'title' => $validated['title'],
@@ -495,7 +415,6 @@ class ProjectController extends Controller
             'status' => $workflowStatus,
             'status_id' => $projectStatusId,
             'project_no' => $validated['project_no'] ?: $this->generateProjectNo(),
-            'ticket_id' => $ticketId,
             'start_date' => $this->parseDate($validated['start_date'] ?? data_get($validated, 'timeline.start')),
             'end_date' => $this->parseDate($validated['end_date'] ?? data_get($validated, 'timeline.end')),
             'created_by' => auth()->id(),
@@ -519,7 +438,6 @@ class ProjectController extends Controller
             return $project;
         });
 
-        $this->syncTicketStatusFromProject($project);
         $this->attachments->adoptFromServerIds($request->input('attachments'), $project);
 
         app(WorkItemNotifier::class)->notifyProjectCreated($project, Auth::user());
@@ -536,12 +454,6 @@ class ProjectController extends Controller
 
         UnitVisibility::ensureProjectAccess($request->user(), $project);
         $project->load([
-            'ticket:id,ticket_no,title,status,due_at,due_date,agent_id,assigned_id,requester_id',
-            'ticket.agent:id,first_name,last_name,username,email,unit',
-            'ticket.assignee:id,first_name,last_name,username,email,unit',
-            'ticket.assignedUsers:id,first_name,last_name,username,email,unit',
-            'ticket.requester:id,first_name,last_name,username,email,unit',
-            'ticket.attachments:id,attachable_id,attachable_type,original_name,size,path',
             'pics.user:id,first_name,last_name,username,email',
             'actions',
             'costs',
@@ -551,8 +463,6 @@ class ProjectController extends Controller
         ]);
 
         $viewer = $request->user();
-        $ticketCollection = $this->linkableTicketsForUser($viewer, $project->ticket);
-        [$ticketOptions, $ticketUnits] = $this->prepareTicketOptions($ticketCollection);
         $users = $this->getUserOptions();
         $unitOptions = $this->unitOptionsForUser($users, $viewer);
         $statuses = $this->orderedStatuses();
@@ -566,7 +476,6 @@ class ProjectController extends Controller
         $likelihoodOptions = ['rare', 'possible', 'likely', 'almost_certain'];
         $verifiedByOptions = ['identified', 'monitored', 'mitigated', 'occurred'];
 
-        $canManageTicket = $this->userCanManageTicket($viewer);
         $allowedStatuses = $this->allowedProjectStatuses($viewer, $project);
         $statusLock = empty($allowedStatuses);
         $tz = config('app.timezone');
@@ -580,34 +489,12 @@ class ProjectController extends Controller
             'status_label' => WorkflowStatus::label($status),
             'status_id' => $project->status_id,
             'status_badge' => WorkflowStatus::badgeClass($status),
-            'ticket_id' => $project->ticket_id,
             'description' => $project->description,
             'start_date' => $project->start_date ? $this->formatDate($project->start_date, 'd/m/Y', $tz) : null,
             'end_date' => $project->end_date ? $this->formatDate($project->end_date, 'd/m/Y', $tz) : null,
             'public_slug' => $project->public_slug,
             'agent_id' => $project->agent_id,
             'assigned_id' => $project->assigned_id,
-            'ticket' => $project->ticket ? [
-                'id' => $project->ticket->id,
-                'ticket_no' => $project->ticket->ticket_no,
-                'title' => $project->ticket->title,
-                'status' => $this->normalizeStatus($project->ticket->status ?? null),
-                'status_label' => WorkflowStatus::label($this->normalizeStatus($project->ticket->status ?? null)),
-                'due_at' => $this->formatDate($project->ticket->due_at ?? $project->ticket->due_date, 'd/m/Y H:i', $tz),
-                'agent_id' => $project->ticket->agent_id,
-                'assigned_id' => $project->ticket->assigned_id,
-                'assigned_ids' => $project->ticket->assignedUsers->pluck('id')->all(),
-                'requester' => $project->ticket->requester ? [
-                    'id' => $project->ticket->requester->id,
-                    'name' => $this->userDisplayName($project->ticket->requester),
-                    'email' => $project->ticket->requester->email,
-                ] : null,
-                'attachments' => $this->mapTicketAttachments($project->ticket),
-            ] : null,
-            'ticket_attachments' => $this->mapTicketAttachments($project->ticket),
-            'ticket_attachment_count' => $project->ticket
-                ? ($project->ticket->attachments_count ?? $project->ticket->attachments?->count() ?? 0)
-                : 0,
             'pics' => $project->pics->map(function (ProjectPic $pic) {
                 $fullName = trim(implode(' ', array_filter([
                     $pic->user?->first_name,
@@ -676,7 +563,6 @@ class ProjectController extends Controller
         return Inertia::render('Projects/Edit', [
             'project' => $projectPayload,
             'options' => [
-                'tickets' => $ticketOptions,
                 'users' => $users->map(fn ($user) => [
                     'id' => $user->id,
                     'label' => $user->label,
@@ -700,144 +586,14 @@ class ProjectController extends Controller
             'meta' => [
                 'mode' => 'edit',
                 'backUrl' => $backUrl,
-                'canManageTicket' => $canManageTicket,
                 'submitUrl' => route('projects.update', ['locale' => app()->getLocale(), 'project' => $project->id]),
                 'submitMethod' => 'put',
                 'statusGuide' => $this->statusGuidance(),
                 'lockStatus' => $statusLock,
                 'allowedStatuses' => $allowedStatuses,
                 'unitOptions' => $unitOptions,
-                'ticketUnits' => $ticketUnits,
             ],
         ]);
-    }
-
-    /**
-     * Tickets yang bisa dilink-kan ke project (mirip create task).
-     *
-     * @return Collection<int, Ticket>
-     */
-    private function linkableTicketsForUser(?User $viewer, ?Ticket $context = null): Collection
-    {
-        $requesterColumns = $this->requesterSelectColumns();
-        $attachmentColumns = ['id', 'attachable_id', 'attachable_type', 'original_name', 'size', 'path'];
-
-        $query = Ticket::query()
-            ->with([
-                'requester:'.implode(',', $requesterColumns),
-                'attachments:'.implode(',', $attachmentColumns),
-            ])
-            ->withCount('attachments')
-            ->select(['id', 'ticket_no', 'title', 'status', 'requester_id', 'created_at'])
-            ->whereIn('status', $this->linkableTicketStatuses())
-            ->latest('id')
-            ->limit(200);
-
-        /** @var Collection<int, Ticket> $tickets */
-        $tickets = $this->filterTicketsByViewerUnit($query->get(), $viewer);
-
-        if ($context) {
-            $context->loadMissing([
-                'requester:'.implode(',', $requesterColumns),
-                'attachments:'.implode(',', $attachmentColumns),
-            ]);
-            if ($tickets->where('id', $context->id)->isEmpty()) {
-                /** @var Collection<int, Ticket> $tickets */
-                $tickets = $tickets->concat([$context]);
-            }
-        }
-
-        /** @var Collection<int, Ticket> $tickets */
-        return $tickets->values();
-    }
-
-    private function linkableTicketStatuses(): array
-    {
-        return [
-            WorkflowStatus::NEW,
-            WorkflowStatus::IN_PROGRESS,
-            WorkflowStatus::CONFIRMATION,
-            WorkflowStatus::REVISION,
-            WorkflowStatus::ON_HOLD,
-        ];
-    }
-
-    /**
-     * @param Collection<int, Ticket> $tickets
-     * @return array{0: array<int, array<string, mixed>>, 1: array<int, string>}
-     */
-    private function prepareTicketOptions(Collection $tickets): array
-    {
-        $options = $tickets
-            ->map(fn (Ticket $ticket) => $this->ticketOptionPayload($ticket))
-            ->values();
-
-        $units = $options
-            ->pluck('unit')
-            ->filter(fn ($value) => is_string($value) && trim($value) !== '')
-            ->unique()
-            ->values()
-            ->all();
-
-        return [$options->all(), $units];
-    }
-
-    private function ticketOptionPayload(Ticket $ticket): array
-    {
-        $status = $this->normalizeStatus($ticket->status ?? null);
-        $unit = $ticket->requester?->unit ?? null;
-        $label = trim(($ticket->ticket_no ?? ('Ticket #'.$ticket->id)).' — '.($ticket->title ?? ''));
-        $attachmentCount = (int) ($ticket->attachments_count
-            ?? ($ticket->relationLoaded('attachments') ? $ticket->attachments->count() : 0));
-        $attachments = [];
-
-        if ($ticket->relationLoaded('attachments')) {
-            $attachments = $ticket->attachments
-                ->map(function ($attachment) {
-                    return [
-                        'id' => $attachment->id,
-                        'name' => $attachment->original_name ?? __('Lampiran ticket'),
-                        'size' => $attachment->size,
-                        'view_url' => $this->attachmentRoute('attachments.view', $attachment),
-                        'download_url' => $this->attachmentRoute('attachments.download', $attachment),
-                    ];
-                })
-                ->values()
-                ->all();
-        }
-
-        return [
-            'id' => $ticket->id,
-            'ticket_no' => $ticket->ticket_no,
-            'title' => $ticket->title,
-            'status' => $status,
-            'status_label' => WorkflowStatus::label($status),
-            'status_badge' => WorkflowStatus::badgeClass($status),
-            'unit' => $unit,
-            'requester' => $this->userDisplayName($ticket->requester ?? null),
-            'label' => $label,
-            'attachments_count' => $attachmentCount,
-            'attachments' => $attachments,
-        ];
-    }
-
-    /**
-     * @param Collection<int, Ticket> $tickets
-     * @return Collection<int, Ticket>
-     */
-    private function filterTicketsByViewerUnit(Collection $tickets, ?User $viewer): Collection
-    {
-        // Tampilkan semua tiket agar pilihan unit lengkap seperti di create task
-        /** @var Collection<int, Ticket> $tickets */
-        return $tickets->values();
-    }
-
-    private function ticketRelatesToUser(Ticket $ticket, ?User $viewer): bool
-    {
-        if (! $viewer) {
-            return false;
-        }
-        return (int) $ticket->requester_id === (int) $viewer->id;
     }
 
     private function viewerCanAccessAllUnits(?User $viewer): bool
@@ -877,8 +633,6 @@ class ProjectController extends Controller
 
         $workflowStatus = WorkflowStatus::normalize($validated['status']);
 
-        $ticketId = $request->integer('ticket_id');
-        $ticketId = $ticketId > 0 ? $ticketId : null;
 
         if ($planningProvided && $hasPlanningColumn) {
             $planningRows = $this->normalizePlanning($planningPayload);
@@ -903,7 +657,6 @@ class ProjectController extends Controller
             'status' => $workflowStatus,
             'status_id' => $projectStatusId,
             'project_no' => $validated['project_no'],
-            'ticket_id' => $ticketId ?? $project->ticket_id,
             'start_date' => $this->parseDate($startRaw),
             'end_date' => $this->parseDate($endRaw),
             'agent_id' => $team['agent_id'],
@@ -924,7 +677,6 @@ class ProjectController extends Controller
         });
 
         $project->refresh();
-        $this->syncTicketStatusFromProject($project);
         $this->attachments->adoptFromServerIds($request->input('attachments'), $project);
 
         if ($currentStatus !== WorkflowStatus::CANCELLED && $workflowStatus === WorkflowStatus::CANCELLED) {
@@ -938,11 +690,9 @@ class ProjectController extends Controller
     public function destroy(Request $request, string $locale, Project $project): RedirectResponse
     {
         UnitVisibility::ensureProjectAccess($request->user(), $project);
-        $ticketId = $project->ticket_id;
 
         DB::transaction(function () use ($project) {
             $project->delete();
-            // (opsional) di sini bisa panggil logika recompute status ticket kalau diinginkan
         });
 
         return $this->redirectBackTo($request, 'projects.on-progress')
@@ -982,7 +732,6 @@ class ProjectController extends Controller
             'description' => ['nullable', 'string'],
             'status' => ['required', Rule::in($workflowStatuses)],
             'project_no' => $projectNoRule,
-            'ticket_id' => ['nullable', 'integer', 'exists:tickets,id'],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'requester_id' => ['nullable', 'integer', 'exists:users,id'],
@@ -1208,24 +957,6 @@ class ProjectController extends Controller
         return WorkflowStatus::DONE;
     }
 
-    /** Sinkronkan status Ticket dari Project yang terkait. */
-    private function syncTicketStatusFromProject(Project $project): void
-    {
-        if (! $project->ticket_id) {
-            return;
-        }
-
-        $status = WorkflowStatus::normalize($project->status);
-        if (! in_array($status, WorkflowStatus::all(), true)) {
-            $status = WorkflowStatus::default();
-        }
-
-        Ticket::where('id', $project->ticket_id)->update([
-            'status' => $status,
-            'status_id' => WorkflowStatus::code($status),
-        ]);
-    }
-
     private function ensurePicPresence(array $entries): void
     {
         if ($this->countPicMembers($entries) === 0) {
@@ -1332,12 +1063,6 @@ class ProjectController extends Controller
             'due_display' => $this->formatDate($project->end_date, 'd/m/Y', $tz),
             'updated_diff' => $project->updated_at?->diffForHumans() ?? '—',
             'links' => $this->buildProjectLinks($project),
-            'ticket' => $project->relationLoaded('ticket') && $project->ticket
-                ? [
-                    'ticket_no' => $project->ticket->ticket_no,
-                    'status' => $this->normalizeStatus($project->ticket->status ?? null),
-                ]
-                : null,
         ];
     }
 
@@ -1354,33 +1079,6 @@ class ProjectController extends Controller
     {
         $tz = config('app.timezone');
         $status = $this->normalizeStatus($project->status ?? null);
-
-        $ticket = null;
-        if ($project->relationLoaded('ticket') && $project->ticket) {
-            $ticket = [
-                'id' => $project->ticket->id,
-                'title' => $project->ticket->title,
-                'ticket_no' => $project->ticket->ticket_no,
-                'status' => $this->normalizeStatus($project->ticket->status ?? null),
-                'due_display' => $this->formatDate($project->ticket->due_at ?? $project->ticket->due_date, 'd/m/Y', $tz),
-                'assignee' => $project->ticket->assignee ? [
-                    'id' => $project->ticket->assignee->id,
-                    'name' => $this->userDisplayName($project->ticket->assignee),
-                ] : null,
-                'requester' => $project->ticket->requester ? [
-                    'id' => $project->ticket->requester->id,
-                    'name' => $this->userDisplayName($project->ticket->requester),
-                    'email' => $project->ticket->requester->email,
-                ] : null,
-                'assigned' => $project->ticket->relationLoaded('assignedUsers')
-                    ? $project->ticket->assignedUsers->map(fn ($user) => [
-                        'id' => $user->id,
-                        'name' => $this->userDisplayName($user),
-                    ])->values()->all()
-                    : [],
-                'attachments' => $this->mapTicketAttachments($project->ticket),
-            ];
-        }
 
         $teamMembers = $project->relationLoaded('pics')
             ? $project->pics->map(function (ProjectPic $pic) {
@@ -1469,56 +1167,6 @@ class ProjectController extends Controller
                 'download_url' => $this->attachmentRoute('attachments.download', $attachment),
             ])->values()->all()
             : [];
-        $ticketAttachments = $this->mapTicketAttachments($project->ticket);
-
-        $relatedProjects = [];
-        if ($project->ticket_id) {
-            $viewer = Auth::user();
-            $currentProjectId = $project->id;
-            $relatedQuery = Project::query()
-                ->select([
-                    'id',
-                    'public_slug',
-                    'title',
-                    'project_no',
-                    'status',
-                    'status_id',
-                    'start_date',
-                    'end_date',
-                    'created_at',
-                    'updated_at',
-                    'ticket_id',
-                ])
-                ->where('ticket_id', $project->ticket_id)
-                ->orderBy('created_at')
-                ->orderBy('id');
-
-            $relatedQuery = UnitVisibility::scopeProjects($relatedQuery, $viewer);
-
-            $relatedProjects = $relatedQuery->get()
-                ->map(function (Project $related) use ($tz, $currentProjectId) {
-                    $relatedStatus = $this->normalizeStatus($related->status ?? null);
-
-                    return [
-                        'id' => $related->id,
-                        'title' => $related->title,
-                        'project_no' => $related->project_no,
-                        'is_current' => (int) $related->id === (int) $currentProjectId,
-                        'status' => $relatedStatus,
-                        'status_label' => WorkflowStatus::label($relatedStatus),
-                        'status_badge' => WorkflowStatus::badgeClass($relatedStatus),
-                        'due_display' => $this->formatDate($related->end_date, 'd/m/Y', $tz),
-                        'updated_display' => $this->formatDate($related->updated_at, 'd M Y H:i', $tz),
-                        'links' => [
-                            'show' => route('projects.show', ['locale' => app()->getLocale(), 'project' => $related->public_slug ?? $related->id]),
-                            'edit' => route('projects.edit', ['locale' => app()->getLocale(), 'project' => $related->public_slug ?? $related->id]),
-                        ],
-                    ];
-                })
-                ->values()
-                ->all();
-        }
-
         return [
             'id' => $project->id,
             'slug' => $project->public_slug,
@@ -1534,7 +1182,6 @@ class ProjectController extends Controller
                 'created' => $this->formatDate($project->created_at, 'd M Y H:i', $tz),
                 'updated' => $this->formatDate($project->updated_at, 'd M Y H:i', $tz),
             ],
-            'ticket' => $ticket,
             'team' => [
                 'agents' => $teamMembers->where('role_type', 'agent')->values()->all(),
                 'pics' => $teamMembers->where('role_type', 'pic')->values()->all(),
@@ -1545,8 +1192,6 @@ class ProjectController extends Controller
             'risks' => $risks,
             'deliverables' => $deliverables,
             'attachments' => $attachments,
-            'ticket_attachments' => $ticketAttachments,
-            'related_projects' => $relatedProjects,
             'links' => array_merge(
                 $this->buildProjectLinks($project),
                 ['pdf' => route('projects.report.detail', ['locale' => app()->getLocale(), 'project' => $project->id])]
@@ -1554,86 +1199,31 @@ class ProjectController extends Controller
         ];
     }
 
-    private function projectReportSummary(array $filters, bool $withTicket, ?User $viewer = null): array
+    private function projectReportSummary(array $filters, ?User $viewer = null): array
     {
-        $query = $this->baseProjectReportQuery($filters, $withTicket, $viewer);
-
-        if ($withTicket) {
-            $total = $this->countProjectTicketGroups(clone $query);
-        } else {
-            $total = (clone $query)->count();
-        }
-
-        $inProgress = $this->countProjectSummaryByStatus(
-            clone $query,
-            WorkflowStatus::equivalents(WorkflowStatus::IN_PROGRESS),
-            $withTicket
-        );
-
-        $done = $this->countProjectSummaryByStatus(
-            clone $query,
-            WorkflowStatus::equivalents(WorkflowStatus::DONE),
-            $withTicket
-        );
+        $query = $this->baseProjectReportQuery($filters, $viewer);
 
         return [
-            'total' => $total,
-            'in_progress' => $inProgress,
-            'done' => $done,
+            'total' => (clone $query)->count(),
+            'in_progress' => (clone $query)->whereIn('status', WorkflowStatus::equivalents(WorkflowStatus::IN_PROGRESS))->count(),
+            'done' => (clone $query)->whereIn('status', WorkflowStatus::equivalents(WorkflowStatus::DONE))->count(),
         ];
     }
 
-    private function mapTicketAttachments(?Ticket $ticket): array
+    private function projectReportPaginator(array $filters, Request $request, ?User $viewer = null)
     {
-        if (! $ticket || ! $ticket->relationLoaded('attachments')) {
-            return [];
-        }
+        $perPage = min(max($request->integer('per_page', 15), 5), 50);
 
-        return $ticket->attachments
-            ->map(fn ($attachment) => [
-                'id' => $attachment->id,
-                'name' => $attachment->original_name,
-                'size' => $attachment->size,
-                'view_url' => $this->attachmentRoute('attachments.view', $attachment),
-                'download_url' => $this->attachmentRoute('attachments.download', $attachment),
-            ])
-            ->values()
-            ->all();
-    }
-
-    private function projectReportPaginator(array $filters, bool $withTicket, Request $request, ?User $viewer = null)
-    {
-        $perPage = (int) $request->integer($withTicket ? 'ticket_per_page' : 'standalone_per_page', 15);
-        $perPage = min(max($perPage, 5), 50);
-
-        $pageName = $withTicket ? 'ticket_page' : 'standalone_page';
-        if ($withTicket) {
-            $baseQuery = $this->baseProjectReportQuery($filters, true, $viewer);
-            $detailedQuery = $this->buildProjectReportQuery($filters, true, true, $viewer);
-
-            return $this->paginateTicketProjectGroups(
-                $baseQuery,
-                $detailedQuery,
-                $perPage,
-                $pageName,
-                $filters
-            );
-        }
-
-        $query = $this->buildProjectReportQuery($filters, false, true, $viewer);
-
-        return $query
-            ->paginate($perPage, ['*'], $pageName)
-            ->appends($this->reportQueryParams($filters, $withTicket))
+        return $this->buildProjectReportQuery($filters, true, $viewer)
+            ->paginate($perPage)->appends($this->reportQueryParams($filters))
             ->through(fn (Project $project) => $this->transformProjectReportRow($project));
     }
 
-    private function baseProjectReportQuery(array $filters, bool $withTicket, ?User $viewer = null): Builder
+    private function baseProjectReportQuery(array $filters, ?User $viewer = null): Builder
     {
         $query = Project::query();
         $query = UnitVisibility::scopeProjects($query, $viewer);
 
-        $query->when($withTicket, fn ($q) => $q->whereNotNull('ticket_id'), fn ($q) => $q->whereNull('ticket_id'));
 
         if (! empty($filters['q'])) {
             $search = $filters['q'];
@@ -1645,11 +1235,7 @@ class ProjectController extends Controller
         }
 
         if (! empty($filters['status'])) {
-            if ($withTicket) {
-                $query->whereHas('ticket', fn ($t) => $t->where('status', $filters['status']));
-            } else {
-                $query->where('status', $filters['status']);
-            }
+            $query->whereIn('status', WorkflowStatus::equivalents($filters['status']));
         }
 
         if (! empty($filters['from'])) {
@@ -1663,16 +1249,16 @@ class ProjectController extends Controller
         return $query;
     }
 
-    private function buildProjectReportQuery(array $filters, bool $withTicket, bool $withRelations = false, ?User $viewer = null): Builder
+    private function buildProjectReportQuery(array $filters, bool $withRelations = false, ?User $viewer = null): Builder
     {
-        $query = $this->baseProjectReportQuery($filters, $withTicket, $viewer)
+        $query = $this->baseProjectReportQuery($filters, $viewer)
             ->select([
                 'id',
                 'title',
                 'project_no',
                 'status',
                 'status_id',
-                'ticket_id',
+                'public_slug',
                 'description',
                 'planning',
                 'start_date',
@@ -1687,105 +1273,22 @@ class ProjectController extends Controller
             $userColumnList = implode(',', $userMeta['selectable']);
 
             $query->with([
-                'ticket:id,ticket_no,status,due_at,due_date,requester_id,agent_id,assigned_id',
-                'ticket.requester:'.$userColumnList,
-                'ticket.agent:'.$userColumnList,
-                'ticket.assignee:'.$userColumnList,
-                'ticket.assignedUsers:'.$userColumnList,
-                'ticket.attachments:id,attachable_id,attachable_type,original_name,size,path',
                 'attachments:id,attachable_id,attachable_type,original_name,size,path',
                 'user' => fn ($userQuery) => $userQuery->select($userMeta['selectable']),
             ]);
         }
 
-        return $query
-            ->orderByRaw("(SUBSTRING_INDEX(title,' ', -1) REGEXP '^[0-9]+$') DESC")
-            ->orderByRaw("CAST(SUBSTRING_INDEX(title,' ', -1) AS UNSIGNED) ASC")
-            ->orderBy('title');
+        return $this->sortProjectList($query);
     }
 
-    private function paginateTicketProjectGroups(
-        Builder $baseQuery,
-        Builder $detailedQuery,
-        int $perPage,
-        string $pageName,
-        array $filters
-    ) {
-        $groupQuery = (clone $baseQuery)
-            ->selectRaw('ticket_id, MAX(updated_at) as latest_updated_at')
-            ->groupBy('ticket_id')
-            ->orderByDesc('latest_updated_at');
-
-        $paginator = $groupQuery
-            ->paginate($perPage, ['ticket_id', 'latest_updated_at'], $pageName)
-            ->appends($this->reportQueryParams($filters, true));
-
-        $ticketIds = collect($paginator->items())
-            ->pluck('ticket_id')
-            ->filter()
-            ->all();
-
-        if (empty($ticketIds)) {
-            $paginator->setCollection(collect());
-
-            return $paginator;
-        }
-
-        $projects = (clone $detailedQuery)
-            ->whereIn('ticket_id', $ticketIds)
-            ->orderBy('ticket_id')
-            ->orderByDesc('updated_at')
-            ->get()
-            ->groupBy('ticket_id')
-            ->map(function (Collection $rows) {
-                $items = $rows
-                    ->map(fn (Project $project) => $this->transformProjectReportRow($project))
-                    ->values();
-
-                $primary = $items->first();
-                $children = $items->slice(1)->values()->all();
-
-                return [
-                    'ticket' => $primary['ticket'] ?? null,
-                    'primary' => $primary,
-                    'children' => $children,
-                ];
-            });
-
-        $ordered = collect($ticketIds)
-            ->map(fn ($ticketId) => $projects->get($ticketId))
-            ->filter()
-            ->values();
-
-        return tap($paginator, fn ($p) => $p->setCollection($ordered));
-    }
-
-    private function countProjectTicketGroups(Builder $query): int
+    private function sortProjectList(Builder $query): Builder
     {
-        return (int) (clone $query)
-            ->whereNotNull('ticket_id')
-            ->distinct('ticket_id')
-            ->count('ticket_id');
-    }
-
-    private function countProjectSummaryByStatus(Builder $query, array $statuses, bool $withTicket): int
-    {
-        if (empty($statuses)) {
-            return 0;
+        if (in_array($query->getConnection()->getDriverName(), ['mysql', 'mariadb'], true)) {
+            $query->orderByRaw("(SUBSTRING_INDEX(title,' ', -1) REGEXP '^[0-9]+$') DESC")
+                ->orderByRaw("CAST(SUBSTRING_INDEX(title,' ', -1) AS UNSIGNED) ASC");
         }
 
-        if ($withTicket) {
-            return (clone $query)
-                ->whereNotNull('ticket_id')
-                ->whereHas('ticket', fn ($ticket) => $ticket->whereIn('status', $statuses))
-                ->distinct('ticket_id')
-                ->count('ticket_id');
-        }
-
-        return (clone $query)
-            ->whereNull('ticket_id')
-            ->whereIn('status', $statuses)
-            ->count();
+        return $query->orderBy('title')->orderBy('id');
     }
 
     private function transformProjectReportRow(Project $project): array
@@ -1793,57 +1296,21 @@ class ProjectController extends Controller
         $status = $this->normalizeStatus($project->status ?? null);
         $tz = config('app.timezone');
 
-        $ticketInfo = null;
-        $ticketStatus = null;
-        if ($project->relationLoaded('ticket') && $project->ticket) {
-            $ticketStatus = $this->normalizeStatus($project->ticket->status ?? null);
-            $displayStatus = $ticketStatus ?? $status;
-
-            $ticketInfo = [
-                'id' => $project->ticket->id,
-                'ticket_no' => $project->ticket->ticket_no,
-                'status' => $ticketStatus,
-                'status_label' => WorkflowStatus::label($ticketStatus),
-                'status_badge' => WorkflowStatus::badgeClass($ticketStatus),
-                'requester' => $project->ticket->relationLoaded('requester') && $project->ticket->requester
-                    ? [
-                        'id' => $project->ticket->requester->id,
-                        'name' => $this->userDisplayName($project->ticket->requester),
-                        'email' => $project->ticket->requester->email,
-                    ]
-                    : null,
-                'attachments' => $project->ticket->relationLoaded('attachments')
-                    ? $project->ticket->attachments->map(fn ($attachment) => [
-                        'id' => $attachment->id,
-                        'name' => $attachment->original_name,
-                        'size' => $attachment->size,
-                        'view_url' => $this->attachmentRoute('attachments.view', $attachment),
-                        'download_url' => $this->attachmentRoute('attachments.download', $attachment),
-                    ])->values()->all()
-                    : [],
-            ];
-        }
-
         return [
             'id' => $project->id,
             'title' => $project->title,
             'project_no' => $project->project_no,
-            'status' => $ticketStatus ?? $status,
-            'status_label' => WorkflowStatus::label($ticketStatus ?? $status),
-            'status_badge' => WorkflowStatus::badgeClass($ticketStatus ?? $status),
-            'status_ticket' => $ticketStatus,
-            'status_ticket_label' => $ticketStatus ? WorkflowStatus::label($ticketStatus) : null,
-            'status_ticket_badge' => $ticketStatus ? WorkflowStatus::badgeClass($ticketStatus) : null,
+            'status' => $status,
+            'status_label' => WorkflowStatus::label($status),
+            'status_badge' => WorkflowStatus::badgeClass($status),
             'status_project' => $status,
             'status_project_label' => WorkflowStatus::label($status),
             'status_project_badge' => WorkflowStatus::badgeClass($status),
             'status_id' => $project->status_id,
-            'due_display' => $this->formatDate($project->end_date ?? optional($project->ticket)->due_at, 'd/m/Y', $tz),
+            'due_display' => $this->formatDate($project->end_date, 'd/m/Y', $tz),
             'created_display' => $this->formatDate($project->created_at, 'd M Y H:i', $tz),
             'updated_display' => $this->formatDate($project->updated_at, 'd M Y H:i', $tz),
             'start_display' => $this->formatDate($project->start_date, 'd/m/Y', $tz),
-            'type_label' => $project->ticket_id ? 'Berbasis Ticket' : 'Mandiri',
-            'ticket' => $ticketInfo,
             'description' => $project->description,
             'planning' => $project->planning,
             'attachments' => $project->relationLoaded('attachments')
@@ -1861,18 +1328,11 @@ class ProjectController extends Controller
                     'name' => $this->userDisplayName($project->user),
                 ]
                 : null,
-            'links' => array_merge(
-                $this->buildProjectLinks($project),
-                [
-                    'ticket' => $project->ticket
-                        ? route('tickets.show', ['locale' => app()->getLocale(), 'ticket' => $project->ticket->id])
-                        : null,
-                ]
-            ),
+            'links' => $this->buildProjectLinks($project),
         ];
     }
 
-    private function reportQueryParams(array $filters, bool $withTicket): array
+    private function reportQueryParams(array $filters): array
     {
         return array_filter([
             'q' => $filters['q'] ?? null,
@@ -1925,19 +1385,17 @@ class ProjectController extends Controller
         return WorkflowStatus::normalize($status ?? WorkflowStatus::NEW);
     }
 
-    private function mapProjectForPdf(Project $project, bool $withTicket, string $tz): array
+    private function mapProjectForPdf(Project $project, string $tz): array
     {
         $status = $this->normalizeStatus($project->status ?? null);
 
         $startDate = $this->formatDate($project->start_date, 'd M Y', $tz);
-        $endSource = $project->end_date ?? optional($project->ticket)->due_at ?? optional($project->ticket)->due_date;
+        $endSource = $project->end_date;
 
         return [
             $project->project_no ?? '—',
             $project->title ?? '—',
             WorkflowStatus::label($status),
-            $withTicket ? 'Berbasis Ticket' : 'Mandiri',
-            $withTicket && $project->ticket ? ($project->ticket->ticket_no ?? '—') : '—',
             $startDate,
             $this->formatDate($endSource, 'd M Y', $tz),
             $this->formatDate($project->updated_at, 'd M Y H:i', $tz),
@@ -2017,37 +1475,6 @@ class ProjectController extends Controller
     private function generateProjectNo(): string
     {
         return Project::nextNumber();
-    }
-
-    private function userCanManageTicket($user): bool
-    {
-        if (! $user) {
-            return false;
-        }
-
-        $allowed = ['super-admin', 'superadmin', 'super admin', 'admin'];
-
-        try {
-            if (method_exists($user, 'hasAnyRole') && $user->hasAnyRole($allowed)) {
-                return true;
-            }
-
-            if (! method_exists($user, 'getRoleNames')) {
-                return false;
-            }
-
-            $roles = collect($user->getRoleNames() ?? [])->map(fn ($name) => Str::lower($name))->all();
-        } catch (\Throwable $e) {
-            return false;
-        }
-
-        foreach ($roles as $role) {
-            if (in_array(Str::lower($role), $allowed, true)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private function resolveBackUrl(Request $request, string $fallback): string

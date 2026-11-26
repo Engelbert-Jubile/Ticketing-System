@@ -8,6 +8,11 @@ Schedule::command('notifications:prune-read --days=7')->dailyAt('01:30')->withou
 Schedule::command('attachments:cleanup-tmp --hours='.max(1, (int) env('TMP_UPLOAD_RETENTION_HOURS', 24)))->hourly()->withoutOverlapping();
 Schedule::command('reminders:send')->dailyAt('08:00')->withoutOverlapping();
 Schedule::command('deadlines:notify')->everyFifteenMinutes()->withoutOverlapping();
+Schedule::command('tickets:close-expired')->everyMinute()->withoutOverlapping();
+
+Artisan::command('tickets:close-expired', function (\App\Services\TicketLifecycle $lifecycle) {
+    $this->info('Tickets closed: '.$lifecycle->closeExpired());
+})->purpose('Complete tickets after the deadline or confirmation window');
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());

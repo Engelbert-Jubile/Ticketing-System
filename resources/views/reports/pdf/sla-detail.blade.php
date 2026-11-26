@@ -30,9 +30,6 @@
     @include('reports.pdf.brand')
 @php
     $primary = $summary;
-    if ($type === 'ticket_work') {
-        $primary = $summary['ticket'] ?? [];
-    }
     $sla = $primary['sla'] ?? null;
 @endphp
 
@@ -120,58 +117,10 @@
             </ul>
         @endif
 
-        @if(!empty($detail['project']))
-            <h2>Project Terkait</h2>
-            <div class="grid">
-                <div class="card">
-                    <p class="label">Project</p>
-                    <p class="value">{{ $detail['project']['number'] ?? '—' }} · {{ $detail['project']['title'] ?? '—' }}</p>
-                </div>
-                <div class="card">
-                    <p class="label">Status</p>
-                    <p class="value">{{ $detail['project']['status'] ?? '—' }}</p>
-                </div>
-            </div>
-        @endif
-
-        @if(!empty($detail['tasks']))
-            <h2>Daftar Task</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Task</th>
-                        <th>Status</th>
-                        <th>Assignee</th>
-                        <th>Deadline</th>
-                        <th>SLA</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($detail['tasks'] as $task)
-                        <tr>
-                            <td>{{ $task['number'] ?? '—' }}</td>
-                            <td>{{ $task['status'] ?? '—' }}</td>
-                            <td>{{ $task['assignee'] ?? '—' }}</td>
-                            <td>{{ data_get($task, 'deadline.display', '—') }}</td>
-                            <td>{{ $task['sla']['label'] ?? '—' }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        @endif
     @endif
 
     @if($type === 'task')
-        <h2>Relasi</h2>
         <div class="grid">
-            <div class="card">
-                <p class="label">Ticket</p>
-                <p class="value">{{ $detail['ticket']['number'] ?? '—' }} · {{ $detail['ticket']['title'] ?? '—' }}</p>
-            </div>
-            <div class="card">
-                <p class="label">Project</p>
-                <p class="value">{{ $detail['project']['number'] ?? '—' }} · {{ $detail['project']['title'] ?? '—' }}</p>
-            </div>
             <div class="card">
                 <p class="label">Assignee</p>
                 <p class="value">{{ $summary['assignee'] ?? '—' }}</p>
@@ -180,71 +129,10 @@
     @endif
 
     @if($type === 'project')
-        <h2>Ticket Terkait</h2>
         <div class="card">
-            <p class="label">Ticket</p>
-            <p class="value">{{ $detail['ticket']['number'] ?? '—' }} · {{ $detail['ticket']['title'] ?? '—' }}</p>
-            <p class="muted">SLA Ticket: {{ $detail['ticket']['sla']['label'] ?? '—' }}</p>
+            <p class="label">Owner</p>
+            <p class="value">{{ $summary['owner'] ?? '—' }}</p>
         </div>
-    @endif
-
-    @if($type === 'ticket_work')
-        @php
-            $ticket = $summary['ticket'] ?? [];
-            $tasks = $summary['tasks']['items'] ?? [];
-            $project = $summary['project'] ?? null;
-        @endphp
-        <h2>Detail Ticket</h2>
-        <div class="grid">
-            <div class="card">
-                <p class="label">Nomor</p>
-                <p class="value">{{ $ticket['number'] ?? '—' }}</p>
-            </div>
-            <div class="card">
-                <p class="label">Assignee</p>
-                <p class="value">{{ $ticket['assignee'] ?? '—' }}</p>
-            </div>
-        </div>
-
-        @if(!empty($tasks))
-            <h2>Task Terkait</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Task</th>
-                        <th>Status</th>
-                        <th>Assignee</th>
-                        <th>Deadline</th>
-                        <th>SLA</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($tasks as $task)
-                        <tr>
-                            <td>{{ $task['number'] ?? '—' }}</td>
-                            <td>{{ $task['status'] ?? '—' }}</td>
-                            <td>{{ $task['assignee'] ?? '—' }}</td>
-                            <td>{{ data_get($task, 'deadline.display', '—') }}</td>
-                            <td>{{ $task['sla']['label'] ?? '—' }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        @endif
-
-        @if(!empty($project))
-            <h2>Project Terkait</h2>
-            <div class="grid">
-                <div class="card">
-                    <p class="label">Project</p>
-                    <p class="value">{{ $project['number'] ?? '—' }} · {{ $project['title'] ?? '—' }}</p>
-                </div>
-                <div class="card">
-                    <p class="label">SLA Project</p>
-                    <p class="value">{{ $project['sla']['label'] ?? '—' }}</p>
-                </div>
-            </div>
-        @endif
     @endif
 
     <p class="muted" style="margin-top: 20px;">Dokumen ini digenerasi otomatis pada {{ now()->timezone(config('app.timezone'))->format('d M Y H:i') }}.</p>

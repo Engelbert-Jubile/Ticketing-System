@@ -1092,5 +1092,22 @@
   "Classic and familiar": "Tampilan seperti semula",
   "Soft, frosted surfaces": "Efek kaca yang lembut",
   "Both themes work with light and dark mode.": "Kedua tema mendukung mode terang dan gelap.",
-  "Close appearance settings": "Tutup pengaturan tampilan"
+  "Close appearance settings": "Tutup pengaturan tampilan",
+  "Confirmation evidence": "Bukti konfirmasi",
+  "Worked on": "Mulai dikerjakan",
+  "Ticket details": "Detail tiket",
+  "Deadline is required.": "Deadline wajib diisi.",
+  "Deadline cannot be before today.": "Deadline tidak boleh sebelum hari ini.",
+  "Deadline must be in the future.": "Deadline harus berada di masa mendatang.",
+  "The deadline can be changed within 48 hours of ticket creation and before the deadline.": "Deadline dapat diubah dalam 48 jam sejak tiket dibuat dan sebelum tenggat.",
+  "Only the requester can change the deadline within 48 hours of ticket creation and before the deadline.": "Deadline hanya dapat diubah oleh requester dalam 48 jam sejak tiket dibuat dan sebelum tenggat.",
+  "A note is required.": "Keterangan wajib diisi.",
+  "Upload at least one evidence file.": "Lampiran bukti wajib diunggah.",
+  "Upload the missing evidence again.": "Unggah ulang lampiran bukti yang tidak tersedia.",
+  "The evidence file could not be saved.": "Lampiran bukti gagal disimpan.",
+  "Rejection reason": "Alasan penolakan",
+  "Reject": "Tolak",
+  "Rejected": "Ditolak",
+  "Task Report": "Laporan Task",
+  "Project Report": "Laporan Project"
 }

@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Support\RoleHelpers;
-use App\Support\TicketStatusSync;
 use App\Support\WorkflowStatus;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
@@ -19,7 +18,6 @@ use Illuminate\Support\Str;
  * @property string|null $uuid
  * @property string|null $project_no
  * @property string $public_slug
- * @property int|null $ticket_id
  * @property string|null $status_id
  * @property string $title
  * @property string|null $description
@@ -45,7 +43,6 @@ use Illuminate\Support\Str;
  * @property-read int|null $pics_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ProjectRiskAnalysis> $risks
  * @property-read int|null $risks_count
- * @property-read \App\Models\Ticket|null $ticket
  * @property-read \App\Models\User|null $agent
  * @property-read \App\Models\User|null $assignee
  * @property-read \App\Models\User|null $user
@@ -64,7 +61,6 @@ use Illuminate\Support\Str;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Project whereStartDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Project whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Project whereStatusId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Project whereTicketId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Project whereTitle($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Project whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Project whereUuid($value)
@@ -77,7 +73,6 @@ class Project extends Model
 
     protected $fillable = [
         'uuid',
-        'ticket_id',
         'project_no',
         'public_slug',
         'status_id',
@@ -120,9 +115,6 @@ class Project extends Model
             }
         });
 
-        static::saved(function (Project $project) {
-            TicketStatusSync::handleProjectSaved($project);
-        });
     }
 
     public static function nextNumber(): string
@@ -137,11 +129,6 @@ class Project extends Model
     }
 
     // ================= Relasi =================
-
-    public function ticket(): BelongsTo
-    {
-        return $this->belongsTo(Ticket::class, 'ticket_id');
-    }
 
     public function agent(): BelongsTo
     {
@@ -198,11 +185,6 @@ class Project extends Model
         return $this->hasMany(ProjectDeliverable::class);
     }
 
-    public function tasks(): HasMany
-    {
-        return $this->hasMany(Task::class, 'project_id');
-    }
-
     protected function planning(): Attribute
     {
         return Attribute::make(
@@ -250,13 +232,6 @@ class Project extends Model
 
     public function isRequester(User $user): bool
     {
-        $ticket = $this->relationLoaded('ticket') ? $this->ticket : $this->ticket()->first();
-        if ($ticket) {
-            if ($ticket->isRequester($user)) {
-                return true;
-            }
-        }
-
         if ($this->requester_id && (int) $this->requester_id === (int) $user->id) {
             return true;
         }
@@ -267,11 +242,6 @@ class Project extends Model
     public function isAgent(User $user): bool
     {
         $userId = (int) $user->id;
-
-        $ticket = $this->relationLoaded('ticket') ? $this->ticket : $this->ticket()->first();
-        if ($ticket && $ticket->isAgent($user)) {
-            return true;
-        }
 
         if ($this->agent_id && (int) $this->agent_id === $userId) {
             return true;

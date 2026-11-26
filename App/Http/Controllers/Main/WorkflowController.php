@@ -44,7 +44,11 @@ class WorkflowController extends Controller
         $this->applyItemStatusFilter($scopedItems, $filters['status']);
 
         $items = $this->withItemRelations($scopedItems)
-            ->latest('workflow_instances.updated_at')
+            ->orderByRaw('COALESCE(
+                (SELECT created_at FROM tickets WHERE tickets.id = workflow_instances.subject_id AND workflow_instances.subject_type = ?),
+                (SELECT created_at FROM tasks WHERE tasks.id = workflow_instances.subject_id AND workflow_instances.subject_type = ?)
+            ) DESC', [Ticket::class, Task::class])
+            ->orderByDesc('workflow_instances.id')
             ->paginate(min(50, max(5, $request->integer('per_page', 10))))
             ->withQueryString();
         $taskAssignees = User::query()
@@ -107,8 +111,8 @@ class WorkflowController extends Controller
             'histories.actor',
             'subject' => function (MorphTo $morphTo): void {
                 $morphTo->morphWith([
-                    Ticket::class => ['requester', 'agent', 'assignee', 'assignedUsers', 'tasks'],
-                    Task::class => ['requester', 'assignee', 'ticket'],
+                    Ticket::class => ['requester', 'agent', 'assignee', 'assignedUsers'],
+                    Task::class => ['requester', 'assignee'],
                 ]);
             },
         ]);
@@ -120,37 +124,22 @@ class WorkflowController extends Controller
         $item = $this->instancePayload($instance, $locale, $taskAssignees, $request->user());
         $subject = $instance->subject;
         $isTicket = $subject instanceof Ticket;
-        $targetDate = $isTicket ? ($subject->due_at ?? $subject->due_date) : ($subject->due_at ?? $subject->end_date);
-        $finishedAt = $isTicket ? ($subject->finish_at ?? $subject->finish_date) : $subject->completed_at;
+        $targetDate = $isTicket ? $subject->deadline() : ($subject->due_at ?? $subject->end_date);
+        $finishedAt = $subject->completed_at;
         $finishedAt = $finishedAt ? \Illuminate\Support\Carbon::parse($finishedAt) : null;
-        $sla = $isTicket ? $subject->sla : $subject->ticket?->sla;
+        $sla = $isTicket ? $subject->sla : null;
         $historyByStatus = $instance->histories->groupBy('to_status');
         $currentPosition = (int) ($instance->currentStage?->position ?? 0);
 
         $item['description'] = $subject->description;
         $item['sla'] = [
-            'label' => $sla ?: __('Tidak ditentukan'),
-            'started_at' => $instance->started_at?->toIso8601String(),
+            'label' => match ($sla) { 'ontime' => __('On Time'), 'late' => __('Late'), default => '-' },
+            'started_at' => $subject->created_at?->toIso8601String(),
             'target_at' => $targetDate?->toIso8601String(),
             'finished_at' => $finishedAt?->toIso8601String(),
             'state' => $instance->status === 'completed'
                 ? 'completed'
                 : ($instance->status === 'cancelled' ? 'cancelled' : ($targetDate?->isPast() ? 'overdue' : ($targetDate ? 'on_track' : 'not_set'))),
-        ];
-        $item['related'] = $isTicket ? [
-            'type' => $subject->type,
-            'reason' => $subject->reason,
-            'tasks_count' => $subject->tasks->count(),
-            'parent_number' => null,
-            'parent_title' => null,
-            'parent_url' => null,
-        ] : [
-            'type' => 'task',
-            'reason' => null,
-            'tasks_count' => null,
-            'parent_number' => $subject->ticket?->ticket_no,
-            'parent_title' => $subject->ticket?->title,
-            'parent_url' => $subject->ticket ? route('tickets.show', ['locale' => $locale, 'ticket' => $subject->ticket]) : null,
         ];
         $item['timeline'] = $instance->workflow->stages->map(function (WorkflowStage $stage) use ($instance, $historyByStatus, $currentPosition): array {
             $entries = $historyByStatus->get($stage->status_key, collect())->sortBy('created_at');
@@ -183,6 +172,7 @@ class WorkflowController extends Controller
             'from_stage' => \App\Support\WorkflowDisplay::text($instance->workflow, $history->from_stage_name),
             'to_stage' => \App\Support\WorkflowDisplay::text($instance->workflow, $history->to_stage_name),
             'metadata' => $history->metadata,
+            'reason' => $history->metadata['reason'] ?? null,
             'created_at' => $history->created_at?->toIso8601String(),
         ])->values();
 
@@ -225,7 +215,11 @@ class WorkflowController extends Controller
         });
 
         $instances = $this->withItemRelations($scopedItems)
-            ->latest('workflow_instances.updated_at')
+            ->orderByRaw('COALESCE(
+                (SELECT created_at FROM tickets WHERE tickets.id = workflow_instances.subject_id AND workflow_instances.subject_type = ?),
+                (SELECT created_at FROM tasks WHERE tasks.id = workflow_instances.subject_id AND workflow_instances.subject_type = ?)
+            ) DESC', [Ticket::class, Task::class])
+            ->orderByDesc('workflow_instances.id')
             ->paginate(10)
             ->withQueryString();
 
@@ -320,29 +314,81 @@ class WorkflowController extends Controller
     {
         $instance = $this->resolveInstance($instance);
         abort_unless($this->scopedItemsQuery($request->user())->whereKey($instance->id)->exists(), 403);
-        $instance->load(['workflow.stages', 'currentStage', 'subject']);
-        abort_unless($instance->workflow?->is_active, 422, __('Workflow sedang nonaktif.'));
-        $data = $request->validate(['status' => ['required', Rule::in(WorkflowStatus::all())]]);
-        $subject = $instance->subject;
-        abort_unless($subject instanceof Ticket || $subject instanceof Task, 422);
-        $from = WorkflowStatus::normalize($subject->status);
-        $to = WorkflowStatus::normalize($data['status']);
-        if (! WorkflowStatus::canTransition($from, $to)) {
-            throw ValidationException::withMessages(['status' => __('Transisi status tidak valid.')]);
+        $data = $request->validate([
+            'status' => ['required_without:rejection_reason', 'nullable', Rule::in(WorkflowStatus::all())],
+            'rejection_reason' => ['nullable', 'string', 'max:4000', 'prohibits:status'],
+            'confirmation_note' => ['nullable', 'string', 'max:4000'],
+            'evidence' => ['nullable', 'array', 'max:10'],
+            'evidence.*' => ['uuid', 'distinct'],
+        ]);
+        $instance->load(['workflow.stages', 'subject']);
+
+        $cancelledTicket = DB::transaction(function () use ($instance, $request, $data): ?Ticket {
+            $subject = $instance->subject;
+            abort_unless($subject instanceof Ticket || $subject instanceof Task, 422);
+            $subject = $subject->newQuery()->lockForUpdate()->findOrFail($subject->getKey());
+            $instance->refresh()->load(['workflow.stages', 'currentStage']);
+            abort_unless($instance->workflow?->is_active, 422, __('Workflow sedang nonaktif.'));
+            $from = $subject->status;
+            $actor = $request->user();
+            $rejecting = isset($data['rejection_reason']);
+            $to = $rejecting ? $this->rejectionStatus($instance, $subject, $actor) : $data['status'];
+            abort_if($to === null, 403);
+
+            if (! WorkflowStatus::canTransition($from, $to)) {
+                throw ValidationException::withMessages(['status' => __('Transisi status tidak valid.')]);
+            }
+            abort_unless($rejecting || $subject->canUserSetStatus($actor, $to), 403);
+            $stage = $instance->workflow->stages->firstWhere('status_key', $to);
+            if (! $stage) {
+                throw ValidationException::withMessages(['status' => __('Tahap tujuan tidak tersedia pada workflow ini.')]);
+            }
+            if ($subject instanceof Ticket) {
+                app(\App\Services\TicketLifecycle::class)->changeStatus($subject, $actor, $to, $data, $rejecting);
+            } else {
+                $subject->status = $to;
+            }
+            $subject->save();
+
+            if ($rejecting) {
+                $instance->histories()->create([
+                    'workflow_id' => $instance->workflow_id,
+                    'user_id' => $actor->id,
+                    'event' => 'rejected',
+                    'from_status' => $from,
+                    'to_status' => $to,
+                    'from_stage_name' => $instance->currentStage?->name,
+                    'to_stage_name' => $stage->name,
+                    'metadata' => ['reason' => $data['rejection_reason']],
+                ]);
+            }
+
+            return $subject instanceof Ticket && $from !== $to && $to === WorkflowStatus::CANCELLED ? $subject : null;
+        });
+        if ($cancelledTicket) {
+            app(\App\Services\WorkItemNotifier::class)->notifyTicketCancelled($cancelledTicket, $request->user());
         }
-        if (! $subject->canUserSetStatus($request->user(), $to)) {
-            abort(403);
-        }
-        if (! $instance->workflow->stages->contains('status_key', $to)) {
-            throw ValidationException::withMessages(['status' => __('Tahap tujuan tidak tersedia pada workflow ini.')]);
-        }
-        $subject->update(['status' => $to]);
 
         if ($request->expectsJson()) {
             return response()->json(['message' => __('Status workflow berhasil diperbarui.')]);
         }
 
         return back()->with('success', __('Status workflow berhasil diperbarui.'));
+    }
+
+    private function rejectionStatus(WorkflowInstance $instance, Ticket|Task $subject, User $actor): ?string
+    {
+        if (! $instance->workflow?->is_active) {
+            return null;
+        }
+
+        $from = $subject->status;
+        $to = $from === WorkflowStatus::CONFIRMATION ? WorkflowStatus::REVISION : WorkflowStatus::CANCELLED;
+        $assigned = $subject instanceof Ticket ? $subject->isAgent($actor) : $subject->isAssignee($actor);
+        $canReject = $subject->canUserSetStatus($actor, $to) || ($from === WorkflowStatus::NEW && $assigned);
+
+        return $from !== $to && $canReject && WorkflowStatus::canTransition($from, $to)
+            && $instance->workflow->stages->contains('status_key', $to) ? $to : null;
     }
 
     public function storeStage(Request $request, string $locale, Workflow $workflow): RedirectResponse
@@ -728,10 +774,6 @@ class WorkflowController extends Controller
                     $taskInstances
                         ->where('subject_type', Task::class)
                         ->whereHasMorph('subject', [Task::class], function (Builder $taskQuery) use ($user) {
-                            // Tasks automatically derived from a ticket are
-                            // shown inside that ticket's workflow entry.
-                            // Keep only standalone tasks in this list.
-                            $taskQuery->whereNull('ticket_id');
                             UnitVisibility::scopeWorkflowTasks($taskQuery, $user);
                         });
                 });
@@ -819,7 +861,7 @@ class WorkflowController extends Controller
             'subject' => function (MorphTo $morphTo): void {
                 $morphTo->morphWith([
                     Ticket::class => ['requester', 'agent', 'assignee', 'assignedUsers'],
-                    Task::class => ['requester', 'assignee', 'ticket'],
+                    Task::class => ['requester', 'assignee'],
                 ]);
             },
         ]);
@@ -863,7 +905,7 @@ class WorkflowController extends Controller
             $number = $subject->ticket_no ?: 'Ticket #'.$subject->id;
             $detailUrl = route('tickets.show', ['locale' => $locale, 'ticket' => $subject]);
             $editUrl = route('tickets.edit', ['locale' => $locale, 'ticket' => $subject]);
-            $targetDate = $subject->due_at ?? $subject->due_date;
+            $targetDate = $subject->deadline();
         } else {
             $ids = $this->taskAssigneeIds(collect([$instance]));
             $pic = collect($ids)->map(fn ($id) => $taskAssignees->get($id)?->display_name)->filter();
@@ -914,6 +956,7 @@ class WorkflowController extends Controller
             'can_view_workflow' => $viewer->can('view', $instance->workflow),
             'can_edit' => $viewer->can($isTicket ? 'update tickets' : 'update tasks'),
             'can_update_status' => $statusOptions->isNotEmpty(),
+            'can_reject' => $this->rejectionStatus($instance, $subject, $viewer) !== null,
             'can_update_workflow' => $viewer->can('update', $instance->workflow),
             'can_toggle_workflow' => $viewer->can('toggle', $instance->workflow),
             'can_delete_workflow' => $viewer->can('delete', $instance->workflow) && ! $instance->workflow->instances()->exists(),

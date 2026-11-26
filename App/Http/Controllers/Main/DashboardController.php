@@ -89,30 +89,21 @@ class DashboardController extends Controller
         if (! $isSuperAdmin && $viewerId > 0) {
             $tasksBase->where(function (Builder $builder) use ($viewerId) {
                 $builder->where('assignee_id', $viewerId)
-                    ->orWhere('created_by', $viewerId)
-                    ->orWhereHas('ticket', function (Builder $ticket) use ($viewerId) {
-                        $ticket->where('requester_id', $viewerId)
-                            ->orWhere('agent_id', $viewerId)
-                            ->orWhere('assigned_id', $viewerId)
-                            ->orWhereHas('assignedUsers', fn (Builder $sub) => $sub->where('users.id', $viewerId));
-                    });
+                    ->orWhere('created_by', $viewerId);
                 $this->orWhereJsonAssignmentContains($builder, 'assigned_to', $viewerId);
             });
         } elseif (! $isSuperAdmin) {
             $tasksBase->whereRaw('1=0');
         }
 
-        $taskColumns = ['tasks.status', 'tasks.ticket_id', 'tasks.created_at', 'tasks.updated_at'];
+        $taskColumns = ['tasks.status', 'tasks.created_at', 'tasks.updated_at'];
         if (Schema::hasColumn('tasks', 'completed_at')) {
             $taskColumns[] = 'tasks.completed_at';
         }
-        $taskRecords = (clone $tasksBase)->with([
-            'ticket' => fn ($ticket) => UnitVisibility::scopeTickets($ticket->getQuery(), $request->user())
-                ->select(['id', 'status', 'updated_at']),
-        ])->get($taskColumns)->map(fn (Task $task) => [
-            'status' => WorkflowStatus::normalize($task->ticket?->status ?? $task->status),
+        $taskRecords = (clone $tasksBase)->get($taskColumns)->map(fn (Task $task) => [
+            'status' => WorkflowStatus::normalize($task->status),
             'created_at' => $task->created_at,
-            'completed_at' => $task->ticket?->updated_at ?? $task->completed_at ?? $task->updated_at ?? $task->created_at,
+            'completed_at' => $task->completed_at ?? $task->updated_at ?? $task->created_at,
         ]);
         $taskAgg = array_fill_keys(WorkflowStatus::all(), 0);
         foreach ($taskRecords as $task) {
@@ -140,13 +131,7 @@ class DashboardController extends Controller
                     ->orWhere('agent_id', $viewerId)
                     ->orWhere('assigned_id', $viewerId)
                     ->orWhere('created_by', $viewerId)
-                    ->orWhereHas('pics', fn (Builder $sub) => $sub->where('user_id', $viewerId))
-                    ->orWhereHas('ticket', function (Builder $ticketQuery) use ($viewerId) {
-                        $ticketQuery->where('requester_id', $viewerId)
-                            ->orWhere('agent_id', $viewerId)
-                            ->orWhere('assigned_id', $viewerId)
-                            ->orWhereHas('assignedUsers', fn (Builder $sub) => $sub->where('users.id', $viewerId));
-                    });
+                    ->orWhereHas('pics', fn (Builder $sub) => $sub->where('user_id', $viewerId));
             });
         } elseif (! $isSuperAdmin) {
             $projectsBase->whereRaw('1=0');

@@ -16,6 +16,7 @@
 
     <form class="mt-4 space-y-6 rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/70" @submit.prevent="submit">
       <section class="grid gap-4 md:grid-cols-2">
+        <h2 class="text-base font-semibold md:col-span-2">{{ $t("Detail tiket") }}</h2>
         <div>
           <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Judul") }}</label>
           <input
@@ -63,17 +64,6 @@
           <p v-if="form.errors.priority" class="mt-1 text-xs text-red-500">{{ form.errors.priority }}</p>
         </div>
 
-        <div>
-          <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Tipe") }}</label>
-          <select
-            v-model="form.type"
-            :disabled="coreFieldsLocked"
-            class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-500/40"
-          >
-            <option v-for="option in typeOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-          </select>
-          <p v-if="form.errors.type" class="mt-1 text-xs text-red-500">{{ form.errors.type }}</p>
-        </div>
 
         <div>
           <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Status</label>
@@ -100,33 +90,33 @@
 
         
 
-        <div>
-          <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">SLA</label>
-          <select
-            v-model="form.sla"
-            :disabled="coreFieldsLocked"
-            class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-500/40"
-          >
-            <option :value="null">{{ $t("Tidak ada") }}</option>
-            <option v-for="option in slaOptions" :key="option" :value="option">{{ formatSla(option) }}</option>
-          </select>
-          <p v-if="form.errors.sla" class="mt-1 text-xs text-red-500">{{ form.errors.sla }}</p>
+
+        <div class="md:col-span-2 grid gap-4 rounded-xl bg-slate-50 p-4 dark:bg-slate-800/60 sm:grid-cols-3">
+          <div>
+            <label for="ticket-deadline" class="block text-sm font-semibold">{{ $t("Deadline") }}</label>
+            <DatePickerFlatpickr v-if="meta.canEditDeadline" id="ticket-deadline" v-model="form.due_at"
+              :config="dateConfig" :placeholder="$t('Pilih tanggal & waktu')" />
+            <p v-else class="mt-1 text-sm">{{ formatDate(ticket.deadline_at) }}</p>
+            <p v-if="meta.canEditDeadline" class="mt-1 text-xs text-slate-500">{{ $t('Deadline dapat diubah dalam 48 jam sejak tiket dibuat dan sebelum tenggat.') }}</p>
+            <p v-if="form.errors.due_at" role="alert" class="mt-1 text-xs text-red-500">{{ form.errors.due_at }}</p>
+          </div>
+          <div>
+            <p class="text-sm font-semibold">{{ $t("Dibuat") }}</p>
+            <p class="mt-1 text-sm">{{ formatDate(ticket.created_at) }}</p>
+          </div>
+          <div>
+            <p class="text-sm font-semibold">{{ $t("Mulai dikerjakan") }}</p>
+            <p class="mt-1 text-sm">{{ formatDate(ticket.worked_on_at) }}</p>
+          </div>
         </div>
 
-        <div>
-          <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Tenggat") }}</label>
-          <DatePickerFlatpickr v-model="form.due_at" :config="dateConfig" :placeholder="$t(&quot;Pilih tanggal & waktu&quot;)" :disabled="coreFieldsLocked" />
-          <p v-if="form.errors.due_at || form.errors.due_date" class="mt-1 text-xs text-red-500">{{ form.errors.due_at || form.errors.due_date }}</p>
-        </div>
-
-        <div>
-          <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Target Selesai") }}</label>
-          <DatePickerFlatpickr v-model="form.finish_at" :config="dateConfig" :placeholder="$t(&quot;Pilih tanggal & waktu&quot;)" :disabled="coreFieldsLocked" />
-          <p v-if="form.errors.finish_at || form.errors.finish_date" class="mt-1 text-xs text-red-500">{{ form.errors.finish_at || form.errors.finish_date }}</p>
-        </div>
+        <TicketConfirmationFields v-if="needsEvidence" class="md:col-span-2"
+          v-model:note="form.confirmation_note" v-model:evidence="form.evidence"
+          :errors="form.errors" :disabled="form.processing" />
       </section>
 
-      <section class="grid gap-4 md:grid-cols-2">
+      <section class="grid gap-4 border-t pt-5 dark:border-slate-700 md:grid-cols-2">
+        <h2 class="text-base font-semibold md:col-span-2">{{ $t("Penugasan") }}</h2>
         <div class="md:col-span-2">
           <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Requester</label>
           <template v-if="canSelectRequester">
@@ -494,7 +484,7 @@
         >
           {{ $t("Batal") }}
         </Link>
-        <SaveButton type="submit" :processing="form.processing">
+        <SaveButton type="submit" :processing="form.processing" :disabled="needsEvidence && !form.evidence.length">
           {{ $t("Simpan Perubahan") }}
         </SaveButton>
       </div>
@@ -503,7 +493,8 @@
 </template>
 
 <script setup>
-import { translateUi as uiText } from '../../i18n'
+import TicketConfirmationFields from "../../Components/TicketConfirmationFields.vue";
+import { translateUi as uiText, uiLocale } from '../../i18n'
 
 import { Link, useForm } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, onMounted, ref, watch, watchEffect } from 'vue';
@@ -518,8 +509,6 @@ const props = defineProps({
   ticket: { type: Object, required: true },
   statusOptions: { type: Array, default: () => [] },
   priorityOptions: { type: Array, default: () => [] },
-  typeOptions: { type: Array, default: () => [] },
-  slaOptions: { type: Array, default: () => [] },
   userOptions: { type: Array, default: () => [] },
   meta: { type: Object, default: () => ({}) },
 });
@@ -550,18 +539,19 @@ const form = useForm({
   reason: props.ticket.reason ?? '',
   letter_no: props.ticket.letter_no ?? '',
   priority: props.ticket.priority ?? 'medium',
-  type: props.ticket.type ?? 'task',
   status: props.ticket.status ?? 'new',
-  sla: props.ticket.sla ?? null,
   due_at: toInputDateTime(props.ticket.due_at),
-  finish_at: toInputDateTime(props.ticket.finish_at),
   requester_id: props.ticket.requester_id ?? null,
   agent_id: props.ticket.agent_id ?? null,
   assigned_id: props.ticket.assigned_id ?? null,
   assigned_user_ids: props.ticket.assigned_user_ids ?? [],
   attachments: [],
+  confirmation_note: "",
+  evidence: [],
 });
 
+const needsEvidence = computed(() => form.status === 'confirmation' && props.ticket.status !== 'confirmation');
+const formatDate = value => value ? new Intl.DateTimeFormat(uiLocale.value, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : '—';
 const attachmentIds = ref([]);
 const uploadError = ref('');
 const attachmentFilterChoices = attachmentFilterOptions;
@@ -1006,6 +996,7 @@ const formatUserOptionLabel = option => {
 
 const dateConfig = computed(() => ({
   enableTime: true,
+  minDate: props.meta.minTicketDate,
   altInput: true,
   altFormat: 'd M Y, H:i',
   dateFormat: 'Y-m-d H:i',
@@ -1090,10 +1081,12 @@ function submit() {
   form
     .transform(data => ({
       ...data,
-      status: currentStatus,
-      sla: data.sla ?? null,
-      due_at: sanitizeDateTime(form.due_at ?? data.due_at),
-      finish_at: sanitizeDateTime(form.finish_at ?? data.finish_at),
+      status: currentStatus !== fallbackStatus ? currentStatus : undefined,
+      due_at: props.meta.canEditDeadline && form.due_at !== toInputDateTime(props.ticket.due_at)
+        ? sanitizeDateTime(form.due_at)
+        : undefined,
+      confirmation_note: needsEvidence.value ? data.confirmation_note : undefined,
+      evidence: needsEvidence.value ? data.evidence : undefined,
     }))
     .put(updateUrl, {
       preserveScroll: true,
@@ -1105,11 +1098,6 @@ function submit() {
       },
     });
 }
-
-const formatSla = sla => {
-  if (!sla) return '';
-  return sla.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
-};
 
 const formatSize = size => {
   if (!size) return '';

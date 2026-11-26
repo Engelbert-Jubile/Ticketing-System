@@ -26,10 +26,6 @@
             <span class="material-icons text-sm">visibility</span>
             {{ $t("Mode Tampilan") }}
           </Link>
-          <button v-if="task.links.promote" type="button" class="action-chip" @click="promote">
-            <span class="material-icons text-sm">upgrade</span>
-            Promote to Project
-          </button>
         </div>
       </div>
       <div class="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-white/20 blur-2xl"></div>
@@ -58,59 +54,6 @@
           </ul>
         </article>
 
-        <article v-if="relatedTasks.length" class="rounded-2xl border border-blue-200/70 bg-white/95 p-6 shadow-sm dark:border-blue-500/40 dark:bg-slate-900">
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <h2 class="text-lg font-bold text-slate-900 dark:text-slate-100">{{ $t("Task Terkait") }}</h2>
-            <div v-if="task.ticket" class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">
-              Ticket: <span class="font-bold text-blue-600 dark:text-blue-300">{{ task.ticket.ticket_no }}</span>
-            </div>
-          </div>
-          <p class="mt-1 text-sm text-slate-500 dark:text-slate-300">{{ $t("Daftar task lain pada ticket yang sama.") }}</p>
-          <div class="mt-4 space-y-3">
-            <div
-              v-for="related in relatedTasks"
-              :key="`related-${related.id}`"
-              :class="[
-                'rounded-2xl border p-4 text-sm shadow-sm transition dark:bg-slate-900/70',
-                related.is_current
-                  ? 'border-blue-400/70 bg-blue-50/70 dark:border-blue-500/50'
-                  : 'border-slate-200 bg-white dark:border-slate-700'
-              ]"
-            >
-              <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ related.task_no || '—' }}</p>
-                  <p class="text-base font-semibold text-slate-900 dark:text-slate-100">{{ related.title || '—' }}</p>
-                  <span v-if="related.is_current" class="mt-1 inline-flex items-center gap-1 rounded-full bg-blue-600/10 px-3 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-500/20 dark:text-blue-200">
-                    <span class="material-icons text-xs">visibility</span>
-                    {{ $t("Sedang dibuka") }}
-                  </span>
-                </div>
-                <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-300">
-                  <span :class="['inline-flex rounded-full px-3 py-1 text-xs font-semibold', related.display_status?.badge || 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300']">
-                    {{ related.display_status?.label || '—' }}
-                  </span>
-                  <span v-if="related.priority_label" class="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">{{ related.priority_label }}</span>
-                  <span>{{ related.due_display || '—' }}</span>
-                </div>
-              </div>
-              <div class="mt-3 flex flex-wrap items-center gap-3 text-sm">
-                <Link v-if="related.links?.show" :href="related.links.show" class="text-blue-600 hover:underline dark:text-blue-400">Detail</Link>
-                <Link v-if="related.links?.edit" :href="related.links.edit" class="text-blue-600 hover:underline dark:text-blue-400">Edit</Link>
-                <button
-                  v-if="!related.is_current && related.links?.delete"
-                  type="button"
-                  class="inline-flex items-center gap-1 text-sm font-semibold text-red-600 hover:text-red-700 disabled:opacity-60 dark:text-red-300 dark:hover:text-red-200"
-                  :disabled="isDeletingRelated(related.id)"
-                  @click="deleteRelatedTask(related)"
-                >
-                  <span class="material-icons text-base" aria-hidden="true">{{ isDeletingRelated(related.id) ? 'hourglass_top' : 'delete' }}</span>
-                  {{ $t("Hapus") }}
-                </button>
-              </div>
-            </div>
-          </div>
-        </article>
       </div>
 
       <aside class="space-y-6">
@@ -176,28 +119,7 @@
           </div>
         </article>
 
-        <article v-if="task.ticket" class="card">
-          <h3 class="card-title">{{ $t("Ticket Terkait") }}</h3>
-          <div class="text-sm text-slate-600 dark:text-slate-300">
-            <div class="font-semibold text-slate-800 dark:text-slate-100">{{ task.ticket.ticket_no }}</div>
-            <div class="line-clamp-2 text-xs">{{ task.ticket.title }}</div>
-            <Link :href="task.ticket.link" class="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline dark:text-blue-400">
-              <span class="material-icons text-xs">open_in_new</span>
-              {{ $t("Lihat Ticket") }}
-            </Link>
-          </div>
-        </article>
 
-        <article v-if="task.project" class="card">
-          <h3 class="card-title">Project</h3>
-          <div class="text-sm text-slate-600 dark:text-slate-300">
-            <div class="font-semibold text-slate-800 dark:text-slate-100">{{ task.project.title }}</div>
-            <Link :href="task.project.link" class="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline dark:text-blue-400">
-              <span class="material-icons text-xs">open_in_new</span>
-              {{ $t("Lihat Project") }}
-            </Link>
-          </div>
-        </article>
 
         <article v-if="task.due_display !== '—'" class="card">
           <h3 class="card-title">{{ $t("Target Selesai") }}</h3>
@@ -265,44 +187,11 @@ function formatSize(size) {
   return `${mb.toFixed(1)} MB`;
 }
 
-function promote() {
-  if (!props.task?.links?.promote) return;
-  if (!confirm(uiText("Promosikan task ini menjadi project?"))) {
-    return;
-  }
-  router.post(props.task.links.promote, {}, { preserveScroll: true });
-}
-
 const task = computed(() => props.task);
-const relatedTasks = computed(() => task.value?.related_tasks || []);
 
-const deletingRelatedId = ref(null);
-
-function deleteRelatedTask(item) {
-  if (!item?.links?.delete) {
-    return;
-  }
-  if (!confirm((uiText("Yakin ingin menghapus task \"") + (item.title || item.task_no || uiText('tanpa judul')) + "\"?"))) {
-    return;
-  }
-  deletingRelatedId.value = item.id;
-  router.delete(item.links.delete, {
-    preserveScroll: true,
-    onFinish: () => {
-      deletingRelatedId.value = null;
-    },
-  });
-}
-
-function isDeletingRelated(id) {
-  return deletingRelatedId.value === id;
-}
 
 const statusBreakdown = computed(() => {
   const panels = [];
-  if (task.value?.status_ticket_label) {
-    panels.push({ label: 'Status Ticket', status: task.value.status_ticket, labelText: task.value.status_ticket_label });
-  }
   panels.push({ label: 'Status Task', status: task.value?.status_task, labelText: task.value?.status_task_label });
 
   return panels.filter(panel => panel.labelText);
@@ -310,12 +199,8 @@ const statusBreakdown = computed(() => {
 
 const timelinePanels = computed(() => {
   const panels = [];
-  const ticketTimeline = task.value?.timeline?.ticket;
   const taskTimeline = task.value?.timeline?.task;
 
-  if (ticketTimeline && hasTimelineContent(ticketTimeline)) {
-    panels.push({ label: 'Ticket', data: ticketTimeline });
-  }
   if (taskTimeline && hasTimelineContent(taskTimeline)) {
     panels.push({ label: 'Task', data: taskTimeline });
   }

@@ -100,7 +100,12 @@ function refresh() {
 }
 
 function changeStatus(url, ticket) {
-  if (updatingStatus.value !== null || !ticket.status_actions?.some(action => action.url === url)) return;
+  const action = ticket.status_actions?.find(action => action.url === url);
+  if (updatingStatus.value !== null || !action) return;
+  if (action.value === 'confirmation') {
+    router.visit(ticket.links.edit);
+    return;
+  }
   updatingStatus.value = ticket.id;
   router.patch(url, {}, {
     preserveScroll: true,

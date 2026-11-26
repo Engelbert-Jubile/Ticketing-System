@@ -442,7 +442,6 @@ class ReportController extends Controller
             'tickets' => [
                 'status' => $this->groupCounts('tickets', 'status', $start, $end),
                 'priority' => $this->groupCounts('tickets', 'priority', $start, $end),
-                'type' => $this->groupCounts('tickets', 'type', $start, $end),
             ],
             'tasks' => [
                 'status' => $this->groupCounts('tasks', 'status', $start, $end),

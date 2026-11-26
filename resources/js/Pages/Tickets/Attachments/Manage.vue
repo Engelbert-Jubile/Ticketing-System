@@ -38,6 +38,7 @@
             </div>
           </div>
           <button
+            v-if="item.delete_url"
             type="button"
             class="inline-flex items-center gap-1 rounded-full border border-red-200 px-3 py-1 text-xs font-semibold text-red-500 transition hover:bg-red-50 disabled:opacity-60 dark:border-red-500/40 dark:hover:bg-red-500/10"
             :disabled="deletingId === item.id"

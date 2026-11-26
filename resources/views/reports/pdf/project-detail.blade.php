@@ -63,38 +63,6 @@
     <h2>Deskripsi</h2>
     <div class="description">{!! $description !!}</div>
 
-    @if(!empty($ticket))
-        <h2>Informasi Ticket</h2>
-        <div class="grid">
-            <div class="card">
-                <p class="label">Nomor Ticket</p>
-                <p class="value">{{ $ticket['ticket_no'] ?? '—' }}</p>
-            </div>
-            <div class="card">
-                <p class="label">Status Ticket</p>
-                <p class="value">{{ $ticket['status_label'] ?? '—' }}</p>
-            </div>
-            <div class="card">
-                <p class="label">Assignee</p>
-                <p class="value">{{ $ticket['assignee']['name'] ?? '—' }}</p>
-            </div>
-            <div class="card">
-                <p class="label">Requester</p>
-                <p class="value">{{ $ticket['requester']['name'] ?? '—' }}</p>
-            </div>
-        </div>
-        @if(!empty($ticket['assigned']))
-            <div class="card">
-                <p class="label">Assigned Users</p>
-                <ul>
-                    @foreach($ticket['assigned'] as $member)
-                        <li>{{ $member['name'] ?? '—' }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-    @endif
-
     @if(!empty($pics))
         <h2>Person In Charge</h2>
         <ul>

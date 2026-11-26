@@ -684,7 +684,6 @@ class SettingsController extends Controller
                 ['label' => 'Title'],
                 ['label' => 'Status'],
                 ['label' => 'Priority'],
-                ['label' => 'Type'],
                 ['label' => 'Created At'],
             ];
 
@@ -694,7 +693,6 @@ class SettingsController extends Controller
                     $ticket->title,
                     $ticket->status,
                     $ticket->priority,
-                    $ticket->type,
                     optional($ticket->created_at)->format('Y-m-d H:i'),
                 ];
             })->values()->all();

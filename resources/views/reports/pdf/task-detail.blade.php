@@ -64,17 +64,6 @@
                 <p class="muted">{{ $task['requester']['email'] }}</p>
             @endif
         </div>
-        <div class="card">
-            <p class="label">Ticket Terkait</p>
-            <p class="value">{{ $task['ticket']['title'] ?? '—' }}</p>
-            @if(!empty($task['ticket']['ticket_no']))
-                <p class="muted">{{ $task['ticket']['ticket_no'] }}</p>
-            @endif
-        </div>
-        <div class="card">
-            <p class="label">Project Terkait</p>
-            <p class="value">{{ $task['project']['title'] ?? '—' }}</p>
-        </div>
     </div>
 
     <div class="card">

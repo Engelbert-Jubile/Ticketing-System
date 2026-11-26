@@ -11,7 +11,6 @@ use App\Support\UnitVisibility;
 use App\Support\WorkflowStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class SLAReportService
@@ -26,7 +25,7 @@ class SLAReportService
     {
         $viewer = User::find($filters['viewer_id'] ?? 0);
         abort_unless($viewer, 403);
-        $entity = $type === 'ticket_work' ? 'ticket' : $type;
+        $entity = $type;
         $query = $this->visibleQuery($entity, $viewer);
         $number = $entity.'_no';
         $this->applyCommonFilters($query, $filters, 'created_at', ['title', 'description', $number]);
@@ -50,7 +49,7 @@ class SLAReportService
         $stats['export_limit'] = self::EXPORT_LIMIT;
 
         $recordsQuery = (clone $query)->orderByDesc('created_at')->orderByDesc('id');
-        $mapper = fn ($item) => $type === 'ticket_work' ? $this->mapTicketWork($item) : $this->mapItem($item, $entity);
+        $mapper = fn ($item) => $this->mapItem($item, $entity);
         $records = $paginate
             ? $recordsQuery->paginate($this->perPage($filters))->withQueryString()->through($mapper)
             : $recordsQuery->limit(self::EXPORT_LIMIT)->get()->map($mapper);
@@ -60,13 +59,10 @@ class SLAReportService
 
     public function findDetail(string $type, int $id, User $viewer): ?array
     {
-        $entity = $type === 'ticket_work' ? 'ticket' : $type;
+        $entity = $type;
         $item = $this->visibleQuery($entity, $viewer)->find($id);
         if (! $item) {
             return null;
-        }
-        if ($type === 'ticket_work') {
-            return ['type' => $type, 'summary' => $this->mapTicketWork($item)];
         }
         $detail = ['type' => $entity, 'summary' => $this->mapItem($item, $entity), 'description' => $item->description];
         if ($entity === 'ticket') {
@@ -74,15 +70,8 @@ class SLAReportService
                 'requester' => $this->displayUserName($item->requester),
                 'assignee' => $detail['summary']['assignee'],
                 'assigned' => $item->assignedUsers->map(fn ($user) => $this->displayUserName($user))->all(),
-                'tasks' => $item->tasks->map(fn ($task) => $this->mapTask($task))->all(),
-                'project' => $item->project ? $this->mapProject($item->project) : null,
             ];
         }
-        $detail['ticket'] = $item->ticket ? $this->mapTicket($item->ticket) : null;
-        if ($entity === 'task') {
-            $detail['project'] = $item->project ? $this->mapProject($item->project) : null;
-        }
-
         return $detail;
     }
 
@@ -97,31 +86,10 @@ class SLAReportService
 
     private function visibleQuery(string $type, User $viewer): Builder
     {
-        $projectRelations = ['user',
-            'tasks' => fn ($q) => UnitVisibility::scopeTasks($q->getQuery(), $viewer),
-            'ticket' => fn ($q) => UnitVisibility::scopeTickets($q->getQuery(), $viewer),
-        ];
-        $ticketRelations = ['requester', 'assignee', 'assignedUsers',
-            'project' => fn ($q) => UnitVisibility::scopeProjects($q->getQuery(), $viewer)->with($projectRelations),
-        ];
-
         return match ($type) {
-            'task' => UnitVisibility::scopeTasks(Task::query(), $viewer)->with([
-                'assignee',
-                'ticket' => fn ($q) => UnitVisibility::scopeTickets($q->getQuery(), $viewer)->with($ticketRelations),
-                'project' => fn ($q) => UnitVisibility::scopeProjects($q->getQuery(), $viewer)->with($projectRelations),
-            ]),
-            'project' => UnitVisibility::scopeProjects(Project::query(), $viewer)->with($projectRelations)->with([
-                'ticket' => fn ($q) => UnitVisibility::scopeTickets($q->getQuery(), $viewer)->with($ticketRelations),
-            ]),
-            default => UnitVisibility::scopeTickets(Ticket::query(), $viewer)->with($ticketRelations)->with([
-                'project' => fn ($q) => UnitVisibility::scopeProjects($q->getQuery(), $viewer)->with($projectRelations),
-                'tasks' => fn ($q) => UnitVisibility::scopeTasks($q->getQuery(), $viewer)->with([
-                    'assignee',
-                    'ticket' => fn ($t) => UnitVisibility::scopeTickets($t->getQuery(), $viewer),
-                    'project' => fn ($p) => UnitVisibility::scopeProjects($p->getQuery(), $viewer)->with($projectRelations),
-                ]),
-            ])->withCount(['tasks' => fn ($q) => UnitVisibility::scopeTasks($q, $viewer)]),
+            'task' => UnitVisibility::scopeTasks(Task::query(), $viewer)->with('assignee'),
+            'project' => UnitVisibility::scopeProjects(Project::query(), $viewer)->with('user'),
+            default => UnitVisibility::scopeTickets(Ticket::query(), $viewer)->with('requester', 'assignee', 'assignedUsers'),
         };
     }
 
@@ -157,34 +125,26 @@ class SLAReportService
         return max(1, min(self::MAX_PER_PAGE, $perPage));
     }
 
-    protected function summarizeCollection(Collection $items): array
-    {
-        $summary = ['total' => 0, 'met' => 0, 'pending' => 0, 'breached' => 0, 'missing' => 0];
-        foreach ($items as $item) {
-            $sla = $item['ticket']['sla'] ?? $item['sla'] ?? null;
-            $summary['total']++;
-            $status = $sla['status'] ?? 'missing';
-            if (array_key_exists($status, $summary)) {
-                $summary[$status]++;
-            } else {
-                $summary['missing']++;
-            }
-        }
-        $summary['met_percent'] = $summary['total'] > 0 ? round(($summary['met'] / $summary['total']) * 100, 1) : 0.0;
-
-        return $summary;
-    }
-
     protected function mapTicket(Ticket $ticket): array
     {
         $status = WorkflowStatus::normalize((string) $ticket->status);
         [$due, $finished] = SlaClock::dates($ticket, 'ticket');
         $sla = $this->evaluateSla($due, $finished, $ticket->created_at, $status);
+        $sla['label'] = match ($ticket->sla) {
+            'ontime' => __('On Time'),
+            'late' => __('Late'),
+            default => '-',
+        };
+        if ($status === WorkflowStatus::CANCELLED) {
+            $sla['status'] = 'missing';
+            $sla['delta_human'] = '-';
+            $sla['delta_minutes'] = null;
+        }
 
         return [
             'id' => $ticket->id, 'number' => $ticket->ticket_no, 'title' => $ticket->title, 'status' => WorkflowStatus::label($status), 'status_code' => WorkflowStatus::code($status),
             'priority' => $ticket->priority, 'assignee' => $ticket->assignees_label ?: $this->displayUserName($ticket->assignee), 'requester' => $this->displayUserName($ticket->requester),
-            'tasks_count' => $ticket->tasks_count, 'project_no' => optional($ticket->project)->project_no, 'created_at' => $this->presentDateTime($ticket->created_at),
+            'created_at' => $this->presentDateTime($ticket->created_at),
             'deadline' => $this->presentDateTime($due), 'completed_at' => $this->presentDateTime($finished), 'duration' => $this->formatDurationMinutes($this->calculateDurationMinutes($ticket->created_at, $finished)), 'sla' => $sla,
             'detail_pdf_url' => route('sla.detail.download', ['locale' => app()->getLocale(), 'type' => 'ticket', 'id' => $ticket->id]),
         ];
@@ -198,7 +158,7 @@ class SLAReportService
 
         return [
             'id' => $task->id, 'number' => $task->task_no, 'title' => $task->title, 'status' => WorkflowStatus::label($status), 'status_code' => WorkflowStatus::code($status),
-            'assignee' => $this->displayUserName($task->assignee), 'ticket_no' => optional($task->ticket)->ticket_no, 'project_no' => optional($task->project)->project_no,
+            'assignee' => $this->displayUserName($task->assignee),
             'created_at' => $this->presentDateTime($task->created_at), 'deadline' => $this->presentDateTime($due), 'completed_at' => $this->presentDateTime($finished),
             'duration' => $this->formatDurationMinutes($this->calculateDurationMinutes($task->created_at, $finished)), 'sla' => $sla,
             'detail_pdf_url' => route('sla.detail.download', ['locale' => app()->getLocale(), 'type' => 'task', 'id' => $task->id]),
@@ -213,20 +173,11 @@ class SLAReportService
 
         return [
             'id' => $project->id, 'number' => $project->project_no, 'title' => $project->title, 'status' => WorkflowStatus::label($status), 'status_code' => WorkflowStatus::code($status),
-            'owner' => $this->displayUserName($project->user), 'ticket_no' => optional($project->ticket)->ticket_no, 'tasks_total' => $project->tasks?->count() ?: 0,
+            'owner' => $this->displayUserName($project->user),
             'created_at' => $this->presentDateTime($project->created_at), 'deadline' => $this->presentDateTime($due), 'completed_at' => $this->presentDateTime($finished),
             'duration' => $this->formatDurationMinutes($this->calculateDurationMinutes($project->created_at, $finished)), 'sla' => $sla,
             'detail_pdf_url' => route('sla.detail.download', ['locale' => app()->getLocale(), 'type' => 'project', 'id' => $project->id]),
         ];
-    }
-
-    protected function mapTicketWork(Ticket $ticket): array
-    {
-        $base = $this->mapTicket($ticket);
-        $tasks = $ticket->tasks ? $ticket->tasks->map(fn (Task $t) => $this->mapTask($t)) : collect();
-        $project = $ticket->project ? $this->mapProject($ticket->project) : null;
-
-        return ['ticket' => $base, 'tasks' => ['items' => $tasks, 'stats' => $this->summarizeCollection($tasks)], 'project' => $project, 'detail_pdf_url' => route('sla.detail.download', ['locale' => app()->getLocale(), 'type' => 'ticket_work', 'id' => $ticket->id])];
     }
 
     protected function evaluateSla(?Carbon $target, ?Carbon $actual, ?Carbon $started, string $status): array

@@ -23,7 +23,8 @@
     </section>
 
     <form class="mt-4 space-y-8 rounded-3xl border border-slate-200 bg-white/90 p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/70 sm:p-7" @submit.prevent="submit">
-      <section class="grid gap-4 md:grid-cols-2">
+      <section class="grid gap-4 md:grid-cols-2" aria-labelledby="ticket-info">
+        <h2 id="ticket-info" class="text-base font-semibold md:col-span-2">{{ $t("Detail tiket") }}</h2>
         <div>
           <label for="ticket-title" class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Judul") }} <span class="text-red-500">*</span></label>
           <input
@@ -66,7 +67,7 @@
           <p id="ticket-reason-error" role="alert" v-if="form.errors.reason" class="mt-1 text-xs text-red-500">{{ form.errors.reason }}</p>
         </div>
 
-        <div class="grid gap-4 md:col-span-2 md:grid-cols-3">
+        <div class="grid gap-4 md:col-span-2 md:grid-cols-2">
           <div>
             <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Prioritas") }} <span class="text-red-500">*</span></label>
             <div class="mt-1 w-full">
@@ -76,20 +77,9 @@
           </div>
 
           <div>
-            <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Mulai") }}</label>
+            <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Deadline") }} <span class="text-red-500">*</span></label>
             <DatePickerFlatpickr
-              :aria-label="$t(&quot;Tanggal mulai ticket&quot;)" class="mt-1"
-              v-model="form.start_at"
-              :config="startDateConfig"
-              :placeholder="$t(&quot;Pilih tanggal&quot;)"
-            />
-            <p v-if="form.errors.start_at || form.errors.due_date" class="mt-1 text-xs text-red-500">{{ form.errors.start_at || form.errors.due_date }}</p>
-          </div>
-
-          <div>
-            <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Tanggal Jatuh Tempo") }}</label>
-            <DatePickerFlatpickr
-              :aria-label="$t(&quot;Tanggal jatuh tempo ticket&quot;)" class="mt-1"
+              :aria-label="$t(&quot;Deadline&quot;)" class="mt-1"
               v-model="form.due_at"
               :config="dueDateConfig"
               :placeholder="$t(&quot;Pilih tanggal&quot;)"
@@ -99,7 +89,8 @@
         </div>
       </section>
 
-      <section class="space-y-6">
+      <section class="space-y-4 border-t pt-5 dark:border-slate-700">
+        <h2 class="text-base font-semibold">{{ $t("Penugasan") }}</h2>
         <div class="grid gap-4 md:grid-cols-2">
           <div class="md:col-span-2">
             <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Requester</label>
@@ -414,10 +405,7 @@ const form = useForm({
   reason: '',
   letter_no: '',
   priority: props.defaults.priority ?? null,
-  type: props.defaults.type ?? 'task',
   status: 'new',
-  start_at: props.defaults.start_at ?? props.defaults.due_date ?? null,
-  due_date: props.defaults.due_date ?? null,
   due_at: props.defaults.due_at ?? null,
   requester_id: props.defaults.requester_id ?? null,
   agent_id: null,
@@ -426,7 +414,7 @@ const form = useForm({
   attachments: [],
   submission_token: createSubmissionToken(),
 });
-const draft = useFormDraft(form, 'ticket', ["title","description","reason","letter_no","priority","start_at","due_at","due_date"], true);
+const draft = useFormDraft(form, 'ticket', ["title","description","reason","letter_no","priority","due_at"], true);
 
 
 const toDateOnly = value => {
@@ -463,7 +451,6 @@ const canSelectRequester = computed(() => Boolean(props.meta?.canSelectRequester
 const requesterLabel = computed(() => props.meta?.requesterLabel ?? '');
 const minTicketDate = computed(() => props.meta?.minTicketDate ?? new Date().toISOString().slice(0, 10));
 watchEffect(() => {
-  form.type = 'task';
   form.status = 'new';
 });
 const userLookup = computed(() => {
@@ -612,15 +599,6 @@ watch(picPrimary, value => {
   form.assigned_id = normalized ?? null;
 }, { immediate: true });
 
-watch(() => form.start_at, value => {
-  const normalized = normalizeDateValue(value);
-  if (normalized !== value) {
-    form.start_at = normalized;
-    return;
-  }
-  form.due_date = normalized;
-}, { immediate: true });
-
 watch(() => form.due_at, value => {
   const normalized = normalizeDateValue(value);
   if (normalized !== value) {
@@ -763,21 +741,12 @@ onBeforeUnmount(() => {
   window.removeEventListener('scroll', handleResize, true);
 });
 
-const baseDateConfig = computed(() => ({
+const dueDateConfig = computed(() => ({
   enableTime: false,
   altInput: true,
   altFormat: 'd M Y',
   dateFormat: 'Y-m-d',
   minDate: minTicketDate.value,
-}));
-
-const startDateConfig = computed(() => ({
-  ...baseDateConfig.value,
-}));
-
-const dueDateConfig = computed(() => ({
-  ...baseDateConfig.value,
-  minDate: form.start_at || minTicketDate.value,
 }));
 
 function handleUploaded(payload) {
@@ -826,10 +795,7 @@ function resetForm() {
   draft.clear();
   form.reset();
   form.priority = props.defaults.priority ?? null;
-  form.type = 'task';
   form.status = 'new';
-  form.start_at = props.defaults.start_at ?? props.defaults.due_date ?? null;
-  form.due_date = props.defaults.due_date ?? null;
   form.due_at = props.defaults.due_at ?? null;
   form.agent_id = null;
   form.assigned_id = null;
@@ -860,11 +826,10 @@ const normalizeNumber = value => {
 
 function validateForm() {
   if (typeof form.clearErrors === 'function') {
-    form.clearErrors('title', 'priority', 'due_date', 'due_at', 'start_at');
+    form.clearErrors('title', 'priority', 'due_at');
   }
 
   const errors = {};
-  const startDate = normalizeDateValue(form.start_at);
   const dueDate = normalizeDateValue(form.due_at);
 
   if (!String(form.title ?? '').trim()) {
@@ -873,14 +838,10 @@ function validateForm() {
   if (!form.priority) {
     errors.priority = uiText("Pilih prioritas ticket.");
   }
-  if (startDate && isDateBefore(startDate, minTicketDate.value)) {
-    errors.due_date = uiText("Tanggal mulai tidak boleh sebelum hari ini.");
-  }
-  if (dueDate && isDateBefore(dueDate, minTicketDate.value)) {
-    errors.due_at = uiText("Due date tidak boleh sebelum hari ini.");
-  }
-  if (startDate && dueDate && isDateBefore(dueDate, startDate)) {
-    errors.due_at = uiText("Due date tidak boleh lebih awal dari tanggal mulai.");
+  if (!dueDate) {
+    errors.due_at = uiText("Deadline wajib diisi.");
+  } else if (isDateBefore(dueDate, minTicketDate.value)) {
+    errors.due_at = uiText("Deadline tidak boleh sebelum hari ini.");
   }
 
   if (Object.keys(errors).length) {
@@ -899,11 +860,8 @@ function prepareSubmission() {
     form[field] = normalizeNumber(form[field]);
   });
 
-  form.type = 'task';
   form.status = 'new';
   form.agent_id = null;
-  form.start_at = normalizeDateValue(form.start_at);
-  form.due_date = form.start_at || null;
   form.due_at = normalizeDateValue(form.due_at);
 
   const normalizedAssignees = Array.isArray(form.assigned_user_ids)

@@ -7,8 +7,6 @@ namespace App\Domains\Task\Models;
  * @property int $id
  * @property string|null $uuid
  * @property string|null $task_no
- * @property int|null $ticket_id
- * @property int|null $project_id
  * @property int|null $assignee_id
  * @property string $title
  * @property string|null $description
@@ -27,9 +25,7 @@ namespace App\Domains\Task\Models;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Attachment> $attachments
  * @property-read int|null $attachments_count
  * @property-read string $status_label
- * @property-read \App\Domains\Project\Models\Project|null $project
  * @property-read \App\Models\User|null $requester
- * @property-read \App\Models\Ticket|null $ticket
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Task newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Task newQuery()
@@ -45,11 +41,9 @@ namespace App\Domains\Task\Models;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Task whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Task wherePlanning($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Task wherePriority($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Task whereProjectId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Task whereStartDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Task whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Task whereTaskNo($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Task whereTicketId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Task whereTitle($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Task whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Task whereUuid($value)

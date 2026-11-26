@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Main;
 
-use App\Domains\Project\Models\Project;
 use App\Domains\Task\DTO\TaskData;
 use App\Domains\Task\Enums\TaskStatus;
 use App\Domains\Task\UseCases\CreateTask;
@@ -11,9 +10,7 @@ use App\Domains\Task\UseCases\GetAllTasks;
 use App\Domains\Task\UseCases\UpdateTask;
 use App\Http\Controllers\Controller;
 use App\Models\Task;
-use App\Models\Ticket;
 use App\Models\User;
-use App\Notifications\ActivityNotification;
 use App\Services\AttachmentService;
 use App\Services\ReportExportService;
 use App\Services\WorkItemNotifier;
@@ -76,11 +73,9 @@ final class TaskController extends Controller
         $hasDueDateColumn = Schema::hasColumn('tasks', 'due_date');
         $actor = $request->user();
 
-        $ticketSummary = $this->taskReportSummary($filters, true, $hasDueDateColumn, $actor);
-        $standaloneSummary = $this->taskReportSummary($filters, false, $hasDueDateColumn, $actor);
+        $standaloneSummary = $this->taskReportSummary($filters, $hasDueDateColumn, $actor);
 
-        $ticketTasks = $this->taskReportPaginator($filters, true, $hasDueDateColumn, $request, $actor);
-        $standaloneTasks = $this->taskReportPaginator($filters, false, $hasDueDateColumn, $request, $actor);
+        $standaloneTasks = $this->taskReportPaginator($filters, $hasDueDateColumn, $request, $actor);
 
         $statusOptions = collect(TaskStatus::values())
             ->map(fn (string $value) => [
@@ -91,7 +86,8 @@ final class TaskController extends Controller
             ->values()
             ->all();
 
-        return Inertia::render('Tasks/Report', [
+        return Inertia::render('WorkItemReport', [
+            'kind' => 'task',
             'filters' => [
                 'q' => $filters['q'],
                 'status' => $filters['status'],
@@ -99,10 +95,8 @@ final class TaskController extends Controller
                 'to' => $filters['to'],
             ],
             'statusOptions' => $statusOptions,
-            'ticketSummary' => $ticketSummary,
-            'standaloneSummary' => $standaloneSummary,
-            'ticketTasks' => $ticketTasks,
-            'standaloneTasks' => $standaloneTasks,
+            'summary' => $standaloneSummary,
+            'items' => $standaloneTasks,
         ]);
     }
 
@@ -116,13 +110,11 @@ final class TaskController extends Controller
 
         $tz = config('app.timezone');
         $rows = $tasks->map(function (Task $task) use ($tz) {
-            $statusPayload = $this->ticketAwareStatusPayload($task, $task->ticket_id !== null);
-            $displayStatus = $statusPayload['display'];
 
             return [
                 $task->task_no ?? '—',
                 $task->title ?? '—',
-                $displayStatus['label'],
+                WorkflowStatus::label($task->status),
                 ucfirst($task->priority ?? '—'),
                 $this->formatDate($task->due_at ?? ($task->due_date ?? null), 'd M Y H:i', $tz),
                 $this->formatDate($task->updated_at, 'd M Y H:i', $tz),
@@ -153,351 +145,25 @@ final class TaskController extends Controller
         return $this->reportExport->downloadPdf(__('Laporan Task'), $columns, $rows, $meta, $filename);
     }
 
-    public function reportTicketDetail(Request $request, string $locale, Ticket|string $ticket): Response
+    private function taskReportSummary(array $filters, bool $hasDueDateColumn, ?User $viewer = null): array
     {
-        // Locale is captured by the route prefix; we only need the ticket value.
-        $ticket = $ticket instanceof Ticket
-            ? $ticket
-            : Ticket::where('ticket_no', $ticket)->firstOrFail();
-
-        UnitVisibility::ensureTicketAccess($request->user(), $ticket);
-
-        $userColumns = $this->userProfileSelectColumns();
-        $userSelect = implode(',', $userColumns);
-
-        $ticket->load([
-            'requester:'.$userSelect,
-            'agent:'.$userSelect,
-            'assignedUsers:'.$userSelect,
-            'attachments:id,attachable_id,attachable_type,original_name,size',
-        ]);
-
-        $hasDueDateColumn = Schema::hasColumn('tasks', 'due_date');
-        $viewer = $request->user();
-        $origin = routeLocale('tasks.report');
-
-        $taskRows = $this->buildTaskReportQuery($this->emptyTaskReportFilters(), $hasDueDateColumn, $viewer, true)
-            ->where('ticket_id', $ticket->id)
-            ->orderByDesc('created_at')
-            ->get();
-
-        $tasks = $taskRows
-            ->map(fn (Task $task) => $this->transformTaskReportRow($task, true, $origin, false))
-            ->values();
-
-        $summary = $this->summarizeTaskRows($tasks);
-
-        return Inertia::render('Tasks/ReportTicketDetail', [
-            'ticket' => $this->buildTicketDetailPayload($ticket, $summary),
-            'tasks' => $tasks,
-            'summary' => $summary,
-            'meta' => [
-                'backUrl' => $this->resolveBackUrl($request, routeLocale('tasks.report')),
-            ],
-        ]);
-    }
-
-    private function taskReportSummary(array $filters, bool $withTicket, bool $hasDueDateColumn, ?User $viewer = null): array
-    {
-        $baseQuery = $this->baseTaskReportQuery($filters, $hasDueDateColumn, $viewer);
-
-        if ($withTicket) {
-            $total = $this->countDistinctTicketIds((clone $baseQuery)->whereNotNull('ticket_id'));
-        } else {
-            $total = (clone $baseQuery)->whereNull('ticket_id')->count();
-        }
-
-        $inProgress = $this->countTaskSummaryByStatus(
-            clone $baseQuery,
-            WorkflowStatus::equivalents(WorkflowStatus::IN_PROGRESS),
-            $withTicket
-        );
-
-        $done = $this->countTaskSummaryByStatus(
-            clone $baseQuery,
-            WorkflowStatus::equivalents(WorkflowStatus::DONE),
-            $withTicket
-        );
+        $query = $this->baseTaskReportQuery($filters, $hasDueDateColumn, $viewer);
 
         return [
-            'total' => $total,
-            'in_progress' => $inProgress,
-            'done' => $done,
+            'total' => (clone $query)->count(),
+            'in_progress' => (clone $query)->whereIn('status', WorkflowStatus::equivalents(WorkflowStatus::IN_PROGRESS))->count(),
+            'done' => (clone $query)->whereIn('status', WorkflowStatus::equivalents(WorkflowStatus::DONE))->count(),
         ];
     }
 
-    private function countTaskSummaryByStatus(Builder $query, array $statuses, bool $withTicket): int
+    private function taskReportPaginator(array $filters, bool $hasDueDateColumn, Request $request, ?User $viewer = null)
     {
-        if (empty($statuses)) {
-            return 0;
-        }
+        $perPage = min(max($request->integer('per_page', 15), 5), 50);
 
-        if ($withTicket) {
-            return (clone $query)
-                ->whereNotNull('ticket_id')
-                ->whereHas('ticket', function (Builder $ticket) use ($statuses) {
-                    $ticket->whereIn('status', $statuses);
-                })
-                ->distinct('ticket_id')
-                ->count('ticket_id');
-        }
-
-        return (clone $query)
-            ->whereNull('ticket_id')
-            ->whereIn('status', $statuses)
-            ->count();
-    }
-
-    private function countDistinctTicketIds(Builder $query): int
-    {
-        return (int) (clone $query)
-            ->distinct('ticket_id')
-            ->count('ticket_id');
-    }
-
-    private function taskReportPaginator(array $filters, bool $withTicket, bool $hasDueDateColumn, Request $request, ?User $viewer = null)
-    {
-        $perPageParam = $withTicket ? 'ticket_per_page' : 'standalone_per_page';
-        $pageName = $withTicket ? 'ticket_page' : 'standalone_page';
-
-        $perPage = (int) $request->integer($perPageParam, 15);
-        $perPage = min(max($perPage, 5), 50);
-
-        $origin = $this->reportOrigin($request);
-
-        if ($withTicket) {
-            $baseQuery = $this->baseTaskReportQuery($filters, $hasDueDateColumn, $viewer);
-            $detailedQuery = $this->buildTaskReportQuery($filters, $hasDueDateColumn, $viewer, true);
-
-            return $this->paginateTicketTaskGroups(
-                $baseQuery,
-                $detailedQuery,
-                $perPage,
-                $pageName,
-                $filters,
-                $origin
-            );
-        }
-
-        $query = $this->buildTaskReportQuery($filters, $hasDueDateColumn, $viewer, true)
-            ->whereNull('ticket_id')
-            ->orderByDesc('created_at');
-
-        return $query
-            ->paginate($perPage, ['*'], $pageName)
-            ->appends($this->taskReportQueryParams($filters))
-            ->through(fn (Task $task) => $this->transformTaskReportRow($task, false, $origin));
-    }
-
-    private function paginateTicketTaskGroups(
-        Builder $baseQuery,
-        Builder $detailedQuery,
-        int $perPage,
-        string $pageName,
-        array $filters,
-        string $origin
-    ) {
-        $groupQuery = (clone $baseQuery)
-            ->whereNotNull('ticket_id')
-            ->selectRaw('ticket_id, MAX(created_at) as latest_created_at')
-            ->groupBy('ticket_id')
-            ->orderByDesc('latest_created_at');
-
-        $paginator = $groupQuery
-            ->paginate($perPage, ['ticket_id', 'latest_created_at'], $pageName)
-            ->appends($this->taskReportQueryParams($filters));
-
-        $ticketIds = collect($paginator->items())
-            ->pluck('ticket_id')
-            ->filter()
-            ->all();
-
-        if (empty($ticketIds)) {
-            $paginator->setCollection(collect());
-
-            return $paginator;
-        }
-
-        $tasks = (clone $detailedQuery)
-            ->whereNotNull('ticket_id')
-            ->whereIn('ticket_id', $ticketIds)
-            ->orderBy('ticket_id')
-            ->orderByDesc('created_at')
-            ->get()
-            ->groupBy('ticket_id')
-            ->map(fn (Collection $taskRows) => $this->formatTicketTaskGroup($taskRows, $origin));
-
-        $ordered = collect($ticketIds)
-            ->map(fn ($ticketId) => $tasks->get($ticketId))
-            ->filter()
-            ->values();
-
-        return tap($paginator, fn ($p) => $p->setCollection($ordered));
-    }
-
-    private function summarizeTaskRows(Collection $rows): array
-    {
-        $total = $rows->count();
-
-        if ($total === 0) {
-            return [
-                'total' => 0,
-                'in_progress' => 0,
-                'done' => 0,
-            ];
-        }
-
-        $inProgressStatuses = array_unique(array_merge(
-            WorkflowStatus::equivalents(WorkflowStatus::IN_PROGRESS),
-            WorkflowStatus::equivalents(WorkflowStatus::CONFIRMATION),
-            WorkflowStatus::equivalents(WorkflowStatus::REVISION)
-        ));
-
-        $doneStatuses = WorkflowStatus::equivalents(WorkflowStatus::DONE);
-
-        $statusResolver = static function (array $row): string {
-            $status = $row['status_task'] ?? $row['status'] ?? WorkflowStatus::NEW;
-
-            return strtolower((string) $status);
-        };
-
-        $inProgress = $rows->filter(fn (array $row) => in_array($statusResolver($row), $inProgressStatuses, true))->count();
-        $done = $rows->filter(fn (array $row) => in_array($statusResolver($row), $doneStatuses, true))->count();
-
-        return [
-            'total' => $total,
-            'in_progress' => $inProgress,
-            'done' => $done,
-        ];
-    }
-
-    private function formatTicketTaskGroup(Collection $taskRows, string $origin, ?Ticket $fallbackTicket = null): array
-    {
-        $rows = $taskRows
-            ->map(fn (Task $task) => $this->transformTaskReportRow($task, true, $origin))
-            ->values();
-
-        $ticketInfo = $rows->first()['ticket'] ?? ($fallbackTicket ? $this->buildTicketReportPayload($fallbackTicket) : null);
-        $detailLink = $this->ticketDetailLink($ticketInfo['id'] ?? null, $ticketInfo['ticket_no'] ?? null);
-
-        if ($ticketInfo) {
-            $ticketInfo['links']['detail'] = $detailLink;
-        }
-
-        return [
-            'ticket' => $ticketInfo,
-            'primary' => $rows->first(),
-            'children' => $rows->slice(1)->values()->all(),
-            'tasks' => $rows->all(),
-            'summary' => $this->summarizeTaskRows($rows),
-            'links' => [
-                'ticket' => $ticketInfo['links']['show'] ?? null,
-                'detail' => $detailLink,
-            ],
-        ];
-    }
-
-    private function ticketDetailLink(?int $ticketId, ?string $ticketNo = null): ?string
-    {
-        if (! $ticketId && ! $ticketNo) {
-            return null;
-        }
-
-        $identifier = $ticketNo;
-
-        if (! $identifier && $ticketId) {
-            $identifier = Ticket::query()->whereKey($ticketId)->value('ticket_no');
-        }
-
-        if (! $identifier) {
-            return null;
-        }
-
-        return routeLocale('tasks.report.ticket', [
-            'ticket' => $identifier,
-        ]);
-    }
-
-    private function ticketReportDetailUrl(Ticket $ticket): string
-    {
-        $ticketNo = is_string($ticket->ticket_no ?? null) ? trim((string) $ticket->ticket_no) : '';
-        if ($ticketNo !== '') {
-            return routeLocale('tickets.report.detail.view', ['ticket' => $ticketNo]);
-        }
-
-        return routeLocale('tickets.edit', ['ticket' => $ticket->id]);
-    }
-
-    private function buildTicketReportPayload(Ticket $ticket): array
-    {
-        $tz = config('app.timezone');
-        $ticketStatus = $this->normalizeStatus($ticket->status ?? null);
-
-        return [
-            'id' => $ticket->id,
-            'ticket_no' => $ticket->ticket_no,
-            'title' => $ticket->title,
-            'status' => $ticketStatus,
-            'status_label' => WorkflowStatus::label($ticketStatus),
-            'status_badge' => WorkflowStatus::badgeClass($ticketStatus),
-            'due_display' => $this->formatDate($ticket->due_at ?? $ticket->due_date, 'd M Y H:i', $tz),
-            'timeline' => [
-                'start' => $this->formatDate($ticket->start_date ?? $ticket->created_at, 'd M Y H:i', $tz),
-                'due' => $this->formatDate($ticket->due_at ?? $ticket->due_date, 'd M Y H:i', $tz),
-                'end' => $this->formatDate($ticket->end_date ?? $ticket->updated_at, 'd M Y H:i', $tz),
-            ],
-            'links' => [
-                'show' => $this->ticketReportDetailUrl($ticket),
-            ],
-        ];
-    }
-
-    private function buildTicketDetailPayload(Ticket $ticket, array $summary): array
-    {
-        $tz = config('app.timezone');
-        $status = $this->normalizeStatus($ticket->status ?? null);
-
-        $userSelect = implode(',', $this->userProfileSelectColumns());
-
-        $ticket->loadMissing([
-            'assignedUsers:'.$userSelect,
-            'requester:'.$userSelect,
-            'agent:'.$userSelect,
-        ]);
-
-        return [
-            'id' => $ticket->id,
-            'ticket_no' => $ticket->ticket_no,
-            'title' => $ticket->title,
-            'status' => $status,
-            'status_label' => WorkflowStatus::label($status),
-            'status_badge' => WorkflowStatus::badgeClass($status),
-            'priority' => ucfirst($ticket->priority ?? 'normal'),
-            'type' => ucfirst($ticket->type ?? 'general'),
-            'description' => $ticket->description ? $this->sanitizeDescription($ticket->description) : null,
-            'timeline' => [
-                'start' => $this->formatDate($ticket->start_date ?? $ticket->created_at, 'd M Y H:i', $tz),
-                'due' => $this->formatDate($ticket->due_at ?? $ticket->due_date, 'd M Y H:i', $tz),
-                'end' => $this->formatDate($ticket->finish_at ?? $ticket->updated_at, 'd M Y H:i', $tz),
-            ],
-            'requester' => $this->formatUserProfile($ticket->requester),
-            'agent' => $this->formatUserProfile($ticket->agent),
-            'assigned' => $ticket->assignedUsers->map(fn ($user) => $this->formatUserProfile($user))->filter()->values()->all(),
-            'attachments' => $ticket->relationLoaded('attachments')
-                ? $ticket->attachments->map(fn ($attachment) => [
-                    'id' => $attachment->id,
-                    'name' => $attachment->original_name,
-                    'size' => $attachment->size,
-                    'view_url' => $this->attachmentRoute('attachments.view', $attachment),
-                    'download_url' => $this->attachmentRoute('attachments.download', $attachment),
-                ])->values()->all()
-                : [],
-            'summary' => $summary,
-            'links' => [
-                'ticket' => $this->ticketReportDetailUrl($ticket),
-                'detail' => $this->ticketDetailLink($ticket->id, $ticket->ticket_no),
-            ],
-        ];
+        return $this->buildTaskReportQuery($filters, $hasDueDateColumn, $viewer, true)
+            ->latest('created_at')->orderByDesc('id')
+            ->paginate($perPage)->appends($this->taskReportQueryParams($filters))
+            ->through(fn (Task $task) => $this->transformTaskReportRow($task));
     }
 
     private function formatUserProfile(?User $user): ?array
@@ -527,133 +193,12 @@ final class TaskController extends Controller
         ];
     }
 
-    private function transformTaskReportRow(Task $task, bool $withTicket, string $origin, ?bool $preferTicketStatus = null): array
+    private function transformTaskReportRow(Task $task): array
     {
-        $preferTicketStatus ??= $withTicket;
-        $tz = config('app.timezone');
-        $statusPayload = $this->ticketAwareStatusPayload($task, $preferTicketStatus);
-        $displayStatus = $statusPayload['display'];
-        $taskStatus = $statusPayload['task'];
-        $ticketStatusPayload = $statusPayload['ticket'];
-
-        $ticketModel = ($task->relationLoaded('ticket') && $task->ticket) ? $task->ticket : null;
-        $ticketInfo = null;
-        if ($ticketModel) {
-            $ticketInfo = $this->buildTicketReportPayload($ticketModel);
-        }
-
-        $projectInfo = null;
-        if ($task->relationLoaded('project') && $task->project) {
-            $projectStatus = $this->normalizeStatus($task->project->status ?? null);
-            $projectInfo = [
-                'id' => $task->project->id,
-                'title' => $task->project->title,
-                'project_no' => $task->project->project_no,
-                'status' => $projectStatus,
-                'status_label' => WorkflowStatus::label($projectStatus),
-                'status_badge' => WorkflowStatus::badgeClass($projectStatus),
-                'start_display' => $this->formatDate($task->project->start_date, 'd/m/Y', $tz),
-                'end_display' => $this->formatDate($task->project->end_date, 'd/m/Y', $tz),
-                'links' => [
-                    'show' => route('projects.show', [
-                        'project' => $task->project->public_slug,
-                    ]),
-                ],
-            ];
-        }
-
-        $attachments = $task->relationLoaded('attachments')
-            ? $task->attachments->map(fn ($attachment) => [
-                'id' => $attachment->id,
-                'name' => $attachment->original_name,
-                'size' => $attachment->size,
-                'view_url' => $this->attachmentRoute('attachments.view', $attachment),
-                'download_url' => $this->attachmentRoute('attachments.download', $attachment),
-            ])->values()->all()
-            : [];
-
-        $dueSource = $ticketModel ? ($ticketModel->due_at ?? $ticketModel->due_date) : ($task->due_at ?? $task->due_date);
-
-        $taskTimeline = [
-            'start' => $this->formatDate($task->start_date ?? null, 'd M Y', $tz),
-            'due' => $this->formatDate($task->due_at ?? $task->due_date, 'd M Y H:i', $tz),
-            'end' => $this->formatDate($task->end_date ?? null, 'd M Y', $tz),
-        ];
-        $ticketTimeline = $ticketInfo['timeline'] ?? null;
-
-        $displayStatusValue = $displayStatus['value'];
-        $displayStatusLabel = $displayStatus['label'];
-        $displayStatusBadge = $displayStatus['badge'];
-
         return [
-            'id' => $task->id,
-            'task_no' => $task->task_no,
-            'title' => $task->title,
-            'slug' => $task->public_slug,
-            'status' => $displayStatusValue,
-            'status_label' => $displayStatusLabel,
-            'status_badge' => $displayStatusBadge,
-            'display_status' => [
-                'label' => $displayStatusLabel,
-                'badge' => $displayStatusBadge,
-            ],
-            'status_task' => $taskStatus['value'],
-            'status_task_label' => $taskStatus['label'],
-            'status_task_badge' => $taskStatus['badge'],
-            'status_ticket' => $ticketStatusPayload['value'] ?? null,
-            'status_ticket_label' => $ticketStatusPayload['label'] ?? null,
-            'status_ticket_badge' => $ticketStatusPayload['badge'] ?? null,
-            'priority' => $task->priority ?? 'normal',
-            'priority_label' => ucfirst($task->priority ?? 'normal'),
-            'due_display' => $this->formatDate($dueSource, 'd M Y H:i', $tz),
-            'created_display' => $this->formatDate($task->created_at, 'd M Y H:i', $tz),
-            'updated_display' => $this->formatDate($task->updated_at, 'd M Y H:i', $tz),
-            'description' => $task->description ? $this->sanitizeDescription($task->description) : null,
-            'ticket' => $ticketInfo,
-            'project' => $projectInfo,
-            'attachments' => $attachments,
-            'timeline' => [
-                'task' => $taskTimeline,
-                'ticket' => $ticketTimeline,
-            ],
-            'requester' => $task->relationLoaded('requester') && $task->requester
-                ? ['name' => $this->formatUserName($task->requester)]
-                : null,
-            'assignee' => $task->relationLoaded('assignee') && $task->assignee
-                ? ['name' => $this->formatUserName($task->assignee)]
-                : null,
-            'links' => $this->buildTaskLinks($task, $origin),
-            'type_label' => $withTicket ? __('Dari Ticket') : 'Mandiri',
-        ];
-    }
-
-    private function ticketAwareStatusPayload(Task $task, bool $preferTicket): array
-    {
-        $taskStatus = $this->normalizeStatus($task->status ?? null);
-        $ticketStatus = null;
-
-        if ($task->relationLoaded('ticket') && $task->ticket) {
-            $ticketStatus = $this->normalizeStatus($task->ticket->status ?? null);
-        }
-
-        $displayStatus = $preferTicket && $ticketStatus ? $ticketStatus : $taskStatus;
-
-        return [
-            'display' => [
-                'value' => $displayStatus,
-                'label' => WorkflowStatus::label($displayStatus),
-                'badge' => WorkflowStatus::badgeClass($displayStatus),
-            ],
-            'task' => [
-                'value' => $taskStatus,
-                'label' => WorkflowStatus::label($taskStatus),
-                'badge' => WorkflowStatus::badgeClass($taskStatus),
-            ],
-            'ticket' => $ticketStatus ? [
-                'value' => $ticketStatus,
-                'label' => WorkflowStatus::label($ticketStatus),
-                'badge' => WorkflowStatus::badgeClass($ticketStatus),
-            ] : null,
+            ...$this->transformTaskSummary($task),
+            'requester' => $this->formatUserProfile($task->requester),
+            'created_display' => $this->formatDate($task->created_at, 'd M Y H:i'),
         ];
     }
 
@@ -670,7 +215,7 @@ final class TaskController extends Controller
     public function downloadDetail(Request $request, string $locale, Task $task)
     {
         UnitVisibility::ensureTaskAccess($request->user(), $task);
-        $task->load(['attachments', 'assignee', 'requester', 'ticket', 'ticket.assignedUsers', 'ticket.agent', 'project']);
+        $task->load(['attachments', 'assignee', 'requester']);
 
         $payload = $this->transformTaskDetail($task);
 
@@ -735,20 +280,16 @@ final class TaskController extends Controller
         $allowedStatuses = $this->allowedTaskStatuses($viewer);
         $lockStatus = empty($allowedStatuses);
         $unitOptions = $this->unitOptionsForUser($users, $viewer);
-        $ticketCollection = $this->linkableTicketsForUser($viewer);
-        [$ticketOptions, $ticketUnits] = $this->prepareTicketOptions($ticketCollection);
 
         $defaults = [
             'status' => WorkflowStatus::normalize(WorkflowStatus::default()),
             'priority' => 'normal',
             'requester_id' => $request->user()?->id,
-            'output_type' => 'task',
         ];
 
         return Inertia::render('Tasks/Create', [
             'statusOptions' => $statusOptions->all(),
             'priorityOptions' => $priorityOptions->all(),
-            'ticketOptions' => $ticketOptions,
             'userOptions' => $userOptions,
             'defaults' => $defaults,
             'meta' => [
@@ -759,7 +300,6 @@ final class TaskController extends Controller
                 'requesterLabel' => $this->userDisplayName($viewer),
                 'allowedStatuses' => $allowedStatuses,
                 'unitOptions' => $unitOptions,
-                'ticketUnits' => $ticketUnits,
             ],
         ]);
     }
@@ -832,7 +372,6 @@ final class TaskController extends Controller
         $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'status' => ['nullable', 'string'],
-            'ticket_id' => ['nullable', 'integer', 'exists:tickets,id'],
             'priority' => ['nullable', 'in:low,normal,high,critical'],
             'assignees' => ['nullable', 'array'],
             'assignees.*' => ['integer', 'exists:users,id'],
@@ -872,26 +411,6 @@ final class TaskController extends Controller
 
             // Lampiran
             $this->attachments->adoptFromServerIds($request->input('attachments', []), $task->refresh());
-
-            // Opsi project
-            if ($request->input('output_type') === 'task_project') {
-                $project = Project::create([
-                    'title' => $request->input('project_title') ?: $task->title,
-                    'description' => $task->description,
-                    'status' => WorkflowStatus::IN_PROGRESS,
-                    'status_id' => WorkflowStatus::code(WorkflowStatus::IN_PROGRESS),
-                    'ticket_id' => $task->ticket_id,
-                    'created_by' => auth()->id(),
-                    'start_date' => $request->input('project_start') ?: now(),
-                    'end_date' => $request->input('project_end'),
-                    'project_no' => $this->generateProjectNo(),
-                ]);
-
-                if (Schema::hasColumn($task->getTable(), 'project_id')) {
-                    $task->project_id = $project->id;
-                    $task->save();
-                }
-            }
 
             return $task;
         });
@@ -940,7 +459,7 @@ final class TaskController extends Controller
     public function show(string $locale, Task $task, Request $request): Response
     {
         UnitVisibility::ensureTaskAccess($request->user(), $task);
-        $task->load(['attachments', 'assignee', 'requester', 'ticket', 'ticket.assignedUsers', 'ticket.agent', 'project']);
+        $task->load(['attachments', 'assignee', 'requester']);
 
         $backUrl = $this->resolveBackUrl($request, routeLocale('tasks.report'));
 
@@ -951,7 +470,6 @@ final class TaskController extends Controller
         $taskPayload['links']['view'] = routeLocale('tasks.view', [
             'task' => $task->id,
         ]);
-        $taskPayload['related_tasks'] = $this->relatedTasksForTicket($task, $request);
 
         return Inertia::render('Tasks/Show', [
             'task' => $taskPayload,
@@ -964,10 +482,8 @@ final class TaskController extends Controller
     public function view(string $locale, Task $task, Request $request): Response
     {
         UnitVisibility::ensureTaskAccess($request->user(), $task);
-        $task->load(['attachments', 'assignee', 'requester', 'ticket', 'ticket.assignedUsers', 'ticket.agent', 'project']);
-        $task->load(['attachments', 'assignee', 'requester', 'ticket', 'ticket.assignedUsers', 'ticket.agent', 'project']);
+        $task->load(['attachments', 'assignee', 'requester']);
         $taskPayload = $this->transformTaskDetail($task);
-        $taskPayload['related_tasks'] = $this->relatedTasksForTicket($task, $request);
 
         return Inertia::render('Tasks/View', [
             'task' => $taskPayload,
@@ -982,13 +498,6 @@ final class TaskController extends Controller
             'attachments',
             'assignee',
             'requester',
-            'ticket',
-            'ticket.assignedUsers',
-            'ticket.agent',
-            'ticket.attachments' => function ($query) {
-                $query->select(['id', 'attachable_id', 'attachable_type', 'original_name', 'size', 'created_at']);
-            },
-            'project',
         ]);
 
         $statusOptions = collect(TaskStatus::values())
@@ -1014,8 +523,6 @@ final class TaskController extends Controller
         $allowedStatuses = $this->allowedTaskStatuses($viewer, $task);
         $lockStatus = empty($allowedStatuses);
         $unitOptions = $this->unitOptionsForUser($users, $viewer);
-        $ticketCollection = $this->linkableTicketsForUser($viewer, $task->ticket);
-        [$ticketOptions, $ticketUnits] = $this->prepareTicketOptions($ticketCollection);
 
         $backUrl = $this->resolveBackUrl($request, routeLocale('tasks.report'));
 
@@ -1023,7 +530,6 @@ final class TaskController extends Controller
             'task' => $this->transformTaskForm($task),
             'statusOptions' => $statusOptions->all(),
             'priorityOptions' => $priorityOptions->all(),
-            'ticketOptions' => $ticketOptions,
             'userOptions' => $userOptions,
             'meta' => [
                 'backUrl' => $backUrl,
@@ -1036,7 +542,6 @@ final class TaskController extends Controller
                 'requesterLabel' => $this->userDisplayName($task->requester) ?? $this->userDisplayName($viewer),
                 'allowedStatuses' => $allowedStatuses,
                 'unitOptions' => $unitOptions,
-                'ticketUnits' => $ticketUnits,
             ],
         ]);
     }
@@ -1132,7 +637,6 @@ final class TaskController extends Controller
         $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'status' => ['required', 'string'],
-            'ticket_id' => ['nullable', 'integer', 'exists:tickets,id'],
             'priority' => ['nullable', 'in:low,normal,high,critical'],
             'assignees' => ['nullable', 'array'],
             'assignees.*' => ['integer', 'exists:users,id'],
@@ -1216,10 +720,9 @@ final class TaskController extends Controller
     public function destroy(Request $request, string $locale, Task $task): RedirectResponse
     {
         UnitVisibility::ensureTaskAccess($request->user(), $task);
-        $ticketId = $task->ticket_id;
         $statusValue = $task->status instanceof \BackedEnum ? $task->status->value : $task->status;
 
-        DB::transaction(function () use ($task, $ticketId) {
+        DB::transaction(function () use ($task) {
             $this->deleteTask->execute($task);
         });
 
@@ -1228,69 +731,7 @@ final class TaskController extends Controller
         return redirect()->to($backTo)->with('success', 'Task deleted.');
     }
 
-    /** Promote Task -> Project */
-    public function promoteToProject(Request $request, string $locale, Task $task): RedirectResponse
-    {
-        UnitVisibility::ensureTaskAccess($request->user(), $task);
-        if ($task->project_id) {
-            return back()->with('error', __('Task sudah terhubung ke Project.'));
-        }
-
-        DB::transaction(function () use ($task) {
-            $project = Project::create([
-                'title' => $task->title,
-                'description' => $task->description,
-                'status' => WorkflowStatus::IN_PROGRESS,
-                'status_id' => WorkflowStatus::code(WorkflowStatus::IN_PROGRESS),
-                'ticket_id' => $task->ticket_id,
-                'created_by' => auth()->id(),
-                'start_date' => now(),
-                'end_date' => null,
-                'project_no' => $this->generateProjectNo(),
-            ]);
-
-            $task->update(['project_id' => $project->id]);
-
-            if ($project->ticket_id) {
-                $this->updateLinkedTicketStatus($project->ticket_id, WorkflowStatus::IN_PROGRESS);
-            }
-        });
-
-        $task->load('project');
-
-        try {
-            $creator = Auth::user();
-            if ($creator) {
-                $projectLink = $task->project
-                    ? route('projects.show', ['project' => $task->project->public_slug])
-                    : route('projects.report');
-
-                $creator->notify(new ActivityNotification([
-                    'title' => __('Project Baru'),
-                    'message' => 'Task dipromosikan menjadi project: '.$task->title,
-                    'url' => $projectLink,
-                    'icon' => 'work',
-                    'by' => $creator->display_name,
-                    'subject_type' => 'project',
-                    'subject_id' => $task->project?->id,
-                ]));
-            }
-        } catch (\Throwable $e) {
-        }
-
-        return back()->with('success', __('Berhasil mempromosikan Task menjadi Project.'));
-    }
-
     /** Helper: generate nomor project unik */
-    private function generateProjectNo(): string
-    {
-        do {
-            $no = 'PRJ'.date('Y').str_pad(random_int(1, 9999), 4, '0', STR_PAD_LEFT);
-        } while (Project::where('project_no', $no)->exists());
-
-        return $no;
-    }
-
     private function transformTaskInProgress(Task $task, ?string $origin = null): array
     {
         $status = $this->normalizeStatus($task->status ?? null);
@@ -1312,10 +753,7 @@ final class TaskController extends Controller
         $statusLabel = WorkflowStatus::label($status);
         $priority = $task->priority ?? 'normal';
         $tz = config('app.timezone');
-        $ticketDue = ($task->relationLoaded('ticket') && $task->ticket)
-            ? ($task->ticket->due_at ?? $task->ticket->due_date)
-            : null;
-        $dueSource = $ticketDue ?? $task->due_at ?? $task->due_date;
+        $dueSource = $task->due_at ?? $task->due_date;
 
         $statusCodes = [
             WorkflowStatus::NEW => 'NEW',
@@ -1343,10 +781,7 @@ final class TaskController extends Controller
                 'view_url' => $this->attachmentRoute('attachments.view', $attachment),
                 'download_url' => $this->attachmentRoute('attachments.download', $attachment),
             ])->values()->all(),
-            'links' => array_merge(
-                $this->buildTaskLinks($task, $origin),
-                ['promote' => routeLocale('tasks.promote', ['task' => $task->id])]
-            ),
+            'links' => $this->buildTaskLinks($task, $origin),
         ];
     }
 
@@ -1367,39 +802,8 @@ final class TaskController extends Controller
     private function transformTaskDetail(Task $task): array
     {
         $tz = config('app.timezone');
-        $statusPayload = $this->ticketAwareStatusPayload($task, false);
-        $displayStatus = $statusPayload['display'];
-        $taskStatus = $statusPayload['task'];
-        $ticketStatus = $statusPayload['ticket'];
-        $priority = $task->priority ?? null;
-
-        $ticketModel = ($task->relationLoaded('ticket') && $task->ticket) ? $task->ticket : null;
-        $ticket = null;
-        if ($ticketModel) {
-            $ticket = [
-                'id' => $ticketModel->id,
-                'title' => $ticketModel->title,
-                'ticket_no' => $ticketModel->ticket_no,
-                'status' => $ticketStatus['value'] ?? null,
-                'status_label' => $ticketStatus['label'] ?? null,
-                'status_badge' => $ticketStatus['badge'] ?? null,
-                'timeline' => [
-                    'start' => $this->formatDate($ticketModel->start_date ?? $ticketModel->created_at, 'd M Y', $tz),
-                    'due' => $this->formatDate($ticketModel->due_at ?? $ticketModel->due_date, 'd M Y H:i', $tz),
-                    'end' => $this->formatDate($ticketModel->end_date ?? $ticketModel->updated_at, 'd M Y', $tz),
-                ],
-                'link' => $this->ticketReportDetailUrl($ticketModel),
-            ];
-        }
-
-        $project = null;
-        if ($task->relationLoaded('project') && $task->project) {
-            $project = [
-                'id' => $task->project->id,
-                'title' => $task->project->title,
-                'link' => route('projects.show', ['project' => $task->project->public_slug]),
-            ];
-        }
+        $status = $this->normalizeStatus($task->status);
+        $priority = $task->priority;
 
         $assignee = null;
         if ($task->relationLoaded('assignee') && $task->assignee) {
@@ -1424,45 +828,11 @@ final class TaskController extends Controller
             'due' => $this->formatDate($task->due_at ?? $task->due_date, 'd M Y H:i', $tz),
             'end' => $this->formatDate($task->end_date, 'd M Y', $tz),
         ];
-        $ticketTimeline = $ticket['timeline'] ?? null;
-
-        $dueSource = $ticketModel
-            ? ($ticketModel->due_at ?? $ticketModel->due_date)
-            : ($task->due_at ?? $task->due_date);
-
-        $assignmentPayload = $this->ticketAssignmentPayload($ticketModel);
-
-        $assigneeEntry = null;
-        if ($task->relationLoaded('assignee') && $task->assignee) {
-            $assigneeEntry = $this->formatAssignmentEntry($task->assignee, 'Agent');
-        }
-
-        if (empty($assignmentPayload['entries'])) {
-            $fallbackAssigned = $this->resolveAssigned($task);
-            $entries = $fallbackAssigned;
-
-            if ($assigneeEntry) {
-                array_unshift($entries, $assigneeEntry);
-            }
-
-            $assignmentPayload = [
-                'source' => 'task',
-                'agent' => $assigneeEntry,
-                'pics' => $fallbackAssigned,
-                'entries' => collect($entries)
-                    ->filter(fn ($entry) => ! empty($entry['name']))
-                    ->unique(fn ($entry) => strtolower((string) ($entry['id'] ?? $entry['name'] ?? '')))
-                    ->values()
-                    ->all(),
-            ];
-        } elseif (! $assignmentPayload['agent'] && $assigneeEntry) {
-            $assignmentPayload['agent'] = $assigneeEntry;
-            $assignmentPayload['entries'] = collect($assignmentPayload['entries'])
-                ->prepend($assigneeEntry)
-                ->unique(fn ($entry) => strtolower((string) ($entry['id'] ?? $entry['name'] ?? '')))
-                ->values()
-                ->all();
-        }
+        $dueSource = $task->due_at ?? $task->due_date;
+        $agent = $task->assignee ? $this->formatAssignmentEntry($task->assignee, 'Agent') : null;
+        $pics = $this->resolveAssigned($task);
+        $entries = collect([$agent, ...$pics])->filter()->unique('id')->values()->all();
+        $assignmentPayload = ['source' => 'task', 'agent' => $agent, 'pics' => $pics, 'entries' => $entries];
 
         return [
             'id' => $task->id,
@@ -1470,30 +840,24 @@ final class TaskController extends Controller
             'title' => $task->title,
             'slug' => $task->public_slug,
             'description' => $task->description,
-            'status' => $displayStatus['value'],
-            'status_label' => $displayStatus['label'],
-            'status_badge' => $displayStatus['badge'],
-            'status_task' => $taskStatus['value'],
-            'status_task_label' => $taskStatus['label'],
-            'status_task_badge' => $taskStatus['badge'],
-            'status_ticket' => $ticketStatus['value'] ?? null,
-            'status_ticket_label' => $ticketStatus['label'] ?? null,
-            'status_ticket_badge' => $ticketStatus['badge'] ?? null,
+            'status' => $status,
+            'status_label' => WorkflowStatus::label($status),
+            'status_badge' => WorkflowStatus::badgeClass($status),
+            'status_task' => $status,
+            'status_task_label' => WorkflowStatus::label($status),
+            'status_task_badge' => WorkflowStatus::badgeClass($status),
             'priority' => $priority,
             'priority_label' => $priority ? ucfirst($priority) : null,
             'due_display' => $this->formatDate($dueSource, 'd M Y H:i', $tz),
             'due_at' => $task->due_at?->timezone($tz)->format('Y-m-d H:i'),
             'start_display' => $this->formatDate($task->start_date, 'd M Y', $tz),
             'end_display' => $this->formatDate($task->end_date, 'd M Y', $tz),
-            'ticket' => $ticket,
-            'project' => $project,
             'assignee' => $assignee,
             'requester' => $requester,
             'assigned' => $assignmentPayload['entries'],
             'assignment' => $assignmentPayload,
             'timeline' => [
                 'task' => $taskTimeline,
-                'ticket' => $ticketTimeline,
             ],
             'attachments' => $task->attachments->map(fn ($attachment) => [
                 'id' => $attachment->id,
@@ -1507,61 +871,8 @@ final class TaskController extends Controller
                 'edit' => routeLocale('tasks.edit', ['task' => $task->public_slug]),
                 'view' => routeLocale('tasks.view', ['task' => $task->id]),
                 'pdf' => routeLocale('tasks.report.detail', ['task' => $task->id]),
-                'promote' => routeLocale('tasks.promote', ['task' => $task->id]),
             ],
         ];
-    }
-
-    private function relatedTasksForTicket(Task $task, Request $request): array
-    {
-        if (! $task->ticket_id) {
-            return [];
-        }
-
-        $viewer = $request->user();
-        $tz = config('app.timezone');
-
-        /** @var Builder $query */
-        $query = Task::query()
-            ->where('ticket_id', $task->ticket_id)
-            ->orderByDesc('created_at');
-
-        /** @var Builder $query */
-        $query = UnitVisibility::scopeTasks($query, $viewer);
-
-        $ticketColumns = implode(',', array_unique(array_filter([
-            'id',
-            'status',
-            Schema::hasColumn('tickets', 'due_at') ? 'due_at' : null,
-            Schema::hasColumn('tickets', 'due_date') ? 'due_date' : null,
-        ])));
-
-        $query->with(['ticket:'.$ticketColumns]);
-
-        return $query->get()->map(function (Task $related) use ($task, $tz) {
-            $statusPayload = $this->ticketAwareStatusPayload($related, false);
-            $displayStatus = $statusPayload['display'];
-            $ticketDue = $related->relationLoaded('ticket') && $related->ticket
-                ? ($related->ticket->due_at ?? $related->ticket->due_date)
-                : null;
-            $dueSource = $ticketDue ?? ($related->due_at ?? ($related->due_date ?? null));
-
-            return [
-                'id' => $related->id,
-                'task_no' => $related->task_no,
-                'title' => $related->title,
-                'slug' => $related->public_slug,
-                'is_current' => $related->id === $task->id,
-                'display_status' => $displayStatus,
-                'priority_label' => $related->priority ? ucfirst($related->priority) : null,
-                'due_display' => $this->formatDate($dueSource, 'd M Y H:i', $tz),
-                'links' => [
-                    'show' => $this->taskShowLink($related),
-                    'edit' => routeLocale('tasks.edit', ['task' => $related->public_slug]),
-                    'delete' => $related->id === $task->id ? null : routeLocale('tasks.destroy', ['task' => $related->id]),
-                ],
-            ];
-        })->values()->all();
     }
 
     private function transformTaskForm(Task $task, ?string $timezone = null): array
@@ -1571,39 +882,7 @@ final class TaskController extends Controller
         $status = $this->normalizeStatus($task->status ?? null);
         $priority = $task->priority ?? 'normal';
         $assignedIds = $this->extractAssignedIds($task);
-        $ticket = $task->relationLoaded('ticket') ? $task->ticket : null;
-
-        if (empty($assignedIds) && $ticket && $ticket->relationLoaded('assignedUsers')) {
-            $assignedIds = $ticket->assignedUsers->pluck('id')->all();
-        }
-
-        $assigneeId = $task->assignee_id;
-        if (! $assigneeId && $ticket) {
-            $assigneeId = $ticket->agent_id ?? $ticket->assignee_id;
-        }
-
-        $ticketAttachments = [];
-        if ($ticket && $ticket->relationLoaded('attachments')) {
-            $ticketAttachments = $ticket->attachments
-                ->map(fn ($attachment) => [
-                    'id' => $attachment->id,
-                    'name' => $attachment->original_name ?? __('Lampiran ticket'),
-                    'size' => $attachment->size,
-                    'view_url' => $this->attachmentRoute('attachments.view', $attachment),
-                    'download_url' => $this->attachmentRoute('attachments.download', $attachment),
-                ])
-                ->values()
-                ->all();
-        }
-
-        $dueAt = $task->due_at
-            ?: ($ticket?->due_at ?? $ticket?->due_date);
-
-        $projectTitle = $task->project_title
-            ?? ($task->relationLoaded('project') && $task->project ? $task->project->title : null);
-
-        $projectStart = $task->project_start ?? $task->start_date;
-        $projectEnd = $task->project_end ?? $task->end_date;
+        $dueAt = $task->due_at ?? $task->due_date;
 
         return [
             'id' => $task->id,
@@ -1612,18 +891,13 @@ final class TaskController extends Controller
             'description' => $task->description,
             'status' => $status,
             'priority' => $priority,
-            'ticket_id' => $task->ticket_id,
             'assignees' => array_map('intval', array_filter($assignedIds, fn ($id) => is_numeric($id))),
             'assigned_to' => array_map('intval', array_filter($assignedIds, fn ($id) => is_numeric($id))),
-            'assignee_id' => $assigneeId,
+            'assignee_id' => $task->assignee_id,
             'requester_id' => $task->requester_id,
             'due_at' => $dueAt ? Carbon::parse($dueAt)->copy()->timezone($timezone)->format('Y-m-d H:i') : null,
             'start_date' => $task->start_date ? Carbon::parse($task->start_date)->format('Y-m-d') : null,
             'end_date' => $task->end_date ? Carbon::parse($task->end_date)->format('Y-m-d') : null,
-            'output_type' => $task->output_type ?? 'task',
-            'project_title' => $projectTitle,
-            'project_start' => $projectStart ? Carbon::parse($projectStart)->format('Y-m-d') : null,
-            'project_end' => $projectEnd ? Carbon::parse($projectEnd)->format('Y-m-d') : null,
             'attachments' => $task->attachments->map(fn ($attachment) => [
                 'id' => $attachment->id,
                 'name' => $attachment->original_name,
@@ -1632,8 +906,6 @@ final class TaskController extends Controller
                 'download_url' => $this->attachmentRoute('attachments.download', $attachment),
                 'delete_url' => $this->attachmentRoute('attachments.destroy', $attachment),
             ])->values()->all(),
-            'ticket_attachments' => $ticketAttachments,
-            'ticket_attachment_count' => (int) ($ticket?->attachments_count ?? count($ticketAttachments)),
         ];
     }
 
@@ -1707,41 +979,6 @@ final class TaskController extends Controller
             ->unique(fn ($entry) => strtolower($entry['name']))
             ->values()
             ->all();
-    }
-
-    private function ticketAssignmentPayload(?Ticket $ticket): array
-    {
-        $payload = [
-            'source' => 'task',
-            'agent' => null,
-            'pics' => [],
-            'entries' => [],
-        ];
-
-        if (! $ticket) {
-            return $payload;
-        }
-
-        $payload['source'] = 'ticket';
-
-        if ($ticket->relationLoaded('agent') && $ticket->agent) {
-            $agentEntry = $this->formatAssignmentEntry($ticket->agent, 'Agent');
-            $payload['agent'] = $agentEntry;
-            $payload['entries'][] = $agentEntry;
-        }
-
-        if ($ticket->relationLoaded('assignedUsers') && $ticket->assignedUsers) {
-            foreach ($ticket->assignedUsers as $user) {
-                $entry = $this->formatAssignmentEntry($user, 'PIC');
-                $payload['pics'][] = $entry;
-                $payload['entries'][] = $entry;
-            }
-        }
-
-        $payload['pics'] = array_values($payload['pics']);
-        $payload['entries'] = array_values($payload['entries']);
-
-        return $payload;
     }
 
     private function formatAssignmentEntry(User $user, string $role): array
@@ -1842,38 +1079,9 @@ final class TaskController extends Controller
 
     private function baseTaskReportQuery(array $filters, bool $hasDueDateColumn, ?User $viewer = null): Builder
     {
-        $query = Task::query();
-
-if ($viewer && \App\Support\UnitVisibility::requiresRestriction($viewer)) {
-
-    $userId = (int) $viewer->id;
-
-    $query->where(function (Builder $q) use ($userId) {
-
-        // 1️⃣ TASK MANDIRI (aturan lama, ketat)
-        $q->where(function (Builder $t) use ($userId) {
-            $t->where('assignee_id', $userId)
-              ->orWhere('created_by', $userId)
-              ->orWhere(function (Builder $inner) use ($userId) {
-                  $inner->whereRaw("JSON_VALID(tasks.assigned_to) AND JSON_CONTAINS(tasks.assigned_to, CAST(? AS JSON), '$')", [(int) $userId]);
-              });
-        });
-
-
-        // 2️⃣ TASK DARI TICKET (WARISAN RELASI)
-        $q->orWhereHas('ticket', function (Builder $ticket) use ($userId) {
-            $ticket->where('requester_id', $userId)
-                   ->orWhere('agent_id', $userId)
-                   ->orWhere('assigned_id', $userId)
-                   ->orWhereHas(
-                       'assignedUsers',
-                       fn (Builder $sub) => $sub->where('users.id', $userId)
-                   );
-        });
-
-    });
-}
-
+        $query = UnitVisibility::requiresRestriction($viewer)
+            ? UnitVisibility::scopeWorkflowTasks(Task::query(), $viewer)
+            : Task::query();
 
         if ($filters['q'] !== '') {
             $query->where(function ($inner) use ($filters) {
@@ -1883,12 +1091,7 @@ if ($viewer && \App\Support\UnitVisibility::requiresRestriction($viewer)) {
         }
 
         if ($filters['normalized_status']) {
-            $query->where(function (Builder $inner) use ($filters) {
-                $inner->where('status', $filters['normalized_status'])
-                    ->orWhereHas('ticket', function (Builder $ticket) use ($filters) {
-                        $ticket->where('status', $filters['normalized_status']);
-                    });
-            });
+            $query->whereIn('status', WorkflowStatus::equivalents($filters['normalized_status']));
         }
 
         if ($filters['from_date']) {
@@ -1928,7 +1131,7 @@ if ($viewer && \App\Support\UnitVisibility::requiresRestriction($viewer)) {
             'updated_at',
         ];
 
-        foreach (['task_no', 'priority', 'description', 'due_at', 'ticket_id', 'project_id', 'assignee_id', 'requester_id', 'status_id', 'start_date', 'end_date'] as $column) {
+        foreach (['task_no', 'priority', 'description', 'due_at', 'public_slug', 'assignee_id', 'created_by', 'status_id', 'start_date', 'end_date'] as $column) {
             if (Schema::hasColumn('tasks', $column)) {
                 $selectColumns[] = $column;
             }
@@ -1945,8 +1148,6 @@ if ($viewer && \App\Support\UnitVisibility::requiresRestriction($viewer)) {
             $userColumns = $this->userRelationColumns();
             $query->with([
                 'attachments:id,attachable_id,attachable_type,original_name,size',
-                'ticket:'.$this->ticketRelationColumns(),
-                'project:'.$this->projectRelationColumns(),
                 'assignee:'.$userColumns,
                 'requester:'.$userColumns,
             ]);
@@ -2028,32 +1229,6 @@ if ($viewer && \App\Support\UnitVisibility::requiresRestriction($viewer)) {
         }
 
         return array_unique($columns);
-    }
-
-    private function ticketRelationColumns(): string
-    {
-        $columns = ['id', 'title', 'status'];
-
-        foreach (['ticket_no', 'due_at', 'due_date', 'start_date', 'end_date', 'created_at', 'updated_at'] as $column) {
-            if (Schema::hasColumn('tickets', $column)) {
-                $columns[] = $column;
-            }
-        }
-
-        return implode(',', array_unique($columns));
-    }
-
-    private function projectRelationColumns(): string
-    {
-        $columns = ['id', 'title', 'status'];
-
-        foreach (['project_no', 'start_date', 'end_date', 'status_id'] as $column) {
-            if (Schema::hasColumn('projects', $column)) {
-                $columns[] = $column;
-            }
-        }
-
-        return implode(',', array_unique($columns));
     }
 
     private function formatDate($value, string $format, ?string $tz = null): string
@@ -2172,12 +1347,6 @@ if ($viewer && \App\Support\UnitVisibility::requiresRestriction($viewer)) {
         $priority = $request->input('priority');
         if ($priority !== null && $priority !== '') {
             $meta['priority'] = $priority;
-        }
-
-        // Ticket terkait (task berbasis ticket)
-        $ticketId = $request->input('ticket_id');
-        if ($ticketId !== null && $ticketId !== '') {
-            $meta['ticket_id'] = (int) $ticketId;
         }
 
         // ASSIGNEE (gunakan assignee_id bila ada)
@@ -2396,20 +1565,6 @@ if ($viewer && \App\Support\UnitVisibility::requiresRestriction($viewer)) {
         }
     }
 
-    private function updateLinkedTicketStatus(?int $ticketId, string $status): void
-    {
-        if (! $ticketId) {
-            return;
-        }
-
-        $normalized = WorkflowStatus::normalize($status);
-
-        Ticket::where('id', $ticketId)->update([
-            'status' => $normalized,
-            'status_id' => WorkflowStatus::code($normalized),
-        ]);
-    }
-
     private function statusGuidance(): array
     {
         return [
@@ -2551,121 +1706,6 @@ if ($viewer && \App\Support\UnitVisibility::requiresRestriction($viewer)) {
         return array_values($units);
     }
 
-    private function linkableTicketsForUser(?User $viewer, ?Ticket $context = null): Collection
-    {
-        $requesterColumns = $this->requesterSelectColumns();
-        $attachmentColumns = ['id', 'attachable_id', 'attachable_type', 'original_name', 'size'];
-
-        $query = Ticket::query()
-            ->with([
-                'requester:'.implode(',', $requesterColumns),
-                'attachments:'.implode(',', $attachmentColumns),
-            ])
-            ->withCount('attachments')
-            ->select(['id', 'ticket_no', 'title', 'status', 'requester_id', 'created_at'])
-            ->whereIn('status', $this->linkableTicketStatuses())
-            ->latest('id')
-            ->limit(200);
-
-        $tickets = $this->filterTicketsByViewerUnit($query->get(), $viewer);
-
-        if ($context) {
-            $context->loadMissing([
-                'requester:'.implode(',', $requesterColumns),
-                'attachments:'.implode(',', $attachmentColumns),
-            ]);
-            if ($tickets->where('id', $context->id)->isEmpty()) {
-                $tickets->push($context);
-            }
-        }
-
-        return $tickets->values();
-    }
-
-    private function prepareTicketOptions(Collection $tickets): array
-    {
-        $options = $tickets
-            ->map(fn (Ticket $ticket) => $this->ticketOptionPayload($ticket))
-            ->values();
-
-        $units = $options
-            ->pluck('unit')
-            ->filter(fn ($value) => is_string($value) && trim($value) !== '')
-            ->unique()
-            ->values()
-            ->all();
-
-        return [$options->all(), $units];
-    }
-
-    private function ticketOptionPayload(Ticket $ticket): array
-    {
-        $number = $ticket->ticket_no ?? ('Ticket #'.$ticket->id);
-        $title = $ticket->title ? Str::limit($ticket->title, 70) : 'Tanpa judul';
-        $unit = $ticket->requester?->unit ?? null;
-        $status = WorkflowStatus::normalize($ticket->status ?? WorkflowStatus::default());
-        $attachmentCount = (int) ($ticket->attachments_count
-            ?? ($ticket->relationLoaded('attachments') ? $ticket->attachments->count() : 0));
-        $attachments = [];
-
-        if ($ticket->relationLoaded('attachments')) {
-            $attachments = $ticket->attachments
-                ->map(function ($attachment) {
-                    return [
-                        'id' => $attachment->id,
-                        'name' => $attachment->original_name ?? __('Lampiran ticket'),
-                        'size' => $attachment->size,
-                        'view_url' => $this->attachmentRoute('attachments.view', $attachment),
-                        'download_url' => $this->attachmentRoute('attachments.download', $attachment),
-                    ];
-                })
-                ->values()
-                ->all();
-        }
-
-        return [
-            'id' => $ticket->id,
-            'label' => trim($number.' — '.$title),
-            'ticket_no' => $number,
-            'title' => $ticket->title ?? '',
-            'status' => $status,
-            'status_label' => WorkflowStatus::label($status),
-            'unit' => $unit !== '' ? $unit : null,
-            'attachments_count' => $attachmentCount,
-            'attachments' => $attachments,
-            'requester' => $this->userDisplayName($ticket->requester),
-        ];
-    }
-
-    private function linkableTicketStatuses(): array
-    {
-        return [
-            WorkflowStatus::NEW,
-            WorkflowStatus::IN_PROGRESS,
-            WorkflowStatus::CONFIRMATION,
-            WorkflowStatus::REVISION,
-            WorkflowStatus::ON_HOLD,
-        ];
-    }
-
-    private function filterTicketsByViewerUnit(Collection $tickets, ?User $viewer): Collection
-    {
-        if ($this->viewerCanAccessAllUnits($viewer)) {
-            return $tickets->values();
-        }
-
-        $viewerUnitKey = $this->normalizedUnitKey($viewer?->unit ?? null);
-        return $tickets
-            ->filter(function (Ticket $ticket) use ($viewerUnitKey, $viewer) {
-                $requesterUnit = $ticket->requester?->unit ?? null;
-                $unitMatches = $viewerUnitKey && $this->normalizedUnitKey($requesterUnit) === $viewerUnitKey;
-                $userInvolved = $this->ticketRelatesToUser($ticket, $viewer);
-
-                return $unitMatches || $userInvolved;
-            })
-            ->values();
-    }
-
     private function viewerCanAccessAllUnits(?User $viewer): bool
     {
         return RoleHelpers::userIsSuperAdmin($viewer);
@@ -2692,34 +1732,6 @@ if ($viewer && \App\Support\UnitVisibility::requiresRestriction($viewer)) {
     private function userCanSelectRequester(?User $user): bool
     {
         return RoleHelpers::userIsSuperAdmin($user);
-    }
-
-    private function ticketRelatesToUser(Ticket $ticket, ?User $viewer): bool
-    {
-        if (! $viewer) {
-            return false;
-        }
-
-        $userId = (int) ($viewer->id ?? 0);
-        if ($userId <= 0) {
-            return false;
-        }
-
-        if ((int) ($ticket->requester_id ?? 0) === $userId) {
-            return true;
-        }
-        if ((int) ($ticket->agent_id ?? 0) === $userId) {
-            return true;
-        }
-        if ((int) ($ticket->assigned_id ?? 0) === $userId) {
-            return true;
-        }
-
-        if ($ticket->relationLoaded('assignedUsers')) {
-            return $ticket->assignedUsers->contains(fn ($assigned) => (int) $assigned->id === $userId);
-        }
-
-        return $ticket->assignedUsers()->where('users.id', $userId)->exists();
     }
 
     private function userDisplayName($user): string

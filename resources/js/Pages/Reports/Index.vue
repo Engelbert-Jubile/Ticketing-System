@@ -915,7 +915,6 @@ const buildDistribution = group => ({
 const matrix = computed(() => props.statusMatrix ?? {});
 const ticketStatus = computed(() => buildDistribution(matrix.value.tickets?.status));
 const ticketPriority = computed(() => buildDistribution(matrix.value.tickets?.priority));
-const ticketType = computed(() => buildDistribution(matrix.value.tickets?.type));
 const taskStatus = computed(() => buildDistribution(matrix.value.tasks?.status));
 const projectStatus = computed(() => buildDistribution(matrix.value.projects?.status));
 
@@ -927,7 +926,6 @@ const statusPanels = computed(() => [
     completionRate: completionRate(normalizedOverview.value.tickets),
     segments: [
       ticketPriority.value.items.length ? { label: uiText("Prioritas"), items: ticketPriority.value.items } : null,
-      ticketType.value.items.length ? { label: uiText("Tipe"), items: ticketType.value.items } : null
     ].filter(Boolean)
   },
   {

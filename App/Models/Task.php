@@ -17,8 +17,6 @@ use Illuminate\Support\Str;
  * @property int $id
  * @property string|null $uuid
  * @property string|null $task_no
- * @property int|null $ticket_id
- * @property int|null $project_id
  * @property int|null $assignee_id
  * @property string $title
  * @property string|null $description
@@ -37,9 +35,7 @@ use Illuminate\Support\Str;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Attachment> $attachments
  * @property-read int|null $attachments_count
  * @property-read string $status_label
- * @property-read \App\Domains\Project\Models\Project|null $project
  * @property-read \App\Models\User|null $requester
- * @property-read \App\Models\Ticket|null $ticket
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Task newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Task newQuery()
@@ -55,11 +51,9 @@ use Illuminate\Support\Str;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Task whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Task wherePlanning($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Task wherePriority($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Task whereProjectId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Task whereStartDate($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Task whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Task whereTaskNo($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Task whereTicketId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Task whereTitle($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Task whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Task whereUuid($value)
@@ -74,8 +68,6 @@ class Task extends Model
 
     protected $fillable = [
         'uuid',
-        'ticket_id',
-        'project_id',
         'task_no',
         'title',
         'description',
@@ -146,16 +138,6 @@ class Task extends Model
     }
 
     // ===== Relasi =====
-    public function ticket(): BelongsTo
-    {
-        return $this->belongsTo(\App\Models\Ticket::class, 'ticket_id');
-    }
-
-    public function project(): BelongsTo
-    {
-        return $this->belongsTo(\App\Domains\Project\Models\Project::class, 'project_id');
-    }
-
     public function assignee(): BelongsTo
     {
         return $this->belongsTo(\App\Models\User::class, 'assignee_id');
@@ -232,11 +214,6 @@ class Task extends Model
         $userId = (int) $user->id;
 
         if ($this->created_by && (int) $this->created_by === $userId) {
-            return true;
-        }
-
-        $ticket = $this->relationLoaded('ticket') ? $this->ticket : $this->ticket()->select(['id', 'requester_id'])->first();
-        if ($ticket && (int) ($ticket->requester_id ?? 0) === $userId) {
             return true;
         }
 

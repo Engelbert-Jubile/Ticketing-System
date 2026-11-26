@@ -173,7 +173,7 @@ class WorkflowRuntimeService
             if (! in_array($field, ['priority', 'status', 'type'], true)) {
                 return false;
             }
-            $actual = (string) ($subject->getAttribute($field) ?? '');
+            $actual = $field === 'type' ? $workflow->entity_type : (string) ($subject->getAttribute($field) ?? '');
             $passes = match ($operator) {
                 'not_equals' => strcasecmp($actual, $expected) !== 0,
                 'contains' => str_contains(strtolower($actual), strtolower($expected)),

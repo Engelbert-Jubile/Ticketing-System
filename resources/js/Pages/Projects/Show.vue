@@ -37,7 +37,6 @@
         <div><dt class="font-semibold text-slate-800 dark:text-slate-100">{{ $t("Target Selesai") }}</dt><dd>{{ project.timeline.end }}</dd></div>
         <div><dt class="font-semibold text-slate-800 dark:text-slate-100">{{ $t("Dibuat") }}</dt><dd>{{ project.timeline.created }}</dd></div>
         <div><dt class="font-semibold text-slate-800 dark:text-slate-100">{{ $t("Diupdate") }}</dt><dd>{{ project.timeline.updated }}</dd></div>
-        <div v-if="project.ticket"><dt class="font-semibold text-slate-800 dark:text-slate-100">Ticket</dt><dd>{{ project.ticket.ticket_no }}</dd></div>
       </dl>
 
       <div class="mt-6 space-y-2">
@@ -49,93 +48,7 @@
       </div>
     </section>
 
-    <section v-if="project.ticket" class="rounded-3xl border border-blue-200 bg-blue-50/80 p-6 shadow-sm dark:border-blue-900/60 dark:bg-blue-950/40">
-      <header class="mb-4 flex items-start justify-between">
-        <div>
-          <h2 class="text-lg font-semibold text-blue-900 dark:text-blue-200">{{ $t("Informasi Ticket") }}</h2>
-          <p class="text-sm text-blue-700/80 dark:text-blue-300/80">{{ project.ticket.title }}</p>
-        </div>
-        <StatusBadge :status="project.ticket.status" variant="status" size="sm" />
-      </header>
-      <dl class="grid gap-3 text-sm text-blue-900 dark:text-blue-100 sm:grid-cols-2">
-        <div><dt class="font-semibold">Due Date</dt><dd>{{ project.ticket.due_display }}</dd></div>
-        <div v-if="project.ticket.requester">
-          <dt class="font-semibold">Requester</dt>
-          <dd>
-            {{ project.ticket.requester.name }}
-            <span v-if="project.ticket.requester.email" class="block text-xs text-slate-400 dark:text-slate-500">{{ project.ticket.requester.email }}</span>
-          </dd>
-        </div>
-      </dl>
-      <div v-if="ticketAgent" class="mt-4">
-        <div class="text-xs font-semibold uppercase text-blue-800/80 dark:text-blue-300/80">Agent</div>
-        <div class="mt-2 flex flex-wrap gap-2">
-          <TasksAssigneePill :name="ticketAgent.name" />
-        </div>
-      </div>
-      <div v-if="ticketAssigned.length" class="mt-4">
-        <div class="text-xs font-semibold uppercase text-blue-800/80 dark:text-blue-300/80">PIC</div>
-        <div class="mt-2 flex flex-wrap gap-2">
-          <TasksAssigneePill v-for="person in ticketAssigned" :key="person.id" :name="person.name" />
-        </div>
-      </div>
-      <div v-if="project.ticket" class="mt-4 space-y-2">
-        <div class="text-xs font-semibold uppercase text-blue-800/80 dark:text-blue-300/80">Ticket Attachments</div>
-        <TicketAttachmentList :attachments="ticketAttachments" />
-      </div>
-    </section>
 
-    <section v-if="relatedProjects.length" class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-      <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h2 class="text-lg font-semibold text-slate-900 dark:text-white">{{ $t("Daftar Project") }}</h2>
-          <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Project lain yang terhubung ke ticket ini.") }}</p>
-        </div>
-        <div class="flex flex-wrap gap-2 text-xs font-semibold">
-          <span class="rounded-full bg-blue-100 px-3 py-1 text-blue-700 dark:bg-blue-500/10 dark:text-blue-100">Total {{ relatedSummary.total }}</span>
-          <span class="rounded-full bg-amber-100 px-3 py-1 text-amber-700 dark:bg-amber-500/10 dark:text-amber-200">{{ $t("In Progress") }} {{ relatedSummary.in_progress }}</span>
-          <span class="rounded-full bg-emerald-100 px-3 py-1 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200">{{ $t("Selesai") }} {{ relatedSummary.done }}</span>
-        </div>
-      </div>
-
-      <div class="mt-5 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700">
-        <div class="overflow-x-auto">
-          <table class="w-full min-w-[820px] divide-y divide-slate-200 text-sm dark:divide-slate-700">
-            <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-300">
-              <tr>
-                <th class="px-4 py-3 text-left">#</th>
-                <th class="px-4 py-3 text-left">Project</th>
-                <th class="px-4 py-3 text-left">Status</th>
-                <th class="px-4 py-3 text-left">Due</th>
-                <th class="px-4 py-3 text-right">{{ $t("Aksi") }}</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-200 bg-white dark:divide-slate-700 dark:bg-slate-900">
-              <tr v-if="!relatedProjects.length">
-                <td colspan="5" class="px-4 py-6 text-center text-slate-500 dark:text-slate-300">{{ $t("Belum ada project terkait ticket ini.") }}</td>
-              </tr>
-              <tr v-for="(row, index) in relatedProjects" :key="row.id" class="transition hover:bg-slate-50 dark:hover:bg-slate-800/60">
-                <td class="px-4 py-3">{{ index + 1 }}</td>
-                <td class="px-4 py-3">
-                  <div class="font-semibold text-slate-900 dark:text-slate-100">{{ row.title }}</div>
-                  <div class="text-xs text-slate-500 dark:text-slate-300">{{ row.project_no || '—' }}</div>
-                </td>
-                <td class="px-4 py-3">
-                  <StatusBadge :status="row.status" :label="row.status_label" size="sm" />
-                </td>
-                <td class="px-4 py-3 text-slate-600 dark:text-slate-200">{{ row.due_display || '—' }}</td>
-                <td class="px-4 py-3">
-                  <div class="flex items-center justify-end gap-3">
-                    <Link v-if="row.links?.show" :href="row.links.show" class="text-sm text-blue-600 hover:underline dark:text-blue-400">Detail</Link>
-                    <Link v-if="row.links?.edit" :href="row.links.edit" class="text-sm text-blue-600 hover:underline dark:text-blue-400">Edit</Link>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
 
     <section v-if="hasTeam" class="rounded-3xl border border-emerald-200 bg-emerald-50/80 p-6 shadow-sm dark:border-emerald-900/60 dark:bg-emerald-950/40">
       <h2 class="text-lg font-semibold text-emerald-900 dark:text-emerald-200">{{ $t("Tim Project") }}</h2>
@@ -290,7 +203,6 @@ import { computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import StatusBadge from '@/Components/StatusBadge.vue';
 import TasksAssigneePill from '@/Components/TasksAssigneePill.vue';
-import TicketAttachmentList from '@/Components/TicketAttachmentList.vue';
 
 const props = defineProps({
   project: { type: Object, required: true },
@@ -299,32 +211,7 @@ const props = defineProps({
 
 const project = computed(() => props.project);
 
-const relatedProjects = computed(() => project.value.related_projects || []);
-const relatedSummary = computed(() => {
-  const items = relatedProjects.value;
-  let done = 0;
-  let inProgress = 0;
-  items.forEach(item => {
-    const status = String(item.status || '').toLowerCase();
-    if (status === 'done' || status === 'cancelled') {
-      done += 1;
-      return;
-    }
-    if (['in_progress', 'confirmation', 'revision', 'on_hold'].includes(status)) {
-      inProgress += 1;
-    }
-  });
 
-  return {
-    total: items.length,
-    in_progress: inProgress,
-    done,
-  };
-});
-
-const ticketAgent = computed(() => project.value.ticket?.assignee || null);
-const ticketAssigned = computed(() => project.value.ticket?.assigned || []);
-const ticketAttachments = computed(() => project.value.ticket?.attachments || []);
 const fallbackTeam = computed(() => project.value.pics || []);
 
 const teamAgents = computed(() => {

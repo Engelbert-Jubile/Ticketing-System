@@ -50,18 +50,7 @@
         <div class="text-sm text-slate-700 dark:text-slate-200">{{ task.requester.name }}</div>
       </article>
 
-      <article class="card" v-if="task.ticket">
-        <h3 class="card-title">{{ $t("Ticket Terkait") }}</h3>
-        <div class="text-sm text-slate-600 dark:text-slate-300">
-          <div class="font-semibold text-slate-800 dark:text-slate-100">{{ task.ticket.ticket_no }}</div>
-          <div class="line-clamp-2 text-xs">{{ task.ticket.title }}</div>
-        </div>
-      </article>
 
-      <article class="card" v-if="task.project">
-        <h3 class="card-title">Project</h3>
-        <div class="text-sm text-slate-600 dark:text-slate-300">{{ task.project.title }}</div>
-      </article>
 
       <article class="card" v-if="task.due_display !== '—'">
         <h3 class="card-title">{{ $t("Target Selesai") }}</h3>
