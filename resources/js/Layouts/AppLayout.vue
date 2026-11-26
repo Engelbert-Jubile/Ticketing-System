@@ -246,10 +246,35 @@ const ticketWorkspaceActiveTab = computed(() => {
 })
 const isPortal = computed(() => page.component === 'Portal')
 const portalUrl = computed(() => page.props.portalUrl)
-const focusedModule = computed(() => {
+const workspaceModules = ['tickets', 'tasks', 'projects']
+const workspaceOnPage = computed(() => {
+  if (page.component === 'ServerRoomTemperature') return null
+  if (ticketWorkspaceActiveTab.value) return 'tickets'
   const [, area, module] = currentPath.value.split('/')
-  return area === 'dashboard' && (module === 'tasks' || module === 'projects') ? module : null
+  if (area === 'dashboard' && (module === 'tasks' || module === 'projects')) return module
 })
+const sidebarWorkspace = ref(null)
+const sidebarWorkspaceKey = userId => `sidebar:workspace:${userId}`
+
+watch([() => authUser.value?.id, workspaceOnPage], ([userId, workspace], [previousUserId]) => {
+  // Shared pages keep the workspace selected in this tab.
+  if (workspace === undefined && userId === previousUserId) return
+
+  sidebarWorkspace.value = userId ? workspace ?? null : null
+  if (!userId) return
+
+  try {
+    const key = sidebarWorkspaceKey(userId)
+    if (workspace === undefined) {
+      const saved = sessionStorage.getItem(key)
+      if (workspaceModules.includes(saved)) sidebarWorkspace.value = saved
+    } else if (workspace) {
+      sessionStorage.setItem(key, workspace)
+    } else {
+      sessionStorage.removeItem(key)
+    }
+  } catch (_) {}
+}, { immediate: true })
 
 const searchQuery = computed(() => {
   const url = inertiaUrl.value ?? ''
@@ -431,10 +456,6 @@ const navItems = computed(() => {
     })
   }
 
-  if (focusedModule.value) {
-    return items.filter(item => item.key === focusedModule.value || item.key === 'portal')
-  }
-
   const unit = String(authUser.value?.unit ?? '').trim()
 
   if (isSuperAdmin.value) {
@@ -527,6 +548,11 @@ const navItems = computed(() => {
 
   if (isLimitedUser.value) {
     items = items.filter(item => !['reports', 'settings'].includes(item.key))
+  }
+
+  if (sidebarWorkspace.value) {
+    const order = ['portal', 'dashboard', sidebarWorkspace.value, 'work', 'unit-reports', 'users', 'account', 'knowledge', 'logout']
+    return order.map(key => items.find(item => item.key === key)).filter(Boolean)
   }
 
   return items
@@ -770,6 +796,7 @@ const logout = async () => {
   await themeSavePromise
   try {
     localStorage.setItem(SIDEBAR_LOGOUT_REASON_KEY, 'manual')
+    sessionStorage.removeItem(sidebarWorkspaceKey(authUser.value?.id))
   } catch (error) {}
   resetSidebarPersistence()
   router.post(resolveRouteName('logout'))
