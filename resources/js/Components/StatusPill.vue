@@ -12,6 +12,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { translateUi } from '@/i18n';
 import { formatStatusLabel, statusPillProps } from '@/utils/statusTheme';
 
 const props = defineProps({
@@ -124,7 +125,10 @@ const pill = computed(() => {
 
   return base;
 });
-const displayLabel = computed(() => formatStatusLabel(props.status, props.label));
+const displayLabel = computed(() => {
+  const label = formatStatusLabel(props.status, props.label);
+  return props.variant === 'priority' || !props.label ? translateUi(label) : label;
+});
 </script>
 
 <style>

@@ -1,3 +1,6 @@
+import { computed } from 'vue';
+import { translateUi } from '../i18n';
+
 export const attachmentFilterOptions = [
   {
     value: 'pdf',
@@ -58,5 +61,11 @@ export const attachmentFilterOptions = [
     mimeTypes: ['text/plain', 'text/csv'],
   },
 ];
+
+export const localizedAttachmentFilterOptions = computed(() => attachmentFilterOptions.map(option => ({
+  ...option,
+  label: translateUi(option.label),
+  description: translateUi(option.description),
+})));
 
 export const defaultAttachmentExtensions = attachmentFilterOptions.flatMap(option => option.extensions);

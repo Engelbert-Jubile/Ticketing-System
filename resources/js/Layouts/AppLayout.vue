@@ -226,7 +226,7 @@ const currentPath = computed(() => {
   return stripLocalePrefix(url.split('?')[0] || '/')
 })
 const ticketWorkspaceTabs = [
-  { key: 'new-ticket', label: 'ticketWorkspace.newTicket', icon: 'confirmation_number', route: 'tickets.create' },
+  { key: 'create-ticket', label: 'Create Ticket', icon: 'confirmation_number', route: 'tickets.create' },
   { key: 'in-progress', label: 'nav.ticketsInProgress', icon: 'pending_actions', route: 'tickets.on-progress' },
   { key: 'report', label: 'nav.ticketsReport', icon: 'bar_chart', route: 'tickets.report' },
   { key: 'workflows', label: 'nav.workflows', icon: 'account_tree', route: 'workflows.index' },

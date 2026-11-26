@@ -39,7 +39,7 @@
             {{ $t("Terapkan") }}
           </button>
           <button type="button" class="inline-flex items-center rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800" @click="reset">
-            Reset
+            {{ $t("Reset") }}
           </button>
         </div>
       </form>
@@ -48,7 +48,7 @@
         <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-700">
           <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-300">
             <tr>
-              <th class="px-4 py-3">Ticket</th>
+              <th class="px-4 py-3">{{ $t("Ticket") }}</th>
               <th class="px-4 py-3">Status</th>
               <th class="px-4 py-3">{{ $t("Prioritas") }}</th>
               <th class="px-4 py-3">{{ $t("Jenis") }}</th>
@@ -78,7 +78,7 @@
               <td class="px-4 py-4 align-top text-slate-600 dark:text-slate-200">{{ formatDate(ticket.updated_at, true) }}</td>
               <td class="px-4 py-4 align-top">
                 <div class="flex items-center justify-end gap-3">
-                  <Link :href="ticket.links.edit" class="text-sm text-blue-600 hover:underline dark:text-blue-300">Edit</Link>
+                  <Link :href="ticket.links.edit" class="text-sm text-blue-600 hover:underline dark:text-blue-300">{{ $t("Edit") }}</Link>
                   <button
                     v-if="ticket.links.delete"
                     type="button"

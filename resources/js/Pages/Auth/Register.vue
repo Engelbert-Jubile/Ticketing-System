@@ -9,7 +9,7 @@
 
     <form @submit.prevent="submit" class="card grid gap-6 rounded-2xl bg-white/95 p-6 shadow-lg shadow-emerald-200/40 ring-1 ring-emerald-100 sm:grid-cols-2 sm:p-8">
       <div class="space-y-2">
-        <label for="username" class="text-sm font-semibold text-slate-600">Username</label>
+        <label for="username" class="text-sm font-semibold text-slate-600">{{ $t("Username") }}</label>
         <input
           id="username"
           v-model="form.username"
@@ -57,7 +57,7 @@
       </div>
 
       <div class="space-y-2">
-        <label for="password" class="text-sm font-semibold text-slate-600">Password</label>
+        <label for="password" class="text-sm font-semibold text-slate-600">{{ $t("Password") }}</label>
         <input
           id="password"
           v-model="form.password"

@@ -59,7 +59,7 @@ final class TaskController extends Controller
         $filters['status'] = $filters['status'] ?? '';
         $filters['active_work'] = true;
         return Inertia::render('Search/Results', [
-            'heading' => 'Task sedang dikerjakan',
+            'heading' => __('Task sedang dikerjakan'),
             'endpoint' => 'tasks.on-progress',
             'personal' => false, 'filters' => $filters,
             'statuses' => WorkflowStatus::labels(),
@@ -270,7 +270,7 @@ final class TaskController extends Controller
             'critical' => 'Critical',
         ])->map(fn ($label, $value) => [
             'value' => $value,
-            'label' => $label,
+            'label' => __($label),
         ])->values();
 
         $viewer = $request->user();
@@ -514,7 +514,7 @@ final class TaskController extends Controller
             'critical' => 'Critical',
         ])->map(fn ($label, $value) => [
             'value' => $value,
-            'label' => $label,
+            'label' => __($label),
         ])->values();
 
         $users = $this->getUsersList();

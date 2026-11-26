@@ -218,13 +218,13 @@ if ($isSuperadmin) {
         for ($i = 0; $i < $taskMonths; $i++) {
             $month = (clone $taskMonthStart)->addMonths($i);
             $key = $month->format('Y-m');
-            $label = $month->format('M');
+            $label = $month->translatedFormat('M');
             $taskReportLabels[] = $label;
             $taskReportDoneCounts[] = (int) ($taskDoneRows[$key] ?? 0);
             $taskReportProgressCounts[] = (int) ($taskProgressRows[$key] ?? 0);
         }
 
-        $tasksPeriod = $taskMonthStart->format('M Y').' - '.Carbon::now()->format('M Y');
+        $tasksPeriod = $taskMonthStart->translatedFormat('M Y').' - '.Carbon::now()->translatedFormat('M Y');
 
         /* ===== Projects monthly ===== */
         $projectMonths = max(3, min(12, (int) env('DASHBOARD_PROJECT_MONTHS', 6)));
@@ -258,7 +258,7 @@ if ($isSuperadmin) {
         for ($i = 0; $i < $projectMonths; $i++) {
             $m = (clone $monthStart)->addMonths($i);
             $key = $m->format('Y-m');
-            $lab = $m->format('M');
+            $lab = $m->translatedFormat('M');
             $projCreatedLabels[] = $lab;
             $projCreatedCounts[] = (int) ($projCreatedRows[$key] ?? 0);
             $projReportLabels[] = $lab;
@@ -266,7 +266,7 @@ if ($isSuperadmin) {
             $projReportProgressCounts[] = (int) ($projProgressRows[$key] ?? 0);
         }
 
-        $projectsPeriod = $monthStart->format('M Y').' - '.Carbon::now()->format('M Y');
+        $projectsPeriod = $monthStart->translatedFormat('M Y').' - '.Carbon::now()->translatedFormat('M Y');
 
         $agents = $this->buildAgentStats($unit);
 
@@ -314,10 +314,10 @@ if ($isSuperadmin) {
         }
 
         return Inertia::render('UnitReports/Index', [
-            'pageTitle' => 'Unit Reports',
+            'pageTitle' => __('Unit Reports'),
             'pageSubtitle' => $pageSubtitle,
             'unitName' => $unitName,
-            'dateLabel' => Carbon::now()->format('D, d M Y'),
+            'dateLabel' => Carbon::now()->translatedFormat('D, d M Y'),
             'ticketsNew' => $ticketsNew,
             'ticketsInProgress' => $ticketsInProgress,
             'ticketsDone' => $ticketsDone,

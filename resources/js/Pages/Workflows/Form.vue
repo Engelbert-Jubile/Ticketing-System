@@ -31,7 +31,7 @@
             <div class="grid gap-4 md:grid-cols-2">
               <label class="field">{{ $t("Nama tahap") }}<input v-model="stage.name" required class="input" /></label>
               <label class="field">Status<WorkflowSelect :model-value="stage.status_key" :options="statusOptions" :aria-label="$t(&quot;Status tahap&quot;)" @update:model-value="requestStatusChange(index, $event)" /><small v-if="stageError(index, 'status_key')" class="error">{{ stageError(index, 'status_key') }}</small></label>
-              <label class="field">Role PIC<WorkflowSelect v-model="stage.responsible_role" :options="roleOptions" :placeholder="$t(&quot;Tidak ditentukan&quot;)" aria-label="Role PIC" /></label>
+              <label class="field">{{ $t("Role PIC") }}<WorkflowSelect v-model="stage.responsible_role" :options="roleOptions" :placeholder="$t(&quot;Tidak ditentukan&quot;)" :aria-label="$t(&quot;Role PIC&quot;)" /></label>
               <label class="field">{{ $t("PIC spesifik") }}<WorkflowSelect v-model="stage.responsible_user_id" :options="userOptions" :placeholder="$t(&quot;Tidak ditentukan&quot;)" :aria-label="$t(&quot;PIC spesifik&quot;)" /></label>
               <label class="field">{{ $t("Aksi ke tahap berikutnya") }}<input v-model="stage.action_label" class="input" :placeholder="$t(&quot;Contoh: Mulai pengerjaan&quot;)" /></label>
               <label class="field">{{ $t("Instruksi") }}<input v-model="stage.instructions" class="input" :placeholder="$t(&quot;Catatan untuk penanggung jawab&quot;)" /></label>

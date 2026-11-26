@@ -11,7 +11,7 @@
       <header class="flex items-center justify-between">
         <div>
           <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-200">{{ $t("Lampiran Saat Ini") }}</h2>
-          <p class="text-xs text-slate-400">Ticket: {{ ticket.title }}</p>
+          <p class="text-xs text-slate-400">{{ $t("Ticket:") }} {{ ticket.title }}</p>
         </div>
         <button
           type="button"
@@ -71,7 +71,7 @@
           class="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
           @click="resetUploads"
         >
-          Reset
+          {{ $t("Reset") }}
         </button>
         <SaveButton type="submit" :disabled="form.processing || !attachmentIds.length" :processing="form.processing">
           {{ $t("Simpan Lampiran") }}

@@ -93,7 +93,7 @@ createInertiaApp({
 
     wrapRouteWithLocale();
 
-    router.on('success', event => {
+    router.on('navigate', event => {
       const newLocale = event?.detail?.page?.props?.locale || detectLocaleFromUrl();
       if (newLocale) {
         i18n.setLocale(newLocale);

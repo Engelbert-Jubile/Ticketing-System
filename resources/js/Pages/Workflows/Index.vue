@@ -40,7 +40,7 @@
           <dl class="grid gap-3 rounded-xl bg-slate-50 p-4 text-sm dark:bg-slate-800/60 sm:grid-cols-2 lg:grid-cols-4">
             <div><dt class="text-xs text-slate-500 dark:text-slate-400">{{ $t("Tahap saat ini") }}</dt><dd class="mt-1 font-semibold text-slate-900 dark:text-white">{{ item.stage_name }}</dd></div>
             <div><dt class="text-xs text-slate-500 dark:text-slate-400">{{ $t("PIC pekerjaan") }}</dt><dd class="mt-1 break-words text-slate-700 dark:text-slate-200">{{ item.pic }}</dd></div>
-            <div><dt class="text-xs text-slate-500 dark:text-slate-400">Requester</dt><dd class="mt-1 break-words text-slate-700 dark:text-slate-200">{{ item.requester }}</dd></div>
+            <div><dt class="text-xs text-slate-500 dark:text-slate-400">{{ $t("Requester") }}</dt><dd class="mt-1 break-words text-slate-700 dark:text-slate-200">{{ item.requester }}</dd></div>
             <div><dt class="text-xs text-slate-500 dark:text-slate-400">{{ $t("Masuk tahap ini") }}</dt><dd class="mt-1 text-slate-700 dark:text-slate-200">{{ formatDate(item.stage_started_at) }}</dd></div>
           </dl>
           <div v-if="item.process_stages.length">

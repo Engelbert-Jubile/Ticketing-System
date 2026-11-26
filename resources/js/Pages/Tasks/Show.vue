@@ -20,7 +20,7 @@
           </a>
           <Link v-if="task.links.edit" :href="task.links.edit" class="action-chip">
             <span class="material-icons text-sm">edit</span>
-            Edit Task
+            {{ $t("Edit Task") }}
           </Link>
           <Link v-if="task.links.view" :href="task.links.view" class="action-chip">
             <span class="material-icons text-sm">visibility</span>
@@ -84,10 +84,10 @@
         </article>
 
         <article class="card">
-          <h3 class="card-title">Agent &amp; PIC</h3>
+          <h3 class="card-title">{{ $t("Agent & PIC") }}</h3>
           <div class="space-y-4">
             <div>
-              <p class="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">Agent</p>
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">{{ $t("Agent") }}</p>
               <div v-if="assignmentAgent" class="mt-2 flex flex-wrap gap-2">
                 <TasksAssigneePill :name="assignmentAgent.name" :email="assignmentAgent.email" role="Agent" />
               </div>
@@ -127,7 +127,7 @@
         </article>
 
         <article v-if="timelinePanels.length" class="card">
-          <h3 class="card-title">Timeline</h3>
+          <h3 class="card-title">{{ $t("Timeline") }}</h3>
           <div class="space-y-4">
             <div
               v-for="panel in timelinePanels"
@@ -141,7 +141,7 @@
                   <dd class="font-semibold text-slate-900 dark:text-slate-100">{{ panel.data.start || '—' }}</dd>
                 </div>
                 <div>
-                  <dt class="text-xs font-semibold text-slate-400 dark:text-slate-500">Due</dt>
+                  <dt class="text-xs font-semibold text-slate-400 dark:text-slate-500">{{ $t("Due") }}</dt>
                   <dd class="font-semibold text-slate-900 dark:text-slate-100">{{ panel.data.due || '—' }}</dd>
                 </div>
                 <div>
@@ -192,7 +192,7 @@ const task = computed(() => props.task);
 
 const statusBreakdown = computed(() => {
   const panels = [];
-  panels.push({ label: 'Status Task', status: task.value?.status_task, labelText: task.value?.status_task_label });
+  panels.push({ label: uiText('Task status'), status: task.value?.status_task, labelText: task.value?.status_task_label });
 
   return panels.filter(panel => panel.labelText);
 });
@@ -202,7 +202,7 @@ const timelinePanels = computed(() => {
   const taskTimeline = task.value?.timeline?.task;
 
   if (taskTimeline && hasTimelineContent(taskTimeline)) {
-    panels.push({ label: 'Task', data: taskTimeline });
+    panels.push({ label: uiText('Task'), data: taskTimeline });
   }
 
   return panels;

@@ -75,11 +75,11 @@
               <div ref="assigneeCardRef" class="relative rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                 <div class="flex items-start justify-between gap-3">
                   <div>
-                    <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">Agent</p>
+                    <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">{{ $t("Agent") }}</p>
                     <p class="text-xs text-slate-400">{{ $t("Pilih assignee lintas unit, lalu tandai yang utama.") }}</p>
                   </div>
                   <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                    {{ assigneeSelections.length ? assigneeSelections.length + ' agent dipilih' : $t("Belum ada pilihan") }}
+                    {{ assigneeSelections.length ? $t(':count agent dipilih', { count: assigneeSelections.length }) : $t("Belum ada pilihan") }}
                   </span>
                 </div>
                 <div class="relative mt-3 w-full">
@@ -155,7 +155,7 @@
                   </transition>
                 </div>
                 <p class="mt-2 text-xs text-slate-400">
-                  {{ assigneeSelections.length ? assigneeSelections.length + ' agent terhubung' : $t("Belum ada agent terpilih") }}
+                  {{ assigneeSelections.length ? $t(':count agent terhubung', { count: assigneeSelections.length }) : $t("Belum ada agent terpilih") }}
                 </p>
                 <p v-if="form.errors.assignee_id" class="mt-2 text-xs text-red-500">{{ form.errors.assignee_id }}</p>
               </div>
@@ -167,7 +167,7 @@
                     <p class="text-xs text-slate-400">{{ $t("Tambahkan pendukung tugas dari unit manapun.") }}</p>
                   </div>
                   <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                    {{ additionalSelections.length ? additionalSelections.length + ' PIC dipilih' : $t("Belum ada pilihan") }}
+                    {{ additionalSelections.length ? $t(':count PIC dipilih', { count: additionalSelections.length }) : $t("Belum ada pilihan") }}
                   </span>
                 </div>
                 <div class="relative mt-3 w-full">
@@ -242,13 +242,13 @@
                   </transition>
                 </div>
                 <p class="mt-2 text-xs text-slate-400">
-                  {{ additionalSelections.length ? additionalSelections.length + ' PIC terhubung' : $t("Belum ada PIC") }}
+                  {{ additionalSelections.length ? $t(':count PIC terhubung', { count: additionalSelections.length }) : $t("Belum ada PIC") }}
                 </p>
               </div>
             </div>
           </div>
           <div>
-            <label class="field-label">Requester</label>
+            <label class="field-label">{{ $t("Requester") }}</label>
             <template v-if="canSelectRequester">
               <div ref="requesterCardRef" class="relative mt-1 w-full overflow-visible">
                 <button
@@ -322,7 +322,7 @@
             <div class="rounded-xl border border-blue-200/60 bg-white p-3 dark:border-blue-500/30 dark:bg-slate-900">
               <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-blue-700 dark:text-blue-200">
                 <span class="material-icons text-base">verified_user</span>
-                <span>Agent ({{ selectedAssigneeDetails.length }})</span>
+                <span>{{ $t("Agent (") }}{{ selectedAssigneeDetails.length }})</span>
               </div>
               <div class="flex flex-wrap gap-1">
                 <span
@@ -415,7 +415,7 @@
           class="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
           @click="resetForm"
         >
-          Reset
+          {{ $t("Reset") }}
         </button>
         <SaveButton v-if="isLastStep" type="submit" :processing="form.processing">
           {{ primaryButtonLabel }}
@@ -446,7 +446,7 @@ import DatePickerFlatpickr from '@/Components/DatePickerFlatpickr.vue';
 import FileUploaderPond from '@/Components/FileUploaderPond.vue';
 import RichTextQuill from '@/Components/RichTextQuill.vue';
 import FancySelect from '@/Components/FancySelect.vue';
-import { attachmentFilterOptions } from '@/utils/attachmentFilters';
+import { localizedAttachmentFilterOptions } from '@/utils/attachmentFilters';
 
 const props = defineProps({
   statusOptions: { type: Array, default: () => [] },
@@ -645,16 +645,16 @@ const isAdditionalSelected = id => additionalSelections.value
 
 const uploadError = ref('');
 const attachmentIds = ref([]);
-const attachmentFilterChoices = attachmentFilterOptions;
+const attachmentFilterChoices = localizedAttachmentFilterOptions;
 const selectedAttachmentFilter = ref('');
 const activeAttachmentFilter = computed(
-  () => attachmentFilterChoices.find(option => option.value === selectedAttachmentFilter.value) ?? null
+  () => attachmentFilterChoices.value.find(option => option.value === selectedAttachmentFilter.value) ?? null
 );
 const attachmentMimeTypes = computed(() => activeAttachmentFilter.value?.mimeTypes ?? []);
 const attachmentAllowedExtensions = computed(() => activeAttachmentFilter.value?.extensions ?? []);
 const uploaderDisabled = computed(() => !activeAttachmentFilter.value);
 const attachmentFilterHint = computed(() => (
-  activeAttachmentFilter.value ? (uiText("Hanya ") + (activeAttachmentFilter.value.label)) : uiText("Pilih jenis file untuk mengaktifkan unggahan.")
+  activeAttachmentFilter.value ? uiText("Hanya :type", { type: activeAttachmentFilter.value.label }) : uiText("Pilih jenis file untuk mengaktifkan unggahan.")
 ));
 const uploaderRef = ref(null);
 const currentStep = ref(0);

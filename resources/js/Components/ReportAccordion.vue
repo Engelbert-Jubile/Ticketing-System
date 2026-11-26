@@ -18,8 +18,8 @@
         <slot name="meta">
           <div class="report-accordion__counts" v-if="counts">
             <span class="report-accordion__count" v-if="counts.total !== undefined">Total: {{ counts.total }}</span>
-            <span class="report-accordion__count" v-if="counts.in_progress !== undefined">In Progress: {{ counts.in_progress }}</span>
-            <span class="report-accordion__count" v-if="counts.done !== undefined">Done: {{ counts.done }}</span>
+            <span class="report-accordion__count" v-if="counts.in_progress !== undefined">{{ $t("In Progress:") }} {{ counts.in_progress }}</span>
+            <span class="report-accordion__count" v-if="counts.done !== undefined">{{ $t("Done:") }} {{ counts.done }}</span>
           </div>
         </slot>
         <span class="report-accordion__chevron" :class="{ 'report-accordion__chevron--open': open }" aria-hidden="true">

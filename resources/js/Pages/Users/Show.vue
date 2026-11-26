@@ -2,7 +2,7 @@
   <div class="mx-auto max-w-3xl space-y-6 px-4 py-6">
     <header class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">User Detail</h1>
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">{{ $t("User Detail") }}</h1>
         <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Informasi lengkap akun pengguna.") }}</p>
       </div>
       <Link :href="backUrl" class="inline-flex items-center gap-2 text-sm text-blue-600 hover:underline dark:text-blue-300">
@@ -15,11 +15,11 @@
       <div class="flex items-start justify-between gap-4">
         <div class="space-y-4">
           <div>
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">User ID</p>
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">{{ $t("User ID") }}</p>
             <p class="text-lg font-semibold text-slate-900 dark:text-slate-100">{{ user.id }}</p>
           </div>
           <div>
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Username</p>
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">{{ $t("Username") }}</p>
             <p class="text-lg font-semibold text-slate-900 dark:text-slate-100">{{ user.username }}</p>
           </div>
           <div>
@@ -51,7 +51,7 @@
             class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
           >
             <span class="material-icons text-base">edit</span>
-            Edit
+            {{ $t("Edit") }}
           </Link>
           <button
             v-if="can.delete"

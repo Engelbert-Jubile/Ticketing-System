@@ -4,7 +4,7 @@
       <div class="flex flex-col items-start gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">{{ task.title }}</h1>
-          <p v-if="task.task_no" class="text-sm text-slate-500 dark:text-slate-400">Task No: {{ task.task_no }}</p>
+          <p v-if="task.task_no" class="text-sm text-slate-500 dark:text-slate-400">{{ $t("Task No:") }} {{ task.task_no }}</p>
         </div>
         <StatusBadge :status="task.status" :label="task.status_label" variant="status" />
       </div>
@@ -20,10 +20,10 @@
 
     <section class="grid gap-6 md:grid-cols-2">
         <article class="card">
-          <h3 class="card-title">Agent &amp; PIC</h3>
+          <h3 class="card-title">{{ $t("Agent & PIC") }}</h3>
           <div class="space-y-4">
             <div>
-              <p class="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">Agent</p>
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">{{ $t("Agent") }}</p>
               <div v-if="assignmentAgent" class="mt-2 flex flex-wrap gap-2">
                 <TasksAssigneePill :name="assignmentAgent.name" :email="assignmentAgent.email" role="Agent" />
               </div>

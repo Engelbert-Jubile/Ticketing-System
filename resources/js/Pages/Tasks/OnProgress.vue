@@ -2,7 +2,7 @@
   <div class="mx-auto max-w-6xl space-y-6 px-4 py-6 lg:px-6">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Task In Progress</h1>
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">{{ $t("Task In Progress") }}</h1>
         <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Daftar task yang sedang dikerjakan.") }}</p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
@@ -53,7 +53,7 @@
             <td class="px-4 py-3">
               <div class="flex flex-wrap items-center gap-2">
                 <Link :href="task.links.show" class="action-btn action-btn--view">Detail</Link>
-                <Link v-if="task.links.edit" :href="task.links.edit" class="action-btn action-btn--edit">Edit</Link>
+                <Link v-if="task.links.edit" :href="task.links.edit" class="action-btn action-btn--edit">{{ $t("Edit") }}</Link>
                 <button v-if="task.links.delete" type="button" class="action-btn action-btn--delete" @click="destroyTask(task)">{{ $t("Delete") }}</button>
               </div>
             </td>

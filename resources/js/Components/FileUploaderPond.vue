@@ -7,6 +7,8 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { route as ziggyRoute } from 'ziggy-js';
+import indonesianLabels from 'filepond/locale/id-id.js';
+import { uiLocale } from '../i18n';
 
 const props = defineProps({
   processUrl: { type: String, default: '' },
@@ -84,6 +86,7 @@ const emit = defineEmits(['uploaded', 'removed', 'error']);
 
 const inputRef = ref(null);
 let pondInstance = null;
+let labelOptions = {};
 
 const disableInstance = state => {
   if (!pondInstance) {
@@ -134,7 +137,15 @@ onMounted(async () => {
     registerPlugin(validateType, validateSize);
   }
 
+  const defaults = pondModule.getOptions();
+  const labels = Object.entries(indonesianLabels).filter(([key]) => Object.hasOwn(defaults, key));
+  labelOptions = {
+    'en-US': Object.fromEntries(labels.map(([key]) => [key, defaults[key]])),
+    'id-ID': Object.fromEntries(labels),
+  };
+
   pondInstance = create(inputRef.value, {
+    ...labelOptions[uiLocale.value],
     name: 'file',
     allowMultiple: props.multiple,
     maxFiles: props.multiple ? null : 1,
@@ -233,6 +244,8 @@ watch(
     disableInstance(value);
   }
 );
+
+watch(uiLocale, locale => pondInstance?.setOptions(labelOptions[locale]));
 </script>
 
 <style scoped>

@@ -38,7 +38,7 @@
           </label>
         </div>
         <div class="border-t border-slate-200 px-3 py-2 text-right text-xs text-slate-500 dark:border-slate-700">
-          <button type="button" class="rounded px-2 py-1 hover:bg-slate-100 dark:hover:bg-slate-700/50" @click="clear">Reset</button>
+          <button type="button" class="rounded px-2 py-1 hover:bg-slate-100 dark:hover:bg-slate-700/50" @click="clear">{{ $t("Reset") }}</button>
         </div>
       </div>
     </Transition>

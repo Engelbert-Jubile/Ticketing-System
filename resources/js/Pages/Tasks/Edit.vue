@@ -2,7 +2,7 @@
   <div class="mx-auto max-w-6xl space-y-6 px-4 py-8 pb-28 lg:px-6">
     <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-3xl font-semibold text-slate-900 dark:text-slate-100">Edit Task</h1>
+        <h1 class="text-3xl font-semibold text-slate-900 dark:text-slate-100">{{ $t("Edit Task") }}</h1>
         <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Perbarui informasi task, penanggung jawab, dan lampiran.") }}</p>
       </div>
       <Link
@@ -54,7 +54,7 @@
         <h2 class="section-title">{{ $t("Penugasan & Timeline") }}</h2>
         <div class="grid gap-4 md:grid-cols-2">
           <div class="relative" ref="agentCardRef">
-            <label class="field-label">Agent</label>
+            <label class="field-label">{{ $t("Agent") }}</label>
             <button
               type="button"
               class="mt-1 flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-700 shadow-sm transition hover:border-blue-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
@@ -119,7 +119,7 @@
             <p v-if="form.errors.assignee_id" class="field-error">{{ form.errors.assignee_id }}</p>
           </div>
           <div>
-            <label class="field-label">Requester</label>
+            <label class="field-label">{{ $t("Requester") }}</label>
             <template v-if="canSelectRequester">
               <div ref="requesterCardRef" class="relative mt-1 w-full overflow-visible">
                 <button
@@ -364,7 +364,7 @@ import DatePickerFlatpickr from '@/Components/DatePickerFlatpickr.vue';
 import FileUploaderPond from '@/Components/FileUploaderPond.vue';
 import RichTextQuill from '@/Components/RichTextQuill.vue';
 import FancySelect from '@/Components/FancySelect.vue';
-import { attachmentFilterOptions } from '@/utils/attachmentFilters';
+import { localizedAttachmentFilterOptions } from '@/utils/attachmentFilters';
 
 const props = defineProps({
   task: { type: Object, required: true },
@@ -426,16 +426,16 @@ const requesterLabel = computed(() => props.meta?.requesterLabel ?? '');
 const uploadError = ref('');
 const attachmentIds = ref([]);
 const deletingId = ref(null);
-const attachmentFilterChoices = attachmentFilterOptions;
+const attachmentFilterChoices = localizedAttachmentFilterOptions;
 const selectedAttachmentFilter = ref('');
 const activeAttachmentFilter = computed(
-  () => attachmentFilterChoices.find(option => option.value === selectedAttachmentFilter.value) ?? null
+  () => attachmentFilterChoices.value.find(option => option.value === selectedAttachmentFilter.value) ?? null
 );
 const attachmentMimeTypes = computed(() => activeAttachmentFilter.value?.mimeTypes ?? []);
 const attachmentAllowedExtensions = computed(() => activeAttachmentFilter.value?.extensions ?? []);
 const uploaderDisabled = computed(() => !activeAttachmentFilter.value);
 const attachmentFilterHint = computed(() => (
-  activeAttachmentFilter.value ? (uiText("Hanya ") + (activeAttachmentFilter.value.label)) : uiText("Pilih jenis file untuk mengaktifkan unggahan.")
+  activeAttachmentFilter.value ? uiText("Hanya :type", { type: activeAttachmentFilter.value.label }) : uiText("Pilih jenis file untuk mengaktifkan unggahan.")
 ));
 const uploaderRef = ref(null);
 const agentDropdownOpen = ref(false);

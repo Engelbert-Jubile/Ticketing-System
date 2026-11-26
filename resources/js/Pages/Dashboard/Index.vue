@@ -210,7 +210,7 @@ const { t } = useI18n();
 const usagePage = usePage();
 const usageText = (id, en) => usagePage.props.locale === 'en' ? en : id;
 const usageCards = computed(() => [
-  { label: 'Total Visit', value: props.usageMetrics.visits, icon: 'visibility', variant: 'usage-icon--visits', caption: usageText('Kunjungan dashboard', 'Dashboard visits') },
+  { label: uiText('Total Visits'), value: props.usageMetrics.visits, icon: 'visibility', variant: 'usage-icon--visits', caption: usageText('Kunjungan dashboard', 'Dashboard visits') },
   { label: usageText('Total Frekuensi Login', 'Total Login Frequency'), value: props.usageMetrics.logins, icon: 'login', variant: 'usage-icon--logins', caption: usageText('Login berhasil', 'Successful sign-ins') },
 ]);
 const formatUsage = value => value === null || value === undefined ? '—' : Number(value).toLocaleString();

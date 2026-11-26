@@ -76,7 +76,7 @@
                 <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ t('settings.general.logo') }}</label>
                 <div class="mt-2 flex flex-wrap items-center gap-3">
                   <div class="flex h-16 w-16 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 text-xs text-slate-400 dark:border-slate-600 dark:bg-slate-800">
-                    <img v-if="logoPreview" :src="logoPreview" alt="App logo" class="h-14 w-14 rounded-lg object-cover" />
+                    <img v-if="logoPreview" :src="logoPreview" :alt="$t(&quot;App logo&quot;)" class="h-14 w-14 rounded-lg object-cover" />
                     <span v-else>{{ t('settings.general.logo') }}</span>
                   </div>
                   <div class="flex flex-col gap-2">
@@ -320,8 +320,8 @@
           <section class="rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">SMTP Configuration</h2>
-                <p class="text-sm text-slate-500 dark:text-slate-300">Configure outbound email delivery.</p>
+                <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">{{ $t("SMTP Configuration") }}</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Configure outbound email delivery.") }}</p>
               </div>
               <span v-if="notificationsDirty" class="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-700">
                 {{ $t("Unsaved changes") }}
@@ -330,36 +330,36 @@
 
             <div class="mt-6 grid gap-5 lg:grid-cols-2">
               <div>
-                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">SMTP host</label>
+                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t("SMTP host") }}</label>
                 <input v-model="notificationsForm.smtp_host" type="text" class="form-input mt-2" />
                 <p v-if="notificationsForm.errors.smtp_host" class="form-error">{{ notificationsForm.errors.smtp_host }}</p>
               </div>
               <div>
-                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">SMTP port</label>
+                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t("SMTP port") }}</label>
                 <input v-model.number="notificationsForm.smtp_port" type="number" min="1" max="65535" class="form-input mt-2" />
                 <p v-if="notificationsForm.errors.smtp_port" class="form-error">{{ notificationsForm.errors.smtp_port }}</p>
               </div>
               <div>
-                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">SMTP username</label>
+                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t("SMTP username") }}</label>
                 <input v-model="notificationsForm.smtp_username" type="text" class="form-input mt-2" />
                 <p v-if="notificationsForm.errors.smtp_username" class="form-error">{{ notificationsForm.errors.smtp_username }}</p>
               </div>
               <div>
-                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">SMTP password</label>
-                <input v-model="notificationsForm.smtp_password" type="password" class="form-input mt-2" placeholder="Leave blank to keep existing" />
-                <p v-if="smtpPasswordSet" class="mt-1 text-xs text-slate-500">Saved password: ********</p>
+                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t("SMTP password") }}</label>
+                <input v-model="notificationsForm.smtp_password" type="password" class="form-input mt-2" :placeholder="$t(&quot;Leave blank to keep existing&quot;)" />
+                <p v-if="smtpPasswordSet" class="mt-1 text-xs text-slate-500">{{ $t("Saved password: ********") }}</p>
                 <button
                   v-if="smtpPasswordSet"
                   type="button"
                   class="mt-1 text-xs font-semibold text-rose-500"
                   @click="clearSmtpPassword"
                 >
-                  Clear saved password
+                  {{ $t("Clear saved password") }}
                 </button>
                 <p v-if="notificationsForm.errors.smtp_password" class="form-error">{{ notificationsForm.errors.smtp_password }}</p>
               </div>
               <div>
-                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">Encryption</label>
+                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t("Encryption") }}</label>
                 <FancySelect
                   v-model="notificationsForm.smtp_encryption"
                   :options="encryptionOptions"
@@ -369,9 +369,9 @@
                 <p v-if="notificationsForm.errors.smtp_encryption" class="form-error">{{ notificationsForm.errors.smtp_encryption }}</p>
               </div>
               <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/60">
-                <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">Test email</p>
-                <p class="text-xs text-slate-500">Send a test message to confirm SMTP.</p>
-                <input v-model="testEmailRecipient" type="email" class="form-input mt-3" placeholder="Recipient email" />
+                <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t("Test email") }}</p>
+                <p class="text-xs text-slate-500">{{ $t("Send a test message to confirm SMTP.") }}</p>
+                <input v-model="testEmailRecipient" type="email" class="form-input mt-3" :placeholder="$t(&quot;Recipient email&quot;)" />
                 <button type="button" class="btn-secondary mt-3" :disabled="smtpTesting" @click="sendTestEmail">
                   {{ smtpTesting ? 'Sending...' : 'Send test email' }}
                 </button>
@@ -391,8 +391,8 @@
           <section class="rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Default Notification Rules</h2>
-                <p class="text-sm text-slate-500 dark:text-slate-300">Configure what events send alerts.</p>
+                <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">{{ $t("Default Notification Rules") }}</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Configure what events send alerts.") }}</p>
               </div>
               <span v-if="notificationsDirty" class="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-700">
                 {{ $t("Unsaved changes") }}
@@ -401,15 +401,15 @@
             <div class="mt-6 grid gap-3">
               <label class="flex items-center gap-2 text-sm text-slate-600">
                 <input v-model="notificationsForm.notify_ticket_created" type="checkbox" />
-                Ticket created
+                {{ $t("Ticket created") }}
               </label>
               <label class="flex items-center gap-2 text-sm text-slate-600">
                 <input v-model="notificationsForm.notify_ticket_assigned" type="checkbox" />
-                Ticket assigned
+                {{ $t("Ticket assigned") }}
               </label>
               <label class="flex items-center gap-2 text-sm text-slate-600">
                 <input v-model="notificationsForm.notify_ticket_status_changed" type="checkbox" />
-                Status changed
+                {{ $t("Status changed") }}
               </label>
             </div>
 
@@ -427,8 +427,8 @@
           <section class="rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Work Item Defaults</h2>
-                <p class="text-sm text-slate-500 dark:text-slate-300">Set defaults for tickets, tasks, and projects.</p>
+                <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">{{ $t("Work Item Defaults") }}</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Set defaults for tickets, tasks, and projects.") }}</p>
               </div>
               <span v-if="defaultsDirty" class="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-700">
                 {{ $t("Unsaved changes") }}
@@ -437,30 +437,30 @@
 
             <div class="mt-6 grid gap-5 lg:grid-cols-3">
               <div>
-                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">Ticket default status</label>
+                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t("Ticket default status") }}</label>
                 <FancySelect v-model="defaultsForm.ticket_default_status" :options="statusOptions" accent="subtle" class="mt-2" />
               </div>
               <div>
-                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">Task default status</label>
+                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t("Task default status") }}</label>
                 <FancySelect v-model="defaultsForm.task_default_status" :options="statusOptions" accent="subtle" class="mt-2" />
               </div>
               <div>
-                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">Project default status</label>
+                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t("Project default status") }}</label>
                 <FancySelect v-model="defaultsForm.project_default_status" :options="statusOptions" accent="subtle" class="mt-2" />
               </div>
               <div>
-                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">Default priority</label>
+                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t("Default priority") }}</label>
                 <FancySelect v-model="defaultsForm.default_priority" :options="priorityOptions" accent="subtle" class="mt-2" />
               </div>
               <div>
-                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">Default SLA (hours)</label>
+                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t("Default SLA (hours)") }}</label>
                 <input v-model.number="defaultsForm.default_sla_hours" type="number" min="1" max="720" class="form-input mt-2" />
               </div>
               <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/60">
                 <div class="flex items-center justify-between gap-3">
                   <div>
-                    <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">Auto-assign</p>
-                    <p class="text-xs text-slate-500">Assign by role when creating work items.</p>
+                    <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t("Auto-assign") }}</p>
+                    <p class="text-xs text-slate-500">{{ $t("Assign by role when creating work items.") }}</p>
                   </div>
                   <label class="relative inline-flex cursor-pointer items-center">
                     <input v-model="defaultsForm.auto_assign_enabled" type="checkbox" class="sr-only peer" />
@@ -475,20 +475,20 @@
                   </option>
                 </select>
                 <select v-model="defaultsForm.auto_assign_strategy" class="form-input mt-2" :disabled="!defaultsForm.auto_assign_enabled">
-                  <option value="round_robin">Round robin</option>
-                  <option value="least_load">Least load</option>
+                  <option value="round_robin">{{ $t("Round robin") }}</option>
+                  <option value="least_load">{{ $t("Least load") }}</option>
                 </select>
               </div>
               <div>
-                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">Ticket numbering format</label>
+                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t("Ticket numbering format") }}</label>
                 <input v-model="defaultsForm.ticket_numbering_format" type="text" class="form-input mt-2" />
               </div>
               <div>
-                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">Task numbering format</label>
+                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t("Task numbering format") }}</label>
                 <input v-model="defaultsForm.task_numbering_format" type="text" class="form-input mt-2" />
               </div>
               <div>
-                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">Project numbering format</label>
+                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t("Project numbering format") }}</label>
                 <input v-model="defaultsForm.project_numbering_format" type="text" class="form-input mt-2" />
               </div>
             </div>
@@ -508,8 +508,8 @@
           <section class="rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Roles and Permissions</h2>
-                <p class="text-sm text-slate-500 dark:text-slate-300">Manage access matrix. Scroll horizontally to view all permissions.</p>
+                <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">{{ $t("Roles and Permissions") }}</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Manage access matrix. Scroll horizontally to view all permissions.") }}</p>
               </div>
               <span v-if="rolesDirty" class="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-700">
                 {{ $t("Unsaved changes") }}
@@ -520,7 +520,7 @@
               <table class="min-w-[1800px] text-left text-sm">
                 <thead class="bg-slate-100 text-xs uppercase text-slate-500 dark:bg-slate-800">
                   <tr>
-                    <th class="px-4 py-3">Role</th>
+                    <th class="px-4 py-3">{{ $t("Role") }}</th>
                     <th v-for="permission in roleMatrix.permissions" :key="permission.id" class="px-4 py-3">
                       {{ permission.label }}
                     </th>
@@ -529,13 +529,13 @@
                 <tbody>
                   <tr v-if="roleRows.length === 0">
                     <td :colspan="roleMatrix.permissions.length + 1" class="px-4 py-6 text-center text-sm text-slate-400">
-                      No roles available.
+                      {{ $t("No roles available.") }}
                     </td>
                   </tr>
                   <tr v-for="role in roleRows" :key="role.id" class="border-t border-slate-200 dark:border-slate-700">
                     <td class="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200">
                       {{ role.label }}
-                      <span v-if="role.is_builtin" class="ml-2 text-xs text-slate-400">(built-in)</span>
+                      <span v-if="role.is_builtin" class="ml-2 text-xs text-slate-400">{{ $t("(built-in)") }}</span>
                     </td>
                     <td v-for="permission in roleMatrix.permissions" :key="permission.id" class="px-4 py-3 text-center">
                       <input
@@ -566,15 +566,15 @@
           <section class="rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
               <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Impersonation</h2>
-                  <p class="text-sm text-slate-500 dark:text-slate-300">Temporarily log in as another user (audited).</p>
+                  <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">{{ $t("Impersonation") }}</h2>
+                  <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Temporarily log in as another user (audited).") }}</p>
                 </div>
               </div>
               <div class="mt-4">
                 <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/60">
                   <div>
-                    <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">Allow impersonation</p>
-                    <p class="text-xs text-slate-500">Requires `FEATURE_IMPERSONATION=true`.</p>
+                    <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t("Allow impersonation") }}</p>
+                    <p class="text-xs text-slate-500">{{ $t("Requires `FEATURE_IMPERSONATION=true`.") }}</p>
                   </div>
                   <label class="relative inline-flex cursor-pointer items-center">
                     <input v-model="securityForm.allow_impersonation" type="checkbox" class="sr-only peer" :disabled="!features.impersonation" />
@@ -583,15 +583,15 @@
                   </label>
                 </div>
                 <p v-if="!features.impersonation" class="mt-3 text-sm text-amber-600">
-                  Impersonation is disabled in `config/features.php`.
+                  {{ $t("Impersonation is disabled in `config/features.php`.") }}
                 </p>
                 <p v-else-if="!securityForm.allow_impersonation" class="mt-3 text-sm text-amber-600">
-                  Impersonation is turned off in Security settings.
+                  {{ $t("Impersonation is turned off in Security settings.") }}
                 </p>
                 <div v-else class="mt-4 flex flex-wrap items-center gap-3">
-                  <input v-model="impersonateUserId" type="number" min="1" class="form-input w-40" placeholder="User ID" />
+                  <input v-model="impersonateUserId" type="number" min="1" class="form-input w-40" :placeholder="$t(&quot;User ID&quot;)" />
                   <button type="button" class="btn-secondary" @click="startImpersonate">
-                    Impersonate user
+                    {{ $t("Impersonate user") }}
                   </button>
                   <button v-if="impersonationActive" type="button" class="btn-ghost" @click="stopImpersonate">
                     {{ $t("Stop impersonation") }}
@@ -599,7 +599,7 @@
                 </div>
                 <div class="mt-4 flex flex-wrap items-center gap-3">
                   <SaveButton type="button" @click="saveSecurity" :processing="securityForm.processing">
-                    Save security settings
+                    {{ $t("Save security settings") }}
                   </SaveButton>
                   <button type="button" class="btn-ghost" :disabled="securityForm.processing" @click="resetSecurity">
                     {{ $t("Cancel") }}
@@ -613,14 +613,14 @@
           <section class="rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Export Data</h2>
-                <p class="text-sm text-slate-500 dark:text-slate-300">Generate CSV or PDF exports with filters.</p>
+                <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">{{ $t("Export Data") }}</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Generate CSV or PDF exports with filters.") }}</p>
               </div>
             </div>
 
             <div class="mt-6 grid gap-4 lg:grid-cols-3">
               <div>
-                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">Dataset</label>
+                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t("Dataset") }}</label>
                 <FancySelect v-model="exportForm.type" :options="exportDatasetOptions" accent="subtle" class="mt-2" />
               </div>
               <div>
@@ -628,7 +628,7 @@
                 <FancySelect v-model="exportForm.format" :options="exportFormatOptions" accent="subtle" class="mt-2" />
               </div>
               <div>
-                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">Limit rows</label>
+                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t("Limit rows") }}</label>
                 <input v-model.number="exportForm.limit" type="number" min="1" max="5000" class="form-input mt-2" />
               </div>
               <div>
@@ -640,7 +640,7 @@
                 <FancySelect v-model="exportForm.status" :options="exportStatusOptions" accent="subtle" class="mt-2" />
               </div>
               <div v-else>
-                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">Role</label>
+                <label class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $t("Role") }}</label>
                 <FancySelect v-model="exportForm.role" :options="exportRoleOptions" accent="subtle" class="mt-2" />
               </div>
               <div>
@@ -655,7 +655,7 @@
 
             <div class="mt-6 flex flex-wrap items-center gap-3">
               <button type="button" class="btn-primary" @click="runExport">
-                Export data
+                {{ $t("Export data") }}
               </button>
             </div>
           </section>
@@ -663,8 +663,8 @@
           <section class="rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">System Health</h2>
-                <p class="text-sm text-slate-500 dark:text-slate-300">Live environment diagnostics.</p>
+                <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">{{ $t("System Health") }}</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Live environment diagnostics.") }}</p>
               </div>
               <button type="button" class="btn-ghost" :disabled="healthLoading" @click="loadHealth">
                 {{ $t("Refresh") }}
@@ -686,8 +686,8 @@
           <section class="rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">System Actions</h2>
-                <p class="text-sm text-slate-500 dark:text-slate-300">Clear caches or rebuild indexes.</p>
+                <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">{{ $t("System Actions") }}</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Clear caches or rebuild indexes.") }}</p>
               </div>
             </div>
               <div class="mt-6 flex flex-wrap items-center gap-3">
@@ -697,7 +697,7 @@
                   :disabled="systemActionLoading || !features.cache_actions || systemActionsDisabled"
                   @click="confirmSystemAction('clear')"
                 >
-                  Clear caches
+                  {{ $t("Clear caches") }}
                 </button>
                 <button
                   type="button"
@@ -705,16 +705,16 @@
                   :disabled="systemActionLoading || !features.rebuild_indexes || systemActionsDisabled"
                   @click="confirmSystemAction('rebuild')"
                 >
-                  Rebuild indexes
+                  {{ $t("Rebuild indexes") }}
                 </button>
                 <p v-if="systemActionsDisabled" class="text-xs text-amber-600">
-                  System actions are disabled in production. Set `FEATURE_SYSTEM_ACTIONS_PROD=true` to allow them.
+                  {{ $t("System actions are disabled in production. Set `FEATURE_SYSTEM_ACTIONS_PROD=true` to allow them.") }}
                 </p>
                 <p v-else-if="!features.cache_actions" class="text-xs text-slate-400">
-                  Cache actions are disabled in `config/features.php`.
+                  {{ $t("Cache actions are disabled in `config/features.php`.") }}
                 </p>
                 <p v-else-if="!features.rebuild_indexes" class="text-xs text-slate-400">
-                  Index rebuild is disabled in `config/features.php`.
+                  {{ $t("Index rebuild is disabled in `config/features.php`.") }}
                 </p>
               </div>
             </section>
@@ -725,14 +725,14 @@
               <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">{{ $t("Audit Log") }}</h2>
-                  <p class="text-sm text-slate-500 dark:text-slate-300">Track changes across settings and system actions.</p>
+                  <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Track changes across settings and system actions.") }}</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
                   <input
                     v-model="auditQuery"
                     type="search"
                     class="form-input w-56"
-                    placeholder="Search logs"
+                    :placeholder="$t(&quot;Search logs&quot;)"
                     @keyup.enter="fetchAudit(1)"
                   />
                   <button type="button" class="btn-ghost" :disabled="auditLoading" @click="fetchAudit(1)">
@@ -746,18 +746,18 @@
             </div>
             <div v-else-if="auditError" class="mt-4 text-sm text-rose-500">{{ auditError }}</div>
             <div v-else-if="auditRows.length === 0" class="mt-6 text-sm text-slate-400">
-              No audit entries yet.
+              {{ $t("No audit entries yet.") }}
             </div>
             <div v-else class="mt-6 overflow-auto rounded-xl border border-slate-200 dark:border-slate-700">
               <table class="min-w-full text-left text-sm">
                 <thead class="bg-slate-100 text-xs uppercase text-slate-500 dark:bg-slate-800">
                   <tr>
-                    <th class="px-4 py-3">When</th>
-                    <th class="px-4 py-3">Actor</th>
-                    <th class="px-4 py-3">Action</th>
-                    <th class="px-4 py-3">Field</th>
-                    <th class="px-4 py-3">Before</th>
-                    <th class="px-4 py-3">After</th>
+                    <th class="px-4 py-3">{{ $t("When") }}</th>
+                    <th class="px-4 py-3">{{ $t("Actor") }}</th>
+                    <th class="px-4 py-3">{{ $t("Action") }}</th>
+                    <th class="px-4 py-3">{{ $t("Field") }}</th>
+                    <th class="px-4 py-3">{{ $t("Before") }}</th>
+                    <th class="px-4 py-3">{{ $t("After") }}</th>
                     <th class="px-4 py-3">IP</th>
                   </tr>
                 </thead>
@@ -779,7 +779,7 @@
               <button type="button" class="btn-ghost" :disabled="auditMeta.current_page <= 1" @click="fetchAudit(auditMeta.current_page - 1)">
                 {{ $t("Previous") }}
               </button>
-              <span>Page {{ auditMeta.current_page }} {{ $t("of") }} {{ auditMeta.last_page }}</span>
+              <span>{{ $t("Page") }} {{ auditMeta.current_page }} {{ $t("of") }} {{ auditMeta.last_page }}</span>
               <button type="button" class="btn-ghost" :disabled="auditMeta.current_page >= auditMeta.last_page" @click="fetchAudit(auditMeta.current_page + 1)">
                 {{ $t("Next") }}
               </button>
@@ -803,7 +803,7 @@
         <p class="mt-2 text-sm text-slate-500">{{ confirmDialog.message }}</p>
         <div class="mt-6 flex items-center justify-end gap-3">
           <button type="button" class="btn-ghost" @click="closeConfirm">{{ $t("Cancel") }}</button>
-          <button type="button" class="btn-primary" @click="runConfirmDialog">Confirm</button>
+          <button type="button" class="btn-primary" @click="runConfirmDialog">{{ $t("Confirm") }}</button>
         </div>
       </div>
     </div>
@@ -1328,10 +1328,10 @@ const daysAgo = days => {
 const buildDateOptions = currentValue => {
   const base = [
     { label: 'Any time', value: '' },
-    { label: 'Today', value: formatISODate(new Date()) },
-    { label: 'Last 7 days', value: daysAgo(7) },
-    { label: 'Last 30 days', value: daysAgo(30) },
-    { label: 'Last 90 days', value: daysAgo(90) },
+    { label: uiText('Today'), value: formatISODate(new Date()) },
+    { label: uiText('Last 7 days'), value: daysAgo(7) },
+    { label: uiText('Last 30 days'), value: daysAgo(30) },
+    { label: uiText('Last 90 days'), value: daysAgo(90) },
     { label: 'Custom date…', value: '__custom__' },
   ];
   if (currentValue && !base.some(option => option.value === currentValue)) {
@@ -1399,7 +1399,7 @@ const loadHealth = async () => {
     }
     const data = await response.json();
     healthItems.value = [
-      { label: 'App', value: data.app_name },
+      { label: uiText('App'), value: data.app_name },
       { label: 'Environment', value: data.environment },
       { label: 'Framework', value: data.framework_version },
       { label: 'PHP', value: data.php_version },

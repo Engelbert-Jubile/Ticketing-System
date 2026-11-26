@@ -2,7 +2,7 @@
   <div class="mx-auto max-w-6xl space-y-6 px-4 py-6 lg:px-6">
     <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Project In Progress</h1>
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">{{ $t("Project In Progress") }}</h1>
         <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Daftar project yang sedang berjalan.") }}</p>
       </div>
       <div class="flex flex-wrap items-center gap-3">
@@ -24,8 +24,8 @@
         <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-400">
           <tr>
             <th class="px-4 py-2 text-left">#</th>
-            <th class="px-4 py-2 text-left">Project</th>
-            <th class="px-4 py-2 text-left">Project No</th>
+            <th class="px-4 py-2 text-left">{{ $t("Project") }}</th>
+            <th class="px-4 py-2 text-left">{{ $t("Project No") }}</th>
             <th class="px-4 py-2 text-left">Status</th>
             <th class="px-4 py-2 text-left">Target</th>
             <th class="px-4 py-2 text-left">{{ $t("Diupdate") }}</th>

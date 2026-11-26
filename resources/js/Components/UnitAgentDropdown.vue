@@ -21,7 +21,7 @@
             <div class="flex items-center justify-between gap-3">
               <div>
                 <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{{ $t("Unit tersedia") }}</p>
-                <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">{{ unitCount }} Unit · {{ filteredOptions.length }} Agent</p>
+                <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">{{ unitCount }} Unit · {{ filteredOptions.length }} {{ $t("Agent") }}</p>
               </div>
               <button
                 type="button"
@@ -44,7 +44,7 @@
                   class="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400 dark:text-slate-100"
                   :placeholder="$t(&quot;Cari nama agent, email, atau unit&quot;)"
                 />
-                <button v-if="searchQuery" type="button" class="text-xs text-slate-400 hover:text-rose-500" @click="clearSearch">Reset</button>
+                <button v-if="searchQuery" type="button" class="text-xs text-slate-400 hover:text-rose-500" @click="clearSearch">{{ $t("Reset") }}</button>
               </div>
             </div>
           </transition>

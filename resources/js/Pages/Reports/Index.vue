@@ -10,10 +10,10 @@
           <div class="space-y-4">
             <div class="space-y-2">
               <p class="text-xs font-semibold uppercase tracking-[0.4em] text-slate-500 dark:text-slate-300">
-                Performance Intelligence
+                {{ $t("Performance Intelligence") }}
               </p>
               <div class="flex flex-wrap items-center gap-3">
-                <h1 class="text-3xl font-bold text-slate-900 dark:text-white">Unit Performance Reports</h1>
+                <h1 class="text-3xl font-bold text-slate-900 dark:text-white">{{ $t("Unit Performance Reports") }}</h1>
                 <span
                   class="rounded-full border border-white/60 bg-white/70 px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/70 dark:text-slate-200">
                   {{ filtersWindow.label }}
@@ -29,11 +29,11 @@
                 {{ filtersWindow.start }} → {{ filtersWindow.end }}</span
               >
               <span
-                ><span class="font-semibold text-slate-700 dark:text-slate-200">Range:</span>
+                ><span class="font-semibold text-slate-700 dark:text-slate-200">{{ $t("Range:") }}</span>
                 {{ selectedRangeLabel }}</span
               >
               <span
-                ><span class="font-semibold text-slate-700 dark:text-slate-200">Total Item:</span>
+                ><span class="font-semibold text-slate-700 dark:text-slate-200">{{ $t("Total Item:") }}</span>
                 {{ formatNumber(heroMeta.totalWork) }}</span
               >
             </div>
@@ -93,7 +93,7 @@
             class="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-lg backdrop-blur dark:border-white/10 dark:bg-slate-900/80"
           >
             <p class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500 dark:text-slate-300">
-              Active Units
+              {{ $t("Active Units") }}
             </p>
             <p class="mt-1 text-3xl font-bold text-slate-900 dark:text-white">
               {{ formatNumber(heroMeta.activeUnits) }}
@@ -106,7 +106,7 @@
             class="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-lg backdrop-blur dark:border-white/10 dark:bg-slate-900/80"
           >
             <p class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500 dark:text-slate-300">
-              Completion
+              {{ $t("Completion") }}
             </p>
             <p class="mt-1 text-3xl font-bold text-slate-900 dark:text-white">{{ heroMeta.completionRate }}%</p>
             <p class="text-xs text-slate-500 dark:text-slate-400">
@@ -117,7 +117,7 @@
             class="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-lg backdrop-blur dark:border-white/10 dark:bg-slate-900/80"
           >
             <p class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500 dark:text-slate-300">
-              SLA Compliance
+              {{ $t("SLA Compliance") }}
             </p>
             <p class="mt-1 text-3xl font-bold text-slate-900 dark:text-white">
               {{ formatPercent(slaStats.compliance_rate) }}
@@ -130,14 +130,14 @@
             class="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-lg backdrop-blur dark:border-white/10 dark:bg-slate-900/80"
           >
             <p class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500 dark:text-slate-300">
-              Pending Backlog
+              {{ $t("Pending Backlog") }}
             </p>
             <p class="mt-1 text-3xl font-bold text-slate-900 dark:text-white">
               {{ formatNumber(workloadTotals.pending) }}
             </p>
             <p class="text-xs text-slate-500 dark:text-slate-400">
-              {{ $t("Tickets") }} {{ formatNumber(normalizedOverview.tickets.pending) }} • Tasks
-              {{ formatNumber(normalizedOverview.tasks.pending) }} • Projects
+              {{ $t("Tickets") }} {{ formatNumber(normalizedOverview.tickets.pending) }} {{ $t("• Tasks") }}
+              {{ formatNumber(normalizedOverview.tasks.pending) }} {{ $t("• Projects") }}
               {{ formatNumber(normalizedOverview.projects.pending) }}
             </p>
           </div>
@@ -150,10 +150,10 @@
         class="flex flex-col rounded-3xl border border-slate-200/70 bg-white p-6 shadow-sm dark:border-slate-700/70 dark:bg-slate-900">
         <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Operational Timeline</p>
-            <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Output vs Completion</h3>
+            <p class="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">{{ $t("Operational Timeline") }}</p>
+            <h3 class="text-xl font-semibold text-slate-900 dark:text-white">{{ $t("Output vs Completion") }}</h3>
           </div>
-          <span class="text-xs text-slate-500 dark:text-slate-400">Aggregated by ISO week</span>
+          <span class="text-xs text-slate-500 dark:text-slate-400">{{ $t("Aggregated by ISO week") }}</span>
         </div>
         <div
           class="mt-6 flex-1 min-h-[340px] w-full overflow-hidden rounded-2xl border border-slate-100/70 bg-white/70 p-3 sm:p-4 dark:border-slate-800/70 dark:bg-slate-900/70">
@@ -163,7 +163,7 @@
       <aside class="grid gap-4">
         <div
           class="rounded-3xl border border-slate-200/70 bg-white p-5 shadow-sm dark:border-slate-700/70 dark:bg-slate-900">
-          <p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Throughput Summary</p>
+          <p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">{{ $t("Throughput Summary") }}</p>
           <ul class="mt-3 space-y-3">
             <li
               v-for="card in trendSummaryCards"
@@ -172,19 +172,19 @@
               <div>
                 <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">{{ card.label }}</p>
                 <p class="text-xs text-slate-500 dark:text-slate-400">
-                  {{ $t("Created") }} {{ formatNumber(card.created) }} • Completed {{ formatNumber(card.completed) }}
+                  {{ $t("Created") }} {{ formatNumber(card.created) }} {{ $t("• Completed") }} {{ formatNumber(card.completed) }}
                 </p>
               </div>
               <div class="text-right">
                 <p class="text-lg font-semibold text-slate-900 dark:text-white">{{ formatNumber(card.total) }}</p>
-                <p class="text-[11px] text-slate-400">Completion {{ formatPercent(card.completionRate) }}</p>
+                <p class="text-[11px] text-slate-400">{{ $t("Completion") }} {{ formatPercent(card.completionRate) }}</p>
               </div>
             </li>
           </ul>
         </div>
         <div
           class="rounded-3xl border border-slate-200/70 bg-white p-5 shadow-sm dark:border-slate-700/70 dark:bg-slate-900">
-          <p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Peak Activity</p>
+          <p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">{{ $t("Peak Activity") }}</p>
           <ul v-if="trendHighlights.length" class="mt-3 space-y-2">
             <li
               v-for="peak in trendHighlights"
@@ -205,7 +205,7 @@
     <section class="space-y-5">
       <header class="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
         <div>
-          <p class="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Workstream Snapshot</p>
+          <p class="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">{{ $t("Workstream Snapshot") }}</p>
           <h3 class="text-xl font-semibold text-slate-900 dark:text-white">{{ $t("Kapasitas lintas layanan") }}</h3>
         </div>
       </header>
@@ -229,7 +229,7 @@
             <div>
               <p class="text-3xl font-bold text-slate-900 dark:text-white">{{ formatNumber(card.stats.total) }}</p>
               <p class="text-xs text-slate-500 dark:text-slate-400">
-                {{ $t("Aktif") }} {{ formatNumber(card.stats.active) }} • Pending {{ formatNumber(card.stats.pending) }}
+                {{ $t("Aktif") }} {{ formatNumber(card.stats.active) }} {{ $t("• Pending") }} {{ formatNumber(card.stats.pending) }}
               </p>
             </div>
             <div>
@@ -240,13 +240,13 @@
                   :style="{ width: `${completionRate(card.stats)}%` }"></div>
               </div>
               <div class="mt-1 flex items-center justify-between text-xs text-slate-400 dark:text-slate-500">
-                <span>Completion</span>
+                <span>{{ $t("Completion") }}</span>
                 <span>{{ completionRate(card.stats) }}%</span>
               </div>
             </div>
             <div
               class="rounded-2xl border border-slate-100/70 bg-slate-50/70 px-4 py-3 text-xs text-slate-500 dark:border-slate-700/70 dark:bg-slate-800/60 dark:text-slate-300">
-              Output {{ formatNumber(card.summary.created) }} • Completion {{ formatNumber(card.summary.completed) }}
+              {{ $t("Output") }} {{ formatNumber(card.summary.created) }} {{ $t("• Completion") }} {{ formatNumber(card.summary.completed) }}
             </div>
           </div>
         </article>
@@ -258,7 +258,7 @@
         class="rounded-3xl border border-slate-200/70 bg-white p-6 shadow-sm dark:border-slate-700/70 dark:bg-slate-900">
         <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Status Distribution</p>
+            <p class="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">{{ $t("Status Distribution") }}</p>
             <h3 class="text-xl font-semibold text-slate-900 dark:text-white">{{ $t("Health indicator per workstream") }}</h3>
           </div>
           <span class="text-xs text-slate-500 dark:text-slate-400">{{ filtersWindow.label }}</span>
@@ -275,7 +275,7 @@
               <span
                 class="inline-flex items-center gap-2 rounded-full border border-slate-200/70 bg-white/70 px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-200"
               >
-                Completion {{ formatPercent(dist.completionRate) }}
+                {{ $t("Completion") }} {{ formatPercent(dist.completionRate) }}
               </span>
             </div>
             <div class="space-y-2">
@@ -314,9 +314,9 @@
         <header class="flex items-center justify-between">
           <div>
             <p class="text-xs font-semibold uppercase tracking-[0.4em] text-slate-500 dark:text-white/60">
-              SLA Command Center
+              {{ $t("SLA Command Center") }}
             </p>
-            <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Realtime Compliance</h3>
+            <h3 class="text-xl font-semibold text-slate-900 dark:text-white">{{ $t("Realtime Compliance") }}</h3>
           </div>
           <span
             class="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 dark:bg-white/10 dark:text-white">
@@ -326,7 +326,7 @@
         <div class="grid gap-3 sm:grid-cols-2">
           <div
             class="rounded-2xl border border-slate-100/70 bg-slate-50/80 p-4 text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-white">
-            <p class="text-xs uppercase tracking-[0.4em] text-slate-500 dark:text-white/60">Breached</p>
+            <p class="text-xs uppercase tracking-[0.4em] text-slate-500 dark:text-white/60">{{ $t("Breached") }}</p>
             <p class="mt-2 text-3xl font-semibold text-rose-500 dark:text-rose-300">
               {{ formatNumber(slaAlerts.metrics.breached) }}
             </p>
@@ -336,7 +336,7 @@
           </div>
           <div
             class="rounded-2xl border border-slate-100/70 bg-slate-50/80 p-4 text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-white">
-            <p class="text-xs uppercase tracking-[0.4em] text-slate-500 dark:text-white/60">Due Soon</p>
+            <p class="text-xs uppercase tracking-[0.4em] text-slate-500 dark:text-white/60">{{ $t("Due Soon") }}</p>
             <p class="mt-2 text-3xl font-semibold text-amber-500 dark:text-amber-200">
               {{ formatNumber(slaAlerts.metrics.dueSoon) }}
             </p>
@@ -346,7 +346,7 @@
           </div>
         </div>
         <div class="rounded-2xl border border-slate-100/70 bg-slate-50/80 p-4 dark:border-white/10 dark:bg-white/5">
-          <p class="text-xs uppercase tracking-[0.4em] text-slate-500 dark:text-white/60">SLA Due Soon</p>
+          <p class="text-xs uppercase tracking-[0.4em] text-slate-500 dark:text-white/60">{{ $t("SLA Due Soon") }}</p>
           <ul class="mt-2 space-y-2" v-if="slaAlerts.dueSoon.length">
             <li
               v-for="item in slaAlerts.dueSoon"
@@ -361,7 +361,7 @@
           </p>
         </div>
         <div class="rounded-2xl border border-slate-100/70 bg-slate-50/80 p-4 dark:border-white/10 dark:bg-white/5">
-          <p class="text-xs uppercase tracking-[0.4em] text-slate-500 dark:text-white/60">SLA Breached</p>
+          <p class="text-xs uppercase tracking-[0.4em] text-slate-500 dark:text-white/60">{{ $t("SLA Breached") }}</p>
           <ul class="mt-2 space-y-2" v-if="slaAlerts.breached.length">
             <li
               v-for="item in slaAlerts.breached"
@@ -379,10 +379,10 @@
     <section class="grid gap-4 xl:grid-cols-3">
       <article
         class="rounded-3xl border border-slate-200/70 bg-white p-6 shadow-sm dark:border-slate-700/70 dark:bg-slate-900">
-        <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Ticket Leaderboard</h3>
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-white">{{ $t("Ticket Leaderboard") }}</h3>
         <div class="mt-4 space-y-4">
           <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Top Resolver</p>
+            <p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">{{ $t("Top Resolver") }}</p>
             <ul class="mt-2 space-y-2" v-if="ticketAgents.length">
               <li
                 v-for="agent in ticketAgents"
@@ -398,7 +398,7 @@
             <p v-else class="mt-2 text-xs text-slate-500 dark:text-slate-400">{{ $t("Belum ada data resolver.") }}</p>
           </div>
           <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Unit Requester</p>
+            <p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">{{ $t("Unit Requester") }}</p>
             <ul class="mt-2 space-y-2" v-if="ticketRequesters.length">
               <li
                 v-for="req in ticketRequesters"
@@ -414,10 +414,10 @@
       </article>
       <article
         class="rounded-3xl border border-slate-200/70 bg-white p-6 shadow-sm dark:border-slate-700/70 dark:bg-slate-900">
-        <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Task & Project Leaderboard</h3>
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-white">{{ $t("Task & Project Leaderboard") }}</h3>
         <div class="mt-4 space-y-4">
           <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Task Assignee</p>
+            <p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">{{ $t("Task Assignee") }}</p>
             <ul class="mt-2 space-y-2" v-if="taskAssignees.length">
               <li
                 v-for="assignee in taskAssignees"
@@ -433,7 +433,7 @@
             <p v-else class="mt-2 text-xs text-slate-500 dark:text-slate-400">{{ $t("Belum ada data penyelesai tugas.") }}</p>
           </div>
           <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Project Owner</p>
+            <p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">{{ $t("Project Owner") }}</p>
             <ul class="mt-2 space-y-2" v-if="projectOwners.length">
               <li
                 v-for="owner in projectOwners"
@@ -441,7 +441,7 @@
                 class="flex items-center justify-between rounded-2xl border border-slate-100/70 bg-slate-50/60 px-4 py-2 text-sm dark:border-slate-700/70 dark:bg-slate-800/60">
                 <div>
                   <p class="font-semibold text-slate-700 dark:text-slate-100">{{ owner.name }}</p>
-                  <p class="text-xs text-slate-500 dark:text-slate-400">Deliver {{ formatNumber(owner.value) }}</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">{{ $t("Deliver") }} {{ formatNumber(owner.value) }}</p>
                 </div>
                 <span class="text-xs text-slate-400">{{ formatAverage(owner.avg, owner.avg_unit) }}</span>
               </li>
@@ -452,10 +452,10 @@
       </article>
       <article
         class="rounded-3xl border border-slate-200/70 bg-white p-6 shadow-sm dark:border-slate-700/70 dark:bg-slate-900">
-        <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Focus Alerts</h3>
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-white">{{ $t("Focus Alerts") }}</h3>
         <div class="mt-4 space-y-4">
           <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Tasks due soon</p>
+            <p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">{{ $t("Tasks due soon") }}</p>
             <ul class="mt-2 space-y-2" v-if="focusAlerts.tasks.length">
               <li
                 v-for="task in focusAlerts.tasks"
@@ -468,7 +468,7 @@
             <p v-else class="mt-2 text-xs text-slate-500 dark:text-slate-400">{{ $t("Tidak ada tugas kritikal.") }}</p>
           </div>
           <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Projects ending soon</p>
+            <p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">{{ $t("Projects ending soon") }}</p>
             <ul class="mt-2 space-y-2" v-if="focusAlerts.projects.length">
               <li
                 v-for="project in focusAlerts.projects"
@@ -491,10 +491,10 @@
         class="rounded-3xl border border-slate-200/70 bg-white p-6 shadow-sm dark:border-slate-700/70 dark:bg-slate-900">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-xs font-semibold uppercase tracking-widest text-slate-400">Top Performer</p>
+            <p class="text-xs font-semibold uppercase tracking-widest text-slate-400">{{ $t("Top Performer") }}</p>
             <h3 class="text-xl font-semibold text-slate-900 dark:text-white">{{ $t("Unit dengan aktivitas tertinggi") }}</h3>
           </div>
-          <span class="text-xs text-slate-500 dark:text-slate-400">Activity Score</span>
+          <span class="text-xs text-slate-500 dark:text-slate-400">{{ $t("Activity Score") }}</span>
         </div>
         <div v-if="topUnits.length" class="mt-5 space-y-4">
           <div
@@ -521,7 +521,7 @@
       <article
         class="rounded-3xl border border-slate-200/70 bg-white p-6 text-slate-900 shadow-sm dark:border-slate-700/70 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 dark:text-white">
         <div class="flex items-center justify-between">
-          <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Unit Idle</h3>
+          <h3 class="text-xl font-semibold text-slate-900 dark:text-white">{{ $t("Unit Idle") }}</h3>
           <span class="text-sm font-medium text-slate-500 dark:text-white/70">{{ idleUnits.length }} unit</span>
         </div>
         <p class="mt-2 text-sm text-slate-600 dark:text-white/70">
@@ -547,7 +547,7 @@
       class="rounded-3xl border border-slate-200/70 bg-white p-6 shadow-sm dark:border-slate-700/70 dark:bg-slate-900">
       <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <p class="text-xs font-semibold uppercase tracking-widest text-slate-400">Multi-Unit Pulse</p>
+          <p class="text-xs font-semibold uppercase tracking-widest text-slate-400">{{ $t("Multi-Unit Pulse") }}</p>
           <h3 class="text-xl font-semibold text-slate-900 dark:text-white">{{ $t("Aktivitas per unit") }}</h3>
         </div>
         <span class="text-xs text-slate-500 dark:text-slate-400">{{ units.length }} {{ $t("unit dipantau") }}</span>
@@ -560,27 +560,27 @@
               <th class="px-4 py-3">{{ $t("Tickets") }}</th>
               <th class="px-4 py-3">{{ $t("Tasks") }}</th>
               <th class="px-4 py-3">{{ $t("Projects") }}</th>
-              <th class="px-4 py-3">Activity</th>
-              <th class="px-4 py-3">Completion</th>
+              <th class="px-4 py-3">{{ $t("Activity") }}</th>
+              <th class="px-4 py-3">{{ $t("Completion") }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
             <tr v-for="unit in units" :key="unit.name" class="align-top">
               <td class="px-4 py-4">
                 <div class="font-semibold text-slate-900 dark:text-white">{{ unit.name }}</div>
-                <p class="text-xs text-slate-500 dark:text-slate-400">Score {{ unit.activity_score }}</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">{{ $t("Score") }} {{ unit.activity_score }}</p>
               </td>
               <td class="px-4 py-4">
                 <p class="font-semibold text-slate-900 dark:text-white">{{ formatNumber(unit.tickets.total) }}</p>
-                <p class="text-xs text-emerald-500">Done {{ formatNumber(unit.tickets.done) }}</p>
+                <p class="text-xs text-emerald-500">{{ $t("Done") }} {{ formatNumber(unit.tickets.done) }}</p>
               </td>
               <td class="px-4 py-4">
                 <p class="font-semibold text-slate-900 dark:text-white">{{ formatNumber(unit.tasks.total) }}</p>
-                <p class="text-xs text-emerald-500">Done {{ formatNumber(unit.tasks.done) }}</p>
+                <p class="text-xs text-emerald-500">{{ $t("Done") }} {{ formatNumber(unit.tasks.done) }}</p>
               </td>
               <td class="px-4 py-4">
                 <p class="font-semibold text-slate-900 dark:text-white">{{ formatNumber(unit.projects.total) }}</p>
-                <p class="text-xs text-emerald-500">Done {{ formatNumber(unit.projects.done) }}</p>
+                <p class="text-xs text-emerald-500">{{ $t("Done") }} {{ formatNumber(unit.projects.done) }}</p>
               </td>
               <td class="px-4 py-4">
                 <div class="text-lg font-semibold text-slate-900 dark:text-white">{{ unit.activity_score }}</div>
@@ -763,14 +763,14 @@ const trendChart = computed(() => {
   const labels = rawTrend.value.labels ?? [];
   const datasets = [
     {
-      label: 'Tickets Created',
+      label: uiText('Tickets Created'),
       data: rawTrend.value.tickets?.created ?? [],
       borderColor: '#6366f1',
       backgroundColor: 'rgba(99,102,241,0.18)',
       fill: true
     },
     {
-      label: 'Tickets Completed',
+      label: uiText('Tickets Completed'),
       data: rawTrend.value.tickets?.completed ?? [],
       borderColor: '#312e81',
       backgroundColor: 'rgba(49,46,129,0.12)',
@@ -778,14 +778,14 @@ const trendChart = computed(() => {
       fill: false
     },
     {
-      label: 'Tasks Created',
+      label: uiText('Tasks Created'),
       data: rawTrend.value.tasks?.created ?? [],
       borderColor: '#f97316',
       backgroundColor: 'rgba(249,115,22,0.15)',
       fill: true
     },
     {
-      label: 'Tasks Completed',
+      label: uiText('Tasks Completed'),
       data: rawTrend.value.tasks?.completed ?? [],
       borderColor: '#c2410c',
       backgroundColor: 'rgba(194,65,12,0.12)',
@@ -793,14 +793,14 @@ const trendChart = computed(() => {
       fill: false
     },
     {
-      label: 'Projects Created',
+      label: uiText('Projects Created'),
       data: rawTrend.value.projects?.created ?? [],
       borderColor: '#10b981',
       backgroundColor: 'rgba(16,185,129,0.16)',
       fill: true
     },
     {
-      label: 'Projects Completed',
+      label: uiText('Projects Completed'),
       data: rawTrend.value.projects?.completed ?? [],
       borderColor: '#047857',
       backgroundColor: 'rgba(4,120,87,0.12)',

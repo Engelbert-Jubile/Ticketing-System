@@ -2,7 +2,7 @@
   <div class="mx-auto max-w-6xl space-y-6 px-4 py-6 lg:px-6">
     <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Tickets - In Progress</h1>
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">{{ $t("Tickets - In Progress") }}</h1>
         <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Daftar ticket yang sedang diproses.") }}</p>
       </div>
       <div class="flex items-center gap-2">

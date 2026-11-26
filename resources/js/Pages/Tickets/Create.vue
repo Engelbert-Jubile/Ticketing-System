@@ -2,7 +2,7 @@
   <div class="mx-auto max-w-5xl space-y-6 px-4 py-6 pt-8 lg:px-6 lg:pt-10">
     <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">{{ $t("Ticket Baru") }}</h1>
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">{{ $t('Create Ticket') }}</h1>
         <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Lengkapi detail ticket dan pilih PIC utama untuk tugas ini.") }}</p>
       </div>
     </header>
@@ -54,7 +54,7 @@
         </div>
 
         <div class="md:col-span-2">
-          <label for="ticket-reason" class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Reason</label>
+          <label for="ticket-reason" class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Reason") }}</label>
           <input
             id="ticket-reason"
             :aria-invalid="Boolean(form.errors.reason)"
@@ -93,7 +93,7 @@
         <h2 class="text-base font-semibold">{{ $t("Penugasan") }}</h2>
         <div class="grid gap-4 md:grid-cols-2">
           <div class="md:col-span-2">
-            <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Requester</label>
+            <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Requester") }}</label>
             <template v-if="canSelectRequester">
               <div ref="requesterCardRef" class="relative mt-1 w-full">
                 <button
@@ -174,7 +174,7 @@
                     <p class="text-xs text-slate-400">{{ $t("Pilih PIC utama dari berbagai unit.") }}</p>
                   </div>
                   <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                    {{ picSelections.length ? picSelections.length + ' PIC dipilih' : $t("Belum ada pilihan") }}
+                    {{ picSelections.length ? $t(':count PIC dipilih', { count: picSelections.length }) : $t("Belum ada pilihan") }}
                   </span>
                 </div>
                 <div class="relative mt-3 w-full">
@@ -265,7 +265,7 @@
                     </div>
                   </transition>
                 </div>
-                <p class="mt-2 text-xs text-slate-400">{{ picSelections.length ? picSelections.length + ' PIC terhubung' : $t("Belum ada PIC terpilih") }}</p>
+                <p class="mt-2 text-xs text-slate-400">{{ picSelections.length ? $t(':count PIC terhubung', { count: picSelections.length }) : $t("Belum ada PIC terpilih") }}</p>
                 <p v-if="form.errors.assigned_id" class="mt-2 text-xs text-red-500">{{ form.errors.assigned_id }}</p>
               </div>
             </div>
@@ -354,7 +354,7 @@
           class="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
           @click="resetForm"
         >
-          Reset
+          {{ $t("Reset") }}
         </button>
         <SaveButton type="submit" :processing="form.processing">
           {{ $t("Simpan Ticket") }}
@@ -376,7 +376,7 @@ import DatePickerFlatpickr from '@/Components/DatePickerFlatpickr.vue';
 import FileUploaderPond from '@/Components/FileUploaderPond.vue';
 import RichTextQuill from '@/Components/RichTextQuill.vue';
 import FancySelect from '@/Components/FancySelect.vue';
-import { attachmentFilterOptions } from '@/utils/attachmentFilters';
+import { localizedAttachmentFilterOptions } from '@/utils/attachmentFilters';
 
 const props = defineProps({
   defaults: { type: Object, default: () => ({}) },
@@ -433,16 +433,16 @@ const isDateBefore = (left, right) => Boolean(left && right && left < right);
 
 const uploadError = ref('');
 const attachmentIds = ref([]);
-const attachmentFilterChoices = attachmentFilterOptions;
+const attachmentFilterChoices = localizedAttachmentFilterOptions;
 const selectedAttachmentFilter = ref('');
 const activeAttachmentFilter = computed(
-  () => attachmentFilterChoices.find(option => option.value === selectedAttachmentFilter.value) ?? null
+  () => attachmentFilterChoices.value.find(option => option.value === selectedAttachmentFilter.value) ?? null
 );
 const attachmentMimeTypes = computed(() => activeAttachmentFilter.value?.mimeTypes ?? []);
 const attachmentAllowedExtensions = computed(() => activeAttachmentFilter.value?.extensions ?? []);
 const uploaderDisabled = computed(() => !activeAttachmentFilter.value);
 const attachmentFilterHint = computed(() => (
-  activeAttachmentFilter.value ? (uiText("Hanya ") + (activeAttachmentFilter.value.label)) : uiText("Pilih jenis file untuk mengaktifkan unggahan.")
+  activeAttachmentFilter.value ? uiText("Hanya :type", { type: activeAttachmentFilter.value.label }) : uiText("Pilih jenis file untuk mengaktifkan unggahan.")
 ));
 const uploaderRef = ref(null);
 

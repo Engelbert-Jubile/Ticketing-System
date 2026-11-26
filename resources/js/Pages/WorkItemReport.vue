@@ -48,7 +48,7 @@
             <td class="whitespace-nowrap px-4 py-3 font-mono text-xs">{{ item[kind + '_no'] || '—' }}</td>
             <td class="min-w-40 px-4 py-3 font-semibold"><Link class="hover:underline" :href="item.links.show">{{ item.title }}</Link></td>
             <td class="whitespace-nowrap px-4 py-3"><StatusPill :status="item.status" :label="item.status_label" size="sm" /></td>
-            <td v-if="kind !== 'project'" class="px-4 py-3 capitalize">{{ item.priority || '—' }}</td>
+            <td v-if="kind !== 'project'" class="px-4 py-3 capitalize">{{ item.priority ? $t(formatStatusLabel(item.priority)) : '—' }}</td>
             <td class="whitespace-nowrap px-4 py-3">{{ item.due_display || '—' }}</td>
             <td v-if="kind === 'ticket'" class="whitespace-nowrap px-4 py-3">{{ item.worked_on_display || '—' }}</td>
             <td class="whitespace-nowrap px-4 py-3">{{ item.created_display || '—' }}</td>
@@ -82,6 +82,7 @@ import { computed, reactive } from 'vue'
 import { useI18n } from '../i18n'
 import AppLayout from '../Layouts/AppLayout.vue'
 import StatusPill from '../Components/StatusPill.vue'
+import { formatStatusLabel } from '../utils/statusTheme'
 import resolveRoute from '../utils/resolveRoute'
 
 defineOptions({ layout: AppLayout })

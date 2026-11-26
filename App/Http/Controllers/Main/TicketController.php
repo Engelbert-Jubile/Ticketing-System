@@ -350,7 +350,7 @@ class TicketController extends Controller
         $priorityOptions = collect($this->priorities())
             ->map(fn (string $priority) => [
                 'value' => $priority,
-                'label' => ucfirst($priority),
+                'label' => $this->reportValueLabel($priority),
             ])
             ->values();
 
@@ -377,7 +377,7 @@ class TicketController extends Controller
             $defaults['description'] = '<p>'.nl2br(e($template->body)).'</p>';
             if ($template->default_assignee_id && $users->contains('id', $template->default_assignee_id)) {
                 $defaults['assigned_user_ids'] = [(int) $template->default_assignee_id];
-                $defaults['assignment_reason'] = 'PIC disarankan oleh template '.$template->title.__('. Anda dapat mengubahnya.');
+                $defaults['assignment_reason'] = __('PIC disarankan oleh template :template. Anda dapat mengubahnya.', ['template' => $template->title]);
             }
         }
 
@@ -579,7 +579,7 @@ class TicketController extends Controller
         $priorityOptions = collect($this->priorities())
             ->map(fn (string $priority) => [
                 'value' => $priority,
-                'label' => ucfirst($priority),
+                'label' => $this->reportValueLabel($priority),
             ])
             ->values();
 
@@ -1495,7 +1495,7 @@ class TicketController extends Controller
                 $dt = $dt->timezone($tz);
             }
 
-            return $dt->format($format);
+            return $dt->locale(app()->getLocale())->translatedFormat($format);
         } catch (\Throwable $e) {
             return (string) $value;
         }

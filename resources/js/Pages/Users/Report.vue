@@ -2,7 +2,7 @@
   <div class="mx-auto max-w-6xl space-y-6 px-4 py-6 lg:px-0">
     <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100">User Report</h1>
+        <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100">{{ $t("User Report") }}</h1>
         <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Kelola akun pengguna dan hak akses di sistem.") }}</p>
       </div>
 
@@ -28,7 +28,7 @@
           <MultiSelect
             v-model="selectedRoles"
             :options="roles"
-            placeholder="Filter Role"
+            :placeholder="$t(&quot;Filter Role&quot;)"
           />
         </div>
 
@@ -36,7 +36,7 @@
           <template #trigger>
             <span class="flex items-center gap-2">
               <span class="material-icons text-base">tune</span>
-              {{ perPage }} / page
+              {{ perPage }} {{ $t("/ page") }}
             </span>
           </template>
           <template #default>
@@ -81,7 +81,7 @@
               <th class="px-4 py-3 text-left hidden md:table-cell">{{ $t("Nama Lengkap") }}</th>
               <th class="px-4 py-3 text-left">Email</th>
               <th class="px-4 py-3 text-left">Unit</th>
-              <th class="px-4 py-3 text-left">Role</th>
+              <th class="px-4 py-3 text-left">{{ $t("Role") }}</th>
               <th class="px-4 py-3 text-right">{{ $t("Actions") }}</th>
             </tr>
           </thead>
@@ -127,7 +127,7 @@
                       @click="goTo(user.links.edit)"
                     >
                       <span class="material-icons text-base">edit</span>
-                      Edit
+                      {{ $t("Edit") }}
                     </button>
                     <button
                       v-if="user.can.delete"

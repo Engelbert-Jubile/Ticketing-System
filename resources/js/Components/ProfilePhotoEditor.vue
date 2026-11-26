@@ -8,7 +8,7 @@
         <div class="crop-guide" aria-hidden="true"></div>
       </div>
       <template v-if="image">
-        <div class="zoom-row"><label for="photo-zoom">Zoom</label><output for="photo-zoom">{{ Math.round(zoom * 100) }}%</output></div>
+        <div class="zoom-row"><label for="photo-zoom">{{ $t("Zoom") }}</label><output for="photo-zoom">{{ Math.round(zoom * 100) }}%</output></div>
         <input id="photo-zoom" :value="zoom" type="range" min="1" max="4" step="0.01" :disabled="busy" @input="setZoom(Number($event.target.value))" />
         <p class="hint">{{ tr('Area lingkaran menunjukkan tampilan avatar. Foto disimpan berbentuk persegi.', 'The circle previews your avatar. The photo is saved as a square.') }}</p>
       </template>

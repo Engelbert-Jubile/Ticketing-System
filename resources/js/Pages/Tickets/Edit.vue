@@ -2,7 +2,7 @@
   <div class="mx-auto max-w-5xl space-y-6 px-4 py-6 pt-8 lg:px-6 lg:pt-10">
     <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Edit Ticket</h1>
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">{{ $t("Edit Ticket") }}</h1>
         <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Perbarui informasi ticket dan tambahkan lampiran baru bila diperlukan.") }}</p>
       </div>
       <Link
@@ -43,7 +43,7 @@
         </div>
 
         <div class="md:col-span-2">
-          <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Reason</label>
+          <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Reason") }}</label>
           <input
             v-model="form.reason"
             type="text"
@@ -118,7 +118,7 @@
       <section class="grid gap-4 border-t pt-5 dark:border-slate-700 md:grid-cols-2">
         <h2 class="text-base font-semibold md:col-span-2">{{ $t("Penugasan") }}</h2>
         <div class="md:col-span-2">
-          <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">Requester</label>
+          <label class="block text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Requester") }}</label>
           <template v-if="canSelectRequester">
             <div ref="requesterCardRef" class="relative mt-1 w-full">
               <button
@@ -194,11 +194,11 @@
             <div ref="agentCardRef" class="relative overflow-visible rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
               <div class="flex items-start justify-between gap-3">
                 <div>
-                  <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">Agent</p>
+                  <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">{{ $t("Agent") }}</p>
                   <p class="text-xs text-slate-400">{{ $t("Pilih beberapa agent lalu tandai yang utama.") }}</p>
                 </div>
                 <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                  {{ agentSelections.length ? agentSelections.length + ' agent dipilih' : $t("Belum ada pilihan") }}
+                  {{ agentSelections.length ? $t(':count agent dipilih', { count: agentSelections.length }) : $t("Belum ada pilihan") }}
                 </span>
               </div>
               <div class="relative mt-3 w-full">
@@ -273,7 +273,7 @@
                   </div>
                 </transition>
               </div>
-              <p class="mt-2 text-xs text-slate-400">{{ agentSelections.length ? agentSelections.length + ' agent terhubung' : $t("Belum ada agent terpilih") }}</p>
+              <p class="mt-2 text-xs text-slate-400">{{ agentSelections.length ? $t(':count agent terhubung', { count: agentSelections.length }) : $t("Belum ada agent terpilih") }}</p>
               <p v-if="form.errors.agent_id" class="mt-2 text-xs text-red-500">{{ form.errors.agent_id }}</p>
             </div>
 
@@ -284,7 +284,7 @@
                   <p class="text-xs text-slate-400">{{ $t("Pilih PIC utama dari berbagai unit.") }}</p>
                 </div>
                 <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                  {{ picSelections.length ? picSelections.length + ' PIC dipilih' : $t("Belum ada pilihan") }}
+                  {{ picSelections.length ? $t(':count PIC dipilih', { count: picSelections.length }) : $t("Belum ada pilihan") }}
                 </span>
               </div>
               <div class="relative mt-3 w-full">
@@ -359,7 +359,7 @@
                   </div>
                 </transition>
               </div>
-              <p class="mt-2 text-xs text-slate-400">{{ picSelections.length ? picSelections.length + ' PIC terhubung' : $t("Belum ada PIC terpilih") }}</p>
+              <p class="mt-2 text-xs text-slate-400">{{ picSelections.length ? $t(':count PIC terhubung', { count: picSelections.length }) : $t("Belum ada PIC terpilih") }}</p>
               <p v-if="form.errors.assigned_id" class="mt-2 text-xs text-red-500">{{ form.errors.assigned_id }}</p>
             </div>
           </div>
@@ -371,7 +371,7 @@
             <div class="rounded-xl border border-blue-200/60 bg-white p-3 dark:border-blue-500/30 dark:bg-slate-900">
               <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-blue-700 dark:text-blue-200">
                 <span class="material-icons text-base">groups</span>
-                <span>Agent ({{ selectedAgentDetails.length }})</span>
+                <span>{{ $t("Agent (") }}{{ selectedAgentDetails.length }})</span>
               </div>
               <div class="flex flex-wrap gap-1">
                 <span
@@ -503,7 +503,7 @@ import DatePickerFlatpickr from '@/Components/DatePickerFlatpickr.vue';
 import FileUploaderPond from '@/Components/FileUploaderPond.vue';
 import RichTextQuill from '@/Components/RichTextQuill.vue';
 import FancySelect from '@/Components/FancySelect.vue';
-import { attachmentFilterOptions } from '@/utils/attachmentFilters';
+import { localizedAttachmentFilterOptions } from '@/utils/attachmentFilters';
 
 const props = defineProps({
   ticket: { type: Object, required: true },
@@ -554,16 +554,16 @@ const needsEvidence = computed(() => form.status === 'confirmation' && props.tic
 const formatDate = value => value ? new Intl.DateTimeFormat(uiLocale.value, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : '—';
 const attachmentIds = ref([]);
 const uploadError = ref('');
-const attachmentFilterChoices = attachmentFilterOptions;
+const attachmentFilterChoices = localizedAttachmentFilterOptions;
 const selectedAttachmentFilter = ref('');
 const activeAttachmentFilter = computed(
-  () => attachmentFilterChoices.find(option => option.value === selectedAttachmentFilter.value) ?? null
+  () => attachmentFilterChoices.value.find(option => option.value === selectedAttachmentFilter.value) ?? null
 );
 const attachmentMimeTypes = computed(() => activeAttachmentFilter.value?.mimeTypes ?? []);
 const attachmentAllowedExtensions = computed(() => activeAttachmentFilter.value?.extensions ?? []);
 const uploaderDisabled = computed(() => !activeAttachmentFilter.value);
 const attachmentFilterHint = computed(() => (
-  activeAttachmentFilter.value ? (uiText("Hanya ") + (activeAttachmentFilter.value.label)) : uiText("Pilih jenis file untuk mengaktifkan unggahan.")
+  activeAttachmentFilter.value ? uiText("Hanya :type", { type: activeAttachmentFilter.value.label }) : uiText("Pilih jenis file untuk mengaktifkan unggahan.")
 ));
 const uploaderRef = ref(null);
 const backLink = computed(() => props.meta?.from || route('tickets.index'));

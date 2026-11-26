@@ -55,7 +55,7 @@
               <p v-if="form.errors.project_no" class="field-error">{{ form.errors.project_no }}</p>
             </div>
             <div class="panel-field">
-              <label>Status Workflow</label>
+              <label>{{ $t("Status Workflow") }}</label>
               <FancySelect v-model="form.status" :options="workflowStatusSelectOptions" :disabled="statusLocked" />
               <p v-if="form.errors.status" class="field-error">{{ form.errors.status }}</p>
               <p v-if="statusLocked" class="field-hint">{{ $t("Status awal diset ke") }} {{ statusDefaultLabel }}.</p>
@@ -116,11 +116,11 @@
             <div ref="agentCardRef" class="relative z-20 rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
               <div class="flex items-start justify-between gap-3">
                 <div>
-                  <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">Agent</p>
+                  <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">{{ $t("Agent") }}</p>
                   <p class="text-xs text-slate-400">{{ $t("Pilih beberapa agent lalu tandai yang utama.") }}</p>
                 </div>
                 <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                  {{ agentMembers.length ? agentMembers.length + ' agent dipilih' : $t("Belum ada pilihan") }}
+                  {{ agentMembers.length ? $t(':count agent dipilih', { count: agentMembers.length }) : $t("Belum ada pilihan") }}
                 </span>
               </div>
               <p class="mt-2 text-xs text-slate-400">{{ $t("Pilih unit untuk melihat daftar anggota.") }}</p>
@@ -198,7 +198,7 @@
                 </transition>
               </div>
               <p class="mt-2 text-xs text-slate-400">
-                {{ agentMembers.length ? agentMembers.length + ' agent terhubung' : $t("Belum ada agent terpilih") }}
+                {{ agentMembers.length ? $t(':count agent terhubung', { count: agentMembers.length }) : $t("Belum ada agent terpilih") }}
               </p>
               <div class="mt-4 space-y-3">
                 <div
@@ -247,7 +247,7 @@
                   <p class="text-xs text-slate-400">{{ $t("Pilih PIC utama dari berbagai unit.") }}</p>
                 </div>
                 <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                  {{ picMembers.length ? picMembers.length + ' PIC dipilih' : $t("Belum ada pilihan") }}
+                  {{ picMembers.length ? $t(':count PIC dipilih', { count: picMembers.length }) : $t("Belum ada pilihan") }}
                 </span>
               </div>
               <p class="mt-2 text-xs text-slate-400">{{ $t("Pilih unit untuk melihat daftar anggota.") }}</p>
@@ -325,7 +325,7 @@
                 </transition>
               </div>
               <p class="mt-2 text-xs text-slate-400">
-                {{ picMembers.length ? picMembers.length + ' PIC terhubung' : $t("Belum ada PIC") }}
+                {{ picMembers.length ? $t(':count PIC terhubung', { count: picMembers.length }) : $t("Belum ada PIC") }}
               </p>
               <div class="mt-4 space-y-3">
                 <div
@@ -374,7 +374,7 @@
               <div class="rounded-xl border border-blue-200/60 bg-white p-3 dark:border-blue-500/30 dark:bg-slate-900">
                 <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-blue-700 dark:text-blue-200">
                   <span class="material-icons text-base">shield_person</span>
-                  <span>Agent ({{ selectedAgentDetails.length }})</span>
+                  <span>{{ $t("Agent (") }}{{ selectedAgentDetails.length }})</span>
                 </div>
                 <div class="flex flex-wrap gap-1">
                   <span
@@ -418,7 +418,7 @@
               <span class="material-icons">playlist_add_check</span>
             </div>
             <div>
-              <h2>Action Plan</h2>
+              <h2>{{ $t("Action Plan") }}</h2>
               <p>{{ $t("Daftar aktivitas utama project.") }}</p>
             </div>
             <button type="button" class="chip-action" @click="addAction">
@@ -445,7 +445,7 @@
                   <p class="mt-1 text-xs text-slate-400">{{ $t("Pilih status untuk action plan ini.") }}</p>
                 </div>
                 <div class="panel-field">
-                  <label>Progress (%)</label>
+                  <label>{{ $t("Progress (%)") }}</label>
                   <input v-model.number="action.progress" type="number" min="0" max="100" />
                   <p v-if="form.errors[`project_actions.${index}.progress`]" class="field-error">{{ form.errors[`project_actions.${index}.progress`] }}</p>
                 </div>
@@ -596,7 +596,7 @@
               <span class="material-icons">task_alt</span>
             </div>
             <div>
-              <h2>Deliverables</h2>
+              <h2>{{ $t("Deliverables") }}</h2>
               <p>{{ $t("Keluaran utama project dan status verifikasi.") }}</p>
             </div>
             <button type="button" class="chip-action" @click="addDeliverable">
@@ -624,7 +624,7 @@
                   <p v-if="form.errors[`project_deliverables.${index}.status_id`]" class="field-error">{{ form.errors[`project_deliverables.${index}.status_id`] }}</p>
                 </div>
                 <div class="panel-field">
-                  <label>Verified By</label>
+                  <label>{{ $t("Verified By") }}</label>
                   <FancySelect v-model="deliverable.verified_by" :options="verifiedByOptions" />
                   <p class="mt-1 text-xs text-slate-400">{{ $t("Pilih pihak yang memverifikasi deliverable.") }}</p>
                   <p v-if="form.errors[`project_deliverables.${index}.verified_by`]" class="field-error">{{ form.errors[`project_deliverables.${index}.verified_by`] }}</p>
@@ -754,7 +754,7 @@ import DatePickerFlatpickr from '@/Components/DatePickerFlatpickr.vue';
 import FileUploaderPond from '@/Components/FileUploaderPond.vue';
 import FancySelect from '@/Components/FancySelect.vue';
 import RichTextQuill from '@/Components/RichTextQuill.vue';
-import { attachmentFilterOptions } from '@/utils/attachmentFilters';
+import { localizedAttachmentFilterOptions } from '@/utils/attachmentFilters';
 
 const props = defineProps({
   project: { type: Object, required: true },
@@ -1368,20 +1368,20 @@ const attachmentIds = ref([]);
 const uploadError = ref('');
 const showUploader = ref(true);
 const existingAttachments = ref(props.project.attachments ? [...props.project.attachments] : []);
-const attachmentFilterChoices = attachmentFilterOptions;
+const attachmentFilterChoices = localizedAttachmentFilterOptions;
 const attachmentFilterSelectOptions = computed(() => [
   { value: '', label: uiText("Pilih extensi file") },
-  ...attachmentFilterChoices,
+  ...attachmentFilterChoices.value,
 ]);
 const selectedAttachmentFilter = ref('');
 const activeAttachmentFilter = computed(
-  () => attachmentFilterChoices.find(option => option.value === selectedAttachmentFilter.value) ?? null
+  () => attachmentFilterChoices.value.find(option => option.value === selectedAttachmentFilter.value) ?? null
 );
 const attachmentMimeTypes = computed(() => activeAttachmentFilter.value?.mimeTypes ?? []);
 const attachmentAllowedExtensions = computed(() => activeAttachmentFilter.value?.extensions ?? []);
 const uploaderDisabled = computed(() => !showUploader.value || !activeAttachmentFilter.value);
 const attachmentFilterHint = computed(() => (
-  activeAttachmentFilter.value ? (uiText("Hanya ") + (activeAttachmentFilter.value.label)) : uiText("Pilih jenis file untuk mengaktifkan unggahan.")
+  activeAttachmentFilter.value ? uiText("Hanya :type", { type: activeAttachmentFilter.value.label }) : uiText("Pilih jenis file untuk mengaktifkan unggahan.")
 ));
 const uploaderRef = ref(null);
 

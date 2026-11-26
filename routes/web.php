@@ -244,6 +244,16 @@ Route::middleware($emailVerificationEnabled
     /* Ã°Å¸Å½Â« Tickets */
     $ticketPortal = 'tickets/ticket-portal';
 
+    // Keep bookmarks working after moving the portal.
+    $redirectPortalRoute = static function (Request $request, string $name) {
+        $target = route($name, $request->route()->parameters());
+        $query = $request->server('QUERY_STRING');
+
+        return redirect()->to($target.($query ? '?'.$query : ''));
+    };
+
+    Route::get($ticketPortal.'/new-ticket', fn (Request $request) => $redirectPortalRoute($request, 'tickets.create'));
+
     Route::prefix($ticketPortal.'/workflows')->name('workflows.')->middleware('permission:view workflows')->group(function () {
         Route::get('/', [WorkflowController::class, 'index'])->name('index');
         Route::get('/instances/{instance}', [WorkflowController::class, 'showInstance'])->name('instances.show');
@@ -257,7 +267,7 @@ Route::middleware($emailVerificationEnabled
     });
 
     Route::prefix($ticketPortal)->name('tickets.')->group(function () {
-        Route::get('/new-ticket', [TicketController::class, 'create'])->name('create');
+        Route::get('/create-ticket', [TicketController::class, 'create'])->name('create');
         Route::get('/{ticket}/collaboration', [TicketCollaborationController::class, 'index'])->name('collaboration');
         Route::post('/{ticket}/messages', [TicketCollaborationController::class, 'message'])->middleware('throttle:30,1')->name('messages.store');
         Route::post('/{ticket}/checklist', [TicketCollaborationController::class, 'checklist'])->name('checklist.store');
@@ -280,14 +290,6 @@ Route::middleware($emailVerificationEnabled
         Route::get('/{ticket}/attachments', [TicketController::class, 'manageAttachments'])->name('attachments.manage');
         Route::put('/{ticket}/attachments', [TicketController::class, 'updateAttachments'])->name('attachments.update');
     });
-
-    // Keep bookmarks and requests from open tabs working after moving the portal.
-    $redirectPortalRoute = static function (Request $request, string $name) {
-        $target = route($name, $request->route()->parameters());
-        $query = $request->server('QUERY_STRING');
-
-        return redirect()->to($target.($query ? '?'.$query : ''));
-    };
 
     Route::prefix('dashboard/tickets')->group(function () use ($redirectPortalRoute) {
         foreach ([

@@ -191,9 +191,9 @@ class SLAReportController extends Controller
     protected function types(): array
     {
         return [
-            'ticket' => 'Tickets',
-            'task' => 'Tasks',
-            'project' => 'Projects',
+            'ticket' => __('Tickets'),
+            'task' => __('Tasks'),
+            'project' => __('Projects'),
         ];
     }
 
@@ -248,7 +248,7 @@ class SLAReportController extends Controller
     {
         return [
             ['value' => '', 'label' => __('Semua status')],
-            ['value' => 'met', 'label' => 'Tercapai'],
+            ['value' => 'met', 'label' => __('SLA met')],
             ['value' => 'pending', 'label' => __('Dalam Proses')],
             ['value' => 'breached', 'label' => __('Lewat SLA')],
             ['value' => 'missing', 'label' => __('SLA tidak diset')],

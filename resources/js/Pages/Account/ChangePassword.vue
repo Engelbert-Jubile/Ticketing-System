@@ -113,7 +113,7 @@
           {{ $t("Batal") }}
         </Link>
         <SaveButton type="submit" :processing="form.processing">
-          Update Password
+          {{ $t("Update Password") }}
         </SaveButton>
       </div>
     </form>

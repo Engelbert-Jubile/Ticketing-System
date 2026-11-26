@@ -21,7 +21,7 @@
       <input type="hidden" name="_token" :value="meta.csrfToken" />
       <div class="grid gap-4 md:grid-cols-2">
         <div>
-          <label for="username" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Username</label>
+          <label for="username" class="block text-sm font-medium text-slate-700 dark:text-slate-200">{{ $t("Username") }}</label>
           <input
             id="username"
             name="username"
@@ -51,7 +51,7 @@
 
       <div class="grid gap-4 md:grid-cols-2">
         <div>
-          <label for="first_name" class="block text-sm font-medium text-slate-700 dark:text-slate-200">First Name</label>
+          <label for="first_name" class="block text-sm font-medium text-slate-700 dark:text-slate-200">{{ $t("First Name") }}</label>
           <input
             id="first_name"
             name="first_name"
@@ -79,7 +79,7 @@
 
       <div class="grid gap-4 md:grid-cols-2">
         <div>
-          <label for="password" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Password</label>
+          <label for="password" class="block text-sm font-medium text-slate-700 dark:text-slate-200">{{ $t("Password") }}</label>
           <input
             id="password"
             name="password"
@@ -107,8 +107,8 @@
       </div>
 
       <div>
-        <label for="role" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Role</label>
-        <WorkflowSelect id="role" v-model="form.role" :options="roles" aria-label="Role" :placeholder="$t('Pilih Role')" class="mt-1" required />
+        <label for="role" class="block text-sm font-medium text-slate-700 dark:text-slate-200">{{ $t("Role") }}</label>
+        <WorkflowSelect id="role" v-model="form.role" :options="roles" :aria-label="$t(&quot;Role&quot;)" :placeholder="$t('Pilih Role')" class="mt-1" required />
         <input type="hidden" name="role" :value="form.role" />
         <p v-if="form.errors.role" class="mt-1 text-xs text-rose-500">{{ form.errors.role }}</p>
       </div>

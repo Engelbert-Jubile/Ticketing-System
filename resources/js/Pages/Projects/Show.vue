@@ -13,7 +13,7 @@
             class="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm transition hover:bg-blue-50 dark:border-blue-500/40 dark:text-blue-200 dark:hover:bg-blue-500/10"
           >
             <span class="material-icons text-base" aria-hidden="true">edit</span>
-            Edit Project
+            {{ $t("Edit Project") }}
           </Link>
           <a
             v-if="project.links?.pdf"
@@ -27,7 +27,7 @@
           </a>
         </div>
         <StatusBadge :status="project.status" :label="project.status_label" />
-        <span class="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-300">Status ID: {{ project.status_id || '—' }}</span>
+        <span class="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:text-slate-300">{{ $t("Status ID:") }} {{ project.status_id || '—' }}</span>
       </div>
     </header>
 
@@ -55,7 +55,7 @@
       <div class="mt-4 grid gap-6 md:grid-cols-2">
         <div v-if="teamAgents.length" class="team-group">
           <header class="team-group__header">
-            <span class="team-group__title">Agent</span>
+            <span class="team-group__title">{{ $t("Agent") }}</span>
             <span class="team-group__hint">{{ $t("Penanggung jawab utama") }}</span>
           </header>
           <div class="team-member-grid">
@@ -87,14 +87,14 @@
     </section>
 
     <section v-if="project.actions.length" class="rounded-3xl border border-indigo-200 bg-indigo-50/80 p-6 shadow-sm dark:border-indigo-900/60 dark:bg-indigo-950/40">
-      <h2 class="text-lg font-semibold text-indigo-900 dark:text-indigo-200">Action Plan</h2>
+      <h2 class="text-lg font-semibold text-indigo-900 dark:text-indigo-200">{{ $t("Action Plan") }}</h2>
       <div class="mt-4 space-y-4">
         <details v-for="action in project.actions" :key="action.id" class="overflow-hidden rounded-2xl border border-indigo-200 bg-white shadow-sm transition dark:border-indigo-800 dark:bg-indigo-900/60">
           <summary class="flex cursor-pointer items-center justify-between gap-4 px-4 py-3 text-sm text-indigo-900 dark:text-indigo-100">
             <div class="font-semibold">{{ action.title }}</div>
             <div class="flex items-center gap-3 text-xs text-indigo-700/80 dark:text-indigo-200/80">
               <span>Status: {{ action.status_id || '—' }}</span>
-              <span>Progress: {{ action.progress ?? 0 }}%</span>
+              <span>{{ $t("Progress:") }} {{ action.progress ?? 0 }}%</span>
             </div>
           </summary>
           <div class="space-y-3 border-t border-indigo-100 px-4 py-4 text-sm text-slate-700 dark:border-indigo-800 dark:text-slate-200">
@@ -109,7 +109,7 @@
                 <div class="font-semibold text-slate-900 dark:text-slate-100">{{ sub.title }}</div>
                 <div class="mt-1 grid gap-2 text-xs text-slate-500 dark:text-slate-300 sm:grid-cols-2">
                   <div>Status: {{ sub.status_id || '—' }}</div>
-                  <div>Progress: {{ sub.progress ?? 0 }}%</div>
+                  <div>{{ $t("Progress:") }} {{ sub.progress ?? 0 }}%</div>
                   <div>{{ $t("Mulai:") }} {{ sub.start }}</div>
                   <div>{{ $t("Selesai:") }} {{ sub.end }}</div>
                 </div>
@@ -162,7 +162,7 @@
     </section>
 
     <section v-if="project.deliverables.length" class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-      <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Deliverables</h2>
+      <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">{{ $t("Deliverables") }}</h2>
       <div class="mt-4 grid gap-4 lg:grid-cols-2">
         <article v-for="deliverable in project.deliverables" :key="deliverable.id" class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-200">
           <header class="flex items-start justify-between">
@@ -173,7 +173,7 @@
             <div><dt class="font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200">Target</dt><dd>{{ deliverable.due || '—' }}</dd></div>
             <div><dt class="font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200">{{ $t("Selesai") }}</dt><dd>{{ deliverable.completed || '—' }}</dd></div>
             <div><dt class="font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200">{{ $t("Verifikasi") }}</dt><dd>{{ deliverable.verified || '—' }}</dd></div>
-            <div><dt class="font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200">Verifier</dt><dd>{{ deliverable.verified_by_label || deliverable.verified_by || '—' }}</dd></div>
+            <div><dt class="font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-200">{{ $t("Verifier") }}</dt><dd>{{ deliverable.verified_by_label || deliverable.verified_by || '—' }}</dd></div>
           </dl>
           <div v-if="deliverable.description" class="rich-description mt-3" v-html="deliverable.description" />
         </article>
@@ -187,7 +187,7 @@
           <span class="text-slate-700 dark:text-slate-200">{{ file.name }}</span>
           <div class="flex w-full flex-wrap items-center gap-3 text-xs sm:w-auto sm:justify-end">
             <span class="text-slate-400 dark:text-slate-500">{{ formatSize(file.size) }}</span>
-            <a :href="file.view_url" target="_blank" class="text-blue-600 hover:underline dark:text-blue-400">Preview</a>
+            <a :href="file.view_url" target="_blank" class="text-blue-600 hover:underline dark:text-blue-400">{{ $t("Preview") }}</a>
             <a :href="file.download_url" class="text-blue-600 hover:underline dark:text-blue-400">{{ $t("Download") }}</a>
           </div>
         </li>

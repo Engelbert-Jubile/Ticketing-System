@@ -9,7 +9,7 @@
           <span class="material-icons">arrow_back</span>
         </Link>
         <div>
-          <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100">Project Overview</h1>
+          <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ $t("Project Overview") }}</h1>
           <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Ringkasan status project terkini.") }}</p>
         </div>
       </div>
@@ -32,10 +32,10 @@
       <table class="min-w-[820px] divide-y divide-slate-200 text-sm dark:divide-slate-700">
         <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-400">
           <tr>
-            <th class="px-4 py-3 text-left">Project</th>
-            <th class="px-4 py-3 text-left">Project No</th>
+            <th class="px-4 py-3 text-left">{{ $t("Project") }}</th>
+            <th class="px-4 py-3 text-left">{{ $t("Project No") }}</th>
             <th class="px-4 py-3 text-left">Status</th>
-            <th class="px-4 py-3 text-left">Ticket</th>
+            <th class="px-4 py-3 text-left">{{ $t("Ticket") }}</th>
             <th class="px-4 py-3 text-left">Target</th>
             <th class="px-4 py-3 text-left">{{ $t("Updated") }}</th>
             <th class="px-4 py-3 text-right">{{ $t("Actions") }}</th>

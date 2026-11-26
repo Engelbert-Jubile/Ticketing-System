@@ -5,7 +5,7 @@
       <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
           <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100">{{ ticket.title }}</h1>
-          <p class="text-sm text-slate-500 dark:text-slate-300">Ticket No: {{ ticket.ticket_no ?? '—' }}</p>
+          <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Ticket No:") }} {{ ticket.ticket_no ?? '—' }}</p>
         </div>
         <div class="flex flex-col items-start gap-3 md:items-end">
           <a
@@ -27,7 +27,7 @@
 
       <dl class="grid gap-4 text-sm text-slate-600 dark:text-slate-300 md:grid-cols-3">
         <div>
-          <dt class="font-semibold text-slate-500 dark:text-slate-400">Status ID</dt>
+          <dt class="font-semibold text-slate-500 dark:text-slate-400">{{ $t("Status ID") }}</dt>
           <dd>
             {{ ticket.status_id ?? '—' }}
             <span v-if="ticket.status_id_label" class="ml-1 text-xs text-slate-400">({{ ticket.status_id_label }})</span>
@@ -65,11 +65,11 @@
         <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t("Pemilik Ticket") }}</h2>
         <dl class="mt-3 space-y-2 text-sm text-slate-600 dark:text-slate-300">
           <div>
-            <dt class="font-medium text-slate-500 dark:text-slate-400">Requester</dt>
+            <dt class="font-medium text-slate-500 dark:text-slate-400">{{ $t("Requester") }}</dt>
             <dd>{{ ticket.requester?.name ?? '—' }}</dd>
           </div>
           <div>
-            <dt class="font-medium text-slate-500 dark:text-slate-400">Assigned Users</dt>
+            <dt class="font-medium text-slate-500 dark:text-slate-400">{{ $t("Assigned Users") }}</dt>
             <dd>
               <template v-if="ticket.assigned_users?.length">
                 <ul class="list-disc list-inside space-y-1">
@@ -89,11 +89,11 @@
         <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $t("Detail Tambahan") }}</h2>
         <dl class="mt-3 space-y-2 text-sm text-slate-600 dark:text-slate-300">
           <div>
-            <dt class="font-medium text-slate-500 dark:text-slate-400">Reason</dt>
+            <dt class="font-medium text-slate-500 dark:text-slate-400">{{ $t("Reason") }}</dt>
             <dd>{{ ticket.reason ?? '—' }}</dd>
           </div>
           <div>
-            <dt class="font-medium text-slate-500 dark:text-slate-400">Letter No</dt>
+            <dt class="font-medium text-slate-500 dark:text-slate-400">{{ $t("Letter No") }}</dt>
             <dd>{{ ticket.letter_no ?? '—' }}</dd>
           </div>
         </dl>
@@ -135,7 +135,7 @@
 </template>
 
 <script setup>
-import { uiLocale } from '../../i18n'
+import { translateUi as uiText, uiLocale } from '../../i18n'
 
 import StatusPill from '@/Components/StatusPill.vue';
 import TicketCollaboration from '@/Components/TicketCollaboration.vue';
@@ -157,7 +157,7 @@ function formatDate(value, withTime = false) {
 }
 
 function formatSla(value) {
-  return { ontime: 'On Time', late: 'Late' }[value] ?? '-';
+  return { ontime: uiText('On Time'), late: uiText('Late') }[value] ?? '-';
 }
 
 function formatSize(size) {

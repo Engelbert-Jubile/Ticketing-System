@@ -2,7 +2,7 @@
   <div class="mx-auto max-w-3xl space-y-6 px-4 py-6">
     <header class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Edit User</h1>
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">{{ $t("Edit User") }}</h1>
         <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Perbarui informasi pengguna dan hak akses.") }}</p>
       </div>
     </header>
@@ -12,7 +12,7 @@
       <input type="hidden" name="_method" value="PUT" />
       <div class="grid gap-4 md:grid-cols-2">
         <div>
-          <label for="username" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Username</label>
+          <label for="username" class="block text-sm font-medium text-slate-700 dark:text-slate-200">{{ $t("Username") }}</label>
           <input
             id="username"
             name="username"
@@ -39,7 +39,7 @@
 
       <div class="grid gap-4 md:grid-cols-2">
         <div>
-          <label for="first_name" class="block text-sm font-medium text-slate-700 dark:text-slate-200">First Name</label>
+          <label for="first_name" class="block text-sm font-medium text-slate-700 dark:text-slate-200">{{ $t("First Name") }}</label>
           <input
             id="first_name"
             name="first_name"
@@ -64,8 +64,8 @@
       </div>
 
       <div>
-        <label for="role" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Role</label>
-        <WorkflowSelect id="role" v-model="form.role" :options="roles" aria-label="Role" :placeholder="$t('Pilih Role')" class="mt-1" required />
+        <label for="role" class="block text-sm font-medium text-slate-700 dark:text-slate-200">{{ $t("Role") }}</label>
+        <WorkflowSelect id="role" v-model="form.role" :options="roles" :aria-label="$t(&quot;Role&quot;)" :placeholder="$t('Pilih Role')" class="mt-1" required />
         <input type="hidden" name="role" :value="form.role" />
         <p v-if="form.errors.role" class="mt-1 text-xs text-rose-500">{{ form.errors.role }}</p>
       </div>

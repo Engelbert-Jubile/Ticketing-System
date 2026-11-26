@@ -22,7 +22,7 @@
       </div>
 
       <div class="space-y-2 text-left">
-        <label for="password" class="text-sm font-semibold text-slate-600 dark:text-slate-300">Password</label>
+        <label for="password" class="text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $t("Password") }}</label>
         <input
           id="password"
           v-model="form.password"

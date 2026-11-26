@@ -28,17 +28,17 @@
       <div class="summary-card">
         <div class="summary-label">{{ $t("Tickets") }}</div>
         <div class="summary-value text-blue-600">{{ ticketsTotal }}</div>
-        <p class="summary-hint">New: {{ ticketsNew }} - Progress: {{ ticketsInProgress }} - Done: {{ ticketsDone }}</p>
+        <p class="summary-hint">{{ $t("New:") }} {{ ticketsNew }} {{ $t("- Progress:") }} {{ ticketsInProgress }} {{ $t("- Done:") }} {{ ticketsDone }}</p>
       </div>
       <div class="summary-card">
         <div class="summary-label">{{ $t("Tasks") }}</div>
         <div class="summary-value text-emerald-600">{{ tasksTotal }}</div>
-        <p class="summary-hint">Done: {{ tasksDone }} - Active: {{ tasksActive }}</p>
+        <p class="summary-hint">{{ $t("Done:") }} {{ tasksDone }} {{ $t("- Active:") }} {{ tasksActive }}</p>
       </div>
       <div class="summary-card">
-        <div class="summary-label">Member Unit</div>
+        <div class="summary-label">{{ $t("Member Unit") }}</div>
         <div class="summary-value text-amber-600">{{ usersCount }}</div>
-        <p class="summary-hint">Active Agent</p>
+        <p class="summary-hint">{{ $t("Active Agent") }}</p>
       </div>
     </section>
 
@@ -47,13 +47,13 @@
         <header class="panel-head">
           <div>
             <p class="panel-kicker">{{ $t("Performa Unit") }}</p>
-            <h2 class="panel-title">Ticket</h2>
+            <h2 class="panel-title">{{ $t("Ticket") }}</h2>
           </div>
           <span class="panel-badge">{{ ticketsCompletion }}{{ $t("% selesai") }}</span>
         </header>
         <div class="panel-body">
           <div class="meter" :class="meterClass(ticketsCompletion)"><i :style="`--w:${ticketsCompletion}%`"></i></div>
-          <p class="panel-hint">New: {{ ticketsNew }} - In Progress: {{ ticketsInProgress }} - Done: {{ ticketsDone }}</p>
+          <p class="panel-hint">{{ $t("New:") }} {{ ticketsNew }} {{ $t("- In Progress:") }} {{ ticketsInProgress }} {{ $t("- Done:") }} {{ ticketsDone }}</p>
           <p class="panel-hint">{{ $t("Periode:") }} {{ tasksPeriod }}</p>
         </div>
       </div>
@@ -62,7 +62,7 @@
         <header class="panel-head">
           <div>
             <p class="panel-kicker">{{ $t("Performa Unit") }}</p>
-            <h2 class="panel-title">Task</h2>
+            <h2 class="panel-title">{{ $t("Task") }}</h2>
           </div>
           <span class="panel-badge">{{ tasksCompletion }}{{ $t("% selesai") }}</span>
         </header>
@@ -84,7 +84,7 @@
 
           <div class="flex items-center gap-2">
             <template v-if="isSuperadmin">
-              <label class="text-xs font-semibold text-slate-500 dark:text-slate-300">Filter Unit</label>
+              <label class="text-xs font-semibold text-slate-500 dark:text-slate-300">{{ $t("Filter Unit") }}</label>
                 <div class="min-w-[220px] max-w-[520px]">
                   <FancySelect
                     v-model="selectedUnitModel"
@@ -104,7 +104,7 @@
             <thead>
               <tr class="text-xs uppercase tracking-wide text-slate-500">
                 <th class="py-2">Unit</th>
-                <th class="py-2 text-center">Users</th>
+                <th class="py-2 text-center">{{ $t("Users") }}</th>
                 <th class="py-2 text-center">{{ $t("Tickets") }}</th>
                 <th class="py-2 text-center">{{ $t("Tasks") }}</th>
               </tr>

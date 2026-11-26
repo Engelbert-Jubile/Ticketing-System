@@ -1,7 +1,7 @@
 ﻿{{-- resources/views/pages/ticket/create.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Buat Tiket Baru')
+@section('title', __('Create Ticket'))
 
 @section('content')
 <div class="page-theme page-theme--ticket">
@@ -15,7 +15,7 @@
       <div class="relative mb-6 overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-500 via-sky-500 to-cyan-500 p-6 text-white shadow-xl">
         <div class="relative z-[1] flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 class="text-3xl font-semibold">Buat Tiket Baru</h2>
+            <h2 class="text-3xl font-semibold">{{ __('Create Ticket') }}</h2>
             <p class="mt-3 max-w-2xl text-sm text-white/80">Tiga langkah untuk membuat tiket anda: Informasi tiket, Data &amp; detail, dan Lampiran file pendukung.</p>
           </div>
           <div class="flex items-center gap-3 rounded-2xl bg-white/15 px-5 py-4 text-sm backdrop-blur">

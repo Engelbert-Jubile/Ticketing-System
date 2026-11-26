@@ -5,10 +5,6 @@ import indonesianUi from '../../../lang/id.json';
 
 const activeLocale = reactive({ value: 'en' });
 export const uiLocale = computed(() => activeLocale.value === 'id' ? 'id-ID' : 'en-US');
-export const translateUi = (text, params = {}) => {
-  const catalogue = activeLocale.value === 'id' ? indonesianUi : englishUi;
-  return interpolate(catalogue[text] ?? text, params);
-};
 
 const I18N_SYMBOL = Symbol('i18n');
 
@@ -23,41 +19,30 @@ const interpolate = (template, params = {}) => {
   return template.replace(/:([A-Za-z0-9_]+)/g, (_, key) => (params[key] !== undefined ? params[key] : `:${key}`));
 };
 
-const createTranslator = localeRef => {
-  return (key, params = {}) => {
-    const current = localeRef.value || 'en';
-    const fallback = 'en';
-    const currentMessages = messages[current] || messages[fallback] || {};
-    const catalogue = current === 'id' ? indonesianUi : englishUi;
-    const value = resolveFromPath(currentMessages, key) ?? resolveFromPath(messages[fallback] || {}, key) ?? catalogue[key] ?? key;
-    return interpolate(value, params);
-  };
+export const translateUi = (key, params = {}) => {
+  const current = activeLocale.value;
+  const catalogue = current === 'id' ? indonesianUi : englishUi;
+  const value = catalogue[key] ?? resolveFromPath(messages[current], key) ?? resolveFromPath(messages.en, key) ?? key;
+  return interpolate(value, params);
 };
 
 export const createI18n = (initialLocale = 'en') => {
-  activeLocale.value = initialLocale === 'id' ? 'id' : 'en';
-  const state = reactive({
-    locale: initialLocale || 'en',
-  });
-
   const setLocale = value => {
-    if (typeof value === 'string' && value.trim() !== '') {
-      state.locale = value;
-      activeLocale.value = value;
-      if (typeof document !== 'undefined') {
-        document.documentElement.setAttribute('lang', value);
-      }
+    if (value !== 'en' && value !== 'id') return;
+    activeLocale.value = value;
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('lang', value);
     }
   };
+  setLocale(initialLocale === 'id' ? 'id' : 'en');
 
-  const currentLocale = computed(() => state.locale);
-  const translator = computed(() => createTranslator(computed(() => state.locale)));
+  const currentLocale = computed(() => activeLocale.value);
 
   const install = app => {
     const api = {
       locale: currentLocale,
       setLocale,
-      t: (key, params) => translator.value(key, params),
+      t: translateUi,
     };
 
     app.provide(I18N_SYMBOL, api);
@@ -67,8 +52,8 @@ export const createI18n = (initialLocale = 'en') => {
   return {
     install,
     setLocale,
-    getLocale: () => state.locale,
-    t: (key, params) => translator.value(key, params),
+    getLocale: () => activeLocale.value,
+    t: translateUi,
   };
 };
 
@@ -76,9 +61,9 @@ export const useI18n = () => {
   const instance = inject(I18N_SYMBOL, null);
   if (instance) return instance;
   const fallback = {
-    locale: computed(() => 'en'),
+    locale: computed(() => activeLocale.value),
     setLocale: () => {},
-    t: key => key,
+    t: translateUi,
   };
   return fallback;
 };

@@ -2,7 +2,7 @@
   <div class="mx-auto max-w-7xl space-y-8 px-4 py-6 lg:px-6">
     <header class="space-y-4">
       <div>
-        <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100">Service Level Agreement Reports</h1>
+        <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100">{{ $t("Service Level Agreement Reports") }}</h1>
         <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Pantau performa SLA ticket dan task secara menyeluruh.") }}</p>
       </div>
     </header>
@@ -29,7 +29,7 @@
           class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
         >
           <span class="material-icons text-base">download</span>
-          Download CSV
+          {{ $t("Download CSV") }}
         </a>
         <a
           :href="downloadUrl('pdf')"
@@ -76,7 +76,7 @@
 
       <div class="mt-4 flex flex-wrap items-center justify-end gap-3">
         <button type="button" class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800" @click="resetFilters">
-          Reset
+          {{ $t("Reset") }}
         </button>
         <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900">
           <span class="material-icons text-base">filter_alt</span>
@@ -87,7 +87,7 @@
 
     <section class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
       <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Total Item</p>
+        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">{{ $t("Total Item") }}</p>
         <p class="mt-1 text-3xl font-bold text-slate-900 dark:text-slate-100">{{ stats.total ?? 0 }}</p>
       </div>
       <div class="rounded-3xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm dark:border-emerald-400/50 dark:bg-emerald-500/15">
@@ -140,7 +140,7 @@
                       class="action-btn action-btn--pdf"
                     >PDF</a>
                     <Link v-if="row.links.view" :href="row.links.view" class="action-btn action-btn--view">{{ $t("View") }}</Link>
-                    <Link v-if="row.links.edit" :href="row.links.edit" class="action-btn action-btn--edit">Edit</Link>
+                    <Link v-if="row.links.edit" :href="row.links.edit" class="action-btn action-btn--edit">{{ $t("Edit") }}</Link>
                   </div>
                 </td>
               </tr>
@@ -275,37 +275,37 @@ const columns = computed(() => {
   switch (form.type) {
     case 'task':
       return [
-        { key: 'number', label: 'Task' },
+        { key: 'number', label: uiText('Task') },
         { key: 'title', label: uiText("Judul") },
         { key: 'status', label: 'Status' },
-        { key: 'assignee', label: 'Assignee' },
+        { key: 'assignee', label: uiText('Assignee') },
         { key: 'deadline', label: uiText("Deadline") },
         { key: 'completed_at', label: uiText("Selesai") },
         { key: 'sla_label', label: 'SLA' },
-        { key: 'sla_delta', label: 'Delta' },
+        { key: 'sla_delta', label: uiText('Delta') },
       ];
     case 'project':
       return [
-        { key: 'number', label: 'Project' },
+        { key: 'number', label: uiText('Project') },
         { key: 'title', label: uiText("Judul") },
         { key: 'status', label: 'Status' },
         { key: 'owner', label: uiText("Owner") },
         { key: 'deadline', label: uiText("Deadline") },
         { key: 'completed_at', label: uiText("Selesai") },
         { key: 'sla_label', label: 'SLA' },
-        { key: 'sla_delta', label: 'Delta' },
+        { key: 'sla_delta', label: uiText('Delta') },
       ];
     default:
       return [
-        { key: 'number', label: 'Ticket' },
+        { key: 'number', label: uiText('Ticket') },
         { key: 'title', label: uiText("Judul") },
         { key: 'status', label: 'Status' },
         { key: 'priority', label: uiText("Prioritas") },
-        { key: 'assignee', label: 'Assignee' },
+        { key: 'assignee', label: uiText('Assignee') },
         { key: 'deadline', label: uiText("Deadline") },
         { key: 'completed_at', label: uiText("Selesai") },
         { key: 'sla_label', label: 'SLA' },
-        { key: 'sla_delta', label: 'Delta' },
+        { key: 'sla_delta', label: uiText('Delta') },
       ];
   }
 });
