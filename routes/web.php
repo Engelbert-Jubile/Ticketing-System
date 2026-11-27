@@ -225,15 +225,15 @@ Route::middleware($emailVerificationEnabled
 
     /* Ã°Å¸â€œÅ  Dashboard Home */
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard/unit-reports', [UnitReportsController::class, 'index'])->name('dashboard.unit-reports');
+    Route::get('/unit-reports', [UnitReportsController::class, 'index'])->name('dashboard.unit-reports');
 
     /* Ã°Å¸Â¤â€“ Gemini AI Assistant */
     Route::post('/dashboard/ai/gemini', [GeminiAIController::class, 'respond'])->middleware('throttle:20,1')->name('ai.gemini.chat');
 
     /* Ã°Å¸â€Â Global Search */
     Route::get('/search', [SearchController::class, 'index'])->name('search');
-    Route::get('/dashboard/my-work', [SearchController::class, 'work'])->name('work.index');
-    Route::get('/dashboard/knowledge', [\App\Http\Controllers\KnowledgeController::class, 'index'])->name('knowledge.index');
+    Route::get('/my-work', [SearchController::class, 'work'])->name('work.index');
+    Route::get('/guides-templates', [\App\Http\Controllers\KnowledgeController::class, 'index'])->name('knowledge.index');
     Route::post('/dashboard/knowledge', [\App\Http\Controllers\KnowledgeController::class, 'save'])->name('knowledge.save');
 
     /* Ã°Å¸â€˜Â¤ Profil user */
@@ -252,18 +252,27 @@ Route::middleware($emailVerificationEnabled
         return redirect()->to($target.($query ? '?'.$query : ''));
     };
 
+    foreach ([
+        '/dashboard/my-work' => 'work.index',
+        '/dashboard/unit-reports' => 'dashboard.unit-reports',
+        '/dashboard/knowledge' => 'knowledge.index',
+        '/dashboard/account/profile' => 'account.profile',
+    ] as $path => $name) {
+        Route::get($path, fn (Request $request) => $redirectPortalRoute($request, $name));
+    }
+
     Route::get($ticketPortal.'/new-ticket', fn (Request $request) => $redirectPortalRoute($request, 'tickets.create'));
 
     Route::prefix($ticketPortal.'/workflows')->name('workflows.')->middleware('permission:view workflows')->group(function () {
-        Route::get('/', [WorkflowController::class, 'index'])->name('index');
-        Route::get('/instances/{instance}', [WorkflowController::class, 'showInstance'])->name('instances.show');
-        Route::patch('/instances/{instance}/status', [WorkflowController::class, 'updateInstanceStatus'])->name('instances.status');
+        Route::get('/', [WorkflowController::class, 'index'])->defaults('workspaceType', 'ticket')->name('index');
+        Route::get('/instances/{instance}', [WorkflowController::class, 'showInstance'])->defaults('workspaceType', 'ticket')->name('instances.show');
+        Route::patch('/instances/{instance}/status', [WorkflowController::class, 'updateInstanceStatus'])->defaults('workspaceType', 'ticket')->name('instances.status');
     });
 
     Route::prefix($ticketPortal.'/sla-reports')->group(function () {
-        Route::get('/', [SLAReportController::class, 'index'])->name('dashboard.sla');
-        Route::get('/download', [SLAReportController::class, 'download'])->name('sla.download');
-        Route::get('/{type}/{id}/pdf', [SLAReportController::class, 'downloadDetail'])->name('sla.detail.download');
+        Route::get('/', [SLAReportController::class, 'index'])->defaults('workspaceType', 'ticket')->name('dashboard.sla');
+        Route::get('/download', [SLAReportController::class, 'download'])->defaults('workspaceType', 'ticket')->name('sla.download');
+        Route::get('/{type}/{id}/pdf', [SLAReportController::class, 'downloadDetail'])->where('type', 'ticket')->whereNumber('id')->name('sla.detail.download');
     });
 
     Route::prefix($ticketPortal)->name('tickets.')->group(function () {
@@ -329,12 +338,34 @@ Route::middleware($emailVerificationEnabled
     });
 
     /* Ã°Å¸â€œâ€¹ Tasks */
-    Route::prefix('dashboard/tasks')->name('tasks.')->group(function () {
+    foreach (['task' => TaskController::class, 'project' => ProjectController::class] as $type => $controller) {
+        $module = $type.'s';
+        Route::prefix($module.'/'.$type.'-portal')->name($module.'.')->group(function () use ($type, $controller, $redirectPortalRoute, $module) {
+            Route::get('/', fn (Request $request) => $redirectPortalRoute($request, $module.'.report'))->name('portal');
+            Route::get('/create-'.$type, [$controller, 'create'])->name('create');
+            Route::get('/in-progress', [$controller, 'onProgress'])->name('on-progress');
+            Route::get('/report', [$controller, 'report'])->name('report');
+
+            Route::prefix('workflows')->name('workflows.')->middleware('permission:view workflows')->group(function () use ($type) {
+                Route::get('/', [WorkflowController::class, 'index'])->defaults('workspaceType', $type)->name('index');
+                Route::get('/instances/{instance}', [WorkflowController::class, 'showInstance'])->defaults('workspaceType', $type)->name('instances.show');
+                Route::patch('/instances/{instance}/status', [WorkflowController::class, 'updateInstanceStatus'])->defaults('workspaceType', $type)->name('instances.status');
+            });
+
+            Route::prefix('sla-reports')->name('sla.')->group(function () use ($type) {
+                Route::get('/', [SLAReportController::class, 'index'])->defaults('workspaceType', $type)->name('index');
+                Route::get('/download', [SLAReportController::class, 'download'])->defaults('workspaceType', $type)->name('download');
+                Route::get('/{type}/{id}/pdf', [SLAReportController::class, 'downloadDetail'])->where('type', $type)->whereNumber('id')->name('detail.download');
+            });
+        });
+    }
+
+    Route::prefix('dashboard/tasks')->name('tasks.')->group(function () use ($redirectPortalRoute) {
         Route::get('/', [TaskController::class, 'index'])->name('index');
-        Route::get('/create', [TaskController::class, 'create'])->name('create');
+        Route::get('/create', fn (Request $request) => $redirectPortalRoute($request, 'tasks.create'));
         Route::post('/', [TaskController::class, 'store'])->name('store');
-        Route::get('/on-progress', [TaskController::class, 'onProgress'])->name('on-progress');
-        Route::get('/report', [TaskController::class, 'report'])->name('report');
+        Route::get('/on-progress', fn (Request $request) => $redirectPortalRoute($request, 'tasks.on-progress'));
+        Route::get('/report', fn (Request $request) => $redirectPortalRoute($request, 'tasks.report'));
         Route::get('/report/download', [TaskController::class, 'downloadReport'])->name('report.download');
         Route::get('/{task}/report/pdf', [TaskController::class, 'downloadDetail'])->name('report.detail');
 
@@ -350,12 +381,12 @@ Route::middleware($emailVerificationEnabled
     });
 
     /* Ã°Å¸â€”â€š Projects */
-    Route::prefix('dashboard/projects')->name('projects.')->group(function () {
+    Route::prefix('dashboard/projects')->name('projects.')->group(function () use ($redirectPortalRoute) {
         Route::get('/', [ProjectController::class, 'index'])->name('index');
-        Route::get('/create', [ProjectController::class, 'create'])->name('create');
+        Route::get('/create', fn (Request $request) => $redirectPortalRoute($request, 'projects.create'));
         Route::post('/', [ProjectController::class, 'store'])->name('store');
-        Route::get('/on-progress', [ProjectController::class, 'onProgress'])->name('on-progress');
-        Route::get('/report', [ProjectController::class, 'report'])->name('report');
+        Route::get('/on-progress', fn (Request $request) => $redirectPortalRoute($request, 'projects.on-progress'));
+        Route::get('/report', fn (Request $request) => $redirectPortalRoute($request, 'projects.report'));
         Route::get('/report/download', [ProjectController::class, 'downloadReport'])->name('report.download');
         Route::get('/{project}/report/pdf', [ProjectController::class, 'downloadDetail'])->name('report.detail');
 
@@ -395,13 +426,29 @@ Route::middleware($emailVerificationEnabled
     });
 
     Route::prefix('dashboard/workflows')->middleware('permission:view workflows')->group(function () use ($redirectPortalRoute) {
-        Route::get('/', fn (Request $request) => $redirectPortalRoute($request, 'workflows.index'));
+        Route::get('/', function (Request $request) use ($redirectPortalRoute) {
+            $name = match ($request->query('type')) {
+                'task' => 'tasks.workflows.index',
+                'project' => 'projects.workflows.index',
+                default => 'workflows.index',
+            };
+
+            return $redirectPortalRoute($request, $name);
+        });
         Route::get('/instances/{instance}', fn (Request $request) => $redirectPortalRoute($request, 'workflows.instances.show'));
         Route::patch('/instances/{instance}/status', [WorkflowController::class, 'updateInstanceStatus']);
     });
 
     Route::prefix('dashboard/sla')->group(function () use ($redirectPortalRoute) {
-        Route::get('/', fn (Request $request) => $redirectPortalRoute($request, 'dashboard.sla'));
+        Route::get('/', function (Request $request) use ($redirectPortalRoute) {
+            $name = match ($request->query('type')) {
+                'task' => 'tasks.sla.index',
+                'project' => 'projects.sla.index',
+                default => 'dashboard.sla',
+            };
+
+            return $redirectPortalRoute($request, $name);
+        });
         Route::get('/download', [SLAReportController::class, 'download']);
         Route::get('/{type}/{id}/pdf', [SLAReportController::class, 'downloadDetail']);
     });
@@ -433,13 +480,18 @@ Route::middleware($emailVerificationEnabled
             Route::post('/impersonate/{user}', [SettingsController::class, 'impersonate'])->name('settings.impersonate.user');
         });
     /* Ã°Å¸â€˜Â¥ Users (ADMIN) */
+    Route::prefix('users')->name('users.')->middleware('can:viewAny,App\Models\User')->group(function () {
+        Route::get('/report', [UserController::class, 'report'])->name('report');
+        Route::get('/create', [UserController::class, 'create'])->name('create');
+    });
+
     Route::prefix('dashboard/users')
         ->name('users.')
         ->middleware('can:viewAny,App\Models\User')
-        ->group(function () {
+        ->group(function () use ($redirectPortalRoute) {
             Route::get('/', [UserController::class, 'report'])->name('index');
-            Route::get('/report', [UserController::class, 'report'])->name('report');
-            Route::get('/create', [UserController::class, 'create'])->name('create');
+            Route::get('/report', fn (Request $request) => $redirectPortalRoute($request, 'users.report'));
+            Route::get('/create', fn (Request $request) => $redirectPortalRoute($request, 'users.create'));
             Route::post('/', [UserController::class, 'store'])->name('store');
             Route::get('/{user}', [UserController::class, 'show'])->name('show');
             Route::get('/{user}/edit', [UserController::class, 'edit'])->name('edit');
@@ -448,8 +500,8 @@ Route::middleware($emailVerificationEnabled
         });
 
     /* Ã¢Å¡â„¢Ã¯Â¸Â Account */
+    Route::get('/account/profile', [AccountController::class, 'profile'])->name('account.profile');
     Route::prefix('dashboard/account')->name('account.')->group(function () {
-        Route::get('/profile', [AccountController::class, 'profile'])->name('profile');
         Route::get('/photo', [AccountController::class, 'photo'])->name('photo');
         Route::put('/profile', [AccountController::class, 'updateProfile'])->name('update-profile');
         Route::patch('/header-color', [AccountController::class, 'updateHeaderColor'])->name('header-color.update');

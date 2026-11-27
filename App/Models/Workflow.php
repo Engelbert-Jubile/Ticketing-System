@@ -10,6 +10,12 @@ use Illuminate\Support\Str;
 
 class Workflow extends Model
 {
+    public const SUBJECTS = [
+        'ticket' => Ticket::class,
+        'task' => Task::class,
+        'project' => Project::class,
+    ];
+
     use SoftDeletes;
 
     protected $fillable = ['uuid', 'slug', 'name', 'code', 'entity_type', 'description', 'trigger_conditions', 'is_active', 'version', 'created_by', 'updated_by'];

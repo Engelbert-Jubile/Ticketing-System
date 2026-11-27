@@ -3,26 +3,11 @@
     <header class="space-y-4">
       <div>
         <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100">{{ $t("Service Level Agreement Reports") }}</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Pantau performa SLA ticket dan task secara menyeluruh.") }}</p>
+        <p class="text-sm text-slate-500 dark:text-slate-300">{{ typeLabel }}</p>
       </div>
     </header>
 
-    <section class="flex flex-wrap items-center justify-between gap-3">
-      <div class="flex flex-wrap gap-2">
-        <button
-          v-for="option in typeOptions"
-          :key="option.value"
-          type="button"
-          class="rounded-full px-4 py-2 text-sm font-semibold transition"
-          :class="form.type === option.value
-            ? 'bg-blue-600 text-white shadow'
-            : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'"
-          @click="changeType(option.value)"
-        >
-          {{ option.label }}
-        </button>
-      </div>
-
+    <section class="flex flex-wrap items-center justify-end gap-3">
       <div class="flex flex-wrap gap-2">
         <a
           :href="downloadUrl('csv')"
@@ -183,7 +168,7 @@ const props = defineProps({
   type: { type: String, default: 'ticket' },
   filters: { type: Object, default: () => ({}) },
   stats: { type: Object, default: () => ({}) },
-  availableTypes: { type: Array, default: () => [] },
+  typeLabel: { type: String, required: true },
   statusOptions: { type: Array, default: () => [] },
   downloadParams: { type: Object, default: () => ({}) },
   records: { type: Object, default: null },
@@ -229,7 +214,6 @@ const perPageChoices = computed(() => perPageOptions.map(per => ({ label: String
 const statusSelectOptions = computed(() => props.statusOptions ?? []);
 
 const form = useForm({
-  type: props.type,
   from: props.filters.from || '',
   to: props.filters.to || '',
   sla_status: props.filters.sla_status || '',
@@ -248,14 +232,8 @@ watch(
   }
 );
 
-watch(
-  () => props.type,
-  value => {
-    form.type = value;
-  }
-);
-
-const typeOptions = computed(() => props.availableTypes ?? []);
+const indexRoute = computed(() => props.type === 'ticket' ? 'dashboard.sla' : `${props.type}s.sla.index`);
+const exportRoute = computed(() => props.type === 'ticket' ? 'sla.download' : `${props.type}s.sla.download`);
 const stats = computed(() => props.stats ?? {});
 
 const records = ref(props.records || null);
@@ -272,7 +250,7 @@ watch(
 );
 
 const columns = computed(() => {
-  switch (form.type) {
+  switch (props.type) {
     case 'task':
       return [
         { key: 'number', label: uiText('Task') },
@@ -316,7 +294,6 @@ const rows = computed(() => {
 });
 
 const currentParams = computed(() => ({
-  type: form.type,
   from: form.from || undefined,
   to: form.to || undefined,
   sla_status: form.sla_status || undefined,
@@ -325,7 +302,7 @@ const currentParams = computed(() => ({
 }));
 
 function applyFilters() {
-  const url = resolveRoute('dashboard.sla', {}, false);
+  const url = resolveRoute(indexRoute.value, {}, false);
   form.get(url, {
     preserveScroll: true,
     replace: true,
@@ -344,12 +321,6 @@ function resetFilters() {
   applyFilters();
 }
 
-function changeType(value) {
-  if (value === form.type) return;
-  form.type = value;
-  applyFilters();
-}
-
 function changePage(link) {
   if (!link.url || link.active) return;
   const page = extractPage(link.url);
@@ -363,7 +334,7 @@ function loadRecords(extra = {}) {
     params.page = extra.page;
   }
 
-  const url = resolveRoute('dashboard.sla', {}, false);
+  const url = resolveRoute(indexRoute.value, {}, false);
   router.get(url, params, {
     only: ['records'],
     preserveState: true,
@@ -418,7 +389,7 @@ function buildRow(item) {
     defaultLinks.pdf = pdfLink;
   }
 
-  if (form.type === 'task') {
+  if (props.type === 'task') {
     const statusLabel = formatStatusLabel(item.status);
     return {
       id: item.id,
@@ -442,7 +413,7 @@ function buildRow(item) {
     };
   }
 
-  if (form.type === 'project') {
+  if (props.type === 'project') {
     const statusLabel = formatStatusLabel(item.status);
     return {
       id: item.id,
@@ -495,7 +466,7 @@ function downloadUrl(format) {
     Object.entries(payload).filter(([, value]) => value !== undefined && value !== null && value !== '')
   );
 
-  return resolveRoute('sla.download', filtered, false);
+  return resolveRoute(exportRoute.value, filtered, false);
 }
 
 onMounted(() => {

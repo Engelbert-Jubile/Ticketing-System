@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\RoleHelpers;
+use App\Services\WorkflowRuntimeService;
 use App\Support\WorkflowStatus;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
@@ -112,6 +113,12 @@ class Project extends Model
         static::saving(function (Project $project) {
             if ($project->isDirty('title') || empty($project->public_slug)) {
                 $project->public_slug = static::generateUniquePublicSlug($project->title, $project->id);
+            }
+        });
+
+        static::saved(function (Project $project) {
+            if ($project->wasRecentlyCreated || $project->wasChanged('status')) {
+                app(WorkflowRuntimeService::class)->sync($project);
             }
         });
 

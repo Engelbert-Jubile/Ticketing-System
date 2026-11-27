@@ -161,7 +161,7 @@ class SLAReportService
             'assignee' => $this->displayUserName($task->assignee),
             'created_at' => $this->presentDateTime($task->created_at), 'deadline' => $this->presentDateTime($due), 'completed_at' => $this->presentDateTime($finished),
             'duration' => $this->formatDurationMinutes($this->calculateDurationMinutes($task->created_at, $finished)), 'sla' => $sla,
-            'detail_pdf_url' => route('sla.detail.download', ['locale' => app()->getLocale(), 'type' => 'task', 'id' => $task->id]),
+            'detail_pdf_url' => route('tasks.sla.detail.download', ['locale' => request()->route('locale') ?? app()->getLocale(), 'type' => 'task', 'id' => $task->id]),
         ];
     }
 
@@ -176,7 +176,7 @@ class SLAReportService
             'owner' => $this->displayUserName($project->user),
             'created_at' => $this->presentDateTime($project->created_at), 'deadline' => $this->presentDateTime($due), 'completed_at' => $this->presentDateTime($finished),
             'duration' => $this->formatDurationMinutes($this->calculateDurationMinutes($project->created_at, $finished)), 'sla' => $sla,
-            'detail_pdf_url' => route('sla.detail.download', ['locale' => app()->getLocale(), 'type' => 'project', 'id' => $project->id]),
+            'detail_pdf_url' => route('projects.sla.detail.download', ['locale' => request()->route('locale') ?? app()->getLocale(), 'type' => 'project', 'id' => $project->id]),
         ];
     }
 

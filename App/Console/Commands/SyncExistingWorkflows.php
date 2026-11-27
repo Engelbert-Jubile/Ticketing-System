@@ -2,8 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Task;
-use App\Models\Ticket;
 use App\Models\Workflow;
 use App\Models\WorkflowInstance;
 use App\Services\WorkflowRuntimeService;
@@ -16,7 +14,7 @@ class SyncExistingWorkflows extends Command
 {
     protected $signature = 'workflows:sync-existing';
 
-    protected $description = 'Backfill and synchronize existing Tickets and Tasks with workflow instances';
+    protected $description = 'Backfill and synchronize existing Tickets, Tasks and Projects with workflow instances';
 
     public function handle(WorkflowRuntimeService $runtime): int
     {
@@ -33,22 +31,19 @@ class SyncExistingWorkflows extends Command
             ]);
         }
 
+        app(WorkflowSeeder::class)->seedProjects();
         $processed = $runtime->syncExisting();
-        $actual = [
-            'ticket' => Schema::hasTable('tickets') ? Ticket::query()->count() : 0,
-            'task' => Schema::hasTable('tasks') ? Task::query()->count() : 0,
-        ];
-        $synchronized = [
-            'ticket' => $this->instanceCount(Ticket::class),
-            'task' => $this->instanceCount(Task::class),
-        ];
+        $actual = $synchronized = $rows = [];
+        foreach (Workflow::SUBJECTS as $type => $model) {
+            $exists = Schema::hasTable((new $model)->getTable());
+            $actual[$type] = $exists ? $model::query()->count() : 0;
+            $synchronized[$type] = $exists ? $this->instanceCount($model) : 0;
+            $rows[] = [ucfirst($type), $processed[$type], $actual[$type], $synchronized[$type]];
+        }
 
         $this->table(
             ['Tipe', 'Diproses', 'Data aktual', 'Workflow instances'],
-            [
-                ['Ticket', $processed['ticket'], $actual['ticket'], $synchronized['ticket']],
-                ['Task', $processed['task'], $actual['task'], $synchronized['task']],
-            ]
+            $rows
         );
 
         if ($actual !== $synchronized) {
@@ -57,7 +52,7 @@ class SyncExistingWorkflows extends Command
             return self::FAILURE;
         }
 
-        $this->info('Sinkronisasi Workflow Ticket dan Task selesai.');
+        $this->info('Sinkronisasi Workflow Ticket, Task, dan Project selesai.');
 
         return self::SUCCESS;
     }

@@ -2,8 +2,6 @@
 
 namespace App\Policies;
 
-use App\Models\Task;
-use App\Models\Ticket;
 use App\Models\User;
 use App\Models\Workflow;
 use App\Support\UnitVisibility;
@@ -28,15 +26,11 @@ class WorkflowPolicy
             return false;
         }
 
-        return $workflow->instances()->where(function (Builder $query) use ($user) {
-            $query->where(function (Builder $tickets) use ($user) {
-                $tickets->where('subject_type', Ticket::class)
-                    ->whereHasMorph('subject', [Ticket::class], fn (Builder $items) => UnitVisibility::scopeWorkflowTickets($items, $user));
-            })->orWhere(function (Builder $tasks) use ($user) {
-                $tasks->where('subject_type', Task::class)
-                    ->whereHasMorph('subject', [Task::class], fn (Builder $items) => UnitVisibility::scopeWorkflowTasks($items, $user));
-            });
-        })->exists();
+        $model = Workflow::SUBJECTS[$workflow->entity_type];
+
+        return $workflow->instances()
+            ->whereHasMorph('subject', [$model], fn (Builder $items) => UnitVisibility::scopeWorkflowSubjects($items, $user, $model))
+            ->exists();
     }
 
     public function create(User $user): bool

@@ -115,6 +115,17 @@ class UnitVisibility
         });
     }
 
+    public static function scopeWorkflowSubjects(Builder $query, ?User $user, string $model): Builder
+    {
+        return match ($model) {
+            Ticket::class => self::scopeWorkflowTickets($query, $user),
+            Task::class => self::scopeWorkflowTasks($query, $user),
+            Project::class => ! $user || RoleHelpers::userIsSuperAdmin($user)
+                ? $query
+                : self::scopeProjectParticipants($query, (int) $user->id),
+        };
+    }
+
 
 
 
@@ -124,7 +135,11 @@ class UnitVisibility
             return $query;
         }
 
-        $userId = (int) ($user?->id ?? 0);
+        return self::scopeProjectParticipants($query, (int) ($user?->id ?? 0));
+    }
+
+    private static function scopeProjectParticipants(Builder $query, int $userId): Builder
+    {
         $projectsHasAgent = self::projectHasColumn('agent_id');
         $projectsHasAssigned = self::projectHasColumn('assigned_id');
 

@@ -33,7 +33,26 @@ class WorkflowSeeder extends Seeder
             }
         });
 
+        $this->seedProjects();
         app(WorkflowRuntimeService::class)->syncExisting();
+    }
+
+    public function seedProjects(): void
+    {
+        DB::transaction(function (): void {
+            $workflow = Workflow::withTrashed()->firstOrCreate(['code' => 'PROJECT_DEFAULT'], [
+                'name' => 'Project Default Workflow',
+                'entity_type' => 'project',
+                'description' => 'Alur standar project dari pembuatan sampai selesai.',
+                'trigger_conditions' => [],
+                'is_active' => true,
+                'version' => 1,
+            ]);
+
+            if ($workflow->wasRecentlyCreated) {
+                $workflow->stages()->createMany($this->workItemStages('Mulai project'));
+            }
+        });
     }
 
     private function defaults(): array
@@ -65,16 +84,21 @@ class WorkflowSeeder extends Seeder
                 'trigger_conditions' => [],
                 'is_active' => true,
                 'version' => 1,
-                'stages' => [
-                    ['position' => 1, 'name' => 'Baru', 'status_key' => 'new', 'responsible_role' => 'admin', 'action_label' => 'Mulai task'],
-                    ['position' => 2, 'name' => 'Dikerjakan', 'status_key' => 'in_progress', 'responsible_role' => 'admin', 'action_label' => 'Selesaikan'],
-                    ['position' => 3, 'name' => 'Konfirmasi', 'status_key' => 'confirmation', 'responsible_role' => 'user', 'action_label' => 'Konfirmasi hasil'],
-                    ['position' => 4, 'name' => 'Revisi', 'status_key' => 'revision', 'responsible_role' => 'admin', 'action_label' => 'Proses revisi'],
-                    ['position' => 5, 'name' => 'Selesai', 'status_key' => 'done', 'responsible_role' => null, 'action_label' => null],
-                    ['position' => 6, 'name' => 'Ditahan', 'status_key' => 'on_hold', 'responsible_role' => 'admin', 'action_label' => 'Lanjutkan'],
-                    ['position' => 7, 'name' => 'Dibatalkan', 'status_key' => 'cancelled', 'responsible_role' => null, 'action_label' => null],
-                ],
+                'stages' => $this->workItemStages('Mulai task'),
             ],
+        ];
+    }
+
+    private function workItemStages(string $startAction): array
+    {
+        return [
+            ['position' => 1, 'name' => 'Baru', 'status_key' => 'new', 'responsible_role' => 'admin', 'action_label' => $startAction],
+            ['position' => 2, 'name' => 'Dikerjakan', 'status_key' => 'in_progress', 'responsible_role' => 'admin', 'action_label' => 'Selesaikan'],
+            ['position' => 3, 'name' => 'Konfirmasi', 'status_key' => 'confirmation', 'responsible_role' => 'user', 'action_label' => 'Konfirmasi hasil'],
+            ['position' => 4, 'name' => 'Revisi', 'status_key' => 'revision', 'responsible_role' => 'admin', 'action_label' => 'Proses revisi'],
+            ['position' => 5, 'name' => 'Selesai', 'status_key' => 'done', 'responsible_role' => null, 'action_label' => null],
+            ['position' => 6, 'name' => 'Ditahan', 'status_key' => 'on_hold', 'responsible_role' => 'admin', 'action_label' => 'Lanjutkan'],
+            ['position' => 7, 'name' => 'Dibatalkan', 'status_key' => 'cancelled', 'responsible_role' => null, 'action_label' => null],
         ];
     }
 }

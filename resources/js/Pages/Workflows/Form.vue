@@ -2,7 +2,7 @@
   <div class="mx-auto max-w-5xl space-y-6">
     <Head :title="$t(&quot;Definisi Alur&quot;)" />
     <Transition name="fade"><div v-if="notice" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 dark:border-rose-400/30 dark:bg-rose-400/10 dark:text-rose-200">{{ notice }}</div></Transition>
-    <header><Link :href="resolveRoute('workflows.index')" class="text-sm font-semibold text-blue-600">{{ $t("← Alur & Riwayat") }}</Link><h1 class="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{{ editing ? $t("Edit definisi alur") : $t("Buat definisi alur") }}</h1><p class="text-sm text-slate-500">{{ $t("Atur tahapan dan aturan proses untuk Ticket atau Task. Pekerjaan harian tersedia di menu Pekerjaan Saya.") }}</p></header>
+    <header><Link :href="indexUrl" class="text-sm font-semibold text-blue-600">{{ $t("← Alur & Riwayat") }}</Link><h1 class="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{{ editing ? $t("Edit definisi alur") : $t("Buat definisi alur") }}</h1><p class="text-sm text-slate-500">{{ $t("Atur tahapan dan aturan proses untuk Ticket, Task, atau Project. Pekerjaan harian tersedia di menu Pekerjaan Saya.") }}</p></header>
     <form class="space-y-6" @submit.prevent="submit">
       <section class="grid gap-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:grid-cols-2 dark:border-slate-700 dark:bg-slate-900">
         <label class="field">{{ $t("Nama workflow") }}<input v-model="form.name" required maxlength="120" class="input" /><small v-if="form.errors.name" class="error">{{ form.errors.name }}</small></label>
@@ -40,7 +40,7 @@
           </article>
         </div>
       </section>
-      <div class="flex justify-end gap-3"><Link :href="resolveRoute('workflows.index')" class="btn-secondary">{{ $t("Batal") }}</Link><SaveButton :processing="form.processing">{{ form.processing ? $t('Menyimpan...') : $t("Simpan definisi alur") }}</SaveButton></div>
+      <div class="flex justify-end gap-3"><Link :href="indexUrl" class="btn-secondary">{{ $t("Batal") }}</Link><SaveButton :processing="form.processing">{{ form.processing ? $t('Menyimpan...') : $t("Simpan definisi alur") }}</SaveButton></div>
     </form>
     <Teleport to="body"><div v-if="pendingSwap" class="swap-backdrop" @click.self="pendingSwap = null"><div class="swap-modal" role="alertdialog" aria-modal="true" aria-labelledby="swap-title"><span class="material-icons rounded-xl bg-violet-50 p-3 text-violet-600 dark:bg-violet-400/15 dark:text-violet-300">swap_horiz</span><h2 id="swap-title" class="mt-4 text-xl font-bold text-slate-900 dark:text-white">{{ $t("Tukar status tahap?") }}</h2><p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300"><strong>{{ statusLabel(pendingSwap.nextStatus) }}</strong> {{ $t("saat ini digunakan oleh Tahap") }} {{ pendingSwap.conflictIndex + 1 }} ({{ form.stages[pendingSwap.conflictIndex]?.name }}{{ $t("). Tukar status kedua tahap?") }}</p><div class="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"><p>{{ $t("Tahap") }} {{ pendingSwap.sourceIndex + 1 }}: {{ statusLabel(pendingSwap.previousStatus) }} → {{ statusLabel(pendingSwap.nextStatus) }}</p><p class="mt-1">{{ $t("Tahap") }} {{ pendingSwap.conflictIndex + 1 }}: {{ statusLabel(pendingSwap.nextStatus) }} → {{ statusLabel(pendingSwap.previousStatus) }}</p></div><div class="mt-6 flex justify-end gap-3"><button type="button" class="btn-secondary" @click="pendingSwap = null">{{ $t("Batal") }}</button><button type="button" class="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-700" @click="confirmStatusSwap">{{ $t("Ya, tukar status") }}</button></div></div></div></Teleport>
   </div>
@@ -49,20 +49,21 @@
 import { translateUi as uiText } from '../../i18n'
 
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import AppLayout from '../../Layouts/AppLayout.vue'
 import WorkflowSelect from '../../Components/WorkflowSelect.vue'
 import resolveRoute from '../../utils/resolveRoute'
 defineOptions({ layout: AppLayout })
-const props = defineProps({ workflow: { type: Object, default: null }, roles: { type: Array, default: () => [] }, users: { type: Array, default: () => [] }, statusOptions: { type: Array, default: () => [] }, canSwapStatuses: { type: Boolean, default: false } })
+const props = defineProps({ initialType: { type: String, default: 'ticket' }, workflow: { type: Object, default: null }, roles: { type: Array, default: () => [] }, users: { type: Array, default: () => [] }, statusOptions: { type: Array, default: () => [] }, canSwapStatuses: { type: Boolean, default: false } })
 const editing = Boolean(props.workflow)
-const entityOptions = [{ value: 'ticket', label: 'Ticket' }, { value: 'task', label: 'Task' }]
+const entityOptions = [{ value: 'ticket', label: 'Ticket' }, { value: 'task', label: 'Task' }, { value: 'project', label: 'Project' }]
 const conditionFieldOptions = [{ value: 'priority', label: uiText("Priority") }, { value: 'status', label: 'Status' }, { value: 'type', label: uiText("Type") }]
 const operatorOptions = [{ value: 'equals', label: uiText("Sama dengan") }, { value: 'not_equals', label: uiText("Tidak sama") }, { value: 'contains', label: uiText('Mengandung') }]
 const roleOptions = [{ value: '', label: uiText("Tidak ditentukan") }, ...props.roles.map(role => ({ value: role, label: role }))]
 const userOptions = [{ value: null, label: uiText("Tidak ditentukan") }, ...props.users.map(user => ({ value: user.id, label: user.name }))]
 const blankStage = (name = '', status = 'new') => ({ id: null, name, status_key: status, responsible_role: '', responsible_user_id: null, is_required: true, action_label: '', instructions: '' })
-const form = useForm({ name: props.workflow?.name || '', code: props.workflow?.code || '', entity_type: props.workflow?.entity_type || 'ticket', description: props.workflow?.description || '', is_active: props.workflow?.is_active ?? true, trigger_conditions: props.workflow?.trigger_conditions?.map(item => ({ ...item })) || [], stages: props.workflow?.stages?.map(item => ({ id: item.id, name: item.name, status_key: item.status_key, responsible_role: item.responsible_role || '', responsible_user_id: item.responsible_user_id, is_required: item.is_required ?? true, action_label: item.action_label || '', instructions: item.instructions || '' })) || [blankStage(uiText("Baru"), 'new'), blankStage(uiText("Selesai"), 'done')] })
+const form = useForm({ name: props.workflow?.name || '', code: props.workflow?.code || '', entity_type: props.workflow?.entity_type || props.initialType, description: props.workflow?.description || '', is_active: props.workflow?.is_active ?? true, trigger_conditions: props.workflow?.trigger_conditions?.map(item => ({ ...item })) || [], stages: props.workflow?.stages?.map(item => ({ id: item.id, name: item.name, status_key: item.status_key, responsible_role: item.responsible_role || '', responsible_user_id: item.responsible_user_id, is_required: item.is_required ?? true, action_label: item.action_label || '', instructions: item.instructions || '' })) || [blankStage(uiText("Baru"), 'new'), blankStage(uiText("Selesai"), 'done')] })
+const indexUrl = computed(() => resolveRoute(form.entity_type === 'ticket' ? 'workflows.index' : form.entity_type + 's.workflows.index'))
 const page = usePage()
 const notice = ref(page.props.flash?.error || null)
 const addCondition = () => form.trigger_conditions.push({ field: 'priority', operator: 'equals', value: '' })

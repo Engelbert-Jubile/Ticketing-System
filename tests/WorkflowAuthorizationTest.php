@@ -1,10 +1,12 @@
 <?php
 
+use App\Domains\Project\Models\Project;
 use App\Models\Task;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Models\Workflow;
 use App\Models\WorkflowInstance;
+use App\Support\WorkflowStatus;
 use Database\Seeders\WorkflowSeeder;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -80,6 +82,27 @@ beforeEach(function () {
         $table->foreignId('ticket_id');
         $table->foreignId('user_id');
         $table->timestamps();
+    });
+    Schema::create('projects', function ($table) {
+        $table->id();
+        $table->uuid('uuid')->nullable();
+        $table->string('project_no')->nullable();
+        $table->string('public_slug')->nullable();
+        $table->string('title');
+        $table->text('description')->nullable();
+        $table->string('status')->default('new');
+        $table->string('status_id')->nullable();
+        $table->foreignId('created_by')->nullable();
+        $table->foreignId('requester_id')->nullable();
+        $table->foreignId('agent_id')->nullable();
+        $table->foreignId('assigned_id')->nullable();
+        $table->date('end_date')->nullable();
+        $table->timestamps();
+    });
+    Schema::create('project_pics', function ($table) {
+        $table->id();
+        $table->foreignId('project_id');
+        $table->foreignId('user_id');
     });
 });
 
@@ -159,16 +182,92 @@ test('user can browse index and view active workflow only', function () {
         ->assertForbidden();
 });
 
-test('workflow seeder creates ticket and task defaults idempotently', function () {
+test('workflow seeder creates a default for every workspace idempotently', function () {
     Artisan::call('db:seed', ['--class' => WorkflowSeeder::class, '--force' => true]);
     Artisan::call('db:seed', ['--class' => WorkflowSeeder::class, '--force' => true]);
 
-    expect(Workflow::query()->count())->toBe(2)
-        ->and(Workflow::query()->where('entity_type', 'project')->count())->toBe(0)
+    expect(Workflow::query()->count())->toBe(3)
+        ->and(Workflow::query()->where('code', 'PROJECT_DEFAULT')->where('is_active', true)->exists())->toBeTrue()
         ->and(Workflow::query()->where('code', 'TICKET_DEFAULT')->where('is_active', true)->exists())->toBeTrue()
         ->and(Workflow::query()->where('code', 'TASK_DEFAULT')->where('is_active', true)->exists())->toBeTrue()
         ->and(Workflow::query()->where('code', 'TICKET_DEFAULT')->first()->stages()->count())->toBe(7)
-        ->and(Workflow::query()->where('code', 'TASK_DEFAULT')->first()->stages()->count())->toBe(7);
+        ->and(Workflow::query()->where('code', 'TASK_DEFAULT')->first()->stages()->count())->toBe(7)
+        ->and(Workflow::query()->where('code', 'PROJECT_DEFAULT')->first()->stages()->count())->toBe(7);
+});
+
+test('project workflows backfill existing projects and record new status changes in their own portal', function () {
+    $owner = workflowUserWithRole('superadmin');
+    $other = workflowUserWithRole('user', ['unit' => null]);
+    $legacyId = DB::table('projects')->insertGetId([
+        'project_no' => 'PRJ-LEGACY',
+        'title' => 'Legacy project',
+        'status' => 'done',
+        'created_by' => $owner->id,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $migration = require database_path('migrations/2026_11_27_000002_add_project_workflows.php');
+    $migration->up();
+    $migration->up();
+
+    $project = Project::create([
+        'project_no' => 'PRJ-RUNTIME',
+        'title' => 'Project runtime',
+        'created_by' => $owner->id,
+    ]);
+    $instances = WorkflowInstance::where('subject_type', \App\Models\Project::class)->get()->keyBy('subject_id');
+    expect($instances)->toHaveCount(2)
+        ->and($instances[$legacyId]->status)->toBe('completed');
+
+    $params = ['locale' => 'en', 'instance' => $project->project_no];
+    $detail = route('projects.workflows.instances.show', $params);
+    $status = route('projects.workflows.instances.status', $params);
+    $this->actingAs($other)->get($detail)->assertForbidden();
+    $this->patchJson($status, ['status' => 'in_progress'])->assertForbidden();
+    $this->actingAs($owner)->patchJson($status, ['status' => 'in_progress'])->assertOk();
+    expect($project->fresh()->status)->toBe('in_progress')
+        ->and($project->fresh()->status_id)->toBe(WorkflowStatus::code('in_progress'));
+
+    $this->withHeaders(workflowInertiaHeaders())->get($detail)
+        ->assertOk()
+        ->assertJsonPath('props.item.type', 'project')
+        ->assertJsonPath('props.item.status', 'in_progress')
+        ->assertJsonPath('props.item.history.1.to_status', 'in_progress')
+        ->assertJsonPath('props.indexUrl', '/en/projects/project-portal/workflows');
+    $this->get(route('tasks.workflows.instances.show', $params))->assertNotFound();
+    $this->patchJson(route('workflows.instances.status', $params), ['status' => 'done'])->assertNotFound();
+});
+
+test('workflow and SLA lists and exports use the workspace entity even when the query asks for another type', function () {
+    $owner = workflowUserWithRole('superadmin');
+    $this->seed(WorkflowSeeder::class);
+    $ticket = Ticket::create(['ticket_no' => 'TCK-ISOLATED', 'title' => 'Ticket only', 'requester_id' => $owner->id]);
+    $task = Task::create(['task_no' => 'TSK-ISOLATED', 'title' => 'Task only', 'created_by' => $owner->id]);
+    $project = Project::create(['project_no' => 'PRJ-ISOLATED', 'title' => 'Project only', 'created_by' => $owner->id]);
+
+    $this->actingAs($owner)->withHeaders(workflowInertiaHeaders());
+    foreach ([
+        ['ticket', 'workflows.index', 'dashboard.sla', 'sla.download', 'sla.detail.download', $ticket->ticket_no, $ticket->id],
+        ['task', 'tasks.workflows.index', 'tasks.sla.index', 'tasks.sla.download', 'tasks.sla.detail.download', $task->task_no, $task->id],
+        ['project', 'projects.workflows.index', 'projects.sla.index', 'projects.sla.download', 'projects.sla.detail.download', $project->project_no, $project->id],
+    ] as [$type, $workflow, $sla, $download, $pdf, $number, $id]) {
+        $params = ['locale' => 'en', 'type' => $type === 'ticket' ? 'task' : 'ticket'];
+        $this->get(route($workflow, $params))->assertOk()
+            ->assertJsonPath('props.filters.type', $type)
+            ->assertJsonCount(1, 'props.items.data')
+            ->assertJsonPath('props.items.data.0.number', $number);
+        $this->get(route($sla, $params))->assertOk()
+            ->assertJsonPath('props.type', $type)
+            ->assertJsonCount(1, 'props.records.data')
+            ->assertJsonPath('props.records.data.0.number', $number)
+            ->assertJsonPath('props.records.data.0.detail_pdf_url', route($pdf, ['locale' => 'en', 'type' => $type, 'id' => $id]));
+        $response = $this->withoutHeader('X-Inertia')->get(route($download, $params))->assertOk();
+        expect($response->streamedContent())->toContain($number);
+        $this->withHeaders(workflowInertiaHeaders());
+    }
+
+    $this->get('/en/projects/project-portal/sla-reports/task/'.$task->id.'/pdf')->assertNotFound();
 });
 
 test('sync existing command backfills legacy statuses idempotently with scoped counts', function () {
@@ -281,7 +380,7 @@ test('existing tickets and tasks use default workflows and follow status changes
             'title' => 'Ticket production existing',
             'type' => 'ticket',
         ]);
-    $this->get(route('workflows.index', ['locale' => 'id', 'type' => 'task']))
+    $this->get(route('tasks.workflows.index', ['locale' => 'id']))
         ->assertOk()
         ->assertJsonPath('props.summary.total', 1)
         ->assertJsonPath('props.summary.completed', 1)
@@ -365,7 +464,7 @@ test('workflow index applies search type status pagination and permissions', fun
         ->assertJsonPath('props.items.data.0.process_stages.1.is_current', false);
 
     $this->actingAs($user)->withHeaders(workflowInertiaHeaders())
-        ->get(route('workflows.index', ['locale' => 'id', 'type' => 'task', 'status' => 'done']))
+        ->get(route('tasks.workflows.index', ['locale' => 'id', 'status' => 'done']))
         ->assertOk()
         ->assertJsonCount(1, 'props.items.data')
         ->assertJsonPath('props.items.data.0.number', 'TSK-USER-001');
@@ -516,7 +615,7 @@ test('superadmin can browse view create update toggle and delete workflows', fun
 
     $this->actingAs($superadmin)
         ->delete(route('workflows.destroy', ['locale' => 'id', 'workflow' => $workflow]))
-        ->assertRedirect(route('workflows.index', ['locale' => 'id']));
+        ->assertRedirect(route('tasks.workflows.index', ['locale' => 'id']));
 
     expect($workflow->fresh()->trashed())->toBeTrue();
 });

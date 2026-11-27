@@ -38,11 +38,7 @@ class SLAReportController extends Controller
                 'per_page' => $filters['per_page'],
             ],
             'stats' => $stats,
-            'availableTypes' => collect($this->types())
-                ->map(fn (string $label, string $value) => [
-                    'value' => $value,
-                    'label' => $label,
-                ])->values()->all(),
+            'typeLabel' => $this->types()[$filters['type']],
             'statusOptions' => $this->statusOptions(),
             'downloadParams' => $this->downloadParams($filters),
             'records' => $records,
@@ -161,7 +157,7 @@ class SLAReportController extends Controller
     protected function filters(Request $request): array
     {
         $viewer = $request->user();
-        $type = (string) $request->query('type', 'ticket');
+        $type = $request->route('workspaceType') ?? (string) $request->query('type', 'ticket');
         $allowed = array_keys($this->types());
         if (! in_array($type, $allowed, true)) {
             $type = 'ticket';
@@ -258,7 +254,6 @@ class SLAReportController extends Controller
     private function downloadParams(array $filters): array
     {
         return array_filter([
-            'type' => $filters['type'] ?? null,
             'from' => $filters['from'] ?? null,
             'to' => $filters['to'] ?? null,
             'sla_status' => $filters['sla_status'] ?? null,

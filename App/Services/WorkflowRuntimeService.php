@@ -2,8 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Task;
-use App\Models\Ticket;
 use App\Models\Workflow;
 use App\Models\WorkflowInstance;
 use App\Support\WorkflowStatus;
@@ -18,13 +16,15 @@ class WorkflowRuntimeService
             return;
         }
 
-        $type = $subject instanceof Ticket ? 'ticket' : ($subject instanceof Task ? 'task' : null);
-        if (! $type) {
+        $subjects = array_filter(Workflow::SUBJECTS, fn (string $model) => $subject instanceof $model);
+        $type = array_key_first($subjects);
+        if ($type === null) {
             return;
         }
+        $model = $subjects[$type];
 
         $instance = WorkflowInstance::query()
-            ->where('subject_type', $subject::class)->where('subject_id', $subject->getKey())
+            ->where('subject_type', $model)->where('subject_id', $subject->getKey())
             ->with('workflow.stages')->oldest('id')->first();
 
         if (! $instance) {
@@ -34,18 +34,19 @@ class WorkflowRuntimeService
                 return;
             }
 
-            $instance = WorkflowInstance::create([
+            $instance = WorkflowInstance::firstOrCreate([
                 'workflow_id' => $workflow->id,
-                'workflow_version' => $workflow->version,
-                'subject_type' => $subject::class,
+                'subject_type' => $model,
                 'subject_id' => $subject->getKey(),
+            ], [
+                'workflow_version' => $workflow->version,
                 'current_stage_id' => $first->id,
                 'status' => 'running',
                 'started_at' => now(),
                 'stage_started_at' => now(),
             ]);
             $instance->setRelation('workflow', $workflow);
-            if (Schema::hasTable('workflow_instance_histories')) {
+            if ($instance->wasRecentlyCreated && Schema::hasTable('workflow_instance_histories')) {
                 $instance->histories()->create([
                     'workflow_id' => $workflow->id,
                     'user_id' => \Illuminate\Support\Facades\Auth::id(),
@@ -91,14 +92,15 @@ class WorkflowRuntimeService
         }
     }
 
-    public function syncExisting(): array
+    public function syncExisting(?string $onlyType = null): array
     {
-        $counts = ['ticket' => 0, 'task' => 0];
+        $subjects = $onlyType === null ? Workflow::SUBJECTS : array_intersect_key(Workflow::SUBJECTS, [$onlyType => true]);
+        $counts = array_fill_keys(array_keys($subjects), 0);
         if (! $this->available()) {
             return $counts;
         }
 
-        foreach ([Ticket::class => 'ticket', Task::class => 'task'] as $model => $type) {
+        foreach ($subjects as $type => $model) {
             if (! Schema::hasTable((new $model)->getTable())) {
                 continue;
             }
@@ -122,7 +124,7 @@ class WorkflowRuntimeService
 
         $workflow->instances()->with('subject')->chunkById(250, function ($instances): void {
             foreach ($instances as $instance) {
-                if ($instance->subject instanceof Ticket || $instance->subject instanceof Task) {
+                if ($instance->subject) {
                     $this->sync($instance->subject);
                 }
             }

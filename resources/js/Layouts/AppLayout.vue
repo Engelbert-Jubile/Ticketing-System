@@ -91,27 +91,27 @@
           </div>
         </div>
         <nav
-          v-if="ticketWorkspaceActiveTab"
+          v-if="activeWorkspaceTab"
           class="mx-auto mb-4 flex w-fit max-w-full flex-wrap justify-center gap-1 rounded-xl border border-slate-200 bg-white/80 p-1 shadow-sm dark:border-slate-700 dark:bg-slate-900/60"
-          :aria-label="t('ticketWorkspace.navigation')"
+          :aria-label="t(workspaces[workspaceOnPage].portal)"
         >
           <Link
-            v-for="tab in ticketWorkspaceTabs"
+            v-for="tab in workspaceTabs"
             :key="tab.key"
             :href="resolveRouteName(tab.route)"
-            :aria-current="ticketWorkspaceActiveTab === tab.key ? 'page' : undefined"
+            :aria-current="activeWorkspaceTab === tab.key ? 'page' : undefined"
             class="ticket-workspace-link inline-flex min-h-10 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-teal-600 sm:px-3 dark:focus-visible:outline-teal-300"
-            :class="{ 'text-slate-700 dark:text-slate-300': ticketWorkspaceActiveTab !== tab.key }"
+            :class="{ 'text-slate-700 dark:text-slate-300': activeWorkspaceTab !== tab.key }"
           >
             <span class="material-icons !text-[17px]" aria-hidden="true">{{ tab.icon }}</span>
             <span>{{ t(tab.label) }}</span>
             <span
-              v-if="tab.key === 'in-progress' && ticketsInProgressBadge"
+              v-if="tab.key === 'in-progress' && workspaceBadge"
               class="ticket-workspace-badge rounded-full px-1.5 text-xs leading-5"
-              :class="ticketWorkspaceActiveTab === tab.key
+              :class="activeWorkspaceTab === tab.key
                 ? 'bg-black/40'
                 : 'bg-teal-100 text-teal-900 dark:bg-teal-400/15 dark:text-teal-200'"
-            >{{ ticketsInProgressBadge }}</span>
+            >{{ workspaceBadge }}</span>
           </Link>
         </nav>
         <slot />
@@ -179,7 +179,6 @@ const badgeValue = value => {
   if (typeof value !== 'number' || value <= 0) return undefined
   return value > 99 ? '99+' : String(value)
 }
-const ticketsInProgressBadge = computed(() => badgeValue(sidebarMetrics.value.tickets_in_progress_count))
 
 const announcement = computed(() => {
   const raw = page.props.announcement ?? null
@@ -225,34 +224,42 @@ const currentPath = computed(() => {
   const url = inertiaUrl.value ?? '/'
   return stripLocalePrefix(url.split('?')[0] || '/')
 })
-const ticketWorkspaceTabs = [
-  { key: 'create-ticket', label: 'Create Ticket', icon: 'confirmation_number', route: 'tickets.create' },
-  { key: 'in-progress', label: 'nav.ticketsInProgress', icon: 'pending_actions', route: 'tickets.on-progress' },
-  { key: 'report', label: 'nav.ticketsReport', icon: 'bar_chart', route: 'tickets.report' },
-  { key: 'workflows', label: 'nav.workflows', icon: 'account_tree', route: 'workflows.index' },
-  { key: 'sla-reports', label: 'nav.slaReports', icon: 'schedule', route: 'dashboard.sla' },
-]
-const ticketWorkspaceActiveTab = computed(() => {
-  const path = currentPath.value
-  const matchesRoute = name => {
-    const target = resolveRoute(name, { locale: activeLocale.value }, false)
-    if (!target.startsWith('/')) return false
-    const routePath = stripLocalePrefix(target)
-    return path === routePath || path.startsWith(`${routePath}/`)
-  }
-
-  return ticketWorkspaceTabs.find(tab => matchesRoute(tab.route))?.key
-    ?? (matchesRoute('tickets.index') ? 'report' : '')
-})
-const isPortal = computed(() => page.component === 'Portal')
-const portalUrl = computed(() => page.props.portalUrl)
-const workspaceModules = ['tickets', 'tasks', 'projects']
+const workspaces = {
+  tickets: { label: 'nav.tickets', portal: 'nav.ticketPortal', create: 'Create Ticket', icon: 'confirmation_number' },
+  tasks: { label: 'nav.tasks', portal: 'nav.taskPortal', create: 'nav.createTask', icon: 'task' },
+  projects: { label: 'nav.projects', portal: 'nav.projectPortal', create: 'nav.createProject', icon: 'folder' },
+}
 const workspaceOnPage = computed(() => {
   if (page.component === 'ServerRoomTemperature') return null
-  if (ticketWorkspaceActiveTab.value) return 'tickets'
   const [, area, module] = currentPath.value.split('/')
-  if (area === 'dashboard' && (module === 'tasks' || module === 'projects')) return module
+  if (Object.hasOwn(workspaces, area)) return area
+  if (area === 'dashboard' && Object.hasOwn(workspaces, module)) return module
 })
+const workspaceTabs = computed(() => {
+  const module = workspaceOnPage.value
+  if (!module) return []
+
+  const { create, icon } = workspaces[module]
+  return [
+    { key: 'create', label: create, icon, route: module + '.create' },
+    { key: 'in-progress', label: 'nav.ticketsInProgress', icon: 'pending_actions', route: module + '.on-progress' },
+    { key: 'report', label: 'nav.ticketsReport', icon: 'bar_chart', route: module + '.report' },
+    { key: 'workflows', label: 'nav.workflows', icon: 'account_tree', route: module === 'tickets' ? 'workflows.index' : module + '.workflows.index' },
+    { key: 'sla-reports', label: 'nav.slaReports', icon: 'schedule', route: module === 'tickets' ? 'dashboard.sla' : module + '.sla.index' },
+  ]
+})
+const activeWorkspaceTab = computed(() => {
+  if (!workspaceOnPage.value) return ''
+  return workspaceTabs.value.find(tab => {
+    const target = resolveRoute(tab.route, { locale: activeLocale.value }, false)
+    if (!target.startsWith('/')) return false
+    const path = stripLocalePrefix(target)
+    return currentPath.value === path || currentPath.value.startsWith(path + '/')
+  })?.key ?? 'report'
+})
+const workspaceBadge = computed(() => badgeValue(sidebarMetrics.value[workspaceOnPage.value + '_in_progress_count']))
+const isPortal = computed(() => page.component === 'Portal')
+const portalUrl = computed(() => page.props.portalUrl)
 const sidebarWorkspace = ref(null)
 const sidebarWorkspaceKey = userId => `sidebar:workspace:${userId}`
 
@@ -267,7 +274,7 @@ watch([() => authUser.value?.id, workspaceOnPage], ([userId, workspace], [previo
     const key = sidebarWorkspaceKey(userId)
     if (workspace === undefined) {
       const saved = sessionStorage.getItem(key)
-      if (workspaceModules.includes(saved)) sidebarWorkspace.value = saved
+      if (Object.hasOwn(workspaces, saved)) sidebarWorkspace.value = saved
     } else if (workspace) {
       sessionStorage.setItem(key, workspace)
     } else {
@@ -367,82 +374,22 @@ const navItems = computed(() => {
     },
     {
       type: 'link', key: 'work', label: uiText("Pekerjaan Saya"), icon: 'assignment_ind',
-      href: resolveRouteName('work.index'), match: path => path === '/dashboard/my-work',
+      href: resolveRouteName('work.index'), match: path => path === '/my-work',
     },
-    {
-      type: 'group',
-      key: 'tickets',
-      label: t('nav.tickets'),
-      icon: 'confirmation_number',
-      indicator: ticketsInProgressBadge.value ? { type: 'dot', variant: 'danger' } : null,
-      children: [
-        {
-          key: 'tickets.create',
-          label: t('nav.ticketPortal'),
-          href: resolveRouteName('tickets.create'),
-          match: () => Boolean(ticketWorkspaceActiveTab.value),
-        },
-      ],
-      match: () => Boolean(ticketWorkspaceActiveTab.value),
-    },
-    {
-      type: 'group',
-      key: 'tasks',
-      label: t('nav.tasks'),
-      icon: 'task',
-      indicator: metrics.tasks_in_progress_count > 0 ? { type: 'dot', variant: 'danger' } : null,
-      children: [
-        {
-          key: 'tasks.create',
-          label: t('nav.createTask'),
-          href: resolveRouteName('tasks.create'),
-          match: path => path === '/dashboard/tasks/create',
-        },
-        {
-          key: 'tasks.on-progress',
-          label: t('nav.tasksInProgress'),
-          href: resolveRouteName('tasks.on-progress'),
-          badge: badgeValue(metrics.tasks_in_progress_count),
-          match: path => path === '/dashboard/tasks/on-progress',
-        },
-        {
-          key: 'tasks.report',
-          label: t('nav.tasksReport'),
-          href: resolveRouteName('tasks.report'),
-          match: path => pathStartsWith(path, '/dashboard/tasks') && !path.includes('/create') && !path.includes('/on-progress'),
-        },
-      ],
-      match: path => pathStartsWith(path, '/dashboard/tasks'),
-    },
-    {
-      type: 'group',
-      key: 'projects',
-      label: t('nav.projects'),
-      icon: 'folder',
-      indicator: metrics.projects_in_progress_count > 0 ? { type: 'dot', variant: 'danger' } : null,
-      children: [
-        {
-          key: 'projects.create',
-          label: t('nav.createProject'),
-          href: resolveRouteName('projects.create'),
-          match: path => path === '/dashboard/projects/create',
-        },
-        {
-          key: 'projects.on-progress',
-          label: t('nav.projectsInProgress'),
-          href: resolveRouteName('projects.on-progress'),
-          badge: badgeValue(metrics.projects_in_progress_count),
-          match: path => path === '/dashboard/projects/on-progress',
-        },
-        {
-          key: 'projects.report',
-          label: t('nav.projectsReport'),
-          href: resolveRouteName('projects.report'),
-          match: path => pathStartsWith(path, '/dashboard/projects') && !path.includes('/create') && !path.includes('/on-progress'),
-        },
-      ],
-      match: path => pathStartsWith(path, '/dashboard/projects'),
-    },
+    ...Object.entries(workspaces).map(([module, workspace]) => {
+      const matches = () => workspaceOnPage.value === module
+      return {
+        type: 'group',
+        key: module,
+        label: t(workspace.label),
+        icon: workspace.icon,
+        indicator: metrics[module + '_in_progress_count'] > 0 ? { type: 'dot', variant: 'danger' } : null,
+        children: [
+          { key: module + '.create', label: t(workspace.portal), href: resolveRouteName(module + '.create'), match: matches },
+        ],
+        match: matches,
+      }
+    }),
   ]
 
   if (portalUrl.value) {
@@ -465,7 +412,7 @@ const navItems = computed(() => {
       label: t('nav.unitReports'),
       icon: 'apartment',
       href: resolveRouteName('dashboard.unit-reports'),
-      match: path => pathStartsWith(path, '/dashboard/unit-reports'),
+      match: path => pathStartsWith(path, '/unit-reports'),
     })
 
     items.push({
@@ -493,7 +440,7 @@ const navItems = computed(() => {
         label: t('nav.unitReports'),
         icon: 'apartment',
         href: resolveRouteName('dashboard.unit-reports'),
-        match: path => pathStartsWith(path, '/dashboard/unit-reports'),
+        match: path => pathStartsWith(path, '/unit-reports'),
       })
     }
   }
@@ -509,16 +456,16 @@ const navItems = computed(() => {
           key: 'users.create',
           label: t('nav.createUser'),
           href: resolveRouteName('users.create'),
-          match: path => path === '/dashboard/users/create',
+          match: path => path === '/users/create',
         },
         {
           key: 'users.report',
           label: t('nav.userList'),
           href: resolveRouteName('users.report'),
-          match: path => pathStartsWith(path, '/dashboard/users') && !path.includes('/create'),
+          match: path => path === '/users/report' || pathStartsWith(path, '/dashboard/users'),
         },
       ],
-      match: path => pathStartsWith(path, '/dashboard/users'),
+      match: path => pathStartsWith(path, '/users/') || pathStartsWith(path, '/dashboard/users'),
     })
   }
 
@@ -532,16 +479,16 @@ const navItems = computed(() => {
         key: 'account.profile',
         label: t('nav.profile'),
         href: resolveRouteName('account.profile'),
-        match: path => path === '/dashboard/account/profile',
+        match: path => path === '/account/profile',
       },
     ],
-    match: path => pathStartsWith(path, '/dashboard/account'),
+    match: path => pathStartsWith(path, '/account/') || pathStartsWith(path, '/dashboard/account'),
   })
 
   items.push(
     {
       type: 'link', key: 'knowledge', label: uiText("Panduan & Template"), icon: 'menu_book',
-      href: resolveRouteName('knowledge.index'), match: path => path === '/dashboard/knowledge',
+      href: resolveRouteName('knowledge.index'), match: path => path === '/guides-templates',
     },
     { type: 'logout', key: 'logout', label: t('nav.logout'), icon: 'logout' }
   )
@@ -562,7 +509,7 @@ const navItems = computed(() => {
 const documentTitle = computed(() => {
   if (isPortal.value) return t('portal.title')
 
-  const ticketTab = ticketWorkspaceTabs.find(tab => tab.key === ticketWorkspaceActiveTab.value)
+  const ticketTab = workspaceTabs.value.find(tab => tab.key === activeWorkspaceTab.value)
   if (ticketTab) return t(ticketTab.label)
 
   const path = currentPath.value

@@ -9,7 +9,7 @@ final class WorkflowDisplay
     public static function text(?Workflow $workflow, ?string $text): ?string
     {
         // Only translate shipped definitions. Custom workflow content stays intact.
-        return $text !== null && in_array($workflow?->code, ['TICKET_DEFAULT', 'TASK_DEFAULT'], true)
+        return $text !== null && in_array($workflow?->code, ['TICKET_DEFAULT', 'TASK_DEFAULT', 'PROJECT_DEFAULT'], true)
             ? __($text)
             : $text;
     }
