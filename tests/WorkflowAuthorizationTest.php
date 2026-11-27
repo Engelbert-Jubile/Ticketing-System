@@ -199,6 +199,58 @@ test('legacy task migration archives linked rows before removing their source co
         ->and(DB::table('tasks')->count())->toBe(3);
 });
 
+test('deployment archives the four confirmed task copies after the legacy links were removed', function () {
+    Schema::table('tasks', fn ($table) => $table->dropColumn(['ticket_id', 'project_id']));
+    (require database_path('migrations/2026_11_27_000000_archive_legacy_linked_tasks.php'))->up();
+
+    $owner = workflowUserWithRole('superadmin');
+    $this->seed(WorkflowSeeder::class);
+
+    foreach (range(1, 3) as $index) {
+        Task::create([
+            'task_no' => 'TSK2026000'.$index,
+            'title' => 'Pengembangan Soft Skill Anak Magang #'.$index,
+            'created_by' => $owner->id,
+        ]);
+    }
+    $unmatched = Task::create([
+        'task_no' => 'TSK20260004',
+        'title' => 'Different task',
+        'created_by' => $owner->id,
+    ]);
+    $sameTitle = Task::create([
+        'task_no' => 'TSK20260005',
+        'title' => 'Instalasi QAD',
+        'created_by' => $owner->id,
+    ]);
+
+    $migration = require database_path('migrations/2026_11_27_000003_archive_confirmed_legacy_task_copies.php');
+    $migration->up();
+    expect(Task::orderBy('id')->pluck('id')->all())->toBe([$unmatched->id, $sameTitle->id]);
+
+    $unmatched->update(['title' => 'Instalasi QAD']);
+    $this->artisan('migrate', [
+        '--path' => 'database/migrations/2026_11_27_000003_archive_confirmed_legacy_task_copies.php',
+        '--force' => true,
+    ])->assertSuccessful();
+    $migration->up();
+
+    expect(Task::pluck('id')->all())->toBe([$sameTitle->id])
+        ->and(DB::table('tasks')->whereNotNull('legacy_archived_at')->count())->toBe(4);
+
+    $this->actingAs($owner)->withHeaders(workflowInertiaHeaders());
+    foreach ([
+        'tasks.report' => ['props.items', 'task_no'],
+        'tasks.workflows.index' => ['props.items', 'number'],
+        'tasks.sla.index' => ['props.records', 'number'],
+    ] as $route => [$items, $number]) {
+        $this->get(route($route, ['locale' => 'en']))
+            ->assertOk()
+            ->assertJsonCount(1, $items.'.data')
+            ->assertJsonPath($items.'.data.0.'.$number, $sameTitle->task_no);
+    }
+});
+
 test('archiving exact task numbers removes legacy copies from the task portal and preserves standalone tasks', function () {
     Schema::table('tasks', fn ($table) => $table->dropColumn(['ticket_id', 'project_id']));
     $migration = require database_path('migrations/2026_11_27_000000_archive_legacy_linked_tasks.php');
