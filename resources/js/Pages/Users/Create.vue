@@ -5,7 +5,7 @@
         <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">{{ $t("Create User") }}</h1>
         <p class="text-sm text-slate-500 dark:text-slate-300">{{ $t("Tambahkan akun baru dan tetapkan peran yang sesuai.") }}</p>
       </div>
-      <Link :href="route('users.report')" class="inline-flex items-center gap-2 text-sm text-blue-600 hover:underline dark:text-blue-300">
+      <Link :href="meta.backUrl" class="inline-flex items-center gap-2 text-sm text-blue-600 hover:underline dark:text-blue-300">
         <span class="material-icons text-base">arrow_back</span>
         {{ $t("Kembali") }}
       </Link>
@@ -122,7 +122,7 @@
       </div>
 
       <div class="flex justify-end gap-2">
-        <Link :href="route('users.report')" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800">
+        <Link :href="meta.backUrl" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800">
           {{ $t("Batal") }}
         </Link>
         <SaveButton type="submit" :processing="isSubmitting">
@@ -136,8 +136,6 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
-import { useRoute } from 'ziggy-js';
-import { Ziggy } from '@/ziggy';
 import WorkflowSelect from '../../Components/WorkflowSelect.vue';
 
 const props = defineProps({
@@ -157,7 +155,6 @@ const form = useForm({
   unit: '',
 });
 
-const route = useRoute(Ziggy);
 const isSubmitting = ref(false);
 
 if (props.roles.length === 1) {

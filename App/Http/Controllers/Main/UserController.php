@@ -106,6 +106,7 @@ class UserController extends Controller
             'meta' => [
                 'canAssignSuperadmin' => in_array('superadmin', $allowed, true),
                 'unitRequired' => ! $viewerIsSuper,
+                'backUrl' => routeLocale('users.report'),
                 'storeUrl' => routeLocale('users.store'),
                 'csrfToken' => csrf_token(),
                 'oldInput' => collect($request->old())->only(['username', 'email', 'first_name', 'last_name', 'role', 'unit'])->all(),
