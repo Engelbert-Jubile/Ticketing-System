@@ -304,7 +304,7 @@ class ReportController extends Controller
 
     private function timelineSeries(string $table, string $column, Carbon $start, Carbon $end, ?callable $constraint = null): array
     {
-        $query = DB::table($table)
+        $query = ($table === 'tasks' ? Task::query()->toBase() : DB::table($table))
             ->selectRaw('YEARWEEK('.$column.', 3) as bucket')
             ->selectRaw('COUNT(*) as total')
             ->whereNotNull($column)

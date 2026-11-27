@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Support\RoleHelpers;
 use App\Support\TicketStatusSync;
 use App\Support\WorkflowStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -92,8 +93,18 @@ class Task extends Model
         'updated_at' => 'datetime',
     ];
 
+    private const WORKSPACE_SCOPE = 'task_workspace';
+
     protected static function booted(): void
     {
+        static::addGlobalScope(self::WORKSPACE_SCOPE, function (Builder $query): void {
+            $schema = $query->getQuery()->getConnection()->getSchemaBuilder();
+            $columns = $schema->getColumnListing($query->getModel()->getTable());
+            foreach (array_intersect(['legacy_archived_at', 'ticket_id', 'project_id'], $columns) as $column) {
+                $query->whereNull($query->qualifyColumn($column));
+            }
+        });
+
         static::creating(function (Task $t) {
             if (empty($t->uuid)) {
                 $t->uuid = (string) Str::uuid();
@@ -129,7 +140,8 @@ class Task extends Model
     public static function nextNumber(): string
     {
         $prefix = 'TSK'.now()->format('Y');
-        $last = static::where('task_no', 'like', $prefix.'%')
+        $last = static::withoutGlobalScope(self::WORKSPACE_SCOPE)
+            ->where('task_no', 'like', $prefix.'%')
             ->orderByDesc('task_no')
             ->value('task_no');
         $seq = $last ? (int) substr($last, -4) + 1 : 1;
@@ -309,7 +321,7 @@ class Task extends Model
         $slug = $base;
         $suffix = 2;
 
-        while (static::query()
+        while (static::withoutGlobalScope(self::WORKSPACE_SCOPE)
             ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
             ->where('public_slug', $slug)
             ->exists()) {

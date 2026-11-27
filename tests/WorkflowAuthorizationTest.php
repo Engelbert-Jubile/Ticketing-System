@@ -182,6 +182,66 @@ test('user can browse index and view active workflow only', function () {
         ->assertForbidden();
 });
 
+test('legacy task migration archives linked rows before removing their source columns', function () {
+    $ticketCopy = Task::create(['title' => 'Shared title']);
+    $projectCopy = Task::create(['title' => 'Project copy']);
+    $standalone = Task::create(['title' => 'Shared title']);
+    DB::table('tasks')->where('id', $ticketCopy->id)->update(['ticket_id' => 1]);
+    DB::table('tasks')->where('id', $projectCopy->id)->update(['project_id' => 1]);
+
+    $migration = require database_path('migrations/2026_11_27_000000_archive_legacy_linked_tasks.php');
+    $migration->up();
+    Schema::table('tasks', fn ($table) => $table->dropColumn(['ticket_id', 'project_id']));
+    $migration->up();
+
+    expect(Task::pluck('id')->all())->toBe([$standalone->id])
+        ->and(DB::table('tasks')->whereNotNull('legacy_archived_at')->count())->toBe(2)
+        ->and(DB::table('tasks')->count())->toBe(3);
+});
+
+test('archiving exact task numbers removes legacy copies from the task portal and preserves standalone tasks', function () {
+    Schema::table('tasks', fn ($table) => $table->dropColumn(['ticket_id', 'project_id']));
+    $migration = require database_path('migrations/2026_11_27_000000_archive_legacy_linked_tasks.php');
+    $migration->up();
+
+    $owner = workflowUserWithRole('superadmin');
+    $this->seed(WorkflowSeeder::class);
+    $ticket = Ticket::create(['ticket_no' => 'TCK-SOURCE', 'title' => 'Shared title', 'requester_id' => $owner->id]);
+    $standalone = Task::create(['title' => 'Shared title', 'created_by' => $owner->id, 'status' => 'in_progress']);
+    $legacy = Task::create(['title' => 'Legacy copy', 'created_by' => $owner->id, 'status' => 'in_progress']);
+    $nextNumber = Task::nextNumber();
+    $nextSlug = Task::generateUniquePublicSlug($legacy->title);
+
+    $this->artisan('tasks:archive-legacy', ['task_numbers' => [$legacy->task_no, 'TSK-MISSING']])->assertFailed();
+    expect(Task::find($legacy->id))->not->toBeNull();
+    $this->artisan('tasks:archive-legacy', ['task_numbers' => [$legacy->task_no]])->assertSuccessful();
+    $this->artisan('tasks:archive-legacy', ['task_numbers' => [$legacy->task_no]])->assertSuccessful();
+
+    $this->actingAs($owner)->withHeaders(workflowInertiaHeaders());
+    foreach ([
+        'tasks.report' => ['props.items', 'task_no'],
+        'tasks.on-progress' => ['props.results', 'number'],
+        'tasks.workflows.index' => ['props.items', 'number'],
+        'tasks.sla.index' => ['props.records', 'number'],
+    ] as $route => [$items, $number]) {
+        $this->get(route($route, ['locale' => 'en']))
+            ->assertOk()
+            ->assertJsonCount(1, $items.'.data')
+            ->assertJsonPath($items.'.data.0.'.$number, $standalone->task_no);
+    }
+
+    $this->get(route('tasks.show', ['locale' => 'en', 'taskSlug' => $legacy->public_slug]))->assertNotFound();
+    $this->get(route('tasks.workflows.instances.show', ['locale' => 'en', 'instance' => $legacy->task_no]))->assertNotFound();
+    $this->get(route('tasks.sla.detail.download', ['locale' => 'en', 'type' => 'task', 'id' => $legacy->id]))->assertNotFound();
+    expect(Task::nextNumber())->toBe($nextNumber)
+        ->and(Task::generateUniquePublicSlug($legacy->title))->toBe($nextSlug)
+        ->and(Ticket::find($ticket->id))->not->toBeNull()
+        ->and(DB::table('tasks')->where('id', $legacy->id)->exists())->toBeTrue();
+
+    $this->artisan('tasks:archive-legacy', ['task_numbers' => [$legacy->task_no], '--restore' => true])->assertSuccessful();
+    expect(Task::find($legacy->id))->not->toBeNull();
+});
+
 test('workflow seeder creates a default for every workspace idempotently', function () {
     Artisan::call('db:seed', ['--class' => WorkflowSeeder::class, '--force' => true]);
     Artisan::call('db:seed', ['--class' => WorkflowSeeder::class, '--force' => true]);
