@@ -108,7 +108,7 @@
 
       <div>
         <label for="role" class="block text-sm font-medium text-slate-700 dark:text-slate-200">{{ $t("Role") }}</label>
-        <WorkflowSelect id="role" v-model="form.role" :options="roles" :aria-label="$t(&quot;Role&quot;)" :placeholder="$t('Pilih Role')" class="mt-1" required />
+        <WorkflowSelect id="role" v-model="form.role" :options="roles" :aria-label="$t('Role')" :placeholder="$t('Pilih Role')" class="mt-1" required />
         <input type="hidden" name="role" :value="form.role" />
         <p v-if="form.errors.role" class="mt-1 text-xs text-rose-500">{{ form.errors.role }}</p>
       </div>
